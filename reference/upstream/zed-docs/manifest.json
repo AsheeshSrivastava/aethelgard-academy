@@ -1,0 +1,11 @@
+{
+  "source_id": "zed-docs",
+  "title": "Zed: High-Performance Multiplayer Code Editor Documentation",
+  "repo_url": "https://github.com/zed-industries/zed",
+  "ref": "main",
+  "commit_sha": "0373366f43e38375f344c733d0dbc9f856333366",
+  "licence": "Apache-2.0",
+  "snapshot_hash": "sha256:d06524cc2c7db601102ae5e4888d95db8b41108a9def08413f3317f318ec8e31",
+  "fetched_at": "2026-10-29T20:04:34.181872+00:00",
+  "files_count": 216
+}

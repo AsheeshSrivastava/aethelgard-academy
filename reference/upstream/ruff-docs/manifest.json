@@ -1,0 +1,11 @@
+{
+  "source_id": "ruff-docs",
+  "title": "Ruff: Extremely Fast Python Linter and Formatter Documentation",
+  "repo_url": "https://github.com/astral-sh/ruff",
+  "ref": "main",
+  "commit_sha": "0a7cf4af531bc2c486a4c6bdbc5e2a451fef7022",
+  "licence": "MIT",
+  "snapshot_hash": "sha256:7083f1bdfe202a754f8d79522de462c27b59e1aee03fc5a62cf8a6b1f78ea56c",
+  "fetched_at": "2026-10-29T20:04:28.641139+00:00",
+  "files_count": 25
+}

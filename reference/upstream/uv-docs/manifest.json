@@ -1,0 +1,11 @@
+{
+  "source_id": "uv-docs",
+  "title": "uv: Unified Python Package & Project Manager Documentation",
+  "repo_url": "https://github.com/astral-sh/uv",
+  "ref": "main",
+  "commit_sha": "d2152bc80fe9b9ef3fe6acceffd408d9bdd90b23",
+  "licence": "MIT",
+  "snapshot_hash": "sha256:52c4b348c95fe66638c6aba28ba75a7ace761cb8146c721ca4cb143797df47a4",
+  "fetched_at": "2026-10-29T20:04:22.646217+00:00",
+  "files_count": 92
+}

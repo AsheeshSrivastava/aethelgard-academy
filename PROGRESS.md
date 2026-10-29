@@ -3,7 +3,7 @@
 - **Branch:** `main`
 - **Latest Commit:** `2e8d517`
 - **Entire Version Control:** Enabled (`entire status` active for Antigravity)
-- **Current Phase:** RAG Document Loaders, Inspection Engine, and Lesson Media Extension (303 Tests Passing)
+- **Current Phase:** Upstream Documentation Bedrock Complete (331 Sources Across Python, uv, Ruff, Zed; 303 Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -46,7 +46,12 @@
     - HTML (`html.py`, `read_html`): Standard library zero-dependency parser converting headings, tables, and lists while dropping scripts and styles.
     - Jupyter Notebooks (`notebook.py`, `read_ipynb`): Extracts prose and code fences while discarding execution counts, outputs, and metadata.
     - Snapshot & Folder Loader (`snapshot.py`, `load_snapshot`): Loads multi-format documentation trees with skip policies (`SkipShareExceeded`).
-  - **Upstream Pinned Reference Slice (`reference/upstream/python-docs/`):** Curated official CPython documentation (`tutorial/` and `reference/`) pinned at commit `3d6d2a63a23ee4d340ed8df6de0bd70ef175c4cf` (28 files, 0 skips, GATE PASSED, PSF-2.0).
+  - **Upstream Pinned Reference Bedrock (`reference/upstream/`):** Curated, official factual documentation pinned at immutable commits and verified through inspection gates (`skip_share <= 0.25`):
+    - `python-docs` (`3d6d2a6`): 28 sources loaded (tutorial & language reference, PSF-2.0, 0 skips).
+    - `uv-docs` (`d2152bc`): 80 sources loaded (packaging, CLI, virtualenvs, MIT, 1 skip).
+    - `ruff-docs` (`0a7cf4a`): 16 sources loaded (linter, formatter, rules, configuration, MIT, 0 skips).
+    - `zed-docs` (`0373366`): 207 sources loaded (editor, tasks, keymaps, LSP, Apache-2.0, 3 skips).
+    - Total: 331 verified, provenance-hashed sources (under 3 MB).
   - **Upstream Fetch Engine (`scripts/fetch_upstream.py`):** Partial-clone blobs-on-demand fetcher ensuring zero bloat and reproducible snapshots.
   - **Source Inspection Engine & CLI (`scripts/inspect_sources.py`):** Pre-indexing audit tool ensuring 0% unreadable or dropped files on curriculum notes.
   - **Proprietary Concept Store (`src/lms/adapters/ai/concept_store.py`):** Ingests and verifies curriculum notes from `docs/concepts/` (tested via fixtures in `tests/fixtures/concepts/`).
