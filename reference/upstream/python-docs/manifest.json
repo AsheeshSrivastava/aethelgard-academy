@@ -1,0 +1,15 @@
+{
+  "source_id": "python-docs",
+  "title": "Python Language Official Documentation (Curated Slice)",
+  "repo_url": "https://github.com/python/cpython",
+  "ref": "3.12",
+  "commit_sha": "3d6d2a63a23ee4d340ed8df6de0bd70ef175c4cf",
+  "licence": "PSF-2.0",
+  "snapshot_hash": "sha256:9ae2d7828c18a08cce20deb6500c1af5fdd52a996dc034d5c71a29325fce8f1c",
+  "fetched_at": "2026-10-29T19:59:47.167209+00:00",
+  "files_count": 29,
+  "sections": [
+    "tutorial",
+    "reference"
+  ]
+}

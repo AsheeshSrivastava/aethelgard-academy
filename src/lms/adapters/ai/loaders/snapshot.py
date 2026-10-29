@@ -41,7 +41,7 @@ def load_snapshot(
     source_id: str = "",
     version: str = "",
     licence: str = "Proprietary-LMS",
-    licence_basis: str = "curriculum-author",
+    licence_basis: str = "declared",
     readers: dict[str, tuple[str, Reader]] | None = None,
     max_skip_share: float = 0.25,
     max_file_bytes: int = MAX_FILE_BYTES,
