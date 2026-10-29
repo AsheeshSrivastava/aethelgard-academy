@@ -47,7 +47,7 @@
     - Jupyter Notebooks (`notebook.py`, `read_ipynb`): Extracts prose and code fences while discarding execution counts, outputs, and metadata.
     - Snapshot & Folder Loader (`snapshot.py`, `load_snapshot`): Loads multi-format documentation trees with skip policies (`SkipShareExceeded`).
   - **Source Inspection Engine & CLI (`scripts/inspect_sources.py`):** Pre-indexing audit tool ensuring 0% unreadable or dropped files on curriculum notes.
-  - **Proprietary Concept Store (`src/lms/adapters/ai/concept_store.py`):** Ingests and verifies `docs/concepts/` (Communication Cycle, Values & Types, Names & Bindings).
+  - **Proprietary Concept Store (`src/lms/adapters/ai/concept_store.py`):** Ingests and verifies curriculum notes from `docs/concepts/` (tested via fixtures in `tests/fixtures/concepts/`).
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
   - **Curriculum Ingestion:** 78 units parsed into `CurriculumCatalog` with acyclic DAG validation.
   - **Evidence Ledger:** Append-only relational tracking across 27 skills in SQLite.

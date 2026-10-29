@@ -37,12 +37,12 @@ def test_concept_store_ingestion(tmp_path):
         assert verify_passage(source, p) is True
 
 
-def test_real_docs_concepts_ingestion():
-    real_concepts_dir = Path("docs/concepts")
-    assert real_concepts_dir.exists()
+def test_fixtures_concepts_ingestion():
+    fixtures_concepts_dir = Path("tests/fixtures/concepts")
+    assert fixtures_concepts_dir.exists()
 
     store = ConceptStore()
-    count = store.ingest_directory(real_concepts_dir)
+    count = store.ingest_directory(fixtures_concepts_dir)
     assert count >= 3
 
     sources = store.list_all_sources()
