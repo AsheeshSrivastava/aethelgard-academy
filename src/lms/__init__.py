@@ -6,6 +6,8 @@ from pathlib import Path
 
 def main() -> None:
     from lms.cli import (
+        handle_ask_command,
+        handle_explain_command,
         handle_list_command,
         handle_pull_command,
         handle_verify_command,
@@ -15,9 +17,11 @@ def main() -> None:
     if not args or args[0] in ("-h", "--help"):
         print("LMS Platform CLI - Hybrid Workspace Tool")
         print("\nCommands:")
-        print("  lms list              List all curriculum units")
-        print("  lms pull <unit_id>    Pull exercise into local workspace (for Zed / VS Code)")
-        print("  lms verify <unit_id>  Run local tests and submit evidence")
+        print("  lms list                     List all curriculum units")
+        print("  lms pull <unit_id>           Pull exercise into local workspace (for Zed / VS Code)")
+        print("  lms verify <unit_id>         Run local tests and submit evidence")
+        print("  lms explain <unit_id> <text> Submit CO-6 concept check explanation")
+        print("  lms ask <unit_id> <question> Consult AXIS AI with Socratic guardrails")
         return
 
     cmd = args[0].lower()
@@ -40,6 +44,24 @@ def main() -> None:
         print(res["message"])
         if not res["success"] and "stderr" in res:
             print(res["stderr"])
+
+    elif cmd == "explain":
+        if len(args) < 3:
+            print("Error: Specify a unit ID and your explanation, e.g.: lms explain PY-0.4 'string formatting'")
+            return
+        res = handle_explain_command(args[1], explanation=" ".join(args[2:]))
+        print(f"Status: {res['status']}")
+        print(f"Feedback: {res['feedback']}")
+
+    elif cmd == "ask":
+        if len(args) < 3:
+            print("Error: Specify a unit ID and your question, e.g.: lms ask PY-0.4 'what is string strip?'")
+            return
+        res = handle_ask_command(args[1], question=" ".join(args[2:]))
+        print(f"AXIS [{res['mode']}]: {res['reply']}")
+        if res.get("suggested_action"):
+            print(f"Action: {res['suggested_action']}")
+        print(f"Assistance Tier: {res['detected_assistance_level']}")
 
     else:
         print(f"Unknown command: {cmd}. Run 'lms --help' for usage.")

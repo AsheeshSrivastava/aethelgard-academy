@@ -226,3 +226,65 @@ def handle_explain_command(
         "message": f"Concept explanation evaluated as {status}. Evidence recorded in ledger.",
     }
 
+
+def handle_ask_command(
+    unit_id: str,
+    question: str,
+    mode: str = "socratic",
+    learner_id: str = "default_learner",
+    repo: Optional[SQLiteLearnerRepository] = None,
+    companion: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Consult AXIS AI Companion with Socratic guardrails and assistance accounting."""
+    from lms.adapters.ai.mock_axis import MockAxisCompanion
+    from lms.core.interfaces import AxisMode, AxisQuery
+    from lms.core.models import ActivityType
+
+    if companion is None:
+        companion = MockAxisCompanion()
+
+    clean_unit = unit_id.upper()
+    axis_mode = (
+        AxisMode.SOCRATIC
+        if mode.lower() == "socratic"
+        else (AxisMode.COACH if mode.lower() == "coach" else AxisMode.HYBRID)
+    )
+
+    query = AxisQuery(
+        learner_id=learner_id,
+        unit_id=clean_unit,
+        mode=axis_mode,
+        current_activity=ActivityType.BUILD,
+        user_prompt=question,
+    )
+    response = companion.consult(query)
+
+    # If repo provided, record inquiry interaction in ledger
+    if repo is not None:
+        strength = (
+            EvidenceStrength.WEAK
+            if response.detected_assistance_level == AssistanceLevel.SUPPLIED_REASONING
+            else EvidenceStrength.MODERATE
+        )
+        entry = EvidenceEntry(
+            learner_id=learner_id,
+            unit_id=clean_unit,
+            skill_id="BU-1",
+            evidence_category=EvidenceCategory.PERFORM_SOLVE,
+            evidence_strength=strength,
+            assistance_level=response.detected_assistance_level,
+            demonstration_context=f"AXIS AI consultation ({axis_mode.value}) for {clean_unit}",
+            observed_reasoning=f"Question: {question[:80]} | Level: {response.detected_assistance_level.value}",
+        )
+        repo.record_evidence(entry)
+
+    return {
+        "success": True,
+        "unit_id": clean_unit,
+        "mode": axis_mode.value,
+        "reply": response.reply,
+        "suggested_action": response.suggested_action,
+        "cited_concepts": response.cited_concepts,
+        "detected_assistance_level": response.detected_assistance_level.value,
+    }
+

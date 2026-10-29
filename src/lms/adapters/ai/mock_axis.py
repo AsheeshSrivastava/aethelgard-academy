@@ -7,13 +7,21 @@ without incurring external API calls or network dependency (MOCK_AI=true).
 from typing import List
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
 from lms.core.models import AssistanceLevel
+from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 
 
 class MockAxisCompanion:
     """Deterministic, zero-token mock implementation of the AXIS AI Companion."""
 
+    def __init__(self, guardrail: SocraticGuardrail = None, classifier: AssistanceClassifier = None):
+        self.guardrail = guardrail or SocraticGuardrail()
+        self.classifier = classifier or AssistanceClassifier()
+
     def consult(self, query: AxisQuery) -> AxisResponse:
         cited: List[str] = ["Operational Communication Cycle"]
+        action = None
+
+        q_lower = query.user_prompt.lower()
 
         if query.mode == AxisMode.SOCRATIC:
             reply = (
@@ -21,8 +29,28 @@ class MockAxisCompanion:
                 "What is the expected type of your variable before transformation occurs? "
                 "What happens to the program flow when incompatible types are combined?"
             )
-            assistance = AssistanceLevel.SMALL_HINT
             action = "Trace variable types step-by-step before re-running."
+
+        elif any(kw in q_lower for kw in ["syntax", "how to uppercase", "how to strip"]):
+            reply = (
+                "To clean whitespace and uppercase a string in Python, use the standard methods: "
+                "`.strip()` returns a string with leading/trailing spaces removed, and `.upper()` converts all characters."
+            )
+            action = "Apply string formatting methods to your variables."
+            cited.append("Standard Library String Methods")
+
+        elif "solution" in q_lower or "whole" in q_lower:
+            reply = (
+                "Here is an implementation:\n"
+                "```python\n"
+                "def run_intake(name, ward_code):\n"
+                "    clean_name = name.strip()\n"
+                "    clean_ward = ward_code.strip().upper()\n"
+                "    return f'REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}]'\n"
+                "```"
+            )
+            action = "Review the provided implementation and adapt to your scenario."
+            cited.append("Intake Transformation Implementation")
 
         elif query.mode == AxisMode.COACH:
             reply = (
@@ -30,7 +58,6 @@ class MockAxisCompanion:
                 "Remember our principle: input is intake, formatting is packaging, and print is egress. "
                 "Check the contract in the unit description to ensure all required fields are included."
             )
-            assistance = AssistanceLevel.SMALL_HINT
             action = "Review the unit's required input/output schema."
             cited.append("Schema Validation")
 
@@ -39,12 +66,17 @@ class MockAxisCompanion:
                 f"In unit {query.unit_id}, notice that functions isolate logic from presentation. "
                 "Try structuring your data into a dictionary first before passing it to the formatter."
             )
-            assistance = AssistanceLevel.STRUCTURAL_DIRECTION
             action = "Define a dictionary schema for the intake record."
             cited.append("Data Contracts")
 
+        # Pass reply through Socratic Guardrail
+        enforced_reply = self.guardrail.enforce(reply, query.mode, strict=False)
+
+        # Classify assistance level
+        assistance = self.classifier.classify(query.user_prompt, enforced_reply, query.mode)
+
         return AxisResponse(
-            reply=reply,
+            reply=enforced_reply,
             suggested_action=action,
             cited_concepts=cited,
             detected_assistance_level=assistance,

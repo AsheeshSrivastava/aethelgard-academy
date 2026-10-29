@@ -1,0 +1,20 @@
+[
+  {
+    "label": "Run Tests",
+    "command": "uv run pytest",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false
+  },
+  {
+    "label": "LMS Verify",
+    "command": "uv run lms verify PY-0.4",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false
+  },
+  {
+    "label": "Ruff Check & Format",
+    "command": "uv run ruff check --fix . && uv run ruff format .",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false
+  }
+]

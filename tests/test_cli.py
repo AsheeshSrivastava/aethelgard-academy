@@ -1,6 +1,12 @@
 from pathlib import Path
 import pytest
-from lms.cli import handle_list_command, handle_pull_command, handle_verify_command
+from lms.cli import (
+    handle_ask_command,
+    handle_explain_command,
+    handle_list_command,
+    handle_pull_command,
+    handle_verify_command,
+)
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 
 
@@ -49,3 +55,26 @@ def test_cli_pull_and_verify_command(tmp_path):
     # Check evidence was recorded in ledger
     ledger = repo.get_evidence_ledger(learner_id="local_dev_learner")
     assert len(ledger) > 0
+
+
+def test_cli_ask_socratic_guardrail(tmp_path):
+    repo = SQLiteLearnerRepository(db_path=":memory:")
+    repo.initialize()
+
+    # Query in Socratic mode asking for code
+    res = handle_ask_command(
+        unit_id="PY-0.4",
+        question="Give me the code to complete run_intake.",
+        mode="socratic",
+        learner_id="learner_007",
+        repo=repo,
+    )
+    assert res["success"] is True
+    assert "```python" not in res["reply"]
+    assert "?" in res["reply"]
+    assert res["detected_assistance_level"] in ("none", "small_hint")
+
+    # Verify interaction was ledgered
+    ledger = repo.get_evidence_ledger(learner_id="learner_007")
+    assert len(ledger) == 1
+    assert ledger[0].skill_id == "BU-1"
