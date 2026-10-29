@@ -5,10 +5,11 @@ Unit domain models and validates the Directed Acyclic Graph (DAG) of prerequisit
 """
 
 from pathlib import Path
+import json
 import re
 from typing import Dict, List, Optional, Set
 
-from lms.core.models import ActivityType, ProficiencyLevel, TargetSkill, Unit
+from lms.core.models import ActivityType, MediaAsset, ProficiencyLevel, TargetSkill, Unit
 
 
 def parse_skills_string(text: str) -> List[TargetSkill]:
@@ -204,4 +205,42 @@ def load_roadmap_from_file(file_path: Path) -> CurriculumCatalog:
                 unit = parse_unit_block(block, stage=stage_num)
                 catalog.add_unit(unit)
 
+    curriculum_path = Path("curriculum")
+    if curriculum_path.exists():
+        overlay_curriculum_packages(catalog, curriculum_path)
+
     return catalog
+
+
+def overlay_curriculum_packages(catalog: CurriculumCatalog, curriculum_dir: Path) -> None:
+    """Scan authored lesson packages and overlay starter code, tests, and media onto units."""
+    if not curriculum_dir.exists():
+        return
+
+    for pkg_dir in curriculum_dir.glob("*/*"):
+        if not pkg_dir.is_dir():
+            continue
+        unit_id = pkg_dir.name.upper()
+        unit = catalog.get_unit(unit_id)
+        if not unit:
+            continue
+
+        starter_file = pkg_dir / "starter.py"
+        test_file = pkg_dir / "test_solution.py"
+        meta_file = pkg_dir / "meta.json"
+
+        if starter_file.exists():
+            unit.starter_code = starter_file.read_text(encoding="utf-8")
+        if test_file.exists():
+            unit.test_code = test_file.read_text(encoding="utf-8")
+        if meta_file.exists():
+            try:
+                meta = json.loads(meta_file.read_text(encoding="utf-8"))
+                media_list = []
+                for item in meta.get("media", []):
+                    media_list.append(MediaAsset(**item))
+                if media_list:
+                    unit.media = media_list
+            except Exception:
+                pass
+

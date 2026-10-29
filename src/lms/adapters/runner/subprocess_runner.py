@@ -26,18 +26,30 @@ class SubprocessRunner:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             script_path = tmppath / "solution.py"
+            script_path.write_text(code, encoding="utf-8")
 
             if test_code:
-                # Combine solution code with test assertions
-                full_script = f"{code}\n\n# --- Verification Assertions ---\n{test_code}"
+                # Write separate test harness file that imports solution
+                test_script = (
+                    "import sys\n"
+                    "from pathlib import Path\n"
+                    "sys.path.insert(0, '.')\n"
+                    "from solution import *\n\n"
+                    f"{test_code}\n\n"
+                    "# --- Auto-invoke test functions ---\n"
+                    "for _name, _fn in list(locals().items()):\n"
+                    "    if _name.startswith('test_') and callable(_fn):\n"
+                    "        _fn()\n"
+                )
+                runner_script = tmppath / "run_tests.py"
+                runner_script.write_text(test_script, encoding="utf-8")
+                target_to_run = runner_script
             else:
-                full_script = code
-
-            script_path.write_text(full_script, encoding="utf-8")
+                target_to_run = script_path
 
             try:
                 proc = subprocess.run(
-                    [sys.executable, str(script_path)],
+                    [sys.executable, str(target_to_run)],
                     capture_output=True,
                     text=True,
                     timeout=timeout_seconds,

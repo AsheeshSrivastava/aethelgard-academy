@@ -9,3 +9,4 @@
 | [ADR-0005](0005-defer-kubernetes-for-docker-sandbox.md) | Defer Kubernetes in Favor of Container-Isolated Runners | **Accepted** | 2026-10-30 |
 | [ADR-0006](0006-hybrid-workspace-and-local-cli.md) | Hybrid Learner Workspace: Local CLI with Zed / VS Code + Cloud Sandbox Fallback | **Accepted** | 2026-10-30 |
 | [ADR-0007](0007-document-loaders-and-inspection-gate.md) | Document Loaders, Format Normalization, and the Inspection Gate | **Accepted** | 2026-10-30 |
+| [ADR-0008](0008-curriculum-lesson-packages-and-overlay-loader.md) | Modular Curriculum Lesson Packages and Overlay Loader | **Accepted** | 2026-10-30 |

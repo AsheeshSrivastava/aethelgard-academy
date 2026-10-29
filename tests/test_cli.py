@@ -22,7 +22,16 @@ def test_cli_pull_and_verify_command(tmp_path):
 
     # Write working code to solution.py
     solution_file = workspace_dir / unit_id / "solution.py"
-    solution_file.write_text("print('First program running!')\n", encoding="utf-8")
+    working_code = (
+        'def run_intake(name: str, ward_code: str) -> str:\n'
+        '    """Process intake desk registration."""\n'
+        '    clean_name = name.strip()\n'
+        '    clean_ward = ward_code.strip().upper()\n'
+        '    return f"REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}]"\n\n'
+        'if __name__ == "__main__":\n'
+        '    print(run_intake("Jane", "4b"))\n'
+    )
+    solution_file.write_text(working_code, encoding="utf-8")
 
     # Run verify command
     repo = SQLiteLearnerRepository(db_path=":memory:")

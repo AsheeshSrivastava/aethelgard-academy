@@ -1,9 +1,9 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
 - **Branch:** `main`
-- **Latest Commit:** `2e8d517`
+- **Latest Commit:** `7c3db61`
 - **Entire Version Control:** Enabled (`entire status` active for Antigravity)
-- **Current Phase:** Upstream Documentation Bedrock Complete (331 Sources Across Python, uv, Ruff, Zed; 303 Tests Passing)
+- **Current Phase:** Interactive Lesson Engine & Unit `PY-0.4` First-Program Spine (307 Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -13,8 +13,8 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 05)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0007) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Runner Sandbox, CLI, API Gateway, RAG Contracts, Loaders, and Inspector (`303` tests passing) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 06)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0008) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, RAG Contracts, Loaders, and Inspector (`307` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -29,6 +29,7 @@
   - SPEC-03: Code Execution Sandbox & Runner
   - SPEC-04: Platform API Gateway
   - SPEC-05: Curriculum RAG & AXIS Grounding Contracts
+  - SPEC-06: Interactive Lesson Engine & Learner Loop
 - **Architecture Decision Records (ADRs):**
   - ADR-0001: Hexagonal Architecture and Pluggable Boundary Ports
   - ADR-0002: Dual-Store Strategy (SQLite for Evidence Ledger vs. Vector DB for RAG)
@@ -37,7 +38,14 @@
   - ADR-0005: Defer Kubernetes in Favor of Container-Isolated Runners
   - ADR-0006: Hybrid Learner Workspace (Local CLI with Zed / VS Code + Cloud Sandbox Fallback)
   - ADR-0007: Document Loaders, Format Normalization, and the Inspection Gate
+  - ADR-0008: Modular Curriculum Lesson Packages and Overlay Loader
 - **Core Engine & Adapters:**
+  - **Interactive Lesson Engine & Learner Loop (`curriculum/` & `src/lms/cli.py`):**
+    - First complete unit package: `curriculum/python/py-0.4/` (Intake Desk Registration scenario).
+    - Structured unit metadata with `MediaAsset` video walkthroughs, timestamped chapters, and `concept_check` rubric (`meta.json`).
+    - Automated learner verification suite (`test_solution.py`) assessing whitespace normalization, uppercase formatting, and string formatting.
+    - Overlay loader (`overlay_curriculum_packages`) dynamically upgrading parsed catalog units with real lesson packages.
+    - CLI commands: `lms pull <unit>`, `lms verify <unit>`, and `lms explain <unit>` (`CO-6` mental model soft gate evaluating Solid vs. Shaky without blocking progression).
   - **Lesson Media & Extensibility (`src/lms/core/models.py`):** `MediaAsset` model supporting video walkthroughs, audio lectures, slides, and transcript timestamps on each `Unit`.
   - **RAG Grounding Contracts (`src/lms/core/rag_contracts.py`):** 100% matched with `rag-core` (`Source`, `Span`, `Passage`, `verify_passage`).
   - **RAG Document Loaders (`src/lms/adapters/ai/loaders/`):** Full format loader suite matching `rag-core` specifications:
@@ -59,10 +67,10 @@
   - **Curriculum Ingestion:** 78 units parsed into `CurriculumCatalog` with acyclic DAG validation.
   - **Evidence Ledger:** Append-only relational tracking across 27 skills in SQLite.
   - **Execution Sandbox:** `DockerRunner` with hardened security cgroup flags + `SubprocessRunner` with timeout defense.
-  - **Platform CLI (`lms`):** Supports `lms list`, `lms pull`, `lms verify` for Zed and VS Code local workflows.
-  - 302 automated tests passing in under 2.8 seconds.
+  - **Platform CLI (`lms`):** Supports `lms list`, `lms pull`, `lms verify`, `lms explain` for Zed and VS Code local workflows.
+  - 307 automated tests passing in under 3.5 seconds.
 
 ---
 
 ## 3. Next Action
-- Wire AXIS AI Grounded Retrieval: Connecting `ConceptStore` passages into AXIS AI queries so pedagogical replies automatically attach verified curriculum citations.
+- Implement AXIS AI Socratic Guardrails & Assistance Accounting (distinguishing syntax assistance vs reasoning supplied, routing to STRENGTHEN).

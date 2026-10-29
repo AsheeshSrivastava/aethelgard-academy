@@ -14,6 +14,7 @@ from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.models import (
     AssistanceLevel,
+    ConceptCheck,
     EvidenceCategory,
     EvidenceEntry,
     EvidenceStrength,
@@ -60,7 +61,7 @@ def handle_pull_command(unit_id: str, target_dir: Path) -> Dict[str, Any]:
     readme_file = unit_dir / "README.md"
 
     # Starter template
-    starter = (
+    starter = unit.starter_code or (
         f'"""\nUnit {unit.unit_id}: {unit.title}\n'
         f'Concept: {unit.concept_line}\n'
         f'Methods: {" -> ".join(m.value for m in unit.methods)}\n"""\n\n'
@@ -70,7 +71,7 @@ def handle_pull_command(unit_id: str, target_dir: Path) -> Dict[str, Any]:
         solution_file.write_text(starter, encoding="utf-8")
 
     # Tests template
-    test_content = (
+    test_content = unit.test_code or (
         f'"""Verification tests for {unit.unit_id}"""\n\n'
         f'def test_solution():\n'
         f'    # Import and verify solution\n'
@@ -79,10 +80,24 @@ def handle_pull_command(unit_id: str, target_dir: Path) -> Dict[str, Any]:
     if not test_file.exists():
         test_file.write_text(test_content, encoding="utf-8")
 
-    # Readme with Zed / VS Code tips
+    # Readme with Zed / VS Code tips and video media
+    media_section = ""
+    if unit.media:
+        m = unit.media[0]
+        timestamps_str = "\n".join(f"- **{t['time']}** {t['topic']}" for t in m.timestamps)
+        duration_min = (m.duration_seconds or 0) // 60
+        duration_sec = (m.duration_seconds or 0) % 60
+        media_section = (
+            f"### Video Walkthrough\n"
+            f"> **{m.title}**\n"
+            f"> URL: `{m.url}` (Duration: {duration_min}m {duration_sec}s)\n\n"
+            f"{timestamps_str}\n\n"
+        )
+
     readme_content = (
         f"# {unit.unit_id}: {unit.title}\n\n"
         f"**The Concept:** {unit.concept_line}\n\n"
+        f"{media_section}"
         f"### Local Editor Instructions (Zed / VS Code)\n"
         f"1. Open this folder in **Zed** (`zed .`) or **VS Code** (`code .`).\n"
         f"2. Edit `solution.py` to satisfy the requirements.\n"
@@ -152,3 +167,62 @@ def handle_verify_command(
         "message": f"Verification passed for {unit_id}! Evidence logged to ledger.",
         "duration_ms": result.duration_ms,
     }
+
+
+def handle_explain_command(
+    unit_id: str,
+    explanation: str,
+    learner_id: str = "default_learner",
+    repo: Optional[SQLiteLearnerRepository] = None,
+) -> Dict[str, Any]:
+    """Submit CO-6 concept check explanation, evaluate mental model, and log evidence."""
+    import json
+    clean_unit = unit_id.upper()
+    meta_path = Path(f"curriculum/python/{clean_unit.lower()}/meta.json")
+    keywords = ["string", "text", "typeerror", "convert", "int"]
+    if meta_path.exists():
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            check_cfg = meta.get("concept_check", {})
+            if "solid_keywords" in check_cfg:
+                keywords = check_cfg["solid_keywords"]
+        except Exception:
+            pass
+
+    # Evaluate mental model: check presence of key conceptual vocabulary
+    lower_exp = explanation.lower()
+    matches = sum(1 for kw in keywords if kw.lower() in lower_exp)
+    is_solid = matches >= 2
+
+    status = "Solid" if is_solid else "Shaky"
+    strength = EvidenceStrength.STRONG if is_solid else EvidenceStrength.WEAK
+    feedback = (
+        "Explanation demonstrates solid operational mental model."
+        if is_solid
+        else "Explanation is emerging or shaky; remember to reflect on types and boundaries."
+    )
+
+    if repo is None:
+        repo = SQLiteLearnerRepository()
+        repo.initialize()
+
+    entry = EvidenceEntry(
+        learner_id=learner_id,
+        unit_id=clean_unit,
+        skill_id="CO-6",
+        evidence_category=EvidenceCategory.EXPLAIN_REASON,
+        evidence_strength=strength,
+        assistance_level=AssistanceLevel.NONE,
+        demonstration_context=f"CO-6 concept check explanation for {clean_unit}",
+        observed_reasoning=f"Mental model graded as {status}: {explanation[:120]}",
+    )
+    repo.record_evidence(entry)
+
+    return {
+        "success": True,
+        "unit_id": clean_unit,
+        "status": status,
+        "feedback": feedback,
+        "message": f"Concept explanation evaluated as {status}. Evidence recorded in ledger.",
+    }
+
