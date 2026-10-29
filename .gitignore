@@ -31,7 +31,10 @@ ENV/
 .coverage
 htmlcov/
 
-# Local databases & state
+# Local developer workspaces
+workspace/
+workspace/*/
+
 *.db
 *.sqlite
 *.sqlite3

@@ -33,12 +33,14 @@
   - ADR-0003: Two-Stage RAG (Research vs. AXIS Grounding Firewall)
   - ADR-0004: Evidence Ledger and Capability Progression over Traditional Course Completion
   - ADR-0005: Defer Kubernetes in Favor of Container-Isolated Runners
+  - ADR-0006: Hybrid Learner Workspace (Local CLI with Zed / VS Code + Cloud Sandbox Fallback)
 - **Core Engine & Adapters:**
   - Curriculum Ingestion: 78 units parsed into `CurriculumCatalog` with acyclic DAG validation.
   - Evidence Ledger: Append-only relational tracking across 27 skills in SQLite.
   - Execution Sandbox: `DockerRunner` with hardened security cgroup flags + `SubprocessRunner` with timeout defense.
   - AXIS AI Companion: Tri-modal (Coach, Hybrid, Socratic) mock engine for zero-cost offline development.
-  - 33 automated tests passing in under 2 seconds.
+  - Hybrid Developer Workspace (`lms` CLI): Supports `lms list`, `lms pull`, `lms verify` for Zed and VS Code local workflows.
+  - 35 automated tests passing in under 2.5 seconds.
 
 ---
 
