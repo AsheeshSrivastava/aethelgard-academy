@@ -39,6 +39,10 @@ workspace/*/
 *.sqlite
 *.sqlite3
 
+# Inspection & evaluation reports
+reports/
+eval-out/
+
 # Environment & secrets
 .env
 .env.*

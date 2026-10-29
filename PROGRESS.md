@@ -3,7 +3,7 @@
 - **Branch:** `main`
 - **Latest Commit:** `d35421c`
 - **Entire Version Control:** Enabled (`entire status` active for Antigravity)
-- **Current Phase:** RAG Grounding Contracts & Concept Store Complete (49 Tests Passing)
+- **Current Phase:** RAG Document Loaders & Source Inspection Engine Complete (302 Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -14,9 +14,9 @@
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
 | **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 05)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0006) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Runner Sandbox, CLI, API Gateway, and RAG Contracts (`49` tests passing) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Runner Sandbox, CLI, API Gateway, RAG Contracts, Loaders, and Inspector (`302` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
-| **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages |
+| **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
 
 ---
@@ -38,13 +38,20 @@
   - ADR-0006: Hybrid Learner Workspace (Local CLI with Zed / VS Code + Cloud Sandbox Fallback)
 - **Core Engine & Adapters:**
   - **RAG Grounding Contracts (`src/lms/core/rag_contracts.py`):** 100% matched with `rag-core` (`Source`, `Span`, `Passage`, `verify_passage`).
+  - **RAG Document Loaders (`src/lms/adapters/ai/loaders/`):** Full format loader suite matching `rag-core` specifications:
+    - Markdown / MDX (`markdown.py`, `read_md`, `read_mdx`): Front matter extraction, JSX and HTML tag stripping, code fence preservation.
+    - reStructuredText (`rst.py`, `read_rst`): Python & Sphinx directive and role translation into clean Markdown without syntax noise.
+    - HTML (`html.py`, `read_html`): Standard library zero-dependency parser converting headings, tables, and lists while dropping scripts and styles.
+    - Jupyter Notebooks (`notebook.py`, `read_ipynb`): Extracts prose and code fences while discarding execution counts, outputs, and metadata.
+    - Snapshot & Folder Loader (`snapshot.py`, `load_snapshot`): Loads multi-format documentation trees with skip policies (`SkipShareExceeded`).
+  - **Source Inspection Engine & CLI (`scripts/inspect_sources.py`):** Pre-indexing audit tool ensuring 0% unreadable or dropped files on curriculum notes.
   - **Proprietary Concept Store (`src/lms/adapters/ai/concept_store.py`):** Ingests and verifies `docs/concepts/` (Communication Cycle, Values & Types, Names & Bindings).
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
   - **Curriculum Ingestion:** 78 units parsed into `CurriculumCatalog` with acyclic DAG validation.
   - **Evidence Ledger:** Append-only relational tracking across 27 skills in SQLite.
   - **Execution Sandbox:** `DockerRunner` with hardened security cgroup flags + `SubprocessRunner` with timeout defense.
   - **Platform CLI (`lms`):** Supports `lms list`, `lms pull`, `lms verify` for Zed and VS Code local workflows.
-  - 49 automated tests passing in under 2.5 seconds.
+  - 302 automated tests passing in under 2.8 seconds.
 
 ---
 
