@@ -132,3 +132,34 @@ def test_idempotent_progress_updates():
     repo.save_unit_progress(learner_id="learner_repeat", unit_id="PY-1.1", status="Completed")
     updated = repo.get_unit_progress(learner_id="learner_repeat", unit_id="PY-1.1")
     assert updated["status"] == "Completed"
+
+
+def test_circular_dependency_falsification_in_curriculum():
+    """Verify that a corrupted curriculum containing a circular dependency is detected."""
+    from lms.adapters.curriculum.loader import CurriculumCatalog
+
+    catalog = CurriculumCatalog()
+    # Create circular loop: A requires B, B requires A
+    unit_a = Unit(
+        unit_id="LOOP-01",
+        title="Loop A",
+        stage=0,
+        concept_line="Concept A",
+        target_skills=[],
+        methods=[ActivityType.EXPLAIN],
+        prerequisites=["LOOP-02"],
+    )
+    unit_b = Unit(
+        unit_id="LOOP-02",
+        title="Loop B",
+        stage=0,
+        concept_line="Concept B",
+        target_skills=[],
+        methods=[ActivityType.EXPLAIN],
+        prerequisites=["LOOP-01"],
+    )
+    catalog.add_unit(unit_a)
+    catalog.add_unit(unit_b)
+
+    # Must detect cycle and return False
+    assert catalog.validate_dag() is False

@@ -1,0 +1,1 @@
+# Curriculum Adapters package

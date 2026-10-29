@@ -6,3 +6,4 @@
 | [ADR-0002](0002-dual-storage-sqlite-and-vector-db.md) | Dual-Store Strategy: SQLite for Evidence Ledger vs. Vector DB for RAG | **Accepted** | 2026-10-29 |
 | [ADR-0003](0003-two-stage-rag-provenance-firewall.md) | Two-Stage RAG: Upstream Research vs. Downstream AXIS AI Grounding | **Accepted** | 2026-10-29 |
 | [ADR-0004](0004-evidence-ledger-and-capability-progression.md) | Evidence Ledger and Activity Engine over Traditional Course Completion | **Accepted** | 2026-10-29 |
+| [ADR-0005](0005-defer-kubernetes-for-docker-sandbox.md) | Defer Kubernetes in Favor of Container-Isolated Runners | **Accepted** | 2026-10-30 |
