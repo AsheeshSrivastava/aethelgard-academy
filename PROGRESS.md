@@ -1,9 +1,9 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
 - **Branch:** `main`
-- **Latest Commit:** `d35421c`
+- **Latest Commit:** `2e8d517`
 - **Entire Version Control:** Enabled (`entire status` active for Antigravity)
-- **Current Phase:** RAG Document Loaders & Source Inspection Engine Complete (302 Tests Passing)
+- **Current Phase:** RAG Document Loaders, Inspection Engine, and Lesson Media Extension (303 Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -13,8 +13,8 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 05)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0006) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Runner Sandbox, CLI, API Gateway, RAG Contracts, Loaders, and Inspector (`302` tests passing) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 05)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0007) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Runner Sandbox, CLI, API Gateway, RAG Contracts, Loaders, and Inspector (`303` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -36,7 +36,9 @@
   - ADR-0004: Evidence Ledger and Capability Progression over Traditional Course Completion
   - ADR-0005: Defer Kubernetes in Favor of Container-Isolated Runners
   - ADR-0006: Hybrid Learner Workspace (Local CLI with Zed / VS Code + Cloud Sandbox Fallback)
+  - ADR-0007: Document Loaders, Format Normalization, and the Inspection Gate
 - **Core Engine & Adapters:**
+  - **Lesson Media & Extensibility (`src/lms/core/models.py`):** `MediaAsset` model supporting video walkthroughs, audio lectures, slides, and transcript timestamps on each `Unit`.
   - **RAG Grounding Contracts (`src/lms/core/rag_contracts.py`):** 100% matched with `rag-core` (`Source`, `Span`, `Passage`, `verify_passage`).
   - **RAG Document Loaders (`src/lms/adapters/ai/loaders/`):** Full format loader suite matching `rag-core` specifications:
     - Markdown / MDX (`markdown.py`, `read_md`, `read_mdx`): Front matter extraction, JSX and HTML tag stripping, code fence preservation.

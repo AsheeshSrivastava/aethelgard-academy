@@ -88,6 +88,17 @@ class ConceptWikiLink(BaseModel):
     wiki_slug: str                     # e.g., "concepts/python/type-casting"
 
 
+class MediaAsset(BaseModel):
+    """Rich media asset attached to a curriculum unit (video walkthrough, lecture, slide deck)."""
+    media_id: str
+    kind: str = "video"                # e.g., "video", "audio", "slides", "interactive_widget"
+    title: str                         # e.g., "Video Walkthrough: Communication Cycle"
+    url: str                           # CDN URL, video stream URL, or local path
+    duration_seconds: Optional[int] = None
+    transcript_url: Optional[str] = None
+    timestamps: List[Dict[str, str]] = Field(default_factory=list)  # e.g. [{"time": "02:15", "topic": "Standard Streams"}]
+
+
 class Unit(BaseModel):
     unit_id: str                       # e.g., "PY-1.2", "AI-0.2"
     title: str                         # e.g., "Numbers, booleans and None"
@@ -98,6 +109,7 @@ class Unit(BaseModel):
     prerequisites: List[str] = Field(default_factory=list)
     carry_forward: Optional[DataContext] = None
     wiki_links: List[ConceptWikiLink] = Field(default_factory=list)
+    media: List[MediaAsset] = Field(default_factory=list)
     starter_code: Optional[str] = None
     test_code: Optional[str] = None
 

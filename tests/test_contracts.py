@@ -11,6 +11,7 @@ from lms.core.models import (
     ConceptCheck,
     DataContext,
     ConceptWikiLink,
+    MediaAsset,
     Unit,
     EvidenceEntry,
 )
@@ -83,3 +84,33 @@ def test_evidence_entry_schema():
     assert entry.evidence_strength == EvidenceStrength.STRONG
     assert entry.assistance_level == AssistanceLevel.NONE
     assert isinstance(entry.recorded_at, datetime)
+
+
+def test_unit_media_assets_and_extensibility():
+    video = MediaAsset(
+        media_id="vid-py-1.2-01",
+        kind="video",
+        title="Walkthrough: Values, Types and Mutability",
+        url="https://cdn.example.org/videos/py-1.2.mp4",
+        duration_seconds=345,
+        timestamps=[
+            {"time": "00:30", "topic": "Integers and Floats"},
+            {"time": "02:15", "topic": "Boolean Truthiness"},
+        ],
+    )
+    unit = Unit(
+        unit_id="PY-1.2",
+        title="Numbers, booleans and None",
+        stage=1,
+        concept_line="Values have types that dictate valid operations",
+        target_skills=[
+            TargetSkill(skill_id="CO-1", skill_name="Predict", goal_level=ProficiencyLevel.APPLY)
+        ],
+        methods=[ActivityType.EXPLAIN],
+        media=[video],
+    )
+    assert len(unit.media) == 1
+    assert unit.media[0].media_id == "vid-py-1.2-01"
+    assert unit.media[0].duration_seconds == 345
+    assert unit.media[0].timestamps[1]["topic"] == "Boolean Truthiness"
+
