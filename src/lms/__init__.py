@@ -24,6 +24,7 @@ def main() -> None:
         print("  lms explain <unit_id> <text> Submit CO-6 concept check explanation")
         print("  lms ask <unit_id> <question> Consult AXIS AI with Socratic guardrails")
         print("  lms index-upstream           Index upstream technical docs into persistent artifacts")
+        print("  lms serve [--port PORT]      Launch Web Platform Shell (default: 8000)")
         return
 
     cmd = args[0].lower()
@@ -83,6 +84,19 @@ def main() -> None:
                 out_path = Path(args[i + 1])
         res = handle_index_upstream_command(corpus_dir=corpus_path, output_dir=out_path)
         print(res["message"])
+
+    elif cmd in ("serve", "studio", "ui"):
+        import uvicorn
+
+        port = 8000
+        for i, arg in enumerate(args):
+            if arg == "--port" and i + 1 < len(args):
+                try:
+                    port = int(args[i + 1])
+                except ValueError:
+                    pass
+        print(f"Starting Aethelgard Academy Web Shell on http://127.0.0.1:{port} ...")
+        uvicorn.run("lms.api.app:app", host="127.0.0.1", port=port, reload=True)
 
     else:
         print(f"Unknown command: {cmd}. Run 'lms --help' for usage.")
