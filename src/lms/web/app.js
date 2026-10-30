@@ -41,6 +41,21 @@ function initMarkdownEngine() {
   }
 }
 
+function processWikiLinks(text) {
+  if (!text) return "";
+  let res = text.replace(
+    /\[\[([a-z0-9\-]+)\|([^\]]+)\]\]/gi,
+    '<a class="wiki-link" onclick="openConceptDrawer(\'$1\')">$2</a>'
+  );
+  res = res.replace(
+    /\[([^\]]+)\]\(concept:([a-z0-9\-]+)\)/gi,
+    '<a class="wiki-link" onclick="openConceptDrawer(\'$2\')">$1</a>'
+  );
+  res = res.replace(/`input\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-input\')">input()</code>');
+  res = res.replace(/`print\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-print\')">print()</code>');
+  return res;
+}
+
 function renderProductionMarkdown(rawMarkdown) {
   if (!rawMarkdown) return "";
 
@@ -51,27 +66,18 @@ function renderProductionMarkdown(rawMarkdown) {
       const cleanType = type.toUpperCase();
       const typeClass = cleanType.toLowerCase();
       const icon = cleanType === "TIP" ? "💡" : cleanType === "WARNING" ? "⚠️" : cleanType === "NOTE" ? "ℹ️" : "📌";
-      const cleanTitle = title.trim() || cleanType;
-      const cleanBody = body.replace(/^>\s?/gm, "").trim();
-      return `<div class="callout-alert callout-${typeClass}"><div class="callout-alert-title"><span>${icon}</span> <span>${cleanTitle}</span></div><div>${cleanBody}</div></div>\n\n`;
+      const cleanTitle = processWikiLinks(title.trim() || cleanType);
+      let cleanBody = body.replace(/^>\s?/gm, "").trim();
+      cleanBody = processWikiLinks(cleanBody);
+      const parsedBody = typeof marked !== "undefined" ? marked.parse(cleanBody) : cleanBody;
+      return `<div class="callout-alert callout-${typeClass}"><div class="callout-alert-title"><span>${icon}</span> <span>${cleanTitle}</span></div><div class="callout-alert-content">${parsedBody}</div></div>\n\n`;
     }
   );
 
-  // 2. Pre-process Wiki Links [[concept-id|Display Text]] or [text](concept:slug)
-  processed = processed.replace(
-    /\[\[([a-z0-9\-]+)\|([^\]]+)\]\]/gi,
-    '<a class="wiki-link" onclick="openConceptDrawer(\'$1\')">$2</a>'
-  );
-  processed = processed.replace(
-    /\[([^\]]+)\]\(concept:([a-z0-9\-]+)\)/gi,
-    '<a class="wiki-link" onclick="openConceptDrawer(\'$2\')">$1</a>'
-  );
+  // 2. Process remaining Wiki links across main text
+  processed = processWikiLinks(processed);
 
-  // 3. Auto-link technical terms like input() or print() if not inside code blocks
-  processed = processed.replace(/`input\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-input\')">input()</code>');
-  processed = processed.replace(/`print\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-print\')">print()</code>');
-
-  // 4. Parse via Marked.js
+  // 3. Parse via Marked.js
   let html = typeof marked !== "undefined" ? marked.parse(processed) : processed;
 
   return html;
