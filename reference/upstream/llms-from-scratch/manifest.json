@@ -1,0 +1,11 @@
+{
+  "source_id": "llms-from-scratch",
+  "title": "Build a Large Language Model (From Scratch) - Sebastian Raschka",
+  "repo_url": "https://github.com/rasbt/LLMs-from-scratch",
+  "ref": "main",
+  "commit_sha": "f184d2276d3b6a7af4b93901979d2a01f80eeddb",
+  "licence": "Apache-2.0",
+  "snapshot_hash": "sha256:1cdff4435035e6fdc724a0b5cfac7c53f8850e6956dfb9d57ca378c5a9a77557",
+  "fetched_at": "2026-10-30T02:06:26.540812+00:00",
+  "files_count": 58
+}

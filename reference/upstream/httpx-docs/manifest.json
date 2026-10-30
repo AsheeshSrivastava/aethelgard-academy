@@ -1,0 +1,11 @@
+{
+  "source_id": "httpx-docs",
+  "title": "HTTPX: Modern, Async-Ready HTTP Client Documentation",
+  "repo_url": "https://github.com/encode/httpx",
+  "ref": "master",
+  "commit_sha": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+  "licence": "BSD-3-Clause",
+  "snapshot_hash": "sha256:09d1ae912e8b5ecde9f5b79e9d58db8f491c76dbf30914db9ca1caf39e902fd0",
+  "fetched_at": "2026-10-30T02:04:08.921056+00:00",
+  "files_count": 24
+}

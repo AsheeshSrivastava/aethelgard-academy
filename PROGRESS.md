@@ -1,9 +1,9 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
 - **Branch:** `main`
-- **Latest Commit:** `2d962c0`
+- **Latest Commit:** `8d7fa84`
 - **Entire Version Control:** Enabled (`entire status` active for Antigravity)
-- **Current Phase:** Socratic Boundary Guardrails & Hybrid Dev Container Setup (316 Tests Passing)
+- **Current Phase:** Upstream Bedrock Extended (14 Curated Sources, 1,312 Clean Docs, Zero Noise, 316 Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -59,7 +59,23 @@
   - **Lesson Media & Extensibility (`src/lms/core/models.py`):** `MediaAsset` model supporting video walkthroughs, audio lectures, slides, and transcript timestamps on each `Unit`.
   - **RAG Grounding Contracts (`src/lms/core/rag_contracts.py`):** 100% matched with `rag-core` (`Source`, `Span`, `Passage`, `verify_passage`).
   - **RAG Document Loaders (`src/lms/adapters/ai/loaders/`):** Full format loader suite matching `rag-core` specifications (`markdown.py`, `rst.py`, `html.py`, `notebook.py`, `snapshot.py`).
-  - **Upstream Pinned Reference Bedrock (`reference/upstream/`):** 331 verified, provenance-hashed sources (under 3 MB across Python, uv, Ruff, Zed).
+  - **Upstream Pinned Reference Bedrock (`reference/upstream/`):** 14 curated, official technical documentation bedrocks pinned at immutable commits with strict anti-noise filtering (1,312 verified sources, < 9.8 MB total):
+    - **Backend Spine:**
+      - `python-docs` (`3d6d2a6`): 29 sources (PSF-2.0, tutorial & language reference)
+      - `uv-docs` (`d2152bc`): 92 sources (MIT, packaging, CLI, virtualenvs)
+      - `ruff-docs` (`0a7cf4a`): 25 sources (MIT, linter, formatter, configuration)
+      - `zed-docs` (`0373366`): 216 sources (Apache-2.0, editor, tasks, LSP)
+      - `fastapi-docs` (`79cab5b`): 157 sources (MIT, English tutorials, APIRouter, schemas)
+      - `pydantic-docs` (`dd0c36a`): 20 sources (MIT, core concepts, validation, models)
+      - `httpx-docs` (`b5addb6`): 24 sources (BSD-3-Clause, async client, streaming, transports)
+      - `pytest-docs` (`a7b2446`): 253 sources (MIT, automated testing, fixtures, assertions)
+    - **AI Engineering Spine:**
+      - `llms-from-scratch` (`f184d22`): 58 sources (Apache-2.0, Sebastian Raschka chapters)
+      - `prompt-engineering-guide` (`5767372`): 133 sources (MIT, DAIR.AI English guides, 1000+ translations excluded)
+      - `generative-ai-for-beginners` (`5abe9a5`): 32 sources (MIT, Microsoft 21 lessons, translations excluded)
+      - `huggingface-course` (`8b893f0`): 96 sources (Apache-2.0, English chapters on NLP, transformers, tokenizers)
+      - `dspy-docs` (`25162c4`): 170 sources (MIT, Stanford LM programming & optimization)
+      - `openai-evals` (`8eac7a7`): 7 sources (MIT, completion evaluation protocols)
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
   - 316 automated tests passing in under 3.5 seconds.
 

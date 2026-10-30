@@ -1,0 +1,11 @@
+{
+  "source_id": "pytest-docs",
+  "title": "Pytest: Automated Testing Framework Documentation (English)",
+  "repo_url": "https://github.com/pytest-dev/pytest",
+  "ref": "main",
+  "commit_sha": "a7b2446ee41a7298d3a0bc22c52f3b8bacae1566",
+  "licence": "MIT",
+  "snapshot_hash": "sha256:993effa67dccca60ead68e7c4d04d8a2cc2c651eb64d62d19ad3209e5dc02c69",
+  "fetched_at": "2026-10-30T02:06:14.315191+00:00",
+  "files_count": 253
+}
