@@ -100,6 +100,39 @@ def test_explain_endpoint_shaky(test_client):
     assert body["evidence_logged"] is True
 
 
+def test_execute_endpoint_with_stdin(test_client):
+    client, _ = test_client
+    code = (
+        "name = input('Name: ')\n"
+        "print(f'HELLO {name}')\n"
+    )
+    res = client.post(
+        "/api/v1/execute",
+        json={"code": code, "stdin_input": "Kofi Mensah\n"}
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["success"] is True
+    assert "HELLO Kofi Mensah" in body["stdout"]
+
+
+def test_explain_error_endpoint(test_client):
+    client, _ = test_client
+    payload = {
+        "unit_id": "PY-0.1",
+        "code": "pritn('Hello')",
+        "error": "NameError: name 'pritn' is not defined",
+        "learner_id": "test_learner",
+    }
+    res = client.post("/api/v1/explain-error", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "explanation" in data
+    assert len(data["explanation"]) > 0
+
+
+
+
 def test_serves_landing_page(test_client):
     client, _ = test_client
     res = client.get("/")

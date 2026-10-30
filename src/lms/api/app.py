@@ -32,6 +32,7 @@ from lms.core.interfaces import (
     ILearnerRepository,
 )
 from lms.core.models import (
+    ActivityType,
     AssistanceLevel,
     ConceptItem,
     EvidenceCategory,
@@ -45,6 +46,7 @@ class ExecuteCodeRequest(BaseModel):
     code: str
     test_code: Optional[str] = None
     timeout_seconds: float = 5.0
+    stdin_input: Optional[str] = None
 
 
 class ProgressUpdateRequest(BaseModel):
@@ -176,6 +178,7 @@ def create_app(
             code=payload.code,
             test_code=payload.test_code,
             timeout_seconds=payload.timeout_seconds,
+            stdin_input=payload.stdin_input,
         )
 
     # --- AXIS AI Companion Routes ---
@@ -241,6 +244,23 @@ def create_app(
             feedback=feedback,
             evidence_logged=True,
         )
+
+    # --- Socratic Error Diagnostic Route ---
+    @app.post("/api/v1/explain-error")
+    def explain_runtime_error(payload: Dict[str, Any]):
+        unit_id = payload.get("unit_id", "PY-0.1").upper()
+        code = payload.get("code", "")
+        error_msg = payload.get("error", "")
+        query = AxisQuery(
+            learner_id=payload.get("learner_id", "default_learner"),
+            unit_id=unit_id,
+            mode=AxisMode.SOCRATIC,
+            current_activity=ActivityType.DEBUG_VALIDATE,
+            user_prompt=f"I ran my code and received this runtime error:\n{error_msg}\nCan you guide me Socratically to inspect my own logic and find where the error came from?",
+            learner_code=code,
+        )
+        resp = axis.consult(query)
+        return {"unit_id": unit_id, "explanation": resp.reply}
 
     # --- Learner Progress & Evidence Ledger Routes ---
     @app.get("/api/v1/learners/{learner_id}/ledger", response_model=List[EvidenceEntry])

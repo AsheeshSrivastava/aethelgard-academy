@@ -74,7 +74,11 @@ class ICodeRunner(Protocol):
     """Port for isolated, deterministic code execution and test verification."""
 
     def execute(
-        self, code: str, test_code: Optional[str] = None, timeout_seconds: float = 5.0
+        self,
+        code: str,
+        test_code: Optional[str] = None,
+        timeout_seconds: float = 5.0,
+        stdin_input: Optional[str] = None,
     ) -> ExecutionResult:
         ...
 

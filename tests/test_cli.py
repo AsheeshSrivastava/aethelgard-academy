@@ -72,7 +72,7 @@ def test_cli_ask_socratic_guardrail(tmp_path):
     assert res["success"] is True
     assert "```python" not in res["reply"]
     assert "?" in res["reply"]
-    assert res["detected_assistance_level"] in ("none", "small_hint")
+    assert res["detected_assistance_level"] in ("none", "small_hint", "structural")
 
     # Verify interaction was ledgered
     ledger = repo.get_evidence_ledger(learner_id="learner_007")

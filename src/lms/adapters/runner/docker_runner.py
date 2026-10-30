@@ -67,18 +67,22 @@ class DockerRunner:
         return cmd
 
     def execute(
-        self, code: str, test_code: Optional[str] = None, timeout_seconds: float = 5.0
+        self,
+        code: str,
+        test_code: Optional[str] = None,
+        timeout_seconds: float = 5.0,
+        stdin_input: Optional[str] = None,
     ) -> ExecutionResult:
         # If Docker daemon is unavailable, fallback gracefully to SubprocessRunner
         if not self.is_available():
             fallback = SubprocessRunner()
-            return fallback.execute(code, test_code, timeout_seconds)
+            return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input)
 
         # Full container execution path
         start_time = time.perf_counter()
         # Fallback runner performs execution when Docker is unavailable
         fallback = SubprocessRunner()
-        return fallback.execute(code, test_code, timeout_seconds)
+        return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input)
 
 
 def get_code_runner(prefer_docker: bool = True) -> ICodeRunner:

@@ -19,7 +19,11 @@ class SubprocessRunner:
     """Runs student code and test assertions locally via isolated subprocess."""
 
     def execute(
-        self, code: str, test_code: Optional[str] = None, timeout_seconds: float = 5.0
+        self,
+        code: str,
+        test_code: Optional[str] = None,
+        timeout_seconds: float = 5.0,
+        stdin_input: Optional[str] = None,
     ) -> ExecutionResult:
         start_time = time.perf_counter()
 
@@ -58,7 +62,7 @@ class SubprocessRunner:
             try:
                 proc = subprocess.run(
                     [sys.executable, str(target_to_run)],
-                    input="",
+                    input=stdin_input or "",
                     capture_output=True,
                     text=True,
                     timeout=timeout_seconds,
