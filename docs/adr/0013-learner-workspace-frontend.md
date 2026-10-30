@@ -1,7 +1,7 @@
 # ADR-0013: Unified Platform Shell, Pedagogical Workspace & Concept Library Architecture
 
 ## Status
-Accepted
+Accepted; section 1 (zero-build shell) superseded by [ADR-0014](0014-react-typescript-vite-frontend.md) on 2026-10-30
 
 ## Context
 Our LMS/KMS platform has engineered the core domain models, execution runners, hybrid RAG retriever, and Stage 0 curriculum packages. However, adult learners transitioning from operations, policy, and social sectors require a cohesive, visual learning operating system rather than disconnected tools.

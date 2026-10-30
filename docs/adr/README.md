@@ -14,3 +14,7 @@
 | [ADR-0010](0010-local-first-llm-facilitation-and-deterministic-telemetry.md) | Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack | **Accepted** | 2026-10-30 |
 | [ADR-0011](0011-rag-chunking-and-hybrid-reranking-pipeline.md) | RAG Chunking, Hybrid Retrieval, and Cross-Encoder Reranking | **Accepted** | 2026-10-30 |
 | [ADR-0012](0012-persistent-rag-artifacts-and-upstream-indexer.md) | Persistent RAG Artifacts & Upstream Documentation Indexer | **Accepted** | 2026-10-30 |
+| [ADR-0013](0013-learner-workspace-frontend.md) | Unified Platform Shell, Pedagogical Workspace & Concept Library | **Accepted** (section 1 superseded by ADR-0014) | 2026-10-30 |
+| [ADR-0014](0014-react-typescript-vite-frontend.md) | React + TypeScript + Vite Learner Frontend | **Accepted** | 2026-10-30 |
+| [ADR-0015](0015-learner-identity-and-sessions.md) | Learner Identity and Sessions | **Proposed** | 2026-10-30 |
+| [ADR-0016](0016-proficiency-estimation-and-progression-decisions.md) | Proficiency Estimation and Progression Decisions over the Whole Ledger | **Proposed** | 2026-10-30 |

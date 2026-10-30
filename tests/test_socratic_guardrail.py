@@ -120,15 +120,21 @@ def test_progression_impact_of_assistance_accounting():
     assert decision == ProgressionDecision.STRENGTHEN
     assert "fragile" in reason.lower()
 
-    # If only syntax lookup, progression allows PROGRESS
-    syntax_entry = EvidenceEntry(
-        learner_id="learner_002",
-        unit_id="PY-0.4",
-        skill_id="CO-1",
-        evidence_category=EvidenceCategory.PERFORM_SOLVE,
-        evidence_strength=EvidenceStrength.STRONG,
-        assistance_level=AssistanceLevel.SYNTAX_LOOKUP,
-        demonstration_context="Looked up .strip() docs then implemented independently",
-    )
-    decision_ok, _ = evaluate_progression(ProficiencyLevel.APPLY, [syntax_entry])
+    # Syntax lookup does not disqualify evidence: two syntax-lookup entries from
+    # different exercises, one a passed Cold Check, allow PROGRESS (ADR-0016).
+    syntax_entries = [
+        EvidenceEntry(
+            learner_id="learner_002",
+            unit_id="PY-0.4",
+            skill_id="CO-1",
+            evidence_category=EvidenceCategory.PERFORM_SOLVE,
+            evidence_strength=EvidenceStrength.STRONG,
+            assistance_level=AssistanceLevel.SYNTAX_LOOKUP,
+            demonstration_context="Looked up .strip() docs then implemented independently",
+            exercise_id=exercise_id,
+            cold_check=cold_check,
+        )
+        for exercise_id, cold_check in (("ex-1", False), ("ex-2", True))
+    ]
+    decision_ok, _ = evaluate_progression(ProficiencyLevel.APPLY, syntax_entries)
     assert decision_ok == ProgressionDecision.PROGRESS
