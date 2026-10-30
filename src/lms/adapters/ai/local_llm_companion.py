@@ -219,12 +219,17 @@ class LocalLLMCompanion:
                         {"role": "user", "content": user_msg},
                     ],
                     "temperature": 0.2,
-                    "max_tokens": 512,
+                    "max_tokens": 1024,
                 },
             )
             resp.raise_for_status()
             payload = resp.json()
-            raw_reply = str(payload["choices"][0]["message"]["content"]).strip()
+            choice = payload["choices"][0]["message"]
+            raw_content = choice.get("content") or ""
+            # Handle deep-thinking/reasoning models (e.g. Qwen3.6-35B-A3B) where answer is in reasoning_content or content
+            if not raw_content.strip() and "reasoning_content" in choice:
+                raw_content = choice["reasoning_content"] or ""
+            raw_reply = str(raw_content).strip()
             self.last_backend_used = f"LocalLLM ({target_model} @ {self.base_url})"
         except Exception as exc:
             if self.fallback_to_mock:

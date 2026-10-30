@@ -55,9 +55,16 @@ def main() -> None:
 
     elif cmd == "ask":
         if len(args) < 3:
-            print("Error: Specify a unit ID and your question, e.g.: lms ask PY-0.4 'what is string strip?'")
+            print("Error: Specify a unit ID and your question, e.g.: lms ask PY-0.4 'what is string strip?' [mode]")
             return
-        res = handle_ask_command(args[1], question=" ".join(args[2:]))
+        # Support optional mode as third argument: lms ask PY-0.4 "question" coach
+        mode = "socratic"
+        if len(args) >= 4 and args[-1].lower() in ("socratic", "coach", "hybrid"):
+            mode = args[-1].lower()
+            question_text = " ".join(args[2:-1])
+        else:
+            question_text = " ".join(args[2:])
+        res = handle_ask_command(args[1], question=question_text, mode=mode)
         print(f"AXIS [{res['mode']}]: {res['reply']}")
         if res.get("suggested_action"):
             print(f"Action: {res['suggested_action']}")
