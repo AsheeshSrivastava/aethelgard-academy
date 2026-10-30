@@ -298,10 +298,13 @@ def handle_ask_command(
         )
         repo.record_evidence(entry)
 
+    backend_label = getattr(companion, "last_backend_used", "Offline Mock (MOCK_AI=true)")
+
     return {
         "success": True,
         "unit_id": clean_unit,
         "mode": axis_mode.value,
+        "backend": backend_label,
         "reply": response.reply,
         "suggested_action": response.suggested_action,
         "cited_concepts": response.cited_concepts,

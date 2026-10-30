@@ -65,6 +65,7 @@ class LocalLLMCompanion:
         self._client = http_client or httpx.Client(timeout=self.timeout_seconds)
         self._resolved_model: Optional[str] = None
         self._mock_fallback = MockAxisCompanion(guardrail=self.guardrail, classifier=self.classifier)
+        self.last_backend_used: str = "LocalLLM (pending)"
 
     def resolve_model(self) -> str:
         """Resolves target model ID, auto-querying GET /v1/models when model == 'auto'."""
@@ -209,8 +210,10 @@ class LocalLLMCompanion:
             resp.raise_for_status()
             payload = resp.json()
             raw_reply = str(payload["choices"][0]["message"]["content"]).strip()
+            self.last_backend_used = f"LocalLLM ({target_model} @ {self.base_url})"
         except Exception as exc:
             if self.fallback_to_mock:
+                self.last_backend_used = f"Offline Mock (Fallback reason: {type(exc).__name__}: {exc})"
                 return self._mock_fallback.consult(query)
             raise LocalLLMError(f"Local LLM consultation failed: {exc}") from exc
 

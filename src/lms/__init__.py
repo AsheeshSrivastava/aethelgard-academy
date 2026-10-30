@@ -62,6 +62,7 @@ def main() -> None:
         if res.get("suggested_action"):
             print(f"Action: {res['suggested_action']}")
         print(f"Assistance Tier: {res['detected_assistance_level']}")
+        print(f"Backend: {res.get('backend', 'Offline Mock')}")
 
     else:
         print(f"Unknown command: {cmd}. Run 'lms --help' for usage.")
