@@ -23,9 +23,9 @@ It communicates over the standard **OpenAI-compatible local HTTP API** (`/v1/cha
 
 ### 2.1 Environment Configuration
 - `MOCK_AI`: `"true"` (default for offline CI/pytest) or `"false"` (enables live `LocalLLMCompanion`).
-- `LOCAL_LLM_BASE_URL`: Base URL of the local inference server (default: `"http://127.0.0.1:8000/v1"`).
+- `LOCAL_LLM_BASE_URL`: Base URL of the local inference server (default: `"http://127.0.0.1:8888/v1"`, Unsloth Studio's default port).
 - `LOCAL_LLM_MODEL`: Target model identifier (default: `"auto"`, which auto-discovers the active model from `GET /v1/models`, falling back to `"qwen3.5-9b"`).
-- `LOCAL_LLM_API_KEY`: Optional bearer token for local servers (default: `"local-no-key"`).
+- `LOCAL_LLM_API_KEY` / `UNSLOTH_STUDIO_AUTH_TOKEN`: Optional bearer token for local servers (`sk-unsloth-...`, default: `"local-no-key"`).
 - `LOCAL_LLM_TIMEOUT`: Request timeout in seconds (default: `30.0`).
 
 ### 2.2 Class Signature (`src/lms/adapters/ai/local_llm_companion.py`)

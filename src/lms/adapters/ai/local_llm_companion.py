@@ -49,10 +49,14 @@ class LocalLLMCompanion:
         fallback_to_mock: bool = True,
         http_client: Optional[httpx.Client] = None,
     ) -> None:
-        raw_url = base_url or os.environ.get("LOCAL_LLM_BASE_URL", "http://127.0.0.1:8000/v1")
+        raw_url = base_url or os.environ.get("LOCAL_LLM_BASE_URL", "http://127.0.0.1:8888/v1")
         self.base_url = raw_url.rstrip("/")
         self.model = model or os.environ.get("LOCAL_LLM_MODEL", "auto")
-        self.api_key = api_key or os.environ.get("LOCAL_LLM_API_KEY", "local-no-key")
+        self.api_key = (
+            api_key
+            or os.environ.get("LOCAL_LLM_API_KEY")
+            or os.environ.get("UNSLOTH_STUDIO_AUTH_TOKEN", "local-no-key")
+        )
         self.timeout_seconds = timeout_seconds
         self.concept_store = concept_store
         self.guardrail = guardrail or SocraticGuardrail()
