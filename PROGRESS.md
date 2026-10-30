@@ -3,7 +3,7 @@
 - **Branch:** `main` (tracking `origin/main` on Entire)
 - **Latest Commit:** `609aca8`
 - **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`, all 25 checkpoint refs synced)
-- **Current Phase:** Upstream Persistent Ingestion & Warm Loader (`lms index-upstream`) Complete (`330` Tests Passing)
+- **Current Phase:** Unified Platform Shell, Pedagogical Workspace & Concept Library Complete (`335` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -13,10 +13,10 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 10)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0012) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer (`330` tests passing) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 11)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0013) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell (`335` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
-| **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
+| **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups, syntax failures, malformed input streams |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
 
 ---

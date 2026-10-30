@@ -228,11 +228,14 @@ def overlay_curriculum_packages(catalog: CurriculumCatalog, curriculum_dir: Path
         starter_file = pkg_dir / "starter.py"
         test_file = pkg_dir / "test_solution.py"
         meta_file = pkg_dir / "meta.json"
+        lesson_file = pkg_dir / "lesson.md"
 
         if starter_file.exists():
             unit.starter_code = starter_file.read_text(encoding="utf-8")
         if test_file.exists():
             unit.test_code = test_file.read_text(encoding="utf-8")
+        if lesson_file.exists():
+            unit.lesson_markdown = lesson_file.read_text(encoding="utf-8")
         if meta_file.exists():
             try:
                 meta = json.loads(meta_file.read_text(encoding="utf-8"))
@@ -241,6 +244,8 @@ def overlay_curriculum_packages(catalog: CurriculumCatalog, curriculum_dir: Path
                     media_list.append(MediaAsset(**item))
                 if media_list:
                     unit.media = media_list
+                if "concept_check" in meta:
+                    unit.concept_check_config = meta["concept_check"]
             except Exception:
                 pass
 

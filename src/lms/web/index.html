@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Aethelgard Academy - Knowledge Management & Learning Platform</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+  <!-- Top Application Navigation Bar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+      <a href="#" onclick="showView('dashboard')" class="nav-brand">
+        <div class="brand-badge">AA</div>
+        <span>Aethelgard Academy</span>
+      </a>
+
+      <!-- View Switcher Tabs -->
+      <nav class="nav-links">
+        <button id="nav-btn-dashboard" onclick="showView('dashboard')" class="nav-tab active">
+          <span>🏠</span> Dashboard
+        </button>
+        <button id="nav-btn-roadmap" onclick="showView('roadmap')" class="nav-tab">
+          <span>🗺️</span> Python MoC
+        </button>
+        <button id="nav-btn-unit-studio" onclick="showView('unit-studio')" class="nav-tab">
+          <span>💻</span> Unit Studio
+        </button>
+        <button id="nav-btn-concept-library" onclick="showView('concept-library')" class="nav-tab">
+          <span>📚</span> Concept Library
+        </button>
+        <button id="nav-btn-ledger" onclick="showView('ledger')" class="nav-tab">
+          <span>📜</span> Evidence Ledger
+        </button>
+      </nav>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="nav-actions">
+      <button onclick="toggleModal('modal-devenv')" class="btn">
+        <span>🛠️</span> Zed / Dev Env
+      </button>
+      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); background: var(--bg-card-subtle); padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        MOCK_AI: offline
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="main-content">
+
+    <!-- ============================================================== -->
+    <!-- VIEW 1: DASHBOARD / LANDING PAGE                              -->
+    <!-- ============================================================== -->
+    <section id="view-dashboard" class="view-panel active">
+      <div class="hero-banner">
+        <div class="hero-text">
+          <h1>Welcome to Aethelgard Academy</h1>
+          <p>Capability-based progression from social & operational transition into Python Backend & AI Engineering.</p>
+        </div>
+        <div>
+          <button onclick="resumeActiveUnit()" class="btn btn-primary" style="font-size: 0.95rem; padding: 0.65rem 1.25rem;">
+            Resume Active Unit (PY-0.1) ➔
+          </button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-block-end: 1.5rem;">
+        <div class="card">
+          <div class="card-title">📜 Evidence Ledger Status</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-primary); margin-block: 0.25rem;" id="dash-ledger-count">
+            5 Verified Entries
+          </div>
+          <p class="card-subtitle">Accumulated across CO-1, VE-4, and DE-3 without school exams.</p>
+          <button onclick="showView('ledger')" class="btn" style="inline-size: 100%; justify-content: center;">
+            Inspect Live Ledger
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🐍 Active Track: Python Backend</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-block: 0.25rem;">
+            Stage 0: 100%
+          </div>
+          <p class="card-subtitle">Foundations & Mental Models: PY-0.4, PY-0.1, PY-0.3.</p>
+          <button onclick="showView('roadmap')" class="btn" style="inline-size: 100%; justify-content: center;">
+            View Stage Progression DAG
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📚 Concept Library (KMS)</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-accent); margin-block: 0.25rem;" id="dash-concept-count">
+            9 Concepts
+          </div>
+          <p class="card-subtitle">Searchable canonical definitions, execution rules, and official anchors.</p>
+          <button onclick="showView('concept-library')" class="btn" style="inline-size: 100%; justify-content: center;">
+            Search Concept Library
+          </button>
+        </div>
+      </div>
+
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-block-end: 1rem;">Curriculum Track Directory</h2>
+      <div class="grid-3">
+        <div class="card" style="border-inline-start: 4px solid var(--color-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 0.5rem;">
+            <span style="font-weight: 700; font-size: 1rem;">Track 1: Python Backend Engineering</span>
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px; background: rgba(34, 197, 94, 0.1); color: var(--color-success); font-weight: 600;">ACTIVE</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-block-end: 1rem;">
+            The cumulative project spine scaling from municipal intake desk reception to multi-tenant asynchronous web services.
+          </p>
+          <button onclick="showView('roadmap')" class="btn btn-primary" style="font-size: 0.8rem;">Explore Track ➔</button>
+        </div>
+
+        <div class="card" style="opacity: 0.75; border-inline-start: 4px solid var(--text-muted);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 0.5rem;">
+            <span style="font-weight: 700; font-size: 1rem;">Track 2: AI Engineering & RAG</span>
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px; background: var(--bg-card-subtle); color: var(--text-muted); font-weight: 600;">LOCKED (Req Stage 3)</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-block-end: 1rem;">
+            Hybrid retrieval reranking, BM25 indices, vector embeddings, DSPy optimization, and autonomous multi-agent pipelines.
+          </p>
+          <button disabled class="btn" style="font-size: 0.8rem; cursor: not-allowed;">Requires Stage 3</button>
+        </div>
+
+        <div class="card" style="opacity: 0.6; border-inline-start: 4px solid var(--text-muted);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 0.5rem;">
+            <span style="font-weight: 700; font-size: 1rem;">Track 3: Systems Architecture & Cloud</span>
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px; background: var(--bg-card-subtle); color: var(--text-muted); font-weight: 600;">COMING SOON</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-block-end: 1rem;">
+            Production infrastructure, Docker container isolation, Kubernetes scheduling, telemetry, and distributed reliability.
+          </p>
+          <button disabled class="btn" style="font-size: 0.8rem; cursor: not-allowed;">In Development</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 2: PYTHON TRACK ROADMAP (MoC)                            -->
+    <!-- ============================================================== -->
+    <section id="view-roadmap" class="view-panel">
+      <div style="margin-block-end: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <h1 style="font-size: 1.35rem; font-weight: 800;">Python Subject Roadmap (Map of Content)</h1>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">The sequential progression DAG governing capability advancement.</p>
+        </div>
+        <button onclick="showView('unit-studio')" class="btn btn-primary">Open Active Unit Studio ➔</button>
+      </div>
+
+      <!-- Stage 0: Foundations -->
+      <div style="margin-block-end: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-block-end: 0.75rem;">
+          <span style="font-weight: 800; font-size: 1rem; color: var(--color-primary);">Stage 0: Foundations & Mental Models</span>
+          <span style="font-size: 0.75rem; background: rgba(37, 99, 235, 0.1); color: var(--color-primary); padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 600;">3 Units</span>
+        </div>
+        <div class="grid-3" id="roadmap-stage-0">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+
+      <!-- Stage 1: Data Ingress & Functions -->
+      <div style="margin-block-end: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-block-end: 0.75rem;">
+          <span style="font-weight: 800; font-size: 1rem;">Stage 1: Data Ingress, Types & Functions</span>
+          <span style="font-size: 0.75rem; background: var(--bg-card-subtle); color: var(--text-muted); padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 600;">Upcoming</span>
+        </div>
+        <div class="grid-3" id="roadmap-stage-1">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 3: UNIT STUDIO & 3-PHASE PLAYGROUND                       -->
+    <!-- ============================================================== -->
+    <section id="view-unit-studio" class="view-panel">
+      <!-- Unit Header & Stepper -->
+      <div class="stepper-bar">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <select id="studio-unit-select" onchange="loadUnit(this.value)" style="background: var(--bg-card-subtle); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 700; font-size: 0.85rem; padding: 0.35rem 0.65rem; border-radius: var(--radius-sm); cursor: pointer;">
+            <option value="PY-0.1">PY-0.1: Python as an Executing Program</option>
+            <option value="PY-0.4">PY-0.4: Run a First Program</option>
+            <option value="PY-0.3">PY-0.3: Tool Help vs Your Own Reasoning</option>
+          </select>
+          <span id="unit-target-skills" style="display: flex; gap: 0.35rem;">
+            <!-- Target skills badges populated dynamically -->
+          </span>
+        </div>
+
+        <!-- Activity Stepper -->
+        <div class="stepper-steps">
+          <button id="step-btn-explain" onclick="goToStep('explain')" class="step-btn active">
+            <span>1</span> Explain (Notes & Video)
+          </button>
+          <button id="step-btn-predict" onclick="goToStep('predict')" class="step-btn">
+            <span>2</span> Predict (Commit)
+          </button>
+          <button id="step-btn-practice" onclick="goToStep('practice')" class="step-btn">
+            <span>3</span> Practice (Code & Terminal)
+          </button>
+        </div>
+
+        <button onclick="toggleModal('modal-devenv')" class="btn" style="font-size: 0.75rem;">
+          <span>⚡</span> Open in Zed
+        </button>
+      </div>
+
+      <!-- Studio Phase 1: EXPLAIN -->
+      <div id="phase-explain" style="display: grid; grid-template-columns: minmax(320px, 1.4fr) minmax(280px, 1fr); gap: 1rem; flex: 1; min-height: 580px;">
+        <!-- Left: Explanatory Notes & Narrative -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>📖 Explanatory Note & Operational Anchors</span>
+            <span id="explain-unit-id" style="color: var(--text-muted); font-family: var(--font-mono);">PY-0.1</span>
+          </div>
+          <div class="pane-body scrollable" id="explain-content" style="font-size: 0.875rem;">
+            <!-- Loaded from unit.lesson_markdown -->
+          </div>
+          <div style="padding: 1rem; border-block-start: 1px solid var(--border-color); background: var(--bg-card-subtle);">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-block-end: 0.5rem; display: flex; justify-content: space-between;">
+              <span>💡 Activity 1 Milestone: CO-6 Concept Check (Soft Gate)</span>
+              <span style="font-size: 0.75rem; color: var(--color-warning);">Non-blocking</span>
+            </div>
+            <textarea id="co6-input" rows="2" style="inline-size: 100%; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 0.825rem; resize: none; margin-block-end: 0.5rem;" placeholder="Explain the core mental model in your own words..."></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <button onclick="submitConceptExplanation()" class="btn btn-primary" style="font-size: 0.8rem;">
+                Submit Explanation & Proceed to Step 2 ➔
+              </button>
+              <span id="co6-eval-feedback" style="font-size: 0.75rem;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Video Walkthrough -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>🎬 Video Walkthrough (Intake Desk)</span>
+            <span style="color: var(--text-muted); font-family: var(--font-mono);">7m 15s</span>
+          </div>
+          <div class="pane-body scrollable" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; position: relative;">
+              <div style="inline-size: 3rem; block-size: 3rem; border-radius: 9999px; background: rgba(37, 99, 235, 0.9); color: white; display: grid; place-content: center; font-size: 1.25rem; cursor: pointer;">
+                ▶
+              </div>
+            </div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.825rem; margin-block-end: 0.5rem;">Key Concepts Indexed by Timestamp:</div>
+              <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.8rem;" id="video-timestamps">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Phase 2: PREDICT -->
+      <div id="phase-predict" style="display: none; flex: 1; align-items: center; justify-content: center; padding: 2rem;">
+        <div class="card" style="max-inline-size: 600px; inline-size: 100%;">
+          <div class="card-title" style="display: flex; justify-content: space-between;">
+            <span>🎯 Activity 2: Predict Before Running (Skill: CO-1)</span>
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px; background: rgba(147, 51, 234, 0.1); color: #a855f7;">Prediction Gate</span>
+          </div>
+          <p class="card-subtitle">Commit to a mental model outcome before hitting execute:</p>
+          <div style="background: #000; color: #e2e8f0; font-family: var(--font-mono); font-size: 0.8rem; padding: 1rem; border-radius: var(--radius-sm); margin-block-end: 1rem;">
+            # Python Execution Order<br>
+            city = "Manchester"<br>
+            print()<br>
+            print(f"Intake Station: {city}")
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-block-end: 1.25rem; font-size: 0.85rem;">
+            <label style="display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer;">
+              <input type="radio" name="pred-opt" value="A">
+              <span><strong>Option A:</strong> Prints two lines: line 1 "Intake Station: Manchester", line 2 is blank.</span>
+            </label>
+            <label style="display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer;">
+              <input type="radio" name="pred-opt" value="B">
+              <span><strong>Option B (Correct Invariant):</strong> Line 1 is an empty blank line (from print()), followed by Line 2 printing "Intake Station: Manchester".</span>
+            </label>
+            <label style="display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer;">
+              <input type="radio" name="pred-opt" value="C">
+              <span><strong>Option C:</strong> Raises a syntax error because print() requires arguments.</span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <button onclick="goToStep('explain')" class="btn">← Back to Notes</button>
+            <button onclick="commitPrediction()" class="btn btn-primary">Commit Prediction & Open Code Playground ➔</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Phase 3: PRACTICE & PLAYGROUND -->
+      <div id="phase-practice" class="studio-layout" style="display: none;">
+        <!-- Sub-Pane 1: Requirements & Pseudocode -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>📋 Requirements & Pseudocode</span>
+            <span id="practice-unit-badge" style="font-family: var(--font-mono); font-size: 0.75rem;">PY-0.1</span>
+          </div>
+          <div class="pane-body scrollable" style="font-size: 0.825rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="background: var(--bg-card-subtle); border-radius: var(--radius-sm); padding: 0.75rem; border: 1px solid var(--border-color);">
+              <div style="font-weight: 700; color: var(--color-warning); margin-block-end: 0.35rem; font-size: 0.75rem; text-transform: uppercase;">Intake Checklist</div>
+              <ul style="list-style-type: none; display: flex; flex-direction: column; gap: 0.4rem; color: var(--text-muted);">
+                <li>1. Call <code>input("Enter name: ")</code> to prompt citizen.</li>
+                <li>2. Store return text in variable <code>applicant_name</code>.</li>
+                <li>3. Call <code>print()</code> with no arguments for separator.</li>
+                <li>4. Print confirmation record with f-string.</li>
+              </ul>
+            </div>
+            <div style="background: rgba(37, 99, 235, 0.08); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid rgba(37, 99, 235, 0.2);">
+              <strong style="color: var(--color-primary); display: block; margin-block-end: 0.25rem;">💡 Pseudocode Scaffolding:</strong>
+              Follow the numbered <code>#</code> comments already placed in the code editor!
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Pane 2: Interactive Code Editor -->
+        <div class="pane">
+          <div class="pane-header">
+            <span style="font-family: var(--font-mono);">solution.py</span>
+            <button onclick="resetCurrentCode()" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Reset Starter</button>
+          </div>
+          <div style="display: flex; gap: 0.5rem; padding: 0.5rem 0.75rem; border-block-end: 1px solid var(--border-color); background: var(--bg-card-subtle);">
+            <button id="btn-run" onclick="executePlaygroundCode()" class="btn btn-primary" style="font-size: 0.75rem;">
+              <span>▶</span> Run Code (Interactive)
+            </button>
+            <button id="btn-verify" onclick="verifyPlaygroundSolution()" class="btn btn-success" style="font-size: 0.75rem;">
+              <span>✓</span> Verify Solution
+            </button>
+            <span id="execution-status" style="margin-inline-start: auto; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); align-self: center;">Ready</span>
+          </div>
+          <div class="editor-container">
+            <div class="line-numbers" id="studio-line-numbers">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10</div>
+            <textarea id="studio-editor" class="code-textarea" spellcheck="false" oninput="updateLineNumbers()"></textarea>
+          </div>
+        </div>
+
+        <!-- Sub-Pane 3: Interactive Terminal -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>📟 Interactive Terminal (Live stdin/stdout)</span>
+            <button onclick="clearTerminalScreen()" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Clear</button>
+          </div>
+          <div class="pane-body" style="display: flex; flex-direction: column; padding: 0.75rem;">
+            <div class="terminal-window scrollable" id="terminal-screen">
+              <div style="color: #64748b;">$ # Click 'Run Code (Interactive)' to execute.</div>
+              <div style="color: #64748b;">When input() executes, you can type your input into the prompt below!</div>
+            </div>
+            <div class="terminal-prompt" id="terminal-prompt-box" style="display: none;">
+              <span id="prompt-label" style="color: #94a3b8; font-family: var(--font-mono); font-size: 0.8rem;">Enter citizen name: </span>
+              <input type="text" id="stdin-field" class="terminal-input" onkeydown="handleStdinEnter(event)" placeholder="Type here and press Enter...">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 4: CONCEPT LIBRARY (KMS)                                  -->
+    <!-- ============================================================== -->
+    <section id="view-concept-library" class="view-panel">
+      <div style="margin-block-end: 1rem;">
+        <h1 style="font-size: 1.35rem; font-weight: 800; margin-block-end: 0.25rem;">Concept Library & Knowledge Base (KMS)</h1>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-block-end: 1rem;">
+          Canonical operational definitions, execution rules, and official python.org documentation anchors.
+        </p>
+        <input type="text" id="concept-search-input" oninput="filterConcepts(this.value)" class="search-box" placeholder="🔍 Search concepts (e.g. 'input', 'variable', 'execution order', 'print')...">
+      </div>
+
+      <div class="grid-3" id="concept-cards-grid">
+        <!-- Populated dynamically by app.js -->
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 5: EVIDENCE LEDGER                                        -->
+    <!-- ============================================================== -->
+    <section id="view-ledger" class="view-panel">
+      <div style="margin-block-end: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <h1 style="font-size: 1.35rem; font-weight: 800;">27-Skill Append-Only Evidence Ledger</h1>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">
+            Immutable, audit-ready telemetry recorded from verified problem-solving and mental model demonstrations.
+          </p>
+        </div>
+        <button onclick="loadLedgerEntries()" class="btn">🔄 Refresh Ledger</button>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="scrollable" style="max-block-size: 600px;">
+          <table style="inline-size: 100%; border-collapse: collapse; font-size: 0.825rem; text-align: left;">
+            <thead style="background: var(--bg-card-subtle); border-block-end: 1px solid var(--border-color); font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">
+              <tr>
+                <th style="padding: 0.75rem 1rem;">Timestamp (UTC)</th>
+                <th style="padding: 0.75rem 1rem;">Unit</th>
+                <th style="padding: 0.75rem 1rem;">Skill</th>
+                <th style="padding: 0.75rem 1rem;">Category</th>
+                <th style="padding: 0.75rem 1rem;">Strength</th>
+                <th style="padding: 0.75rem 1rem;">Observed Reasoning</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-table-body">
+              <!-- Populated dynamically by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Local Dev Environment & Zed CLI Guide                   -->
+  <!-- ============================================================== -->
+  <dialog id="modal-devenv">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 1rem; padding-block-end: 0.75rem; border-block-end: 1px solid var(--border-color);">
+      <h2 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🛠️</span> Graduated Hybrid Workspace (Zed & uv)
+      </h2>
+      <button onclick="toggleModal('modal-devenv')" class="btn" style="padding: 0.2rem 0.5rem;">✕</button>
+    </div>
+    <div class="scrollable" style="max-block-size: 65vh; font-size: 0.85rem; display: flex; flex-direction: column; gap: 1rem;">
+      <p style="color: var(--text-muted);">
+        Transition from this browser playground to a high-performance local editor using **Zed** (Rust-native with Pyright LSP) and **uv**.
+      </p>
+      
+      <div style="background: var(--bg-card-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <strong style="display: block; margin-block-end: 0.35rem;">1. Pull Exercise into Local Workspace:</strong>
+        <div style="background: #000; color: #a7f3d0; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);">
+          uv run lms pull PY-0.1
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <strong style="display: block; margin-block-end: 0.35rem;">2. Open in Zed Editor:</strong>
+        <div style="background: #000; color: #a7f3d0; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);">
+          zed workspace/PY-0.1
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <strong style="display: block; margin-block-end: 0.35rem;">3. Run Tests & Log Evidence:</strong>
+        <div style="background: #000; color: #a7f3d0; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);">
+          uv run lms verify PY-0.1
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.775rem; margin-block-start: 0.35rem;">
+          Writes directly to the local SQLite Evidence Ledger (`data/lms.db`). Both Zed and this web client stay 100% in sync!
+        </p>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; margin-block-start: 1rem;">
+      <button onclick="toggleModal('modal-devenv')" class="btn btn-primary">Close Guide</button>
+    </div>
+  </dialog>
+
+  <!-- Application Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>

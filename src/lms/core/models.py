@@ -88,6 +88,17 @@ class ConceptWikiLink(BaseModel):
     wiki_slug: str                     # e.g., "concepts/python/type-casting"
 
 
+class ConceptItem(BaseModel):
+    """Canonical concept entity for the Concept Library / KMS."""
+    concept_id: str
+    name: str
+    category: str
+    summary: str
+    execution_rules: str
+    doc_url: str
+    units: List[str] = Field(default_factory=list)
+
+
 class MediaAsset(BaseModel):
     """Rich media asset attached to a curriculum unit (video walkthrough, lecture, slide deck)."""
     media_id: str
@@ -112,6 +123,8 @@ class Unit(BaseModel):
     media: List[MediaAsset] = Field(default_factory=list)
     starter_code: Optional[str] = None
     test_code: Optional[str] = None
+    lesson_markdown: Optional[str] = None
+    concept_check_config: Optional[Dict[str, Any]] = None
 
 
 class EvidenceEntry(BaseModel):
