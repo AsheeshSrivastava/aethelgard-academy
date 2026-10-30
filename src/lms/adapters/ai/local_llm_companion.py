@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional
 import httpx
@@ -23,6 +24,20 @@ from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse, IAXISCompanion
 from lms.core.rag_contracts import verify_passage
+
+
+def _load_dotenv_if_present() -> None:
+    """Read a local .env file into os.environ if not already set."""
+    env_file = Path(".env")
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip().strip("'\"")
+                if k not in os.environ:
+                    os.environ[k] = v
 
 MAX_PROMPT_CHARS = 4000
 MAX_CODE_CHARS = 4000
@@ -303,6 +318,7 @@ class LocalLLMCompanion:
 
 def get_axis_companion(concept_store: Optional[ConceptStore] = None) -> IAXISCompanion:
     """Factory returning MockAxisCompanion when MOCK_AI=true, else LocalLLMCompanion."""
+    _load_dotenv_if_present()
     mock_flag = os.environ.get("MOCK_AI", "true").strip().lower()
     if mock_flag in ("1", "true", "yes"):
         return MockAxisCompanion()
