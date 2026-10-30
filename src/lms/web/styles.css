@@ -3,12 +3,12 @@
   color-scheme: light dark;
 
   /* Color Design Tokens using light-dark() */
-  --bg-app: light-dark(#f8fafc, #0f172a);
-  --bg-card: light-dark(#ffffff, #1e293b);
-  --bg-card-subtle: light-dark(#f1f5f9, #131d2e);
+  --bg-app: light-dark(#f8fafc, #0a0f1d);
+  --bg-card: light-dark(#ffffff, #131b2e);
+  --bg-card-subtle: light-dark(#f1f5f9, #1b263b);
   --bg-input: light-dark(#ffffff, #0b1120);
   
-  --border-color: light-dark(#e2e8f0, #334155);
+  --border-color: light-dark(#e2e8f0, #28354d);
   --border-focus: light-dark(#3b82f6, #60a5fa);
   
   --text-main: light-dark(#0f172a, #f8fafc);
@@ -416,18 +416,267 @@ body {
   outline: none;
 }
 
-/* Concept Library Search */
+/* ============================================================== */
+/* PRODUCTION MARKDOWN TYPOGRAPHY (.markdown-body)                */
+/* ============================================================== */
+.markdown-body {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-main);
+}
+
+.markdown-body h1 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-block-start: 0.5rem;
+  margin-block-end: 0.75rem;
+  color: var(--text-main);
+  border-block-end: 1px solid var(--border-color);
+  padding-block-end: 0.5rem;
+}
+
+.markdown-body h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-block-start: 1.5rem;
+  margin-block-end: 0.65rem;
+  color: var(--color-primary);
+}
+
+.markdown-body h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-block-start: 1.25rem;
+  margin-block-end: 0.5rem;
+  color: var(--text-main);
+}
+
+.markdown-body p {
+  margin-block-end: 1rem;
+  color: var(--text-main);
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin-block-end: 1rem;
+  padding-inline-start: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.markdown-body li {
+  line-height: 1.6;
+}
+
+.markdown-body hr {
+  border: none;
+  border-block-start: 1px solid var(--border-color);
+  margin-block: 1.25rem;
+}
+
+.markdown-body blockquote {
+  border-inline-start: 4px solid var(--border-color);
+  padding-inline-start: 1rem;
+  margin-block-end: 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Inline Code & Code Blocks */
+.markdown-body code {
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  background-color: var(--bg-card-subtle);
+  color: var(--text-accent);
+  padding-inline: 0.35rem;
+  padding-block: 0.15rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.markdown-body pre {
+  background-color: #090d16 !important;
+  border: 1px solid #1e293b;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-block-end: 1.25rem;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: #e2e8f0;
+  font-size: 0.825rem;
+  line-height: 1.5;
+}
+
+/* Tables */
+.markdown-body table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  margin-block-end: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+}
+
+.markdown-body th {
+  background-color: var(--bg-card-subtle);
+  font-weight: 700;
+}
+
+/* GitHub Callout Alerts */
+.callout-alert {
+  padding: 0.85rem 1.15rem;
+  border-radius: var(--radius-md);
+  margin-block-end: 1.25rem;
+  font-size: 0.875rem;
+  border-inline-start: 4px solid;
+}
+
+.callout-alert-title {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-block-end: 0.35rem;
+}
+
+.callout-tip {
+  background-color: rgba(34, 197, 94, 0.08);
+  border-color: var(--color-success);
+  color: var(--text-main);
+}
+.callout-tip .callout-alert-title { color: var(--color-success); }
+
+.callout-note {
+  background-color: rgba(37, 99, 235, 0.08);
+  border-color: var(--color-primary);
+  color: var(--text-main);
+}
+.callout-note .callout-alert-title { color: var(--color-primary); }
+
+.callout-warning {
+  background-color: rgba(245, 158, 11, 0.08);
+  border-color: var(--color-warning);
+  color: var(--text-main);
+}
+.callout-warning .callout-alert-title { color: var(--color-warning); }
+
+.callout-important {
+  background-color: rgba(168, 85, 247, 0.08);
+  border-color: #a855f7;
+  color: var(--text-main);
+}
+.callout-important .callout-alert-title { color: #a855f7; }
+
+/* Wiki Links */
+.wiki-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  border-block-end: 1px dashed var(--color-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wiki-link:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-radius: 2px;
+}
+
+/* Slide-over Drawer for Concept Details */
+.drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 200;
+}
+
+.drawer-backdrop.active {
+  display: block;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: -550px;
+  inline-size: min(520px, 92vw);
+  block-size: 100vh;
+  background-color: var(--bg-card);
+  border-inline-start: 1px solid var(--border-color);
+  box-shadow: -10px 0 25px rgba(0,0,0,0.3);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-panel.active {
+  right: 0;
+}
+
+.drawer-header {
+  padding: 1.25rem;
+  border-block-end: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-body {
+  padding: 1.25rem;
+  flex: 1;
+}
+
+/* Recent Search Pills */
+.recent-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-block-end: 1.5rem;
+  font-size: 0.8rem;
+}
+
+.recent-pill {
+  background-color: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+}
+
+.recent-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Search Box */
 .search-box {
   inline-size: 100%;
-  max-inline-size: 500px;
-  padding: 0.65rem 1rem;
+  max-inline-size: 550px;
+  padding: 0.75rem 1.15rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background-color: var(--bg-card);
   color: var(--text-main);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   outline: none;
-  margin-block-end: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .search-box:focus {

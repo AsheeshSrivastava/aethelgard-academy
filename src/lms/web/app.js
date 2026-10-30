@@ -1,6 +1,6 @@
 /**
  * Aethelgard Academy Web Platform Client
- * Production vanilla JS application controller.
+ * Production AI-led LMS / KMS frontend architecture.
  */
 
 const STATE = {
@@ -10,17 +10,78 @@ const STATE = {
   currentUnit: null,
   units: [],
   concepts: [],
-  ledger: []
+  ledger: [],
+  recentSearches: []
 };
 
 // --- Initialization ---
 document.addEventListener("DOMContentLoaded", async () => {
+  initMarkdownEngine();
+  loadRecentSearches();
+  setupGlobalShortcuts();
+
   await loadUnitsCatalog();
-  await loadConcepts();
   await loadLedgerEntries();
   await loadUnit(STATE.activeUnitId);
   updateDashboardCounts();
+
+  // Initialize Concept Library Resting View
+  renderConceptSearchResults([]);
 });
+
+// --- Markdown Rendering Engine with GitHub Alerts & Prism ---
+function initMarkdownEngine() {
+  if (typeof marked !== "undefined") {
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      headerIds: true,
+      mangle: false
+    });
+  }
+}
+
+function renderProductionMarkdown(rawMarkdown) {
+  if (!rawMarkdown) return "";
+
+  // 1. Pre-process GitHub Alerts: > [!TIP], > [!NOTE], > [!WARNING], > [!IMPORTANT]
+  let processed = rawMarkdown.replace(
+    /^>\s*\[!(TIP|NOTE|WARNING|IMPORTANT|CAUTION)\][ \t]*(.*?)\n((?:>.*?(?:\n|$))*)/gim,
+    (match, type, title, body) => {
+      const cleanType = type.toUpperCase();
+      const typeClass = cleanType.toLowerCase();
+      const icon = cleanType === "TIP" ? "💡" : cleanType === "WARNING" ? "⚠️" : cleanType === "NOTE" ? "ℹ️" : "📌";
+      const cleanTitle = title.trim() || cleanType;
+      const cleanBody = body.replace(/^>\s?/gm, "").trim();
+      return `<div class="callout-alert callout-${typeClass}"><div class="callout-alert-title"><span>${icon}</span> <span>${cleanTitle}</span></div><div>${cleanBody}</div></div>\n\n`;
+    }
+  );
+
+  // 2. Pre-process Wiki Links [[concept-id|Display Text]] or [text](concept:slug)
+  processed = processed.replace(
+    /\[\[([a-z0-9\-]+)\|([^\]]+)\]\]/gi,
+    '<a class="wiki-link" onclick="openConceptDrawer(\'$1\')">$2</a>'
+  );
+  processed = processed.replace(
+    /\[([^\]]+)\]\(concept:([a-z0-9\-]+)\)/gi,
+    '<a class="wiki-link" onclick="openConceptDrawer(\'$2\')">$1</a>'
+  );
+
+  // 3. Auto-link technical terms like input() or print() if not inside code blocks
+  processed = processed.replace(/`input\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-input\')">input()</code>');
+  processed = processed.replace(/`print\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-print\')">print()</code>');
+
+  // 4. Parse via Marked.js
+  let html = typeof marked !== "undefined" ? marked.parse(processed) : processed;
+
+  return html;
+}
+
+function highlightSyntaxWithin(element) {
+  if (typeof Prism !== "undefined" && element) {
+    Prism.highlightAllUnder(element);
+  }
+}
 
 // --- View Switching ---
 function showView(viewName) {
@@ -40,7 +101,15 @@ function showView(viewName) {
   });
 
   if (viewName === "roadmap") renderRoadmap();
-  if (viewName === "concept-library") renderConcepts(STATE.concepts);
+  if (viewName === "concept-library") {
+    const input = document.getElementById("concept-search-input");
+    renderRecentSearches();
+    if (input && input.value.trim()) {
+      handleConceptSearchInput(input.value);
+    } else {
+      renderConceptSearchResults([]);
+    }
+  }
   if (viewName === "ledger") loadLedgerEntries();
 }
 
@@ -90,7 +159,7 @@ async function loadUnit(unitId) {
     const unit = await res.json();
     STATE.currentUnit = unit;
 
-    // Render Unit Metadata
+    // Render Target Skills
     const skillsContainer = document.getElementById("unit-target-skills");
     if (skillsContainer && unit.target_skills) {
       skillsContainer.innerHTML = unit.target_skills.map(s => 
@@ -98,12 +167,13 @@ async function loadUnit(unitId) {
       ).join("");
     }
 
-    // Render Lesson Markdown in Explain
+    // Render Lesson Markdown with Production Engine
     const explainBody = document.getElementById("explain-content");
     const explainUnitId = document.getElementById("explain-unit-id");
     if (explainUnitId) explainUnitId.innerText = unit.unit_id;
     if (explainBody) {
-      explainBody.innerHTML = formatMarkdown(unit.lesson_markdown || unit.concept_line);
+      explainBody.innerHTML = renderProductionMarkdown(unit.lesson_markdown || unit.concept_line);
+      highlightSyntaxWithin(explainBody);
     }
 
     // Render Timestamps
@@ -111,13 +181,13 @@ async function loadUnit(unitId) {
     if (tsContainer) {
       if (unit.media && unit.media.length > 0 && unit.media[0].timestamps) {
         tsContainer.innerHTML = unit.media[0].timestamps.map(t => 
-          `<div style="display: flex; justify-content: space-between; padding: 0.35rem 0.5rem; background: var(--bg-card-subtle); border-radius: var(--radius-sm);">
-            <span>${t.topic}</span>
+          `<div style="display: flex; justify-content: space-between; padding: 0.4rem 0.6rem; background: var(--bg-card-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <span style="font-weight: 500;">${t.topic}</span>
             <span style="font-family: var(--font-mono); color: var(--color-primary); font-weight: 700;">${t.time}</span>
           </div>`
         ).join("");
       } else {
-        tsContainer.innerHTML = `<div style="color: var(--text-muted);">No timestamp anchors available for this unit.</div>`;
+        tsContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.8rem;">No timestamp anchors available.</div>`;
       }
     }
 
@@ -191,17 +261,16 @@ function commitPrediction() {
 function executePlaygroundCode() {
   const code = document.getElementById("studio-editor").value;
   const terminal = document.getElementById("terminal-screen");
-  const promptBox = document.getElementById("terminal-interactive-prompt-box") || document.getElementById("terminal-prompt-box");
+  const promptBox = document.getElementById("terminal-prompt-box");
   const stdinField = document.getElementById("stdin-field");
   const status = document.getElementById("execution-status");
 
   status.innerText = "Running...";
 
-  // Check if code uses interactive input()
   if (code.includes("input(")) {
     terminal.innerHTML = `
       <div style="color: #64748b;">$ python solution.py</div>
-      <div style="color: #facc15;">Executing: Waiting for standard input (stdin)...</div>
+      <div style="color: #facc15;">Executing: Paused on stdin...</div>
     `;
     if (promptBox) promptBox.style.display = "flex";
     if (stdinField) {
@@ -210,7 +279,6 @@ function executePlaygroundCode() {
     }
     status.innerText = "Paused on stdin";
   } else {
-    // Direct execution
     runSandboxExecution(code, "");
   }
 }
@@ -243,7 +311,7 @@ async function runSandboxExecution(code, stdinInput) {
 
       let outputHtml = `<div style="color: #64748b;">$ python solution.py</div>`;
       if (stdinInput) {
-        outputHtml += `<div style="color: #94a3b8;">Enter citizen name: <strong style="color: #ffffff;">${stdinInput}</strong></div>`;
+        outputHtml += `<div style="color: #94a3b8;">Enter citizen name: <strong style="color: #ffffff;">${escapeHtml(stdinInput)}</strong></div>`;
       }
       if (result.stdout) {
         outputHtml += `<div style="white-space: pre-wrap; color: #34d399;">${escapeHtml(result.stdout)}</div>`;
@@ -294,7 +362,6 @@ async function verifyPlaygroundSolution() {
           <div style="color: #a7f3d0;">Progression updated: ${STATE.activeUnitId} Completed.</div>
         `;
 
-        // Update progress in DB
         await fetch(`/api/v1/learners/default_learner/progress`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -323,7 +390,6 @@ function clearTerminalScreen() {
   if (terminal) terminal.innerHTML = `<div style="color: #64748b;">$ Terminal cleared. Click 'Run Code' or 'Verify Solution'.</div>`;
 }
 
-// --- Line Numbers ---
 function updateLineNumbers() {
   const editor = document.getElementById("studio-editor");
   const lineNumbers = document.getElementById("studio-line-numbers");
@@ -377,55 +443,193 @@ function renderRoadmap() {
   `).join("");
 }
 
-// --- Concept Library KMS ---
-async function loadConcepts() {
+// ==============================================================
+// CONCEPT LIBRARY KMS (SURFACED ONLY UPON SEARCH OR WIKI LINK)
+// ==============================================================
+
+function loadRecentSearches() {
   try {
-    const res = await fetch("/api/v1/concepts");
-    if (res.ok) {
-      STATE.concepts = await res.json();
-      renderConcepts(STATE.concepts);
-    }
-  } catch (err) {
-    console.error("Failed to load concepts:", err);
+    const raw = localStorage.getItem("aethelgard_recent_searches");
+    STATE.recentSearches = raw ? JSON.parse(raw) : ["input()", "print()", "execution order", "variables"];
+  } catch {
+    STATE.recentSearches = ["input()", "print()", "execution order", "variables"];
   }
 }
 
-function renderConcepts(conceptList) {
-  const grid = document.getElementById("concept-cards-grid");
-  if (!grid) return;
-
-  grid.innerHTML = conceptList.map(c => `
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 0.35rem;">
-        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-primary); font-weight: 700; letter-spacing: 0.05em;">${c.category}</span>
-        <a href="${c.doc_url}" target="_blank" rel="noreferrer" style="font-size: 0.75rem; color: var(--text-accent); text-decoration: none;">python.org ↗</a>
-      </div>
-      <div style="font-weight: 800; font-size: 1rem; margin-block-end: 0.35rem;">${c.name}</div>
-      <p style="font-size: 0.825rem; color: var(--text-main); margin-block-end: 0.5rem;">${c.summary}</p>
-      <div style="background: var(--bg-card-subtle); padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.775rem; color: var(--text-muted); margin-block-end: 0.75rem;">
-        <strong style="color: var(--text-main);">Execution Invariant:</strong> ${c.execution_rules}
-      </div>
-      <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Units:</span>
-        ${c.units.map(u => `<span onclick="loadUnit('${u}'); showView('unit-studio');" style="font-size: 0.7rem; font-family: var(--font-mono); padding: 0.1rem 0.35rem; border-radius: 4px; background: rgba(37, 99, 235, 0.1); color: var(--color-primary); cursor: pointer;">${u}</span>`).join("")}
-      </div>
-    </div>
-  `).join("");
+function saveRecentSearch(term) {
+  if (!term || term.trim().length < 2) return;
+  const clean = term.trim();
+  STATE.recentSearches = [clean, ...STATE.recentSearches.filter(s => s.toLowerCase() !== clean.toLowerCase())].slice(0, 5);
+  try {
+    localStorage.setItem("aethelgard_recent_searches", JSON.stringify(STATE.recentSearches));
+  } catch {}
+  renderRecentSearches();
 }
 
-function filterConcepts(query) {
-  const q = query.toLowerCase().trim();
-  if (!q) {
-    renderConcepts(STATE.concepts);
+function clearRecentSearches() {
+  STATE.recentSearches = [];
+  try { localStorage.removeItem("aethelgard_recent_searches"); } catch {}
+  renderRecentSearches();
+}
+
+function renderRecentSearches() {
+  const row = document.getElementById("recent-searches-row");
+  if (!row) return;
+
+  if (STATE.recentSearches.length === 0) {
+    row.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem;">No recent searches.</span>`;
     return;
   }
-  const filtered = STATE.concepts.filter(c => 
-    c.name.toLowerCase().includes(q) || 
-    c.summary.toLowerCase().includes(q) || 
-    c.category.toLowerCase().includes(q) ||
-    c.units.some(u => u.toLowerCase().includes(q))
-  );
-  renderConcepts(filtered);
+
+  const pillsHtml = STATE.recentSearches.map(term => 
+    `<button class="recent-pill" onclick="applyRecentSearch('${escapeHtml(term)}')">
+      <span>🔎</span> ${escapeHtml(term)}
+    </button>`
+  ).join("");
+
+  row.innerHTML = `
+    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">Recent:</span>
+    ${pillsHtml}
+    <button onclick="clearRecentSearches()" style="background: none; border: none; color: var(--text-muted); font-size: 0.7rem; cursor: pointer; text-decoration: underline; margin-inline-start: 0.25rem;">Clear</button>
+  `;
+}
+
+function applyRecentSearch(term) {
+  const input = document.getElementById("concept-search-input");
+  if (input) {
+    input.value = term;
+    handleConceptSearchInput(term);
+  }
+}
+
+let searchDebounceTimer = null;
+function handleConceptSearchInput(query) {
+  clearTimeout(searchDebounceTimer);
+  const q = query.trim();
+
+  if (!q) {
+    renderConceptSearchResults([]);
+    return;
+  }
+
+  searchDebounceTimer = setTimeout(async () => {
+    saveRecentSearch(q);
+    try {
+      const res = await fetch(`/api/v1/concepts?search=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const results = await res.json();
+        renderConceptSearchResults(results, q);
+      }
+    } catch (err) {
+      console.error("Search failed:", err);
+    }
+  }, 200);
+}
+
+function renderConceptSearchResults(results, query = "") {
+  const container = document.getElementById("concept-results-container");
+  if (!container) return;
+
+  // Resting State: No search performed
+  if (!query && results.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-card-subtle); border-style: dashed;">
+        <div style="font-size: 2.25rem; margin-block-end: 0.5rem;">📚</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-block-end: 0.35rem;">Concept Library Database (Resting Mode)</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; max-inline-size: 500px; margin-inline: auto;">
+          Concepts are stored in the database as markdown notes and surface <strong>only when searched or clicked via wiki link</strong> in your lesson notes.
+        </p>
+        <div style="margin-block-start: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+          <button onclick="applyRecentSearch('input()')" class="btn">Try "input()"</button>
+          <button onclick="applyRecentSearch('execution order')" class="btn">Try "execution order"</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // No Results State
+  if (results.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 2.5rem 1rem;">
+        <div style="font-size: 1.5rem; color: var(--color-warning); margin-block-end: 0.5rem;">🔍</div>
+        <div style="font-weight: 700; font-size: 0.95rem;">No concept notes matched "${escapeHtml(query)}"</div>
+        <p style="color: var(--text-muted); font-size: 0.825rem; margin-block-start: 0.25rem;">
+          Try searching for built-ins (<code>input</code>, <code>print</code>), syntax (<code>variables</code>, <code>f-strings</code>), or invariants (<code>sequential execution</code>).
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  // Active Results Grid
+  container.innerHTML = `
+    <div style="margin-block-end: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+      Found <strong>${results.length}</strong> concept note${results.length > 1 ? 's' : ''} matching "<strong>${escapeHtml(query)}</strong>":
+    </div>
+    <div class="grid-3">
+      ${results.map(c => `
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 0.35rem;">
+              <span style="font-size: 0.725rem; text-transform: uppercase; color: var(--color-primary); font-weight: 700; letter-spacing: 0.05em;">${c.category}</span>
+              <span style="font-size: 0.725rem; color: var(--text-muted); font-family: var(--font-mono);">${c.concept_id}</span>
+            </div>
+            <div style="font-weight: 800; font-size: 1rem; margin-block-end: 0.35rem; color: var(--text-main);">${c.name}</div>
+            <p style="font-size: 0.825rem; color: var(--text-muted); margin-block-end: 0.75rem; line-height: 1.5;">${c.summary}</p>
+          </div>
+          <div>
+            <div style="display: flex; gap: 0.5rem; margin-block-start: 0.5rem;">
+              <button onclick="openConceptDrawer('${c.concept_id}')" class="btn btn-primary" style="flex: 1; justify-content: center; font-size: 0.75rem;">
+                Read Full Markdown Note ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// --- Slide-Over Drawer for Concept Markdown Notes ---
+async function openConceptDrawer(conceptId) {
+  try {
+    const res = await fetch(`/api/v1/concepts/${conceptId}`);
+    if (!res.ok) throw new Error("Concept note not found");
+    const concept = await res.json();
+
+    document.getElementById("drawer-title").innerText = concept.name;
+    document.getElementById("drawer-category").innerText = concept.category;
+    
+    const docLink = document.getElementById("drawer-doc-link");
+    if (docLink) {
+      docLink.href = concept.doc_url || "#";
+      docLink.style.display = concept.doc_url ? "inline-flex" : "none";
+    }
+
+    const contentBox = document.getElementById("drawer-content");
+    if (contentBox) {
+      contentBox.innerHTML = renderProductionMarkdown(concept.content_markdown || concept.summary);
+      highlightSyntaxWithin(contentBox);
+    }
+
+    const drawer = document.getElementById("concept-drawer");
+    const backdrop = document.getElementById("drawer-backdrop");
+    if (drawer) drawer.classList.add("active");
+    if (backdrop) backdrop.classList.add("active");
+
+    // Add to recent searches
+    saveRecentSearch(concept.name);
+  } catch (err) {
+    alert("Could not open concept note: " + err.message);
+  }
+}
+
+function closeConceptDrawer() {
+  const drawer = document.getElementById("concept-drawer");
+  const backdrop = document.getElementById("drawer-backdrop");
+  if (drawer) drawer.classList.remove("active");
+  if (backdrop) backdrop.classList.remove("active");
 }
 
 // --- Evidence Ledger ---
@@ -465,9 +669,24 @@ function renderLedgerTable() {
 
 function updateDashboardCounts() {
   const ledgerEl = document.getElementById("dash-ledger-count");
-  const conceptEl = document.getElementById("dash-concept-count");
   if (ledgerEl) ledgerEl.innerText = `${STATE.ledger.length} Verified Entries`;
-  if (conceptEl) conceptEl.innerText = `${STATE.concepts.length} Concepts`;
+}
+
+// --- Keyboard Shortcuts ---
+function setupGlobalShortcuts() {
+  document.addEventListener("keydown", e => {
+    // Ctrl+K / Cmd+K focuses concept search
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault();
+      showView("concept-library");
+      const search = document.getElementById("concept-search-input");
+      if (search) search.focus();
+    }
+    // Escape closes drawer
+    if (e.key === "Escape") {
+      closeConceptDrawer();
+    }
+  });
 }
 
 // --- Helpers ---
@@ -491,16 +710,4 @@ function formatDate(isoStr) {
   } catch {
     return isoStr;
   }
-}
-
-function formatMarkdown(text) {
-  if (!text) return "";
-  // Lightweight markdown converter for headers, bold, code, and callouts
-  return text
-    .replace(/^### (.*$)/gim, '<h3 style="font-size: 0.95rem; font-weight: 700; margin-block-start: 1rem; margin-block-end: 0.35rem;">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 style="font-size: 1.1rem; font-weight: 800; margin-block-start: 1.25rem; margin-block-end: 0.5rem; color: var(--color-primary);">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 style="font-size: 1.25rem; font-weight: 800; margin-block-end: 0.5rem;">$1</h1>')
-    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/`(.*?)`/gim, '<code style="font-family: var(--font-mono); background: var(--bg-card-subtle); padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-accent);">$1</code>')
-    .replace(/\n\n/gim, '<p style="margin-block-end: 0.75rem; color: var(--text-muted);"></p>');
 }

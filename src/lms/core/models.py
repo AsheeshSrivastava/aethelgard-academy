@@ -97,6 +97,7 @@ class ConceptItem(BaseModel):
     execution_rules: str
     doc_url: str
     units: List[str] = Field(default_factory=list)
+    content_markdown: Optional[str] = None
 
 
 class MediaAsset(BaseModel):

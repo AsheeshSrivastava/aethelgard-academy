@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <title>Aethelgard Academy - Knowledge Management & Learning Platform</title>
+  <link rel="stylesheet" href="/static/vendor/prism.min.css">
   <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/vendor/marked.min.js"></script>
+  <script src="/static/vendor/prism.min.js"></script>
+  <script src="/static/vendor/prism-python.min.js"></script>
 </head>
 <body>
 
@@ -93,9 +97,9 @@
         <div class="card">
           <div class="card-title">📚 Concept Library (KMS)</div>
           <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-accent); margin-block: 0.25rem;" id="dash-concept-count">
-            9 Concepts
+            9 Markdown Notes
           </div>
-          <p class="card-subtitle">Searchable canonical definitions, execution rules, and official anchors.</p>
+          <p class="card-subtitle">Searchable database of operational definitions and execution rules.</p>
           <button onclick="showView('concept-library')" class="btn" style="inline-size: 100%; justify-content: center;">
             Search Concept Library
           </button>
@@ -210,15 +214,16 @@
       </div>
 
       <!-- Studio Phase 1: EXPLAIN -->
-      <div id="phase-explain" style="display: grid; grid-template-columns: minmax(320px, 1.4fr) minmax(280px, 1fr); gap: 1rem; flex: 1; min-height: 580px;">
-        <!-- Left: Explanatory Notes & Narrative -->
+      <div id="phase-explain" style="display: grid; grid-template-columns: minmax(340px, 1.45fr) minmax(280px, 1fr); gap: 1rem; flex: 1; min-height: 580px;">
+        <!-- Left: Explanatory Notes & Narrative (with Production Markdown) -->
         <div class="pane">
           <div class="pane-header">
             <span>📖 Explanatory Note & Operational Anchors</span>
             <span id="explain-unit-id" style="color: var(--text-muted); font-family: var(--font-mono);">PY-0.1</span>
           </div>
-          <div class="pane-body scrollable" id="explain-content" style="font-size: 0.875rem;">
-            <!-- Loaded from unit.lesson_markdown -->
+          <!-- Clean Markdown Container -->
+          <div class="pane-body scrollable markdown-body" id="explain-content">
+            <!-- Rendered by marked.js -->
           </div>
           <div style="padding: 1rem; border-block-start: 1px solid var(--border-color); background: var(--bg-card-subtle);">
             <div style="font-weight: 700; font-size: 0.85rem; margin-block-end: 0.5rem; display: flex; justify-content: space-between;">
@@ -359,19 +364,33 @@
     </section>
 
     <!-- ============================================================== -->
-    <!-- VIEW 4: CONCEPT LIBRARY (KMS)                                  -->
+    <!-- VIEW 4: CONCEPT LIBRARY (KMS) - SEARCH-DRIVEN ONLY             -->
     <!-- ============================================================== -->
     <section id="view-concept-library" class="view-panel">
       <div style="margin-block-end: 1rem;">
         <h1 style="font-size: 1.35rem; font-weight: 800; margin-block-end: 0.25rem;">Concept Library & Knowledge Base (KMS)</h1>
-        <p style="font-size: 0.875rem; color: var(--text-muted); margin-block-end: 1rem;">
-          Canonical operational definitions, execution rules, and official python.org documentation anchors.
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-block-end: 1.25rem;">
+          Markdown concept notes stored in database. Surfaced dynamically upon search or via wiki link.
         </p>
-        <input type="text" id="concept-search-input" oninput="filterConcepts(this.value)" class="search-box" placeholder="🔍 Search concepts (e.g. 'input', 'variable', 'execution order', 'print')...">
+        
+        <!-- Search Bar with Hint -->
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-block-end: 0.75rem;">
+          <input type="text" id="concept-search-input" oninput="handleConceptSearchInput(this.value)" class="search-box" placeholder="🔍 Search concept notes (e.g. 'input', 'print', 'variables', 'sequential')...">
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); background: var(--bg-card-subtle); padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            Ctrl + K
+          </span>
+        </div>
+
+        <!-- 5 Recent Searches Row -->
+        <div class="recent-pills-row" id="recent-searches-row">
+          <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">Recent:</span>
+          <!-- Populated dynamically by app.js (up to 5 recent search terms) -->
+        </div>
       </div>
 
-      <div class="grid-3" id="concept-cards-grid">
-        <!-- Populated dynamically by app.js -->
+      <!-- Search Results / Concept Note Display -->
+      <div id="concept-results-container">
+        <!-- Rendered dynamically: Empty State when no query, Results Cards when searched -->
       </div>
     </section>
 
@@ -411,6 +430,27 @@
     </section>
 
   </main>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE-OVER DRAWER: Concept Markdown Note Preview               -->
+  <!-- ============================================================== -->
+  <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeConceptDrawer()"></div>
+  <aside id="concept-drawer" class="drawer-panel">
+    <div class="drawer-header">
+      <div>
+        <span id="drawer-category" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.05em;">CONCEPT NOTE</span>
+        <h3 id="drawer-title" style="font-size: 1.1rem; font-weight: 800; margin-block-start: 0.2rem;">Concept Title</h3>
+      </div>
+      <button onclick="closeConceptDrawer()" class="btn" style="padding: 0.25rem 0.55rem; font-size: 0.85rem;">✕</button>
+    </div>
+    <div class="drawer-body scrollable markdown-body" id="drawer-content">
+      <!-- Full Markdown Note injected here -->
+    </div>
+    <div style="padding: 1rem; border-block-start: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-subtle);">
+      <a id="drawer-doc-link" href="#" target="_blank" rel="noreferrer" class="btn" style="font-size: 0.75rem;">Official Doc ↗</a>
+      <button onclick="closeConceptDrawer()" class="btn btn-primary" style="font-size: 0.75rem;">Back to Lesson</button>
+    </div>
+  </aside>
 
   <!-- ============================================================== -->
   <!-- MODAL: Local Dev Environment & Zed CLI Guide                   -->

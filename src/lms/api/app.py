@@ -135,6 +135,13 @@ def create_app(
             return concepts.search(search)
         return concepts.list_all()
 
+    @app.get("/api/v1/concepts/{concept_id}", response_model=ConceptItem)
+    def get_concept_by_id(concept_id: str):
+        concept = concepts.get(concept_id)
+        if not concept:
+            raise HTTPException(status_code=404, detail=f"Concept '{concept_id}' not found.")
+        return concept
+
     # --- Curriculum Routes ---
     @app.get("/api/v1/units", response_model=List[Dict[str, Any]])
     def list_units(stage: Optional[int] = Query(None, description="Filter by stage number")):
