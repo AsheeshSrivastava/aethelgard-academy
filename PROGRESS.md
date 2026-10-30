@@ -13,7 +13,7 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 07)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0009) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 07)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0010) |
 | **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, DevContainer (`316` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
@@ -41,6 +41,7 @@
   - ADR-0007: Document Loaders, Format Normalization, and the Inspection Gate
   - ADR-0008: Modular Curriculum Lesson Packages and Overlay Loader
   - ADR-0009: Socratic Boundary Guardrails and Assistance Accounting
+  - ADR-0010: Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack (Unsloth Desktop / OpenAI-compatible Local LLM + `bge-reranker-v2-m3`)
 - **Core Engine & Adapters:**
   - **Socratic Boundary Guardrail & Assistance Accounting (`src/lms/adapters/ai/socratic_guardrail.py`):**
     - Enforces zero-executable-code boundary in `AxisMode.SOCRATIC`.
