@@ -1,0 +1,24 @@
+{
+  "unit_id": "PY-0.1",
+  "title": "Python as an executing program",
+  "media": [
+    {
+      "media_id": "vid-py-0.1-walkthrough",
+      "kind": "video",
+      "title": "Lesson Walkthrough: How Python Executes Statements Line-by-Line",
+      "url": "https://cdn.example.org/videos/py-0.1-executing-program.mp4",
+      "duration_seconds": 330,
+      "timestamps": [
+        {"time": "00:00", "topic": "Top-to-Bottom Execution: How the Interpreter Reads Statements"},
+        {"time": "01:15", "topic": "Comments (#): Writing Pseudocode Blueprints"},
+        {"time": "02:30", "topic": "Built-in Functions: input() Returning a Value into a Variable"},
+        {"time": "03:45", "topic": "Displaying Output: print() with 0 Arguments, Commas, and f-strings"}
+      ]
+    }
+  ],
+  "concept_check": {
+    "prompt": "Explain in your own words how Python executes a script statement-by-statement, how a variable captures a function's return value, and why an empty print() creates a blank line in terminal output.",
+    "solid_keywords": ["order", "statement", "variable", "return", "line", "sequential", "print", "execute"],
+    "rubric": "Learner must recognize that statements run sequentially in top-to-bottom order, a variable stores the value returned by input(), and print() without arguments outputs a blank line."
+  }
+}

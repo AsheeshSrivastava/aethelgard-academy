@@ -29,12 +29,20 @@ class SubprocessRunner:
             script_path.write_text(code, encoding="utf-8")
 
             if test_code:
-                # Write separate test harness file that imports solution
+                # Write separate test harness file that safely imports solution
                 test_script = (
                     "import sys\n"
+                    "import builtins\n"
                     "from pathlib import Path\n"
                     "sys.path.insert(0, '.')\n"
-                    "from solution import *\n\n"
+                    "# Provide default input mock during import to prevent hanging on top-level input()\n"
+                    "_orig_input = builtins.input\n"
+                    "builtins.input = lambda *args, **kwargs: 'Amara Okafor'\n"
+                    "try:\n"
+                    "    from solution import *\n"
+                    "except Exception:\n"
+                    "    pass\n"
+                    "builtins.input = _orig_input\n\n"
                     f"{test_code}\n\n"
                     "# --- Auto-invoke test functions ---\n"
                     "for _name, _fn in list(locals().items()):\n"
@@ -50,6 +58,7 @@ class SubprocessRunner:
             try:
                 proc = subprocess.run(
                     [sys.executable, str(target_to_run)],
+                    input="",
                     capture_output=True,
                     text=True,
                     timeout=timeout_seconds,
