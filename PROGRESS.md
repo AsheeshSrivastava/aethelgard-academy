@@ -3,7 +3,7 @@
 - **Branch:** `main` (tracking `origin/main` on Entire)
 - **Latest Commit:** `609aca8`
 - **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`, all 25 checkpoint refs synced)
-- **Current Phase:** Runtime-Agnostic Local LLM Companion (`LocalLLMCompanion`) & 10% Classifier Wired (`323` Tests Passing)
+- **Current Phase:** RAG Chunking, Hybrid Retrieval & Cross-Encoder Reranking (`HybridRerankedRetriever`) Wired (`328` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -13,8 +13,8 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 08)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0010) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion (`323` tests passing) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 09)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0011) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever (`328` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -32,6 +32,7 @@
   - SPEC-06: Interactive Lesson Engine & Learner Loop
   - SPEC-07: Socratic Boundary Guardrail and Assistance Accounting
   - SPEC-08: Runtime-Agnostic Local LLM Companion & Rubric Classifier
+  - SPEC-09: RAG Indexing & Hybrid Reranked Retriever
 - **Architecture Decision Records (ADRs):**
   - ADR-0001: Hexagonal Architecture and Pluggable Boundary Ports
   - ADR-0002: Dual-Store Strategy (SQLite for Evidence Ledger vs. Vector DB for RAG)
@@ -43,7 +44,15 @@
   - ADR-0008: Modular Curriculum Lesson Packages and Overlay Loader
   - ADR-0009: Socratic Boundary Guardrails and Assistance Accounting
   - ADR-0010: Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack (Unsloth Desktop / OpenAI-compatible Local LLM + `bge-reranker-v2-m3`)
+  - ADR-0011: RAG Chunking, Hybrid Retrieval, and Cross-Encoder Reranking
 - **Core Engine & Adapters:**
+  - **Empirical RAG Chunking & Hybrid Reranked Retriever (`src/lms/adapters/ai/rag/`):**
+    - Governed by empirical retrieval comparison report across 598 file-level questions and 137 quote-anchored passage-level questions.
+    - `HeadingSentenceSplitter`: Heading-aware sentence chunker targeting ~375 tokens (~1500 chars max, ~640 median), guaranteeing the 100% exact-slice invariant (`verify_passage(source, passage) == True`).
+    - `InvertedBM25Index`: Zero-dependency in-memory BM25 index over passage text and 2x weighted heading paths to guarantee exact-symbol and flag matches.
+    - `reciprocal_rank_fusion`: Parameter-free Reciprocal Rank Fusion ($k=60$) combining top-200 dense and top-200 lexical candidates into top-30 merged candidates.
+    - `HybridRerankedRetriever`: Coordinates Dense (`jinaai/jina-embeddings-v2-base-en`), Lexical BM25, RRF, Cross-Encoder reranking (`BAAI/bge-reranker-v2-m3`), and 1-per-source deduplication.
+    - Integrated with `LocalLLMCompanion` for grounding AXIS AI responses with mechanically verifiable passages.
   - **Runtime-Agnostic Local LLM Companion (`src/lms/adapters/ai/local_llm_companion.py`):**
     - Connects to Unsloth Desktop, `llama.cpp`, `LM Studio`, `vLLM`, or `Ollama` via OpenAI-compatible `/v1/chat/completions` and `/v1/models`.
     - Auto-discovers loaded model (`LOCAL_LLM_MODEL=auto`) and injects verified `ConceptStore` passages.

@@ -21,6 +21,7 @@ import httpx
 
 from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.mock_axis import MockAxisCompanion
+from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse, IAXISCompanion
 from lms.core.rag_contracts import verify_passage
@@ -59,6 +60,7 @@ class LocalLLMCompanion:
         api_key: Optional[str] = None,
         timeout_seconds: float = 30.0,
         concept_store: Optional[ConceptStore] = None,
+        retriever: Optional[HybridRerankedRetriever] = None,
         guardrail: Optional[SocraticGuardrail] = None,
         classifier: Optional[AssistanceClassifier] = None,
         fallback_to_mock: bool = True,
@@ -74,6 +76,7 @@ class LocalLLMCompanion:
         )
         self.timeout_seconds = timeout_seconds
         self.concept_store = concept_store
+        self.retriever = retriever
         self.guardrail = guardrail or SocraticGuardrail()
         self.classifier = classifier or AssistanceClassifier()
         self.fallback_to_mock = fallback_to_mock
@@ -109,7 +112,17 @@ class LocalLLMCompanion:
         return self._resolved_model
 
     def _retrieve_grounded_passages(self, unit_id: str, query_text: str) -> tuple[str, List[str]]:
-        """Retrieves verified curriculum passages from ConceptStore if available."""
+        """Retrieves verified curriculum passages using HybridRerankedRetriever or ConceptStore."""
+        # 1. Prefer HybridRerankedRetriever if configured and indexed
+        if self.retriever is not None and self.retriever.passages:
+            search_query = f"{unit_id} {query_text}"
+            results = self.retriever.retrieve(search_query, top_k=3)
+            if results:
+                snippets = [f"[{p.source_id}] {p.text}" for p in results]
+                cited_ids = [p.passage_id for p in results]
+                return "\n\n".join(snippets), cited_ids
+
+        # 2. Fall back to ConceptStore if available
         if self.concept_store is None:
             return "", ["Operational Communication Cycle"]
 
@@ -321,10 +334,13 @@ class LocalLLMCompanion:
             }
 
 
-def get_axis_companion(concept_store: Optional[ConceptStore] = None) -> IAXISCompanion:
+def get_axis_companion(
+    concept_store: Optional[ConceptStore] = None,
+    retriever: Optional[HybridRerankedRetriever] = None,
+) -> IAXISCompanion:
     """Factory returning MockAxisCompanion when MOCK_AI=true, else LocalLLMCompanion."""
     _load_dotenv_if_present()
     mock_flag = os.environ.get("MOCK_AI", "true").strip().lower()
     if mock_flag in ("1", "true", "yes"):
         return MockAxisCompanion()
-    return LocalLLMCompanion(concept_store=concept_store)
+    return LocalLLMCompanion(concept_store=concept_store, retriever=retriever)

@@ -277,3 +277,62 @@ def test_get_axis_companion_factory_respects_mock_ai_env(monkeypatch):
     assert isinstance(comp_local, LocalLLMCompanion)
     assert comp_local.base_url == "http://127.0.0.1:8080/v1"
     assert comp_local.model == "Qwen3.6-35B-A3B-UD-Q4_K_XL"
+
+
+def test_hybrid_reranked_retriever_integration_in_companion():
+    from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
+    from lms.core.rag_contracts import Source, content_sha256, normalize_text
+
+    text = normalize_text("# Python Builtins\n\ninput() reads a line from stream and returns str.")
+    source = Source(
+        source_id="python/builtins",
+        version="3.12",
+        text=text,
+        raw_sha256=content_sha256(text),
+        loader_version="1.0",
+        licence="PSF-2.0",
+        licence_basis="declared",
+    )
+    retriever = HybridRerankedRetriever()
+    retriever.index_source(source)
+
+    captured_system_prompt = ""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal captured_system_prompt
+        payload = json.loads(request.content.decode("utf-8"))
+        captured_system_prompt = payload["messages"][0]["content"]
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "What type does input() return by default?",
+                        }
+                    }
+                ]
+            },
+        )
+
+    companion = LocalLLMCompanion(
+        base_url="http://127.0.0.1:8000/v1",
+        model="qwen3.5-9b",
+        retriever=retriever,
+        http_client=_make_mock_client(handler),
+    )
+
+    query = AxisQuery(
+        learner_id="learner_01",
+        unit_id="PY-0.4",
+        mode=AxisMode.SOCRATIC,
+        current_activity=ActivityType.BUILD,
+        user_prompt="Why does input() fail?",
+    )
+    resp = companion.consult(query)
+
+    assert "python/builtins" in captured_system_prompt
+    assert len(resp.cited_concepts) > 0
+    assert any("python/builtins" in cid for cid in resp.cited_concepts)
+

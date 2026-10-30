@@ -12,3 +12,4 @@
 | [ADR-0008](0008-curriculum-lesson-packages-and-overlay-loader.md) | Modular Curriculum Lesson Packages and Overlay Loader | **Accepted** | 2026-10-30 |
 | [ADR-0009](0009-socratic-boundary-and-assistance-accounting.md) | Socratic Boundary Guardrails and Assistance Accounting | **Accepted** | 2026-10-30 |
 | [ADR-0010](0010-local-first-llm-facilitation-and-deterministic-telemetry.md) | Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack | **Accepted** | 2026-10-30 |
+| [ADR-0011](0011-rag-chunking-and-hybrid-reranking-pipeline.md) | RAG Chunking, Hybrid Retrieval, and Cross-Encoder Reranking | **Accepted** | 2026-10-30 |
