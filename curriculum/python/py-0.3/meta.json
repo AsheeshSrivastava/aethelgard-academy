@@ -1,0 +1,24 @@
+{
+  "unit_id": "PY-0.3",
+  "title": "Tool help versus your own reasoning",
+  "media": [
+    {
+      "media_id": "vid-py-0.3-walkthrough",
+      "kind": "video",
+      "title": "Lesson Walkthrough: The Developer Ownership Boundary in the AI Era",
+      "url": "https://cdn.example.org/videos/py-0.3-tool-help-vs-reasoning.mp4",
+      "duration_seconds": 360,
+      "timestamps": [
+        {"time": "00:00", "topic": "The Seduction of AI Code: Looks Plausible, Hides Flaws"},
+        {"time": "01:20", "topic": "The Three Always-On Habits: Intent, Checking, Decision"},
+        {"time": "02:45", "topic": "What to Delegate vs What You Must Own (DE-3)"},
+        {"time": "04:10", "topic": "Settling Uncertainty with Authoritative Docs and Tests (DE-4)"}
+      ]
+    }
+  ],
+  "concept_check": {
+    "prompt": "Explain in your own words why an AI tool can draft code, but the human developer must always retain ownership of intent, verification, and the final decision.",
+    "solid_keywords": ["intent", "own", "ownership", "verify", "decision", "check", "assumption", "responsibility"],
+    "rubric": "Learner must articulate that AI models lack real-world context and operational accountability; the developer alone is responsible for defining intent, checking assumptions, and deciding what ships."
+  }
+}

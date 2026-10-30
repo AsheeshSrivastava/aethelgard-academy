@@ -75,8 +75,10 @@
     - Production `.devcontainer/devcontainer.json` featuring Python 3.12, `uv` autoinstall, and Ruff VS Code extensions.
     - Zed editor tasks (`.zed/tasks.json`) configured for single-keystroke test runs and Ruff checks.
   - **Interactive Lesson Engine & Learner Loop (`curriculum/` & `src/lms/cli.py`):**
-    - Unit package `curriculum/python/py-0.4/`: Run a first program (Intake Desk Registration scenario).
-    - Unit package `curriculum/python/py-0.1/`: Python as an executing program (Sequential execution order, variables & state, input() return value capture, blank line output with print(), and modern f-strings).
+    - **Stage 0 Complete (All 3 Units Delivered on Intake Desk Spine):**
+      - `curriculum/python/py-0.4/`: Run a first program (Intake Desk Registration scenario).
+      - `curriculum/python/py-0.1/`: Python as an executing program (Sequential execution order, variables & state, input() return value capture, blank line output with print(), and modern f-strings).
+      - `curriculum/python/py-0.3/`: Tool help versus your own reasoning (Developer ownership boundary, auditing flawed AI snippets, DE-3 ownership matrix, and DE-4 authoritative documentation verification).
     - Structured unit metadata with `MediaAsset` video walkthroughs, timestamped chapters, and `concept_check` rubric (`meta.json`).
     - Automated learner verification suite (`test_solution.py`) assessing whitespace normalization, uppercase formatting, and string formatting.
     - Overlay loader (`overlay_curriculum_packages`) dynamically upgrading parsed catalog units with real lesson packages.
