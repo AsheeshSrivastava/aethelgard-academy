@@ -7,7 +7,9 @@ Governed by:
 
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from lms.adapters.ai.rag.bm25 import InvertedBM25Index
@@ -140,3 +142,106 @@ class HybridRerankedRetriever:
                     break
 
         return deduped
+
+    def save(self, index_dir: Path | str) -> None:
+        """Serializes retriever state to disk for sub-50ms warm loading."""
+        target_dir = Path(index_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # 1. Sources JSONL
+        sources_path = target_dir / "sources.jsonl"
+        with open(sources_path, "w", encoding="utf-8") as f:
+            for s in self.sources.values():
+                row = {
+                    "source_id": s.source_id,
+                    "version": s.version,
+                    "text": s.text,
+                    "raw_sha256": s.raw_sha256,
+                    "loader_version": s.loader_version,
+                    "licence": s.licence,
+                    "licence_basis": s.licence_basis,
+                }
+                f.write(json.dumps(row) + "\n")
+
+        # 2. Passages JSONL
+        passages_path = target_dir / "passages.jsonl"
+        with open(passages_path, "w", encoding="utf-8") as f:
+            for p in self.passages.values():
+                row = {
+                    "source_id": p.source_id,
+                    "version": p.version,
+                    "start": p.start,
+                    "end": p.end,
+                    "text": p.text,
+                    "headings": list(p.headings),
+                    "chunker_version": p.chunker_version,
+                    "passage_id": p.passage_id,
+                }
+                f.write(json.dumps(row) + "\n")
+
+        # 3. BM25 JSON
+        bm25_path = target_dir / "bm25.json"
+        with open(bm25_path, "w", encoding="utf-8") as f:
+            json.dump(self.bm25.to_dict(), f)
+
+    @classmethod
+    def load(
+        cls,
+        index_dir: Path | str,
+        splitter: Optional[HeadingSentenceSplitter] = None,
+        embedder: Optional[Callable[[str], List[float]]] = None,
+        reranker: Optional[Callable[[str, List[str]], List[float]]] = None,
+        chunker_version: str = "llamaindex-sentence-v1",
+    ) -> HybridRerankedRetriever:
+        """Warm-loads pre-indexed artifacts in < 50ms without re-parsing text."""
+        target_dir = Path(index_dir)
+        retriever = cls(
+            splitter=splitter,
+            embedder=embedder,
+            reranker=reranker,
+            chunker_version=chunker_version,
+        )
+
+        sources_path = target_dir / "sources.jsonl"
+        if sources_path.exists():
+            with open(sources_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        data = json.loads(line)
+                        src = Source(
+                            source_id=data["source_id"],
+                            version=data["version"],
+                            text=data["text"],
+                            raw_sha256=data["raw_sha256"],
+                            loader_version=data["loader_version"],
+                            licence=data["licence"],
+                            licence_basis=data["licence_basis"],
+                        )
+                        retriever.sources[src.source_id] = src
+
+        passages_path = target_dir / "passages.jsonl"
+        if passages_path.exists():
+            with open(passages_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        data = json.loads(line)
+                        p = Passage(
+                            source_id=data["source_id"],
+                            version=data["version"],
+                            start=data["start"],
+                            end=data["end"],
+                            text=data["text"],
+                            headings=tuple(data["headings"]),
+                            chunker_version=data["chunker_version"],
+                            passage_id=data["passage_id"],
+                        )
+                        retriever.passages[p.passage_id] = p
+
+        bm25_path = target_dir / "bm25.json"
+        if bm25_path.exists():
+            with open(bm25_path, "r", encoding="utf-8") as f:
+                bm25_data = json.load(f)
+                retriever.bm25 = InvertedBM25Index.from_dict(bm25_data)
+
+        return retriever
+

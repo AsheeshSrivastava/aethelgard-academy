@@ -343,4 +343,13 @@ def get_axis_companion(
     mock_flag = os.environ.get("MOCK_AI", "true").strip().lower()
     if mock_flag in ("1", "true", "yes"):
         return MockAxisCompanion()
+
+    if retriever is None:
+        default_index = Path("data/index")
+        if (default_index / "passages.jsonl").exists():
+            try:
+                retriever = HybridRerankedRetriever.load(default_index)
+            except Exception:
+                pass
+
     return LocalLLMCompanion(concept_store=concept_store, retriever=retriever)

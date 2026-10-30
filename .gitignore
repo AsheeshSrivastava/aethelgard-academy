@@ -53,3 +53,12 @@ eval-out/
 .idea/
 *.swp
 *.swo
+
+
+#notebook editor
+.obsidian
+
+# Generated Index Artifacts
+data/
+data/index/
+

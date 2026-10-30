@@ -8,6 +8,7 @@ def main() -> None:
     from lms.cli import (
         handle_ask_command,
         handle_explain_command,
+        handle_index_upstream_command,
         handle_list_command,
         handle_pull_command,
         handle_verify_command,
@@ -22,6 +23,7 @@ def main() -> None:
         print("  lms verify <unit_id>         Run local tests and submit evidence")
         print("  lms explain <unit_id> <text> Submit CO-6 concept check explanation")
         print("  lms ask <unit_id> <question> Consult AXIS AI with Socratic guardrails")
+        print("  lms index-upstream           Index upstream technical docs into persistent artifacts")
         return
 
     cmd = args[0].lower()
@@ -70,6 +72,17 @@ def main() -> None:
             print(f"Action: {res['suggested_action']}")
         print(f"Assistance Tier: {res['detected_assistance_level']}")
         print(f"Backend: {res.get('backend', 'Offline Mock')}")
+
+    elif cmd == "index-upstream":
+        corpus_path = Path("reference/upstream")
+        out_path = Path("data/index")
+        for i, arg in enumerate(args):
+            if arg == "--corpus" and i + 1 < len(args):
+                corpus_path = Path(args[i + 1])
+            elif arg == "--output" and i + 1 < len(args):
+                out_path = Path(args[i + 1])
+        res = handle_index_upstream_command(corpus_dir=corpus_path, output_dir=out_path)
+        print(res["message"])
 
     else:
         print(f"Unknown command: {cmd}. Run 'lms --help' for usage.")

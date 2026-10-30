@@ -311,3 +311,26 @@ def handle_ask_command(
         "detected_assistance_level": response.detected_assistance_level.value,
     }
 
+
+def handle_index_upstream_command(
+    corpus_dir: Path = Path("reference/upstream"),
+    output_dir: Path = Path("data/index"),
+) -> Dict[str, Any]:
+    """Ingests upstream documentation, builds exact slices, and serializes artifacts."""
+    from lms.adapters.ai.rag.indexer import CorpusIndexer
+
+    indexer = CorpusIndexer(corpus_dir=corpus_dir, output_dir=output_dir)
+    stats = indexer.build_and_save()
+    return {
+        "success": True,
+        "source_count": stats["source_count"],
+        "passage_count": stats["passage_count"],
+        "duration_s": stats["duration_s"],
+        "output_dir": str(output_dir),
+        "message": (
+            f"Successfully indexed {stats['source_count']} upstream sources into "
+            f"{stats['passage_count']} verified passages in {stats['duration_s']}s -> {output_dir}"
+        ),
+    }
+
+

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9_\-\.:]+")
 
@@ -79,3 +79,27 @@ class InvertedBM25Index:
 
         sorted_results = sorted(scores.items(), key=lambda item: item[1], reverse=True)
         return sorted_results[:top_k]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializes index state for fast disk persistence."""
+        return {
+            "k1": self.k1,
+            "b": self.b,
+            "doc_count": self.doc_count,
+            "doc_lengths": self.doc_lengths,
+            "avg_doc_length": self.avg_doc_length,
+            "doc_headings": self.doc_headings,
+            "inverted_index": self.inverted_index,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> InvertedBM25Index:
+        """Reconstitutes index from a serialized dictionary."""
+        idx = cls(k1=data.get("k1", 1.5), b=data.get("b", 0.75))
+        idx.doc_count = data.get("doc_count", 0)
+        idx.doc_lengths = data.get("doc_lengths", {})
+        idx.avg_doc_length = data.get("avg_doc_length", 0.0)
+        idx.doc_headings = data.get("doc_headings", {})
+        idx.inverted_index = data.get("inverted_index", {})
+        return idx
+
