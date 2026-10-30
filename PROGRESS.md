@@ -100,8 +100,10 @@
       - `huggingface-course` (`8b893f0`): 96 sources (Apache-2.0, English chapters on NLP, transformers, tokenizers)
       - `dspy-docs` (`25162c4`): 170 sources (MIT, Stanford LM programming & optimization)
       - `openai-evals` (`8eac7a7`): 7 sources (MIT, completion evaluation protocols)
+      - `llamaindex-docs` (`619d746`): 109 sources (MIT, LlamaIndex data framework documentation)
+      - `llama-index-core==0.14.25`: pinned in `pyproject.toml` (`[dependency-groups] variants`) for deterministic boundary evaluation.
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
-  - 316 automated tests passing in under 3.5 seconds.
+  - 330 automated tests passing.
 
 ---
 

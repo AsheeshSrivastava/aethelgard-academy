@@ -39,6 +39,8 @@ MSFT_GENAI_REPO = "https://github.com/microsoft/generative-ai-for-beginners"
 HF_COURSE_REPO = "https://github.com/huggingface/course"
 DSPY_REPO = "https://github.com/stanfordnlp/dspy"
 OPENAI_EVALS_REPO = "https://github.com/openai/evals"
+LLAMAINDEX_REPO = "https://github.com/run-llama/llama_index"
+DEFAULT_LLAMAINDEX_REF = "619d74664e8404612038bc15a1a40c686037277c"
 
 DEFAULT_PYTHON_REF = "3.12"
 DEFAULT_TOOL_REF = "main"
@@ -569,6 +571,52 @@ def fetch_openai_evals(ref: str = "main", dest_root: Path = DEST_ROOT) -> Path:
     return out_dir
 
 
+def fetch_llamaindex_docs(ref: str = DEFAULT_LLAMAINDEX_REF, dest_root: Path = DEST_ROOT) -> Path:
+    out_dir = dest_root / "llamaindex-docs"
+    temp_dir = dest_root / f".tmp-llamaindex-{int(time.time())}"
+    local_snap = Path(f"C:/Users/sashe/.aethelgard/library/snapshots/llamaindex-docs/{ref}")
+    print(f"\n========================================\n[*] Fetching LlamaIndex Docs ({ref})...\n========================================")
+    try:
+        def filter_fn(p: Path) -> bool:
+            name = p.name.lower()
+            if name in ("changelog.md", "stale.md", "release_head.md", "docs_readme.md"):
+                return False
+            if "migration" in name:
+                return False
+            if name == "modules.md":
+                return False
+            return True
+
+        _force_rm(out_dir)
+        if local_snap.exists():
+            commit_sha = ref
+            src_docs = local_snap / "docs" / "src" / "content" / "docs" / "framework"
+            _copy_clean_docs(src_docs, out_dir, allowed_exts=(".md",), filter_fn=filter_fn)
+            lic_src = local_snap / "LICENSE"
+            if lic_src.exists():
+                shutil.copy2(lic_src, out_dir / "LICENSE")
+        else:
+            commit_sha = _sparse_fetch(LLAMAINDEX_REPO, ref, ["/docs/src/content/docs/framework/", "/LICENSE"], temp_dir)
+            src_docs = temp_dir / "docs" / "src" / "content" / "docs" / "framework"
+            _copy_clean_docs(src_docs, out_dir, allowed_exts=(".md",), filter_fn=filter_fn)
+            lic_src = temp_dir / "LICENSE"
+            if lic_src.exists():
+                shutil.copy2(lic_src, out_dir / "LICENSE")
+
+        manifest = {
+            "source_id": "llamaindex-docs",
+            "title": "LlamaIndex Data Framework Documentation",
+            "repo_url": LLAMAINDEX_REPO,
+            "ref": ref,
+            "commit_sha": commit_sha,
+            "licence": "MIT",
+        }
+        _audit_and_save_manifest(out_dir, manifest)
+    finally:
+        _force_rm(temp_dir)
+    return out_dir
+
+
 ALL_TARGETS = {
     "python-docs": fetch_python_docs,
     "uv-docs": fetch_uv_docs,
@@ -584,6 +632,7 @@ ALL_TARGETS = {
     "huggingface-course": fetch_huggingface_course,
     "dspy-docs": fetch_dspy_docs,
     "openai-evals": fetch_openai_evals,
+    "llamaindex-docs": fetch_llamaindex_docs,
 }
 
 
