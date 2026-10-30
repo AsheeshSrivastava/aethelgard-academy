@@ -1,9 +1,9 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
 - **Branch:** `main`
-- **Latest Commit:** `e9f3b1f`
+- **Latest Commit:** `ebebd41`
 - **Entire Version Control:** Enabled (`entire status` active for Antigravity)
-- **Current Phase:** Upstream Bedrock Extended (14 Curated Sources, 1,312 Clean Docs, Zero Noise, 316 Tests Passing)
+- **Current Phase:** Runtime-Agnostic Local LLM Companion (`LocalLLMCompanion`) & 10% Classifier Wired (`323` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -13,8 +13,8 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 07)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0010) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, DevContainer (`316` tests passing) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 08)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0010) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion (`323` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -31,6 +31,7 @@
   - SPEC-05: Curriculum RAG & AXIS Grounding Contracts
   - SPEC-06: Interactive Lesson Engine & Learner Loop
   - SPEC-07: Socratic Boundary Guardrail and Assistance Accounting
+  - SPEC-08: Runtime-Agnostic Local LLM Companion & Rubric Classifier
 - **Architecture Decision Records (ADRs):**
   - ADR-0001: Hexagonal Architecture and Pluggable Boundary Ports
   - ADR-0002: Dual-Store Strategy (SQLite for Evidence Ledger vs. Vector DB for RAG)
@@ -43,6 +44,12 @@
   - ADR-0009: Socratic Boundary Guardrails and Assistance Accounting
   - ADR-0010: Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack (Unsloth Desktop / OpenAI-compatible Local LLM + `bge-reranker-v2-m3`)
 - **Core Engine & Adapters:**
+  - **Runtime-Agnostic Local LLM Companion (`src/lms/adapters/ai/local_llm_companion.py`):**
+    - Connects to Unsloth Desktop, `llama.cpp`, `LM Studio`, `vLLM`, or `Ollama` via OpenAI-compatible `/v1/chat/completions` and `/v1/models`.
+    - Auto-discovers loaded model (`LOCAL_LLM_MODEL=auto`) and injects verified `ConceptStore` passages.
+    - Implements the 10% lightweight rubric classifier (`evaluate_concept_check`) for `CO-6` mental models with deterministic fallback.
+    - Enforces XML prompt-injection delimiters (`<learner_code>`, `<execution_stderr>`, `<learner_query>`) and bounded payload truncation.
+    - `get_axis_companion()` factory switches cleanly via `MOCK_AI=true|false`.
   - **Socratic Boundary Guardrail & Assistance Accounting (`src/lms/adapters/ai/socratic_guardrail.py`):**
     - Enforces zero-executable-code boundary in `AxisMode.SOCRATIC`.
     - Auto-sanitizes leaked code blocks or raises `SocraticBoundaryViolation` in strict mode.

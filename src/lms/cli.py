@@ -174,33 +174,53 @@ def handle_explain_command(
     explanation: str,
     learner_id: str = "default_learner",
     repo: Optional[SQLiteLearnerRepository] = None,
+    companion: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Submit CO-6 concept check explanation, evaluate mental model, and log evidence."""
     import json
+    from lms.adapters.ai.local_llm_companion import get_axis_companion
+
     clean_unit = unit_id.upper()
     meta_path = Path(f"curriculum/python/{clean_unit.lower()}/meta.json")
     keywords = ["string", "text", "typeerror", "convert", "int"]
+    concept_line = "A program takes input, transforms it, and produces output; input() always returns a string."
     if meta_path.exists():
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
             check_cfg = meta.get("concept_check", {})
             if "solid_keywords" in check_cfg:
                 keywords = check_cfg["solid_keywords"]
+            if "concept_line" in check_cfg:
+                concept_line = check_cfg["concept_line"]
         except Exception:
             pass
 
-    # Evaluate mental model: check presence of key conceptual vocabulary
-    lower_exp = explanation.lower()
-    matches = sum(1 for kw in keywords if kw.lower() in lower_exp)
-    is_solid = matches >= 2
+    if companion is None:
+        companion = get_axis_companion()
 
-    status = "Solid" if is_solid else "Shaky"
+    if hasattr(companion, "evaluate_concept_check"):
+        eval_res = companion.evaluate_concept_check(
+            unit_id=clean_unit,
+            concept_line=concept_line,
+            explanation=explanation,
+            solid_keywords=keywords,
+        )
+        status = eval_res["status"]
+        feedback = eval_res["feedback"]
+        is_solid = status == "Solid"
+    else:
+        # Deterministic keyword rubric when using MockAxisCompanion
+        lower_exp = explanation.lower()
+        matches = sum(1 for kw in keywords if kw.lower() in lower_exp)
+        is_solid = matches >= 2
+        status = "Solid" if is_solid else "Shaky"
+        feedback = (
+            "Explanation demonstrates solid operational mental model."
+            if is_solid
+            else "Explanation is emerging or shaky; remember to reflect on types and boundaries."
+        )
+
     strength = EvidenceStrength.STRONG if is_solid else EvidenceStrength.WEAK
-    feedback = (
-        "Explanation demonstrates solid operational mental model."
-        if is_solid
-        else "Explanation is emerging or shaky; remember to reflect on types and boundaries."
-    )
 
     if repo is None:
         repo = SQLiteLearnerRepository()
@@ -236,12 +256,12 @@ def handle_ask_command(
     companion: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Consult AXIS AI Companion with Socratic guardrails and assistance accounting."""
-    from lms.adapters.ai.mock_axis import MockAxisCompanion
+    from lms.adapters.ai.local_llm_companion import get_axis_companion
     from lms.core.interfaces import AxisMode, AxisQuery
     from lms.core.models import ActivityType
 
     if companion is None:
-        companion = MockAxisCompanion()
+        companion = get_axis_companion()
 
     clean_unit = unit_id.upper()
     axis_mode = (

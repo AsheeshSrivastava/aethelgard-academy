@@ -13,6 +13,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from lms.adapters.ai.local_llm_companion import get_axis_companion
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_roadmap_from_file
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
@@ -58,7 +59,7 @@ def create_app(
         runner = get_code_runner()
 
     if axis is None:
-        axis = MockAxisCompanion()
+        axis = get_axis_companion()
 
     if catalog is None:
         roadmap_path = Path("reference/Python Subject Roadmap v3.md")
