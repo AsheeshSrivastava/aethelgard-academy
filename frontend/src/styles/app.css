@@ -969,6 +969,11 @@ td {
 }
 
 /* Lesson page */
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
 .lesson-page {
   max-width: 1360px;
   margin: 0 auto;
@@ -1128,10 +1133,76 @@ button:disabled {
 }
 
 .prose pre {
+  margin: 0;
   padding: 12px 14px;
   border-radius: 10px;
-  background: var(--surface-muted);
+  background: #12161c;
+  color: #e8ecf1;
+  font-size: 13px;
+  line-height: 1.55;
   overflow-x: auto;
+}
+
+.code-wrap {
+  position: relative;
+}
+
+.copy-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #39424e;
+  border-radius: 6px;
+  background: #1d232b;
+  color: #e8ecf1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy-button:hover {
+  border-color: #5cc4c0;
+}
+
+/* The same colours as the editor; code blocks are dark in both themes. */
+.tok-keyword,
+.tok-operatorKeyword {
+  color: #c9a7f5;
+}
+
+.tok-string,
+.tok-string2 {
+  color: #a5e3c0;
+}
+
+.tok-comment {
+  color: #9aa4b1;
+  font-style: italic;
+}
+
+.tok-number,
+.tok-bool,
+.tok-null,
+.tok-atom {
+  color: #f7c58a;
+}
+
+.tok-variableName.tok-definition,
+.tok-className,
+.tok-macroName {
+  color: #8fc7ff;
+}
+
+.tok-propertyName {
+  color: #8fdcd9;
+}
+
+.tok-punctuation,
+.tok-operator {
+  color: #c9ced6;
 }
 
 .prose pre code {
@@ -1392,7 +1463,6 @@ button:disabled {
 .axis-panel {
   flex: 1 1 320px;
   min-width: 0;
-  max-width: 400px;
   min-height: 560px;
   display: flex;
   flex-direction: column;
@@ -1463,10 +1533,19 @@ button:disabled {
 }
 
 .message {
+  min-width: 0;
   font-size: 14px;
   line-height: 1.55;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.message .prose {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.axis-resizer {
+  display: none;
 }
 
 .message-you {
@@ -1519,6 +1598,44 @@ button:disabled {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+@media (min-width: 1000px) {
+  .lesson-layout {
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+
+  .axis-panel {
+    flex: 0 0 min(var(--axis-width, 340px), 60%);
+  }
+
+  .axis-resizer {
+    flex: 0 0 16px;
+    align-self: stretch;
+    display: block;
+    position: relative;
+    cursor: col-resize;
+    touch-action: none;
+    border-radius: 8px;
+  }
+
+  .axis-resizer::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    width: 4px;
+    height: 44px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    background: var(--line-strong);
+  }
+
+  .axis-resizer:hover::after,
+  .axis-resizer:focus-visible::after {
+    background: var(--accent);
+  }
 }
 
 @media (max-width: 640px) {

@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { api, ApiError, type ColdCheckStatus, type Exercise, type Unit } from "../api/client";
 import { BackLink, ErrorNote, Loading } from "../components/common";
 import { ResetUnit } from "../components/ResetUnit";
 import { AxisPanel } from "../lesson/AxisPanel";
+import { AxisResizer } from "../lesson/AxisResizer";
+import { loadAxisWidth } from "../lesson/axisWidth";
 import { CodeWorkspace, ItemForm, type Answer } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
 import { NextLink, Result } from "../lesson/Result";
@@ -378,6 +380,8 @@ export function Lesson() {
   const { state, save, markDone } = useLessonState(unitId);
   const [exerciseId, setExerciseId] = useState<string | undefined>();
   const codeGetter = useRef<(() => string) | undefined>(undefined);
+  const layout = useRef<HTMLDivElement>(null);
+  const [axisWidth, setAxisWidth] = useState(loadAxisWidth);
 
   const stepKnown = unit.data?.activities?.includes(step);
   const stateReady = state.isSuccess;
@@ -429,7 +433,7 @@ export function Lesson() {
       {!stepKnown ? (
         <ErrorNote error={new Error(`This unit has no step called "${step}".`)} />
       ) : (
-        <div className="lesson-layout">
+        <div ref={layout} className="lesson-layout" style={{ "--axis-width": `${axisWidth}px` } as CSSProperties}>
           <section className="lesson-content" aria-label="Lesson content">
             {step === "video" && <VideoStep unit={data} next={next} onDone={finish} done={doneSteps.includes("video")} />}
             {step === "explain" && <ExplainStep unit={data} next={next} onDone={finish} />}
@@ -439,7 +443,12 @@ export function Lesson() {
               <ExerciseStep key={step} unit={data} step={step} next={next} onDone={finish} onExercise={setExerciseId} />
             )}
           </section>
-          {!onColdCheck && <AxisPanel unitId={unitId} step={step} exerciseId={exerciseId} getCode={() => codeGetter.current?.()} />}
+          {!onColdCheck && (
+            <>
+              <AxisResizer layout={layout} width={axisWidth} onChange={setAxisWidth} />
+              <AxisPanel unitId={unitId} step={step} exerciseId={exerciseId} getCode={() => codeGetter.current?.()} />
+            </>
+          )}
         </div>
       )}
     </main>

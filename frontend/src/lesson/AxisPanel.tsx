@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 
-import { streamAxis, type SseEvent } from "./axisStream";
+import { streamAxis, streamSafe, type SseEvent } from "./axisStream";
+import { Prose } from "./Prose";
 import { activityFor } from "./steps";
 
 const MODES = ["Socratic", "Hybrid", "Coach"] as const;
@@ -95,9 +96,14 @@ export function AxisPanel({
       </div>
       <div className="axis-messages" aria-live="polite">
         {messages.length === 0 && <p className="small muted">Stuck? Ask about what you are doing here. AXIS can see this step and your code.</p>}
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div key={message.id} className={`message message-${message.role}`}>
-            {message.text && <p>{message.text}</p>}
+            {message.text &&
+              (message.role === "axis" ? (
+                <Prose>{busy && index === messages.length - 1 ? streamSafe(message.text) : message.text}</Prose>
+              ) : (
+                <p>{message.text}</p>
+              ))}
             {message.role === "axis" && !message.text && !message.error && busy && <p className="muted">Thinking…</p>}
             {message.error && (
               <p className="error-note" role="alert">

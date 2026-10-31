@@ -54,10 +54,11 @@ export function RunTerminal({ getCode, exerciseId }: { getCode: () => string; ex
       }
     });
     terminal.current = term;
-    const resize = () => fit.fit();
-    window.addEventListener("resize", resize);
+    // Follows both the window and the AXIS panel handle.
+    const observer = new ResizeObserver(() => fit.fit());
+    observer.observe(host.current);
     return () => {
-      window.removeEventListener("resize", resize);
+      observer.disconnect();
       socket.current?.close();
       term.dispose();
     };

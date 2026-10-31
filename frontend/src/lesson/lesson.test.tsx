@@ -4,6 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { courseMap, unit } from "../test/fixtures";
 import { renderAt, stubApi } from "../test/harness";
+import {
+  clampAxisWidth,
+  DEFAULT_AXIS_WIDTH,
+  loadAxisWidth,
+  MIN_AXIS_WIDTH,
+  MIN_CONTENT_WIDTH,
+  saveAxisWidth,
+} from "./axisWidth";
 import { parseSse } from "./axisStream";
 import { activityFor, nextStep, revealText, splitLessonForExplain } from "./steps";
 
@@ -681,6 +689,33 @@ describe("AXIS panel", () => {
     expect(within(panel).getByRole("link", { name: "Standard streams" })).toHaveAttribute("href", "https://docs.python.org/3/");
   });
 
+  it("renders code in replies as code, not as raw markdown", async () => {
+    const { panel } = await ask(() =>
+      sse([
+        ["token", { text: "Use `input()` here:\n\n```py" }],
+        ["token", { text: 'thon\nname = input("Name")\n```\n' }],
+        ["done", { assistance_level: "none", cited_concepts: [] }],
+      ]),
+    );
+
+    const inline = await within(panel).findByText("input()");
+    expect(inline.tagName).toBe("CODE");
+    await waitFor(() => expect(panel.querySelector("pre code")).toHaveTextContent(/name = input/));
+    expect(panel).not.toHaveTextContent("```");
+  });
+
+  it("shows HTML from a model as text, never as markup", async () => {
+    const { panel } = await ask(() =>
+      sse([
+        ["token", { text: "Try <img src=x onerror=alert(1)> now." }],
+        ["done", { assistance_level: "none", cited_concepts: [] }],
+      ]),
+    );
+
+    await within(panel).findByText(/Try/);
+    expect(panel.querySelector("img")).toBeNull();
+  });
+
   it("sends the exercise, the mode and the page", async () => {
     const { calls, panel } = await ask(() => sse([["done", { assistance_level: "none", cited_concepts: [] }]]));
 
@@ -720,6 +755,67 @@ describe("AXIS panel", () => {
     const { panel } = await ask(() => sse([["error", { message: "AXIS is unavailable right now." }]]));
 
     expect(await within(panel).findByRole("alert")).toHaveTextContent("AXIS is unavailable");
+  });
+});
+
+describe("AXIS panel width", () => {
+  const ex = exercise("predict", "predict", { code: ["x"], stdin: "", options });
+
+  it("stays between the limits", () => {
+    expect(clampAxisWidth(100, 1300)).toBe(MIN_AXIS_WIDTH);
+    expect(clampAxisWidth(500, 1300)).toBe(500);
+    expect(clampAxisWidth(5000, 1300)).toBe(780);
+  });
+
+  it("always leaves the lesson usable on a narrow layout", () => {
+    expect(clampAxisWidth(600, 800)).toBe(800 - MIN_CONTENT_WIDTH);
+    expect(clampAxisWidth(600, 650)).toBe(MIN_AXIS_WIDTH);
+  });
+
+  it("remembers the width, and ignores a damaged saved value", () => {
+    saveAxisWidth(512);
+    expect(loadAxisWidth()).toBe(512);
+
+    localStorage.setItem("axis-width", "nonsense");
+    expect(loadAxisWidth()).toBe(DEFAULT_AXIS_WIDTH);
+  });
+
+  it("can be resized from the keyboard", async () => {
+    localStorage.removeItem("axis-width");
+    stubApi(routes("predict", ex));
+    const user = userEvent.setup();
+    renderAt("/units/PY-0.1/predict");
+
+    const handle = await screen.findByRole("separator", { name: "Resize AXIS panel" });
+    expect(handle).toHaveAttribute("aria-valuenow", String(DEFAULT_AXIS_WIDTH));
+
+    handle.focus();
+    await user.keyboard("{ArrowLeft}");
+
+    expect(handle).toHaveAttribute("aria-valuenow", String(DEFAULT_AXIS_WIDTH + 24));
+    expect(loadAxisWidth()).toBe(DEFAULT_AXIS_WIDTH + 24);
+  });
+
+  it("double-click resets the width", async () => {
+    saveAxisWidth(600);
+    stubApi(routes("predict", ex));
+    renderAt("/units/PY-0.1/predict");
+
+    const handle = await screen.findByRole("separator", { name: "Resize AXIS panel" });
+    expect(handle).toHaveAttribute("aria-valuenow", "600");
+
+    fireEvent.doubleClick(handle);
+
+    expect(handle).toHaveAttribute("aria-valuenow", String(DEFAULT_AXIS_WIDTH));
+    expect(loadAxisWidth()).toBe(DEFAULT_AXIS_WIDTH);
+  });
+
+  it("is not offered on the Cold Check", async () => {
+    stubApi(routes("cold_check", ex, passed, available));
+    renderAt("/units/PY-0.1/cold_check");
+
+    await screen.findByRole("note");
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
   });
 });
 

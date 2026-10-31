@@ -155,6 +155,43 @@ test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) =
   await shot(page, "progress-after-cold-check");
 });
 
+test("AXIS shows code as code, and its panel can be dragged wider", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/units/PY-0.4/predict");
+
+  await axis(page).getByRole("radio", { name: "Hybrid" }).check({ force: true });
+  await axis(page).getByLabel("Message AXIS").fill("Show me the whole solution");
+  await axis(page).getByRole("button", { name: "Send" }).click();
+  await expect(axis(page).locator("pre code")).toContainText("run_intake");
+  await expect(axis(page)).not.toContainText("```");
+  await shot(page, "axis-code");
+
+  const before = (await axis(page).boundingBox())!;
+  const handle = (await page.getByRole("separator", { name: "Resize AXIS panel" }).boundingBox())!;
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + 100);
+  await page.mouse.down();
+  await page.mouse.move(handle.x - 200, handle.y + 100, { steps: 5 });
+  await page.mouse.up();
+
+  const after = (await axis(page).boundingBox())!;
+  expect(after.width).toBeGreaterThan(before.width + 150);
+  await shot(page, "axis-wide");
+
+  await page.getByRole("button", { name: /switch to dark theme/i }).click();
+  await shot(page, "dark-axis-code");
+  await page.getByRole("button", { name: /switch to light theme/i }).click();
+
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expectNoSideScroll(page);
+  await expect(page.getByRole("separator", { name: "Resize AXIS panel" })).toBeHidden();
+  await shot(page, "phone-axis-code");
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  await page.reload();
+  await expect(axis(page)).toBeVisible();
+  expect((await axis(page).boundingBox())!.width).toBeCloseTo(after.width, -1);
+});
+
 test("a verified playground writes no evidence", async ({ page, request }) => {
   const before = (await (await request.get("/api/v1/learners/me/ledger")).json()).length;
 
