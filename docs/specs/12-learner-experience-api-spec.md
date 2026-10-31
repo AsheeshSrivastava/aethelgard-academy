@@ -41,7 +41,7 @@ Conventions:
 Course     { course_id: "python" | "backend" | "ai-engineering", title, summary, stage_count, unit_count }
 CourseMap  { course: Course, stages: [ { stage, title, units: [UnitSummary], build: BuildSummary | null } ] }
 UnitSummary{ unit_id, title, concept_line, target_skills: [{skill_id, goal_level}], authored: bool }
-Unit.activities: ["video", "explain", ...unit.methods without "Explain", "cold_check"]   // video and explain always first, cold_check always last
+Unit.activities: ["video", "explain", ...unit.methods without "Explain", "playground" (section 3.2), "cold_check"]   // video and explain always first, cold_check always last
 BuildSummary { title, kind: "script" | "mini_project", locked: bool, pending_units: [unit_id] }  // locked until every unit in the stage passed its Cold Check
 StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
              files: [{path, starter}], requirements: [{id, label, unit_id}] }
@@ -66,6 +66,15 @@ Activities and evidence categories:
 | Explain / Reason | Explain, Predict, Trace |
 | Perform / Solve | Specify, Decompose, Modify, Build, Direct |
 | Diagnose / Judge / Transfer | Debug & Validate, Evaluate |
+
+### 3.2 Playground in every lesson (owner decision, 2026-10-31)
+
+Every lesson shows the interactive playground.
+
+- **Unit methods include Modify or Build:** the playground is that activity. It is graded and writes evidence (section 5). `Unit.activities` lists `modify` or `build`, and adds no separate step.
+- **Otherwise:** `Unit.activities` adds a `playground` step before `cold_check`. It is ungraded practice and **writes no evidence**: learners can run and check their work, and the server records nothing in the ledger.
+- **Content:** the unit package's `starter.py` and `test_solution.py` feed the playground. Check results in ungraded practice are feedback only.
+- **Not yet built:** `Unit.activities` gains the `playground` step when exercises are built (step 4).
 
 ---
 
@@ -138,7 +147,8 @@ The server derives the evidence entry:
 | --- | --- | --- |
 | predict | Explain / Reason | Strong if correct, Weak if not |
 | trace | Explain / Reason | Moderate when completed |
-| playground | Perform / Solve | Strong if all checks pass first try, Moderate after retries |
+| playground (Modify or Build only; section 3.2) | Perform / Solve | Strong if all checks pass first try, Moderate after retries |
+| playground (ungraded practice; section 3.2) | none | No evidence entry |
 | debug & validate | Diagnose / Judge / Transfer | Strong if fixed and verified |
 | cold_check | category of the skill probed | Strong if passed, Weak if not (assistance always none) |
 | build | Perform / Solve (Own context per ADR-0016) | Strong if all requirements met |

@@ -67,7 +67,7 @@ Each seed also has exactly one body block, named by its item type. The activity 
 | Decompose | `decompose` | `decompose_plan`, `decompose_code` | Answer key; tests and structure |
 | Explain | `explain` | `explain_spot_flaw`, `explain_model_choice` | Answer key |
 
-SPEC-12's `playground` is the screen, not an activity: Modify and Build both use it.
+SPEC-12's `playground` is the screen, not an activity: Modify and Build both use it. Units without Modify or Build still show an ungraded playground fed by `starter.py` and `test_solution.py` (SPEC-12 section 3.2). That practice needs no seed and writes no evidence.
 
 ---
 
@@ -292,8 +292,7 @@ Rule 11 replaces the curriculum check `cold-check-not-graded`, which judges by a
 
 ## 9. Open questions for the owner
 
-1. **PY-0.1's existing `starter.py` and `test_solution.py`** are a playground, but the unit's Methods (Explain, Predict, Trace) have no Modify or Build. They stay as they are; this spec does not move them.
-2. **Own-level targets on Specify, Decompose and Explain skills.** Own still needs a stage build (ADR-0016), so a Cold Check item alone does not reach Own.
+1. **Own-level targets on Specify, Decompose and Explain skills.** Own still needs a stage build (ADR-0016), so a Cold Check item alone does not reach Own.
 
 ---
 
