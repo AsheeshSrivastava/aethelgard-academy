@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-1",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-2",
+  "level": "Understand",
+  "prompt_markdown": [
+    "An AI tool gave you `name.strip().upper()` and it works, but you do not know why `.strip()` comes first.",
+    "",
+    "What is the best thing to ask the tool next?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Write the rest of the intake script for me."
+      },
+      {
+        "key": "B",
+        "text": "Explain what each part does, and what would change if the order were swapped."
+      },
+      {
+        "key": "C",
+        "text": "Is this code correct?"
+      },
+      {
+        "key": "D",
+        "text": "Rewrite it so it looks more professional."
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "You asked the tool to explain, so the understanding stays with you."
+    ]
+  }
+}

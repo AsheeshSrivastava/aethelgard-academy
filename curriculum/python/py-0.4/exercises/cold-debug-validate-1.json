@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-debug-validate-1",
+  "unit_id": "PY-0.4",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-4",
+  "level": "Understand",
+  "prompt_markdown": [
+    "This script stops with an error on its very first line.",
+    "",
+    "Read the error and fix the script so it registers the citizen who typed their name."
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "debug": {
+    "broken_code": [
+      "print(\"Registering\", citizen)",
+      "citizen = input()"
+    ],
+    "stdin": "Lina Haddad",
+    "reference_solution": [
+      "citizen = input()",
+      "print(\"Registering\", citizen)"
+    ],
+    "hidden_checks": [
+      "import io",
+      "import runpy",
+      "import unittest.mock",
+      "",
+      "",
+      "def run_script(typed):",
+      "    out = io.StringIO()",
+      "    with unittest.mock.patch('builtins.input', return_value=typed):",
+      "        with unittest.mock.patch('sys.stdout', out):",
+      "            runpy.run_path('solution.py')",
+      "    return out.getvalue()",
+      "",
+      "",
+      "def test_case_1():",
+      "    assert run_script('Lina Haddad') == 'Registering Lina Haddad\\n'",
+      "",
+      "",
+      "def test_case_2():",
+      "    assert run_script('Kofi Mensah') == 'Registering Kofi Mensah\\n'"
+    ],
+    "wrong_solution": [
+      "citizen = \"citizen\"",
+      "print(\"Registering\", citizen)",
+      "citizen = input()"
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/predict-2",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "An applicant types `{{person}}`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "template": {
+    "slots": {
+      "person": {
+        "kind": "person_name",
+        "values": [
+          "Amara Okafor",
+          "Kofi Mensah",
+          "Lina Haddad"
+        ]
+      }
+    }
+  },
+  "predict": {
+    "code": [
+      "citizen = input()",
+      "status = \"waiting\"",
+      "print(citizen, status)",
+      "status = \"registered\"",
+      "print()",
+      "print(citizen, status)",
+      "print(f\"Ticket for {citizen}\")"
+    ],
+    "stdin": "{{person}}",
+    "options": [
+      {
+        "key": "A",
+        "text": "{{person}} waiting\n\n{{person}} waiting\nTicket for {{person}}"
+      },
+      {
+        "key": "B",
+        "text": "{{person}} registered\n\n{{person}} registered\nTicket for {{person}}"
+      },
+      {
+        "key": "C",
+        "text": "{{person}} waiting\n\n{{person}} registered\nTicket for {{person}}"
+      },
+      {
+        "key": "D",
+        "text": "{{person}} waiting\n{{person}} registered\nTicket for {{person}}"
+      }
+    ],
+    "answer_key": "C",
+    "why": [
+      "A variable holds its current value when the line runs.",
+      "The first `print` runs before `status` changes, so it shows `waiting`."
+    ]
+  }
+}

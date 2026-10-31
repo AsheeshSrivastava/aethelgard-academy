@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/cold-direct-2",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-3",
+  "level": "Understand",
+  "prompt_markdown": [
+    "Your team is shipping a citizen registration script with AI help.",
+    "",
+    "Which of these is fine to delegate to the tool?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Deciding how long citizen records are kept."
+      },
+      {
+        "key": "B",
+        "text": "Confirming the script handles messy input before it goes live."
+      },
+      {
+        "key": "C",
+        "text": "Deciding the script is ready to ship."
+      },
+      {
+        "key": "D",
+        "text": "Drafting the boilerplate for a function you have already designed."
+      }
+    ],
+    "answer_key": "D",
+    "why": [
+      "Boilerplate is safe to delegate because you still check it. Retention, verification and the ship decision stay with you."
+    ]
+  }
+}

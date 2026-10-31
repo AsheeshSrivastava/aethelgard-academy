@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-explain-1",
+  "unit_id": "PY-0.1",
+  "activity": "Explain",
+  "skill_id": "CO-6",
+  "level": "Understand",
+  "prompt_markdown": [
+    "A new colleague explains how the intake script runs.",
+    "",
+    "One sentence is wrong. Which one?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "Python runs the statements from top to bottom."
+      },
+      {
+        "key": "B",
+        "text": "`input()` waits for the person, then returns what they typed as text."
+      },
+      {
+        "key": "C",
+        "text": "A variable stores the code that made its value, and that code runs again each time the variable is used."
+      },
+      {
+        "key": "D",
+        "text": "`print()` with no arguments writes a blank line."
+      }
+    ],
+    "answer_key": "C",
+    "why": [
+      "A variable holds the value that was produced. Using it does not run `input()` again."
+    ]
+  }
+}

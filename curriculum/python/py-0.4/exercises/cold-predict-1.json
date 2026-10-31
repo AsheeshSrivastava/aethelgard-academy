@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-predict-1",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "A citizen types `north-01` at the terminal.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "predict": {
+    "code": [
+      "print(\"Terminal ready\")",
+      "ward = input()",
+      "# print(\"Ward checked\")",
+      "print(\"Ward:\", ward)",
+      "print(\"Next citizen\")"
+    ],
+    "stdin": "north-01",
+    "options": [
+      {
+        "key": "A",
+        "text": "Terminal ready\nWard checked\nWard: north-01\nNext citizen"
+      },
+      {
+        "key": "B",
+        "text": "Terminal ready\nWard: ward\nNext citizen"
+      },
+      {
+        "key": "C",
+        "text": "Terminal ready\nWard: north-01\nNext citizen"
+      },
+      {
+        "key": "D",
+        "text": "Terminal ready\nNext citizen\nWard: north-01"
+      }
+    ],
+    "answer_key": "C",
+    "why": [
+      "The lines run in order, the comment is skipped, and `ward` holds the typed text."
+    ]
+  }
+}

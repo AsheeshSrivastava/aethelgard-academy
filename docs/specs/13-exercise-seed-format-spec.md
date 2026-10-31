@@ -221,7 +221,7 @@ The structure check parses the learner's code with Python's `ast` module and nev
 
 ## 5. Cold Check seeds
 
-All item types in section 4 are Cold Check eligible. A seed may set `cold_check_eligible: true` only if `curator_approved` is `true`.
+All item types in section 4 are Cold Check eligible. A seed may be drafted with `cold_check_eligible: true` and `curator_approved: false`, but the Cold Check serves a seed only when both are `true`.
 
 Rules for the unit (ADR-0016 amendment C):
 

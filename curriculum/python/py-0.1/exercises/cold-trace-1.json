@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-trace-1",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "prompt_markdown": [
+    "Two names point at a desk label.",
+    "",
+    "Follow the values, then write what the terminal shows."
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "trace": {
+    "code": [
+      "desk = \"A\"",
+      "next_desk = desk",
+      "desk = \"B\"",
+      "print(desk, next_desk)"
+    ],
+    "input": "",
+    "expected_output": [
+      "B A"
+    ],
+    "line_states": [
+      {
+        "line": 2,
+        "state": {
+          "desk": "A",
+          "next_desk": "A"
+        }
+      },
+      {
+        "line": 3,
+        "state": {
+          "desk": "B",
+          "next_desk": "A"
+        }
+      }
+    ]
+  }
+}

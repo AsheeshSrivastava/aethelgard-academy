@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-predict-1",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "A visitor types `Kofi Mensah` at the queue desk.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "predict": {
+    "code": [
+      "print(\"Queue open\")",
+      "visitor = input()",
+      "print()",
+      "print(\"Next:\", visitor)"
+    ],
+    "stdin": "Kofi Mensah",
+    "options": [
+      {
+        "key": "A",
+        "text": "Queue open\nNext: Kofi Mensah"
+      },
+      {
+        "key": "B",
+        "text": "Queue open\n\nNext: Kofi Mensah"
+      },
+      {
+        "key": "C",
+        "text": "Queue open\n\nNext: visitor"
+      },
+      {
+        "key": "D",
+        "text": "Next: Kofi Mensah\n\nQueue open"
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "The lines run in order, so the blank line from `print()` comes before `Next:`.",
+      "`visitor` holds the text `input()` returned."
+    ]
+  }
+}

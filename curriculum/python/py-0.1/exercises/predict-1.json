@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/predict-1",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The intake desk runs this program, and the applicant types `{{person}}`.",
+    "",
+    "Commit to your answer before you run anything: what appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "template": {
+    "slots": {
+      "person": {
+        "kind": "person_name",
+        "values": [
+          "Amara Okafor",
+          "Kofi Mensah",
+          "Lina Haddad"
+        ]
+      }
+    }
+  },
+  "predict": {
+    "code": [
+      "print(\"Desk open\")",
+      "applicant = input()",
+      "print(\"Applicant:\", applicant)",
+      "print()",
+      "print(f\"Record: {applicant}\")"
+    ],
+    "stdin": "{{person}}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Desk open\nApplicant: {{person}}\n\nRecord: {{person}}"
+      },
+      {
+        "key": "B",
+        "text": "Desk open\nApplicant: {{person}}\nRecord: {{person}}"
+      },
+      {
+        "key": "C",
+        "text": "Desk open\nApplicant: applicant\n\nRecord: {applicant}"
+      },
+      {
+        "key": "D",
+        "text": "{{person}}\nDesk open\nApplicant: {{person}}\n\nRecord: {{person}}"
+      }
+    ],
+    "answer_key": "A",
+    "why": [
+      "Statements run from top to bottom, so `Desk open` comes first.",
+      "`input()` returns the text and `applicant` stores it, so both later lines show the value.",
+      "`print()` with no arguments writes one blank line."
+    ]
+  }
+}

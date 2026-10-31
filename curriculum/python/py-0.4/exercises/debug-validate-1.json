@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/debug-validate-1",
+  "unit_id": "PY-0.4",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-4",
+  "level": "Understand",
+  "prompt_markdown": [
+    "This script stops with an error when it reaches the second line.",
+    "",
+    "Run it, read the error's type, message and line number, then fix the script."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "debug": {
+    "broken_code": [
+      "citizen = input()",
+      "print(\"Registering\", citizn)"
+    ],
+    "stdin": "Amara Okafor",
+    "reference_solution": [
+      "citizen = input()",
+      "print(\"Registering\", citizen)"
+    ],
+    "hidden_checks": [
+      "import io",
+      "import runpy",
+      "import unittest.mock",
+      "",
+      "",
+      "def run_script(typed):",
+      "    out = io.StringIO()",
+      "    with unittest.mock.patch('builtins.input', return_value=typed):",
+      "        with unittest.mock.patch('sys.stdout', out):",
+      "            runpy.run_path('solution.py')",
+      "    return out.getvalue()",
+      "",
+      "",
+      "def test_case_1():",
+      "    assert run_script('Amara Okafor') == 'Registering Amara Okafor\\n'",
+      "",
+      "",
+      "def test_case_2():",
+      "    assert run_script('Kofi Mensah') == 'Registering Kofi Mensah\\n'"
+    ],
+    "wrong_solution": [
+      "citizen = input()",
+      "print(\"Registering\", \"citizn\")"
+    ]
+  }
+}

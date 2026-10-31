@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/predict-1",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The reception terminal runs this script, and a citizen types `{{person}}`.",
+    "",
+    "Commit to your answer before you run anything: what appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "template": {
+    "slots": {
+      "person": {
+        "kind": "person_name",
+        "values": [
+          "Amara Okafor",
+          "Kofi Mensah",
+          "Lina Haddad"
+        ]
+      }
+    }
+  },
+  "predict": {
+    "code": [
+      "print(\"Reception open\")",
+      "# print(\"Closed for lunch\")",
+      "citizen = input()",
+      "print(\"Registering\", citizen)",
+      "print(\"Done\")"
+    ],
+    "stdin": "{{person}}",
+    "options": [
+      {
+        "key": "A",
+        "text": "Reception open\nRegistering {{person}}\nDone"
+      },
+      {
+        "key": "B",
+        "text": "Reception open\nClosed for lunch\nRegistering {{person}}\nDone"
+      },
+      {
+        "key": "C",
+        "text": "Reception open\nRegistering citizen\nDone"
+      },
+      {
+        "key": "D",
+        "text": "Reception open\nDone\nRegistering {{person}}"
+      }
+    ],
+    "answer_key": "A",
+    "why": [
+      "Python runs the lines from top to bottom.",
+      "A line starting with `#` is a comment, so Python skips it.",
+      "`citizen` holds what was typed, so its value is printed, not its name."
+    ]
+  }
+}

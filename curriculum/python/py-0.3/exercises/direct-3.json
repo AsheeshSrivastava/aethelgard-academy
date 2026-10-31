@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-3",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-4",
+  "level": "Understand",
+  "prompt_markdown": [
+    "AXIS says a Python function behaves one way, and a blog post says another.",
+    "",
+    "What settles the question?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "The answer given most confidently."
+      },
+      {
+        "key": "B",
+        "text": "The most recent blog post."
+      },
+      {
+        "key": "C",
+        "text": "Asking the AI tool again until it agrees."
+      },
+      {
+        "key": "D",
+        "text": "The official documentation, and running the code yourself."
+      }
+    ],
+    "answer_key": "D",
+    "why": [
+      "Official documentation and a real run are evidence. Confidence and repetition are not."
+    ]
+  }
+}

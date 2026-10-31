@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/cold-direct-1",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-2",
+  "level": "Understand",
+  "prompt_markdown": [
+    "An AI tool fixed your script, and now it runs. You could not explain the fix to a colleague.",
+    "",
+    "What should you do before you keep it?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Keep it, because it runs."
+      },
+      {
+        "key": "B",
+        "text": "Ask the tool to explain why the old code failed and what the change does, then check you can say it yourself."
+      },
+      {
+        "key": "C",
+        "text": "Ask the tool to fix any other problems as well."
+      },
+      {
+        "key": "D",
+        "text": "Paste the same code into a different AI tool."
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "Asking for an explanation you can repeat keeps the reasoning with you."
+    ]
+  }
+}

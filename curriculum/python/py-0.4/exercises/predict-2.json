@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/predict-2",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The terminal asks for a ward number, and a citizen types `12`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "predict": {
+    "code": [
+      "ward = input()",
+      "print(ward + ward)"
+    ],
+    "stdin": "12",
+    "options": [
+      {
+        "key": "A",
+        "text": "24"
+      },
+      {
+        "key": "B",
+        "text": "1212"
+      },
+      {
+        "key": "C",
+        "text": "12 12"
+      },
+      {
+        "key": "D",
+        "text": "An error, because text cannot be added"
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "`input()` always returns text, even when the person types digits.",
+      "`+` on two pieces of text joins them."
+    ]
+  }
+}

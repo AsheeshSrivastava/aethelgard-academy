@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/trace-1",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "prompt_markdown": [
+    "Follow the applicant's status line by line.",
+    "",
+    "Write the value of `status` after each line, then what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "trace": {
+    "code": [
+      "status = \"waiting\"",
+      "print(status)",
+      "status = \"checked in\"",
+      "print(status)"
+    ],
+    "input": "",
+    "expected_output": [
+      "waiting",
+      "checked in"
+    ],
+    "line_states": [
+      {
+        "line": 1,
+        "state": {
+          "status": "waiting"
+        }
+      },
+      {
+        "line": 3,
+        "state": {
+          "status": "checked in"
+        }
+      }
+    ]
+  }
+}
