@@ -9,6 +9,8 @@ Provides versioned REST endpoints (/api/v1/) for:
 
 from datetime import datetime, timezone
 import json
+import logging
+import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -48,7 +50,21 @@ from lms.core.models import (
 )
 from lms.core.proficiency_view import ProficiencyView, build_proficiency_view
 
+logger = logging.getLogger(__name__)
+
 LOCAL_LEARNER_ID = "default_learner"
+
+# The Vite dev server. The built frontend is served from this app's own origin.
+DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+
+
+def allowed_origins() -> List[str]:
+    """Origins from LMS_ALLOWED_ORIGINS. Never a wildcard: credentials are allowed (ADR-0015)."""
+    configured = os.environ.get("LMS_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS)
+    origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
+    if "*" in origins:
+        logger.warning("Ignoring '*' in LMS_ALLOWED_ORIGINS: credentials are allowed.")
+    return [origin for origin in origins if origin != "*"]
 
 
 def utc_now() -> datetime:
@@ -138,7 +154,7 @@ def create_app(
     # CORS configuration
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
