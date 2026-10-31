@@ -45,7 +45,7 @@ UnitSummary{ unit_id, title, concept_line, target_skills: [{skill_id, skill_name
 Unit.activities: ["video", "explain", ...unit.methods without "Explain", "playground" (section 3.2), "cold_check"]   // video and explain always first, cold_check always last
 BuildSummary { title, kind: "script" | "mini_project", locked: bool, pending_units: [unit_id] }  // locked until every unit in the stage passed its Cold Check
 StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
-             files: [{path, starter}], requirements: [{id, label, unit_id}] }
+             files: [{path, starter}], requirements: [{id, label, unit_id}] }   // full shape in SPEC-15
 ```
 
 Course ids map to the three roadmaps: Python Subject Roadmap v3, Backend Engineering Roadmap v2 (shown as "Python for Backend/AI"), AI Engineering Roadmap v2.

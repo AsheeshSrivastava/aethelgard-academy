@@ -187,7 +187,7 @@ def test_course_map_shape(client):
         "skill_name",
         "goal_level",
     }
-    assert set(body["stages"][0]["build"]) == {"title", "kind", "locked", "pending_units"}
+    assert set(body["stages"][0]["build"]) == {"title", "kind", "locked", "pending_units", "authored", "status"}
 
 
 def test_course_map_lists_stages_in_number_order_with_units_in_teaching_order(client):
@@ -269,6 +269,8 @@ def test_build_is_locked_until_every_unit_passed_its_cold_check():
         "kind": "script",
         "locked": False,
         "pending_units": [],
+        "authored": False,
+        "status": None,
     }
 
 

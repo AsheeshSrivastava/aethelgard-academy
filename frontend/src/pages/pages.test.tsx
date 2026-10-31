@@ -112,7 +112,7 @@ describe("course map", () => {
     renderAt("/courses/python");
 
     expect(await screen.findByText(/Locked until PY-0\.1 passes its Cold Check/)).toBeInTheDocument();
-    expect(screen.getByText("Unlocked")).toBeInTheDocument();
+    expect(screen.getByText("Not written yet")).toBeInTheDocument();
   });
 
   it("goes back to the courses page", async () => {

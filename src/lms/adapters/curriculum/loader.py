@@ -10,7 +10,9 @@ import logging
 import re
 from typing import Dict, List, Optional, Set, Tuple
 
+from lms.adapters.curriculum.builds import load_builds
 from lms.adapters.curriculum.concepts import load_concepts
+from lms.core.builds import StageBuildSpec, check_builds
 from lms.core.concepts import check_concept_links
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity, check_curriculum
@@ -166,6 +168,7 @@ class CurriculumCatalog:
         self.findings: List[Finding] = []  # SPEC-12 section 3.1 checks, set by load_all_roadmaps
         self.main_activities: Dict[str, ActivityType] = {}  # Set by load_all_roadmaps
         self.seeds: Dict[str, List[ExerciseSeed]] = {}      # unit_id -> seeds, set by load_all_roadmaps
+        self.builds: Dict[Tuple[str, int], StageBuildSpec] = {}  # (course, stage), set by load_all_roadmaps
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
@@ -275,13 +278,19 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
             skill.skill_name = skill_names.get(skill.skill_id, skill.skill_id)
     catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
     concepts, concept_problems = load_concepts(reference_dir.parent / "curriculum" / "concepts")
+    catalog.builds, build_problems = load_builds(reference_dir.parent / "curriculum")
     catalog.findings = (
         seed_problems
         + check_curriculum(
-            catalog.list_all_units(), main_activities=catalog.main_activities, seeds=catalog.seeds
+            catalog.list_all_units(),
+            stages_with_build=set(catalog.builds),
+            main_activities=catalog.main_activities,
+            seeds=catalog.seeds,
         )
         + concept_problems
         + check_concept_links(concepts, catalog.list_all_units())
+        + build_problems
+        + check_builds(catalog.builds, catalog.list_all_units())
     )
     errors = sum(1 for f in catalog.findings if f.severity == Severity.ERROR)
     if catalog.findings:

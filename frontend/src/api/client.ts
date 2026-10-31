@@ -14,6 +14,12 @@ export type AttemptResult = Schemas["AttemptResult"];
 export type ExplainResponse = Schemas["ExplainResponse"];
 export type ConceptSummary = Schemas["ConceptSummary"];
 export type ConceptDetail = Schemas["ConceptDetail"];
+export type StageBuild = Schemas["StageBuild"];
+
+interface StageRef {
+  courseId: string;
+  stage: number;
+}
 
 const BASE = "/api/v1";
 
@@ -69,6 +75,11 @@ export const api = {
   getDraft: (exerciseId: string) => request<Schemas["Draft"]>(`/learners/me/drafts/${exerciseId}`),
   saveDraft: (exerciseId: string, files: Record<string, string>) =>
     request<void>(`/learners/me/drafts/${exerciseId}`, json("PUT", { files })),
+  stageBuild: ({ courseId, stage }: StageRef) => request<StageBuild>(`/courses/${courseId}/stages/${stage}/build`),
+  checkBuild: ({ courseId, stage }: StageRef, body: Schemas["BuildCheckRequest"]) =>
+    request<Schemas["BuildCheckResult"]>(`/learners/me/courses/${courseId}/stages/${stage}/build:check`, json("POST", body)),
+  resetBuild: ({ courseId, stage }: StageRef) =>
+    request<void>(`/learners/me/courses/${courseId}/stages/${stage}/build:reset`, { method: "POST" }),
   concepts: (q?: string) => request<ConceptSummary[]>(`/concepts${query({ q })}`),
   concept: (slug: string) => request<ConceptDetail>(`/concepts/${encodeURIComponent(slug)}`),
   recentConcepts: () => request<ConceptSummary[]>("/learners/me/concepts/recent"),

@@ -33,6 +33,11 @@ const routeTree = rootRoute.addChildren([
     // The renderer pulls in code colouring, so it loads only when a note opens.
     component: lazyRouteComponent(() => import("./pages/ConceptNote"), "ConceptNote"),
   }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/courses/$courseId/stages/$stage/build",
+    component: lazyRouteComponent(() => import("./pages/StageBuild"), "StageBuild"),
+  }),
   createRoute({ getParentRoute: () => rootRoute, path: "/units/$unitId", component: UnitMap }),
   createRoute({
     getParentRoute: () => rootRoute,

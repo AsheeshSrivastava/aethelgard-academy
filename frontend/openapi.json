@@ -64,6 +64,24 @@
         }
       }
     },
+    "/api/v1/features": {
+      "get": {
+        "summary": "Get Features",
+        "operationId": "get_features_api_v1_features_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Features"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/concepts": {
       "get": {
         "summary": "Get Concepts",
@@ -328,6 +346,153 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses/{course_id}/stages/{stage}/build": {
+      "get": {
+        "summary": "Get Stage Build",
+        "operationId": "get_stage_build_api_v1_courses__course_id__stages__stage__build_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageBuild"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:check": {
+      "post": {
+        "summary": "Check My Build",
+        "operationId": "check_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_check_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildCheckResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset": {
+      "post": {
+        "summary": "Reset My Build",
+        "operationId": "reset_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_reset_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1649,6 +1814,102 @@
         ],
         "title": "AxisStreamRequest"
       },
+      "BuildCheckRequest": {
+        "properties": {
+          "files": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Files"
+          },
+          "ownership_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ownership Note"
+          },
+          "run_checks": {
+            "type": "boolean",
+            "title": "Run Checks",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "BuildCheckRequest"
+      },
+      "BuildCheckResult": {
+        "properties": {
+          "requirements": {
+            "items": {
+              "$ref": "#/components/schemas/RequirementResult"
+            },
+            "type": "array",
+            "title": "Requirements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requirements"
+        ],
+        "title": "BuildCheckResult"
+      },
+      "BuildFile": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-][A-Za-z0-9_.-]*$",
+            "title": "Path"
+          },
+          "starter": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Starter"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "starter"
+        ],
+        "title": "BuildFile"
+      },
+      "BuildProof": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "skill_id",
+          "unit_id",
+          "label"
+        ],
+        "title": "BuildProof"
+      },
       "BuildSummary": {
         "properties": {
           "title": {
@@ -1669,6 +1930,22 @@
             },
             "type": "array",
             "title": "Pending Units"
+          },
+          "authored": {
+            "type": "boolean",
+            "title": "Authored",
+            "default": false
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
           }
         },
         "type": "object",
@@ -2679,6 +2956,28 @@
         ],
         "title": "ExplainSpotFlawBlock"
       },
+      "Features": {
+        "properties": {
+          "live_sessions": {
+            "type": "boolean",
+            "title": "Live Sessions",
+            "default": false
+          },
+          "forums": {
+            "type": "boolean",
+            "title": "Forums",
+            "default": false
+          },
+          "gamification": {
+            "type": "boolean",
+            "title": "Gamification",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "Features",
+        "description": "Modules that are switched on (SPEC-12 section 9). The frontend hides routes for the rest."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2981,6 +3280,65 @@
         ],
         "title": "ProgressionDecision"
       },
+      "PublicRequirement": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit_id"
+        ],
+        "title": "PublicRequirement"
+      },
+      "RequirementResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "met": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Met"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "met"
+        ],
+        "title": "RequirementResult"
+      },
       "Reveal": {
         "properties": {
           "correct": {
@@ -3131,6 +3489,92 @@
           "fields"
         ],
         "title": "SpecifyContractBlock"
+      },
+      "StageBuild": {
+        "properties": {
+          "exercise_id": {
+            "type": "string",
+            "title": "Exercise Id"
+          },
+          "course_id": {
+            "type": "string",
+            "title": "Course Id"
+          },
+          "stage": {
+            "type": "integer",
+            "title": "Stage"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "brief_markdown": {
+            "type": "string",
+            "title": "Brief Markdown"
+          },
+          "sample_run": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sample Run"
+          },
+          "entry": {
+            "type": "string",
+            "title": "Entry"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/BuildFile"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "requirements": {
+            "items": {
+              "$ref": "#/components/schemas/PublicRequirement"
+            },
+            "type": "array",
+            "title": "Requirements"
+          },
+          "proves": {
+            "items": {
+              "$ref": "#/components/schemas/BuildProof"
+            },
+            "type": "array",
+            "title": "Proves"
+          },
+          "submitted": {
+            "type": "boolean",
+            "title": "Submitted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exercise_id",
+          "course_id",
+          "stage",
+          "title",
+          "kind",
+          "status",
+          "brief_markdown",
+          "sample_run",
+          "entry",
+          "files",
+          "requirements",
+          "proves",
+          "submitted"
+        ],
+        "title": "StageBuild",
+        "description": "What a learner sees, built from a list of allowed fields (SPEC-15 section 3)."
       },
       "StageView": {
         "properties": {

@@ -9,6 +9,7 @@ import sqlite3
 from typing import Any, Dict, List, Optional
 
 from lms.core.cold_check import ColdCheckTimer
+from lms.core.events import EVIDENCE_RECORDED, EventBus, EvidenceRecorded, LedgerWriteRefused
 from lms.core.exercises import CurrentExercise
 from lms.core.models import (
     ActivityType,
@@ -36,6 +37,7 @@ class SQLiteLearnerRepository:
 
     def __init__(self, db_path: str = "lms_state.db"):
         self.db_path = db_path
+        self.events = EventBus()
         self._connection: Optional[sqlite3.Connection] = None
 
     def _get_conn(self) -> sqlite3.Connection:
@@ -474,6 +476,8 @@ class SQLiteLearnerRepository:
                 )
 
     def record_evidence(self, entry: EvidenceEntry) -> None:
+        if self.events.dispatching:
+            raise LedgerWriteRefused("A subscriber to evidence.recorded cannot write to the ledger.")
         conn = self._get_conn()
         with conn:
             conn.execute(
@@ -502,6 +506,18 @@ class SQLiteLearnerRepository:
                     entry.seed_id,
                 ),
             )
+        self.events.publish(
+            EVIDENCE_RECORDED,
+            EvidenceRecorded(
+                entry_id=entry.entry_id,
+                learner_id=entry.learner_id,
+                unit_id=entry.unit_id,
+                skill_id=entry.skill_id,
+                category=entry.evidence_category.value,
+                strength=entry.evidence_strength.value,
+                assistance_level=entry.assistance_level.value,
+            ),
+        )
 
     def get_evidence_ledger(
         self, learner_id: str, skill_id: Optional[str] = None

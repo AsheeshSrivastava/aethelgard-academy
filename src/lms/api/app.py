@@ -13,12 +13,12 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
 from lms.adapters.ai.local_llm_companion import get_axis_companion
@@ -29,10 +29,21 @@ from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
+from lms.core.builds import (
+    RequirementResult,
+    StageBuild,
+    StageBuildSpec,
+    check_requirements,
+    exercise_id_of,
+    parse_exercise_id,
+    public_build,
+    scope_of,
+)
 from lms.core.cold_check import ColdCheckState, ColdCheckStatus, cold_check_status
 from lms.core.concepts import used_in
 from lms.core.course_map import (
     COURSES,
+    AuthoredBuild,
     Course,
     CourseMap,
     build_course,
@@ -101,6 +112,7 @@ DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
 
 MAX_DRAFT_CHARS = 256_000
 MAX_CONCEPT_QUERY = 200
+BUILD_ACTIVITY = "build"
 
 
 def allowed_origins() -> List[str]:
@@ -151,6 +163,26 @@ class VerifyRequest(BaseModel):
 
 class AxisStreamRequest(AxisQuery):
     page: Optional[str] = None         # "video", "explain", "predict", "trace", "playground", "build", "progress"
+
+
+class Features(BaseModel):
+    """Modules that are switched on (SPEC-12 section 9). The frontend hides routes for the rest."""
+
+    live_sessions: bool = False
+    forums: bool = False
+    gamification: bool = False
+
+
+class BuildCheckRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    files: Dict[str, str]
+    ownership_note: Optional[str] = None
+    run_checks: bool = False
+
+
+class BuildCheckResult(BaseModel):
+    requirements: List[RequirementResult]
 
 
 class AttemptResult(BaseModel):
@@ -270,6 +302,10 @@ def create_app(
     def health_check() -> Dict[str, str]:
         return {"status": "ok", "version": "0.1.0"}
 
+    @app.get("/api/v1/features", response_model=Features)
+    def get_features():
+        return Features()
+
     # --- Concept Library (KMS) Routes ---
     @app.get("/api/v1/concepts", response_model=List[ConceptSummary])
     def get_concepts(
@@ -348,6 +384,131 @@ def create_app(
                 repo.get_cold_check_timer(learner_id, unit_id), now
             ).state,
             lambda unit: unit_decision(unit, ledger, now, config),
+            {
+                stage: AuthoredBuild(build.title, build.kind, build.status)
+                for (course, stage), build in catalog.builds.items()
+                if course == course_id
+            },
+        )
+
+    # --- Stage Builds (SPEC-15) ---
+    def stage_units(course_id: str, stage: int) -> List[Unit]:
+        return [u for u in catalog.get_course_units(course_id) if u.stage == stage]
+
+    def open_build(course_id: str, stage: int, learner_id: str) -> Union[StageBuildSpec, JSONResponse]:
+        """The build if this learner may have it, otherwise the problem to answer with."""
+        units = stage_units(course_id, stage) if course_id in COURSES else []
+        if not units:
+            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+        now = clock()
+        pending = [
+            u.unit_id
+            for u in units
+            if cold_check_status(repo.get_cold_check_timer(learner_id, u.unit_id), now).state
+            != ColdCheckState.PASSED
+        ]
+        if pending:
+            return problem(423, "Build locked", f"Pass the Cold Check in: {', '.join(pending)}.")
+        build = catalog.builds.get((course_id, stage))
+        if not build:
+            return problem(404, "No build yet", f"The build for stage {stage} is not written yet.")
+        return build
+
+    def too_large(files: Dict[str, str], note: Optional[str]) -> bool:
+        return sum(len(content) for content in files.values()) + len(note or "") > MAX_DRAFT_CHARS
+
+    @app.get("/api/v1/courses/{course_id}/stages/{stage}/build", response_model=StageBuild)
+    def get_stage_build(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
+        build = open_build(course_id, stage, learner_id)
+        if isinstance(build, JSONResponse):
+            return build
+        exercise_id = exercise_id_of(course_id, stage)
+        scope = scope_of(course_id, stage)
+        if repo.get_current_exercise(learner_id, scope, BUILD_ACTIVITY) is None:
+            repo.set_current_exercise(learner_id, scope, BUILD_ACTIVITY, exercise_id, clock())
+        ledger = repo.get_evidence_ledger(learner_id)
+        return public_build(build, submitted=any(e.seed_id == exercise_id for e in ledger))
+
+    @app.post(
+        "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:check",
+        response_model=BuildCheckResult,
+    )
+    def check_my_build(
+        course_id: str,
+        stage: int,
+        payload: BuildCheckRequest,
+        learner_id: str = Depends(current_learner_id),
+    ):
+        build = open_build(course_id, stage, learner_id)
+        if isinstance(build, JSONResponse):
+            return build
+        if too_large(payload.files, payload.ownership_note):
+            return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
+        results = check_requirements(build, payload.files, payload.ownership_note, runner, payload.run_checks)
+        return BuildCheckResult(requirements=results)
+
+    @app.post(
+        "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset",
+        status_code=204,
+        response_model=None,
+    )
+    def reset_my_build(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
+        if course_id not in COURSES or not stage_units(course_id, stage):
+            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+        repo.reset_unit(learner_id, scope_of(course_id, stage))
+        return None
+
+    def attempt_build(target: Tuple[str, int], attempt: Attempt, learner_id: str):
+        course_id, stage = target
+        build = open_build(course_id, stage, learner_id)
+        if isinstance(build, JSONResponse):
+            return build
+        if attempt.activity != BUILD_ACTIVITY:
+            return problem(422, "Unknown activity", "A build takes the 'build' activity.")
+        files = attempt.files or {}
+        if too_large(files, attempt.ownership_note):
+            return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
+
+        results = check_requirements(build, files, attempt.ownership_note, runner, run_checks=True)
+        labels = {r.id: r.label for r in build.requirements}
+        checks = [Check(label=labels[r.id], passed=bool(r.met), detail=r.detail) for r in results]
+        met = sum(1 for check in checks if check.passed)
+        passed = met == len(checks)
+
+        exercise_id = exercise_id_of(course_id, stage)
+        entries: List[EvidenceEntry] = []
+        if passed:
+            current = repo.get_current_exercise(learner_id, scope_of(course_id, stage), BUILD_ACTIVITY)
+            served_at = current.served_at if current else datetime.min.replace(tzinfo=timezone.utc)
+            assistance = highest_assistance(repo.get_assistance_levels(learner_id, exercise_id, served_at))
+            for proof in build.proves:
+                entry = EvidenceEntry(
+                    learner_id=learner_id,
+                    unit_id=proof.unit_id,
+                    skill_id=proof.skill_id,
+                    evidence_category=ACTIVITY_EVIDENCE[ActivityType.BUILD],
+                    evidence_strength=evidence_strength(BUILD_ACTIVITY, True, 0, assistance, False),
+                    assistance_level=assistance,
+                    demonstration_context=f"Stage build {exercise_id}",
+                    observed_reasoning=attempt.ownership_note,
+                    recorded_at=clock(),
+                    exercise_id=exercise_id,
+                    seed_id=exercise_id,
+                    activity=ActivityType.BUILD,
+                )
+                repo.record_evidence(entry)
+                entries.append(entry)
+
+        config = EstimatorConfig(main_activities=catalog.main_activities)
+        return AttemptResult(
+            outcome="passed" if passed else "failed",
+            feedback="Submitted. This build is in your ledger." if passed else "Some requirements are not met yet.",
+            checks=checks,
+            score=Score(passed=met, total=len(checks)),
+            evidence_entry_id=entries[0].entry_id if entries else None,
+            unit_decision=unit_decision(
+                stage_units(course_id, stage)[0], repo.get_evidence_ledger(learner_id), clock(), config
+            ),
         )
 
     # --- Code Execution Sandbox Routes ---
@@ -429,11 +590,18 @@ def create_app(
             return {"concept_id": concept.concept_id, "title": concept.name, "doc_url": concept.doc_url}
         return {"concept_id": name, "title": name, "doc_url": ""}
 
+    def axis_query(query: AxisQuery, learner_id: str) -> AxisQuery:
+        """The server sets the learner, and keeps AXIS Socratic on a build whatever was asked (SPEC-15)."""
+        update: Dict[str, Any] = {"learner_id": learner_id}
+        if parse_exercise_id(query.exercise_id or ""):
+            update["mode"] = AxisMode.SOCRATIC
+        return query.model_copy(update=update)
+
     @app.post("/api/v1/axis/stream", response_model=None)
     def stream_axis_reply(request: AxisStreamRequest, learner_id: str = Depends(current_learner_id)):
         if is_cold_check_exercise(request.exercise_id):
             return axis_blocked()
-        query = request.model_copy(update={"learner_id": learner_id})
+        query = axis_query(request, learner_id)
 
         def sse(event: str, data: Dict[str, Any]) -> str:
             return f"event: {event}\ndata: {json.dumps(data)}\n\n"
@@ -467,7 +635,7 @@ def create_app(
     def consult_axis(query: AxisQuery, learner_id: str = Depends(current_learner_id)):
         if is_cold_check_exercise(query.exercise_id):
             return axis_blocked()
-        response = axis.consult(query.model_copy(update={"learner_id": learner_id}))
+        response = axis.consult(axis_query(query, learner_id))
         if query.exercise_id:
             repo.log_assistance(
                 learner_id, query.exercise_id, response.detected_assistance_level, clock()
@@ -666,6 +834,9 @@ def create_app(
 
     def known_exercise(exercise_id: str) -> Optional[str]:
         """The unit an exercise id belongs to, if it is a real exercise."""
+        build_target = parse_exercise_id(exercise_id)
+        if build_target in catalog.builds:
+            return scope_of(*build_target)
         unit = catalog.get_unit(exercise_id.split("/")[0])
         if not unit:
             return None
@@ -754,6 +925,9 @@ def create_app(
         response_model_exclude_none=True,
     )
     def post_my_attempt(attempt: Attempt, learner_id: str = Depends(current_learner_id)):
+        build_target = parse_exercise_id(attempt.exercise_id)
+        if build_target:
+            return attempt_build(build_target, attempt, learner_id)
         unit_id = known_exercise(attempt.exercise_id)
         if not unit_id:
             return problem(404, "Exercise not found", f"Exercise '{attempt.exercise_id}' does not exist.")

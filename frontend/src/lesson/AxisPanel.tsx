@@ -26,11 +26,13 @@ export function AxisPanel({
   step,
   exerciseId,
   getCode,
+  socraticOnly = false,
 }: {
   unitId: string;
   step: string;
   exerciseId?: string;
   getCode: () => string | undefined;
+  socraticOnly?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("Socratic");
   const [draft, setDraft] = useState("");
@@ -85,14 +87,18 @@ export function AxisPanel({
     <aside className="card axis-panel" aria-label="AXIS facilitator">
       <div className="axis-head">
         <span className="axis-title">AXIS</span>
-        <div className="mode-picker" role="group" aria-label="Facilitation mode">
-          {MODES.map((name) => (
-            <label key={name} className={mode === name ? "mode mode-chosen" : "mode"}>
-              <input type="radio" name="axis-mode" checked={mode === name} onChange={() => setMode(name)} />
-              {name}
-            </label>
-          ))}
-        </div>
+        {socraticOnly ? (
+          <span className="small muted">Socratic during builds</span>
+        ) : (
+          <div className="mode-picker" role="group" aria-label="Facilitation mode">
+            {MODES.map((name) => (
+              <label key={name} className={mode === name ? "mode mode-chosen" : "mode"}>
+                <input type="radio" name="axis-mode" checked={mode === name} onChange={() => setMode(name)} />
+                {name}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
       <div className="axis-messages" aria-live="polite">
         {messages.length === 0 && <p className="small muted">Stuck? Ask about what you are doing here. AXIS can see this step and your code.</p>}

@@ -13,7 +13,7 @@ type RunEvent =
 const socketUrl = () => `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/v1/runs`;
 
 /** Runs the learner's code on the server and connects the program to a real terminal. */
-export function RunTerminal({ getCode, exerciseId }: { getCode: () => string; exerciseId: string }) {
+export function RunTerminal({ getCode, exerciseId, entry = "solution.py" }: { getCode: () => string; exerciseId: string; entry?: string }) {
   const host = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal | null>(null);
   const socket = useRef<WebSocket | null>(null);
@@ -97,8 +97,8 @@ export function RunTerminal({ getCode, exerciseId }: { getCode: () => string; ex
       ws.send(
         JSON.stringify({
           type: "start",
-          files: { "solution.py": getCode() },
-          entry: "solution.py",
+          files: { [entry]: getCode() },
+          entry,
           exercise_id: exerciseId,
         }),
       );

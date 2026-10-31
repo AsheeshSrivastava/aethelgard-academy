@@ -7,7 +7,7 @@ Governed by:
 Deterministic and pure: units and Cold Check states come in, views come out.
 """
 
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Mapping, NamedTuple, Optional
 
 from pydantic import BaseModel
 
@@ -69,6 +69,16 @@ class BuildSummary(BaseModel):
     kind: str                          # "script" | "mini_project"
     locked: bool
     pending_units: List[str]
+    authored: bool = False             # False: a placeholder until the curator writes it
+    status: Optional[str] = None       # "draft" | "approved"
+
+
+class AuthoredBuild(NamedTuple):
+    """The parts of a curated build that the course map shows."""
+
+    title: str
+    kind: str
+    status: str
 
 
 class StageView(BaseModel):
@@ -108,6 +118,7 @@ def build_course_map(
     stage_titles: Dict[int, str],
     cold_check_state_of: Callable[[str], ColdCheckState],
     decision_of: Callable[[Unit], ProgressionDecision],
+    builds: Mapping[int, AuthoredBuild] = {},
 ) -> CourseMap:
     """Group a course's units by stage number; units keep their teaching order."""
     by_stage: Dict[int, List[Unit]] = {}
@@ -117,7 +128,7 @@ def build_course_map(
     return CourseMap(
         course=build_course(course_id, units),
         stages=[
-            _stage_view(stage, by_stage[stage], stage_titles, cold_check_state_of, decision_of)
+            _stage_view(stage, by_stage[stage], stage_titles, cold_check_state_of, decision_of, builds.get(stage))
             for stage in sorted(by_stage)
         ],
     )
@@ -129,6 +140,7 @@ def _stage_view(
     stage_titles: Dict[int, str],
     cold_check_state_of: Callable[[str], ColdCheckState],
     decision_of: Callable[[Unit], ProgressionDecision],
+    authored: Optional[AuthoredBuild] = None,
 ) -> StageView:
     states = {u.unit_id: cold_check_state_of(u.unit_id) for u in units}
     pending = [unit_id for unit_id, state in states.items() if state != ColdCheckState.PASSED]
@@ -138,10 +150,12 @@ def _stage_view(
         units=[_unit_summary(u, decision_of(u), states[u.unit_id]) for u in units],
         # Every stage has one build (owner decision); curator data replaces these defaults.
         build=BuildSummary(
-            title=f"Stage {stage} build",
-            kind="script",
+            title=authored.title if authored else f"Stage {stage} build",
+            kind=authored.kind if authored else "script",
             locked=bool(pending),
             pending_units=pending,
+            authored=authored is not None,
+            status=authored.status if authored else None,
         ),
     )
 

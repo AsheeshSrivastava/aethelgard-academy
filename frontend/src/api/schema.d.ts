@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Features */
+        get: operations["get_features_api_v1_features_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/concepts": {
         parameters: {
             query?: never;
@@ -151,6 +168,57 @@ export interface paths {
         get: operations["get_course_map_api_v1_courses__course_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/courses/{course_id}/stages/{stage}/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Stage Build */
+        get: operations["get_stage_build_api_v1_courses__course_id__stages__stage__build_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check My Build */
+        post: operations["check_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset My Build */
+        post: operations["reset_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_reset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -609,6 +677,41 @@ export interface components {
             /** Page */
             page?: string | null;
         };
+        /** BuildCheckRequest */
+        BuildCheckRequest: {
+            /** Files */
+            files: {
+                [key: string]: string;
+            };
+            /** Ownership Note */
+            ownership_note?: string | null;
+            /**
+             * Run Checks
+             * @default false
+             */
+            run_checks: boolean;
+        };
+        /** BuildCheckResult */
+        BuildCheckResult: {
+            /** Requirements */
+            requirements: components["schemas"]["RequirementResult"][];
+        };
+        /** BuildFile */
+        BuildFile: {
+            /** Path */
+            path: string;
+            /** Starter */
+            starter: string[];
+        };
+        /** BuildProof */
+        BuildProof: {
+            /** Skill Id */
+            skill_id: string;
+            /** Unit Id */
+            unit_id: string;
+            /** Label */
+            label: string;
+        };
         /** BuildSummary */
         BuildSummary: {
             /** Title */
@@ -619,6 +722,13 @@ export interface components {
             locked: boolean;
             /** Pending Units */
             pending_units: string[];
+            /**
+             * Authored
+             * @default false
+             */
+            authored: boolean;
+            /** Status */
+            status?: string | null;
         };
         /** Check */
         Check: {
@@ -985,6 +1095,27 @@ export interface components {
             /** Sentences */
             sentences: components["schemas"]["Choice"][];
         };
+        /**
+         * Features
+         * @description Modules that are switched on (SPEC-12 section 9). The frontend hides routes for the rest.
+         */
+        Features: {
+            /**
+             * Live Sessions
+             * @default false
+             */
+            live_sessions: boolean;
+            /**
+             * Forums
+             * @default false
+             */
+            forums: boolean;
+            /**
+             * Gamification
+             * @default false
+             */
+            gamification: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1096,6 +1227,24 @@ export interface components {
          * @enum {string}
          */
         ProgressionDecision: "Progress" | "Accelerate" | "Strengthen" | "Rebuild" | "Undecided";
+        /** PublicRequirement */
+        PublicRequirement: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Unit Id */
+            unit_id: string;
+        };
+        /** RequirementResult */
+        RequirementResult: {
+            /** Id */
+            id: string;
+            /** Met */
+            met: boolean | null;
+            /** Detail */
+            detail?: string | null;
+        };
         /** Reveal */
         Reveal: {
             /** Correct */
@@ -1147,6 +1296,38 @@ export interface components {
             material: string[];
             /** Fields */
             fields: components["schemas"]["ContractField"][];
+        };
+        /**
+         * StageBuild
+         * @description What a learner sees, built from a list of allowed fields (SPEC-15 section 3).
+         */
+        StageBuild: {
+            /** Exercise Id */
+            exercise_id: string;
+            /** Course Id */
+            course_id: string;
+            /** Stage */
+            stage: number;
+            /** Title */
+            title: string;
+            /** Kind */
+            kind: string;
+            /** Status */
+            status: string;
+            /** Brief Markdown */
+            brief_markdown: string;
+            /** Sample Run */
+            sample_run: string[];
+            /** Entry */
+            entry: string;
+            /** Files */
+            files: components["schemas"]["BuildFile"][];
+            /** Requirements */
+            requirements: components["schemas"]["PublicRequirement"][];
+            /** Proves */
+            proves: components["schemas"]["BuildProof"][];
+            /** Submitted */
+            submitted: boolean;
         };
         /** StageView */
         StageView: {
@@ -1352,6 +1533,26 @@ export interface operations {
             };
         };
     };
+    get_features_api_v1_features_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Features"];
+                };
+            };
+        };
+    };
     get_concepts_api_v1_concepts_get: {
         parameters: {
             query?: {
@@ -1521,6 +1722,104 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CourseMap"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_stage_build_api_v1_courses__course_id__stages__stage__build_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageBuild"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildCheckResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

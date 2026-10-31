@@ -8,25 +8,32 @@ import { buildLockMessage, nextActionMessage } from "../lib/format";
 
 type Stage = Schemas["StageView"];
 
-function BuildTile({ stage }: { stage: Stage }) {
+function BuildTile({ courseId, stage }: { courseId: string; stage: Stage }) {
   const build = stage.build;
   if (!build) return null;
+  const head = (
+    <span className="build-head">
+      <span className="mono">{build.title}</span>
+      <span className="chip chip-build">{build.kind === "script" ? "Script" : "Mini-project"}</span>
+    </span>
+  );
+  if (!build.locked && build.authored) {
+    return (
+      <Link to="/courses/$courseId/stages/$stage/build" params={{ courseId, stage: String(stage.stage) }} className="build-tile">
+        {head}
+        <span className="small">Unlocked</span>
+      </Link>
+    );
+  }
   return (
     <div className="build-tile">
-      <span className="build-head">
-        <span className="mono">{build.title}</span>
-        <span className="chip chip-build">{build.kind === "script" ? "Script" : "Mini-project"}</span>
-      </span>
-      {build.locked ? (
-        <span className="small">{buildLockMessage(build.pending_units)}</span>
-      ) : (
-        <span className="small">Unlocked</span>
-      )}
+      {head}
+      <span className="small">{build.locked ? buildLockMessage(build.pending_units) : "Not written yet"}</span>
     </div>
   );
 }
 
-function StageCard({ stage, current }: { stage: Stage; current: boolean }) {
+function StageCard({ courseId, stage, current }: { courseId: string; stage: Stage; current: boolean }) {
   return (
     <div className={`card stage${current ? " stage-current" : ""}`}>
       <div className="stage-head">
@@ -51,7 +58,7 @@ function StageCard({ stage, current }: { stage: Stage; current: boolean }) {
             </span>
           </Link>
         ))}
-        <BuildTile stage={stage} />
+        <BuildTile courseId={courseId} stage={stage} />
       </div>
     </div>
   );
@@ -120,7 +127,7 @@ export function CourseMap() {
         </aside>
         <section className="stage-list" aria-label="Stages">
           {stages.map((stage) => (
-            <StageCard key={stage.stage} stage={stage} current={stage.stage === progress.data?.stage} />
+            <StageCard key={stage.stage} courseId={courseId} stage={stage} current={stage.stage === progress.data?.stage} />
           ))}
         </section>
       </div>

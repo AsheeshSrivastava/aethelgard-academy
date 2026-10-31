@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "course_id": "python",
+  "stage": 0,
+  "title": "Relief centre check-in script",
+  "kind": "script",
+  "status": "draft",
+  "brief_markdown": "The municipal relief centre has one desk and a long queue. People arrive tired, and they type in messy ways.\n\nWrite one script for the desk. It asks for a person's name, then the service they need, then prints a slip the desk officer can read aloud. Clean both answers first, so the slip looks right however they were typed.",
+  "sample_run": [
+    "Name:    meera ",
+    "Service needed: housing",
+    "",
+    "--- CHECK-IN SLIP ---",
+    "Name: Meera",
+    "Service: Housing",
+    "Please wait for the Housing desk."
+  ],
+  "entry": "checkin.py",
+  "files": [
+    {
+      "path": "checkin.py",
+      "starter": [
+        "# Stage 0 build: relief centre check-in",
+        "# Plan your steps as comments first, then write the code under each one.",
+        ""
+      ]
+    },
+    {
+      "path": "README.md",
+      "starter": [
+        "# Stage 0 build",
+        "",
+        "## What this script does",
+        "",
+        "",
+        "## How to run it",
+        "",
+        "",
+        "## What I checked myself",
+        ""
+      ]
+    }
+  ],
+  "requirements": [
+    { "id": "plan", "label": "Plan written as comments", "unit_id": "PY-0.1", "check": { "kind": "comment_lines", "min": 3 } },
+    { "id": "inputs", "label": "Both answers captured with input() into variables", "unit_id": "PY-0.1", "check": { "kind": "input_assignments", "min": 2 } },
+    { "id": "fstrings", "label": "Output uses at least two f-strings", "unit_id": "PY-0.1", "check": { "kind": "fstring_prints", "min": 2 } },
+    { "id": "sample", "label": "Output matches the sample run (Verify)", "unit_id": "PY-0.4", "check": { "kind": "behaviour", "function": "check_sample_run" } },
+    { "id": "messy", "label": "Messy input is cleaned (Verify)", "unit_id": "PY-0.4", "check": { "kind": "behaviour", "function": "check_messy_input" } },
+    { "id": "readme", "label": "README says how to run the script", "unit_id": "PY-0.4", "check": { "kind": "file_contains", "path": "README.md", "any": ["python checkin.py", "python3 checkin.py", "uv run checkin.py"] } },
+    { "id": "note", "label": "Ownership note written", "unit_id": "PY-0.3", "check": { "kind": "ownership_note", "min_chars": 20 } }
+  ],
+  "proves": [
+    { "skill_id": "CO-1", "unit_id": "PY-0.4", "label": "Run a script and predict what it does" },
+    { "skill_id": "VE-4", "unit_id": "PY-0.4", "label": "Read and fix your own errors" },
+    { "skill_id": "CO-2", "unit_id": "PY-0.1", "label": "Order, state and output" },
+    { "skill_id": "DE-3", "unit_id": "PY-0.3", "label": "Own the reasoning" }
+  ]
+}
