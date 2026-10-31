@@ -1,4 +1,5 @@
 """Tests for the interactive lesson engine, overlay loader, and learner workflow (SPEC-06)."""
+import json
 from pathlib import Path
 import pytest
 
@@ -31,6 +32,32 @@ def test_overlay_curriculum_packages():
     assert unit.media[0].kind == "video"
     assert "Running Your First Program" in unit.media[0].title
     assert len(unit.media[0].timestamps) >= 3
+
+
+def test_stage_0_playgrounds_need_no_functions():
+    for unit in ("py-0.4", "py-0.1", "py-0.3"):
+        starter = Path(f"curriculum/python/{unit}/starter.py").read_text(encoding="utf-8")
+
+        assert "def " not in starter, unit
+
+
+def test_first_unit_introduces_the_text_cleaning_tools():
+    package = Path("curriculum/python/py-0.4")
+    lesson = (package / "lesson.md").read_text(encoding="utf-8")
+    meta = json.loads((package / "meta.json").read_text(encoding="utf-8"))
+    starter = (package / "starter.py").read_text(encoding="utf-8")
+
+    for tool in ("str(", ".strip()", ".title()", ".upper()"):
+        assert tool in lesson, tool
+    assert {"str()", ".strip()", ".title()", ".upper()"} <= set(meta["concepts"])
+    assert "ticket" in starter and "clean_name" in starter
+
+
+def test_first_lesson_warns_about_the_tools_real_traps():
+    lesson = Path("curriculum/python/py-0.4/lesson.md").read_text(encoding="utf-8")
+
+    assert "name = name.strip()" in lesson
+    assert "Mcdonald" in lesson
 
 
 def test_cli_pull_authored_lesson(tmp_path):
@@ -66,15 +93,13 @@ def test_cli_verify_authored_lesson(tmp_path):
 
     # 2. Correct implementation passes
     correct_code = (
-        'def run_intake(name: str, ward_code: str) -> str:\n'
-        '    """Process intake desk registration."""\n'
-        '    clean_name = name.strip()\n'
-        '    clean_ward = ward_code.strip().upper()\n'
-        '    return f"REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}]"\n\n'
-        'if __name__ == "__main__":\n'
-        '    user_name = input("Applicant Name: ")\n'
-        '    ward = input("Ward Code: ")\n'
-        '    print(run_intake(user_name, ward))\n'
+        'raw_name = input("Applicant Name: ")\n'
+        'raw_ward = input("Ward Code: ")\n'
+        'clean_name = raw_name.strip().title()\n'
+        'clean_ward = raw_ward.strip().upper()\n'
+        'queue_number = 7\n'
+        'ticket = "TICKET-" + str(queue_number)\n'
+        'print(f"REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}] {ticket}")\n'
     )
     solution_file.write_text(correct_code, encoding="utf-8")
     pass_res = handle_verify_command("PY-0.4", workspace, learner_id="learner_001", repo=repo)

@@ -14,6 +14,35 @@ In Python, this exact lifecycle is managed through three core primitives:
 
 ---
 
+## Everyday Tools: Cleaning Text
+
+People type in messy ways, so real programs clean text as soon as it arrives. Learn these four as recipes. You do not need to know how they work yet.
+
+| Tool | What it does | Example | Result |
+| --- | --- | --- | --- |
+| `.strip()` | Removes spaces at the two ends | `"  amara  ".strip()` | `"amara"` |
+| `.title()` | Capitalises each word | `"amara okafor".title()` | `"Amara Okafor"` |
+| `.upper()` | Makes every letter a capital | `"north-01".upper()` | `"NORTH-01"` |
+| `str()` | Turns a value into text | `str(7)` | `"7"` |
+
+You can ask the text to clean itself in one line, working left to right:
+
+```python
+name = "   amara OKAFOR ".strip().title()
+```
+
+**Notice the dot.** `str()` is a function: the value goes inside the brackets, like `print()`. `.strip()`, `.title()` and `.upper()` are called on the text with a dot. For now, treat that as how these tools are written; a later unit explains why.
+
+**Keep the result.** These tools give you new text and leave the original alone. On its own, `name.strip()` changes nothing that you can use later. Store the result:
+
+```python
+name = name.strip()
+```
+
+**Tools have assumptions.** `.title()` follows a simple rule, so it gets some real names wrong: `"mcdonald".title()` gives `"Mcdonald"`, and `"van der berg".title()` gives `"Van Der Berg"`. It is fine for practice. In real work, check a tool against real data before you trust it.
+
+---
+
 ## Video Walkthrough
 
 > [!TIP] Watch the walkthrough before writing code:

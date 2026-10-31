@@ -1,6 +1,7 @@
 {
   "unit_id": "PY-0.4",
   "title": "Run a first program",
+  "concepts": ["print()", "input()", "comments", "f-strings", "reading a first error", "str()", ".strip()", ".title()", ".upper()"],
   "media": [
     {
       "media_id": "vid-py-0.4-walkthrough",

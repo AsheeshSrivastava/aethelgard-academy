@@ -2,26 +2,31 @@
 
 Operational Context:
 You are building the intake desk for an operations center.
-When an applicant arrives, the desk collects their name and ward code,
-cleans up leading/trailing whitespace, and emits a standard confirmation slip.
+When an applicant arrives, the desk collects their name and ward code. People type
+in messy ways, so the desk cleans the text before it prints a confirmation slip.
 
-Requirements:
-1. Implement run_intake(name: str, ward_code: str) -> str:
-   - Strip whitespace from name.
-   - Strip whitespace and uppercase ward_code.
-   - Return formatted string: "REGISTRATION CONFIRMED: <name> [WARD-<ward_code>]"
-2. Interactive Execution:
-   - If executed directly as a script (__name__ == "__main__"):
-     Prompt for name via input("Applicant Name: ")
-     Prompt for ward code via input("Ward Code: ")
-     Print the output returned by run_intake().
+This practice is not graded. Run it, try messy input, and use Verify as often as you like.
 """
 
-def run_intake(name: str, ward_code: str) -> str:
-    # TODO: Implement the operational intake formatting
-    pass
+# Step 1: The desk asks for the raw details. input() always returns text.
+raw_name = input("Applicant Name: ")
+raw_ward = input("Ward Code: ")
 
+# Step 2: Clean the name. Remove spaces at the ends, then use title case.
+# Example: "   amara OKAFOR " should become "Amara Okafor"
+clean_name = ...
 
-if __name__ == "__main__":
-    # TODO: Connect input() ingress to run_intake() and print() egress
-    pass
+# Step 3: Clean the ward code. Remove spaces at the ends, then use capitals.
+# Example: " north-01 " should become "NORTH-01"
+clean_ward = ...
+
+# Step 4: Build the ticket by joining "TICKET-" and the queue number.
+# The number must become text first, so use str().
+# Example: "TICKET-7"
+queue_number = 7
+ticket = ...
+
+# Step 5: Print the slip in exactly this format, using an f-string:
+# REGISTRATION CONFIRMED: Amara Okafor [WARD-NORTH-01] TICKET-7
+# (Your code here)
+
