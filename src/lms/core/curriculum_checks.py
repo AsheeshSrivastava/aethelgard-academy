@@ -10,11 +10,12 @@ raised, because the curriculum belongs to the curator (SPEC-12 section 3.1).
 """
 
 from enum import Enum
-from typing import AbstractSet, Dict, List, Mapping, Optional, Set, Tuple
+from typing import AbstractSet, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from pydantic import BaseModel
 
 from lms.core.course_map import course_of
+from lms.core.exercises import ExerciseSeed
 from lms.core.models import ActivityType, EvidenceCategory, ProficiencyLevel, Unit
 
 # What each activity can show, from the evidence category examples in the
@@ -30,24 +31,6 @@ ACTIVITY_EVIDENCE: Dict[ActivityType, EvidenceCategory] = {
     ActivityType.DIRECT: EvidenceCategory.PERFORM_SOLVE,
     ActivityType.DEBUG_VALIDATE: EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER,
     ActivityType.EVALUATE: EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER,
-}
-
-# Activities a machine can grade with no AI: fixed answers or sandbox checks.
-# Evaluate and Direct need a curator-written answer key (ADR-0016 amendment B).
-# Explain, Specify and Decompose need a SPEC-13 item type (amendment C).
-# This judges by type only, because seeds do not load yet, so every real unit
-# passes. SPEC-13 section 8 replaces it with a per-skill seed check.
-DETERMINISTIC_ACTIVITIES = {
-    ActivityType.PREDICT,
-    ActivityType.TRACE,
-    ActivityType.MODIFY,
-    ActivityType.DEBUG_VALIDATE,
-    ActivityType.BUILD,
-    ActivityType.EVALUATE,
-    ActivityType.DIRECT,
-    ActivityType.EXPLAIN,
-    ActivityType.SPECIFY,
-    ActivityType.DECOMPOSE,
 }
 
 
@@ -70,27 +53,61 @@ def check_curriculum(
     units: List[Unit],
     stages_with_build: AbstractSet[Tuple[str, int]] = frozenset(),
     main_activities: Optional[Mapping[str, ActivityType]] = None,
+    seeds: Optional[Mapping[str, Sequence[ExerciseSeed]]] = None,
 ) -> List[Finding]:
     """Run every check.
 
     `stages_with_build` holds (course_id, stage) pairs with a curated build.
     `main_activities` maps each skill to its Learning Method main activity.
+    `seeds` maps unit ids to their loaded seeds; None skips the seed checks.
     """
+    main_activities = main_activities or {}
     findings: List[Finding] = []
     for unit in units:
-        findings.extend(_check_target_levels(unit, stages_with_build, main_activities or {}))
-        if not DETERMINISTIC_ACTIVITIES.intersection(unit.methods):
-            findings.append(
-                Finding(
-                    severity=Severity.ERROR,
-                    code="cold-check-not-graded",
-                    message=f"{unit.unit_id} has no deterministically graded activity for its Cold Check.",
-                    unit_id=unit.unit_id,
-                    course_id=course_of(unit.unit_id),
-                    stage=unit.stage,
-                )
-            )
+        findings.extend(_check_target_levels(unit, stages_with_build, main_activities))
+        if seeds is not None:
+            findings.extend(_check_seeds(unit, seeds.get(unit.unit_id, ()), main_activities))
     findings.extend(_check_stage_coverage(units))
+    return findings
+
+
+def _check_seeds(
+    unit: Unit, seeds: Sequence[ExerciseSeed], main_activities: Mapping[str, ActivityType]
+) -> List[Finding]:
+    """SPEC-13 section 8, rules 3, 8 and 11."""
+    goals = {s.skill_id: s.goal_level for s in unit.target_skills}
+    findings: List[Finding] = []
+
+    def report(severity: Severity, code: str, message: str, skill_id: Optional[str]) -> None:
+        findings.append(
+            Finding(
+                severity=severity,
+                code=code,
+                message=message,
+                unit_id=unit.unit_id,
+                skill_id=skill_id,
+                course_id=course_of(unit.unit_id),
+                stage=unit.stage,
+            )
+        )
+
+    covered: Set[str] = set()
+    for seed in seeds:
+        if seed.activity not in unit.methods:
+            report(Severity.ERROR, "seed-wrong-activity", f"{seed.seed_id} uses {seed.activity.value}, which is not in the unit.", seed.skill_id)
+        if seed.skill_id not in goals:
+            report(Severity.ERROR, "seed-wrong-skill", f"{seed.seed_id} tests {seed.skill_id}, which is not a target skill.", seed.skill_id)
+        elif seed.level != goals[seed.skill_id]:
+            report(Severity.ERROR, "seed-wrong-level", f"{seed.seed_id} is at {seed.level.value}; the goal is {goals[seed.skill_id].value}.", seed.skill_id)
+        if seed.cold_check_eligible:
+            if main_activities.get(seed.skill_id, seed.activity) != seed.activity:
+                report(Severity.ERROR, "seed-not-main-activity", f"{seed.seed_id} must test {seed.skill_id} through its main activity.", seed.skill_id)
+            elif seed.curator_approved:
+                covered.add(seed.skill_id)
+
+    for skill_id in goals:
+        if skill_id not in covered:
+            report(Severity.WARNING, "cold-check-seed-missing", f"{unit.unit_id}: {skill_id} has no approved Cold Check seed.", skill_id)
     return findings
 
 

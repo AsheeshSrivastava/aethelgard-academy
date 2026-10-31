@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity, check_curriculum
+from lms.core.exercises import ExerciseSeed, SeedError, parse_seed
 from lms.core.models import ActivityType, MediaAsset, ProficiencyLevel, TargetSkill, Unit
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,7 @@ class CurriculumCatalog:
         self._stage_titles: Dict[Tuple[Optional[str], int], str] = {}
         self.findings: List[Finding] = []  # SPEC-12 section 3.1 checks, set by load_all_roadmaps
         self.main_activities: Dict[str, ActivityType] = {}  # Set by load_all_roadmaps
+        self.seeds: Dict[str, List[ExerciseSeed]] = {}      # unit_id -> seeds, set by load_all_roadmaps
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
@@ -225,6 +227,28 @@ def load_main_activities(file_path: Path) -> Dict[str, ActivityType]:
     return table
 
 
+def load_seeds(curriculum_dir: Path) -> Tuple[Dict[str, List[ExerciseSeed]], List[Finding]]:
+    """Load every SPEC-13 seed. A bad file is reported and skipped; it never stops the app."""
+    seeds: Dict[str, List[ExerciseSeed]] = {}
+    problems: List[Finding] = []
+    for seed_file in sorted(curriculum_dir.glob("*/*/exercises/*.json")):
+        unit_id = seed_file.parent.parent.name.upper()
+        try:
+            raw = json.loads(seed_file.read_text(encoding="utf-8"))
+            seeds.setdefault(unit_id, []).append(parse_seed(raw, seed_file.stem, unit_id))
+        except (SeedError, ValueError) as error:
+            problems.append(
+                Finding(
+                    severity=Severity.ERROR,
+                    code="seed-invalid",
+                    message=f"{unit_id}/{seed_file.name}: {error}",
+                    unit_id=unit_id,
+                    course_id=course_of(unit_id),
+                )
+            )
+    return seeds, problems
+
+
 def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
     """Load every course's roadmap into one catalog, in course then teaching order."""
     catalog = CurriculumCatalog()
@@ -235,8 +259,9 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
 
     # Findings are reported, never fatal: the curriculum belongs to the curator.
     catalog.main_activities = load_main_activities(reference_dir / LEARNING_METHOD_FILE)
-    catalog.findings = check_curriculum(
-        catalog.list_all_units(), main_activities=catalog.main_activities
+    catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
+    catalog.findings = seed_problems + check_curriculum(
+        catalog.list_all_units(), main_activities=catalog.main_activities, seeds=catalog.seeds
     )
     errors = sum(1 for f in catalog.findings if f.severity == Severity.ERROR)
     if catalog.findings:

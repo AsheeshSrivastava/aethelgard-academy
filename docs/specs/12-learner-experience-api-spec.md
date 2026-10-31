@@ -57,7 +57,7 @@ The curator decides each unit's content, activities, their order and their scaff
 Checks run when curriculum is loaded (and in CI):
 - **Error:** a unit's target level needs evidence its activities cannot produce (Apply needs a Perform/Solve activity or the skill's main activity; Adapt needs a Diagnose/Judge/Transfer activity or the skill's main activity; Own needs the stage build). Main activities come from Learning Method v2 (ADR-0016 amendment A).
 - **Warning:** a stage has no activity producing one of the three evidence categories (Explain/Reason, Perform/Solve, Diagnose/Judge/Transfer). A stage uses 5 to 6 activity types, not all 10.
-- **Error:** a Cold Check would contain no deterministically graded activity. Predict, Trace, Modify, Debug & Validate and Build are gradable; Evaluate and Direct are gradable with a curator-written fixed answer key (ADR-0016 amendment B); Explain, Specify and Decompose are gradable only through SPEC-13's item types (ADR-0016 amendment C). Until seeds load, this is judged by activity type; the seed loader replaces it with a per-skill check (SPEC-13 section 8).
+- **Warning:** a target skill has no approved Cold Check seed (SPEC-13 section 8, rule 11). The skill stays provisional until it has one. Every activity has a deterministic form (ADR-0016 amendments B and C), so this replaces judging by activity type.
 
 Activities and evidence categories:
 

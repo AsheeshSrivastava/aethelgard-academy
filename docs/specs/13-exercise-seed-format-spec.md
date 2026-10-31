@@ -298,7 +298,7 @@ The loader, when it is built, reports these. Each one is an error for that seed 
 10. **Warning:** an activity of the unit, other than Explain, has no seed.
 11. **Warning:** a target skill has no Cold Check seed.
 
-Rule 11 replaces the curriculum check `cold-check-not-graded`, which judges by activity type until seeds load (SPEC-12 section 3.1).
+Rules 3, 8 and 11 run in the curriculum check. A bad file is reported as `seed-invalid` and skipped; it never stops the app. Rule 5's sandbox checks run in the test suite.
 
 ---
 
