@@ -115,6 +115,9 @@ A Cold Check needs a deterministically graded activity. Evaluate and Direct now 
 
 The sentence in section 2.6 that a pass records an entry "at the unit's target level" is read with this rule: the entry is for the tested skill only.
 
+### E. Evidence counts per seed (decided 2026-10-31)
+Section 2.2 said repeating the same exercise variant counts once. Name variants of one seed differ only on the surface, so they count as the same exercise. Repeats of a seed count once, and the newest result is the one kept, so a learner who fails and then succeeds is judged on where they are now.
+
 ### D. Consequences
 - Skills whose main activity is Explain (CO-3, CO-4, CO-5, CO-6) can reach Adapt on Strong Explain evidence. This is what the decision says; tune it if real learner data shows it is too easy.
 - Authoring grows: every target skill needs a Cold Check item, so up to 190 targets need the new item types.

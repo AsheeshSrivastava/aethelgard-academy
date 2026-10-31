@@ -148,28 +148,49 @@ ColdCheckStatus { state: "not_ready" | "waiting" | "available" | "passed" | "fai
 
 ```text
 Attempt       { exercise_id, activity,
-                choice?: str,                       // predict
-                trace_answers?: [str],              // trace, optional per-line answers
-                files?: {path: content},            // playground and build
+                choice?: str,                       // predict, choice, explain items
+                trace_answers?: [str],              // trace: the output lines
+                locate?: {line, error_type},        // debug_locate
+                files?: {path: content},            // playground, debug, decompose_code
+                tests?: str,                        // specify_by_tests
+                fields?: {id: key | [key]},         // specify_contract
+                plan?: [str],                       // decompose_plan: ordered step ids
                 ownership_note?: str }              // build only
 AttemptResult { outcome: "passed" | "failed" | "recorded",
                 feedback, checks?: [{label, passed, detail}],
-                reveal?: {correct, why},            // predict, after commit
-                evidence_entry_id, unit_decision: Decision }
+                score?: {passed, total},            // partial feedback, SPEC-13 section 4
+                reveal?: {correct, why},            // after commit
+                evidence_entry_id: str | null, unit_decision: Decision }
 ```
+
+Rules:
+- Unknown fields are refused with `422`, so a client cannot send strength, category or assistance.
+- The attempt must be on the learner's current exercise: `409` otherwise.
+- **Ungraded playground:** runs the checks, returns `outcome`, and writes no evidence. `evidence_entry_id` is null.
+- **Explain:** the free-text concept check stays on `POST /explain`.
+- **Evidence is per seed:** an entry stores `seed_id`, and repeats of a seed, including its name variants, count once. The newest result is the one that counts.
+- **Completing a unit:** once every activity in the unit's methods has been attempted, and Explain has a concept check entry, the Cold Check clock starts.
+
+Cold Check attempts:
+- Accepted only when the status is `available`: `423` otherwise.
+- One item per target skill, one try each. After an attempt the next item for an unfinished skill is served.
+- When the round ends, the unit's Cold Check passes if every item passed. Otherwise it fails and retries in 24 hours, on the failed skills only.
+- `reveal` is never sent on a failed Cold Check, because the same item may come back. AXIS is off, so assistance is always none.
 
 The server derives the evidence entry:
 
 | Activity | Category | Strength (before assistance) |
 | --- | --- | --- |
 | predict | Explain / Reason | Strong if correct, Weak if not |
-| trace | Explain / Reason | Moderate when completed |
+| trace | Explain / Reason | Moderate when correct, Weak if not |
 | playground (Modify or Build only; section 3.2) | Perform / Solve | Strong if all checks pass first try, Moderate after retries |
 | playground (ungraded practice; section 3.2) | none | No evidence entry |
 | debug & validate | Diagnose / Judge / Transfer | Strong if fixed and verified |
 | cold_check | category of the skill probed | Strong if passed, Weak if not (assistance always none) |
 | build | Perform / Solve (Own context per ADR-0016) | Strong if all requirements met |
 | SPEC-13 item types | category of the activity | Strong if the item passes first try, Moderate after retries, Weak if not |
+
+`POST /learners/me/units/{unit_id}/playground:verify` with `{code}` runs the unit's playground checks on the server and returns an `ExecutionResult`. It writes no evidence, and `GET /units/{unit_id}` no longer sends hidden checks or the concept check rubric.
 
 Assistance level for the entry is the highest level AXIS logged against that `exercise_id` since it was served (ADR-0009). `SUPPLIED_REASONING` forces Weak.
 
