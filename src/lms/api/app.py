@@ -376,13 +376,38 @@ def create_app(
             return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
         return cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock())
 
+    @app.get("/api/v1/learners/me/ledger", response_model=List[EvidenceEntry])
+    def get_my_ledger(
+        skill_id: Optional[str] = Query(None),
+        unit_id: Optional[str] = Query(None),
+        learner_id: str = Depends(current_learner_id),
+    ):
+        entries = repo.get_evidence_ledger(learner_id=learner_id, skill_id=skill_id)
+        if unit_id is not None:
+            entries = [e for e in entries if e.unit_id == unit_id]
+        return sorted(entries, key=lambda e: e.recorded_at, reverse=True)
+
     # --- Learner Progress & Evidence Ledger Routes ---
+    # Older routes that name a learner; they answer only for the signed-in learner.
+    # Keep them after the /me routes so "me" is never read as a learner id.
     @app.get("/api/v1/learners/{learner_id}/ledger", response_model=List[EvidenceEntry])
-    def get_ledger(learner_id: str, skill_id: Optional[str] = Query(None)):
+    def get_ledger(
+        learner_id: str,
+        skill_id: Optional[str] = Query(None),
+        me: str = Depends(current_learner_id),
+    ):
+        if learner_id != me:
+            return problem(404, "Learner not found", f"Learner '{learner_id}' does not exist.")
         return repo.get_evidence_ledger(learner_id=learner_id, skill_id=skill_id)
 
     @app.post("/api/v1/learners/{learner_id}/progress")
-    def update_progress(learner_id: str, payload: ProgressUpdateRequest):
+    def update_progress(
+        learner_id: str,
+        payload: ProgressUpdateRequest,
+        me: str = Depends(current_learner_id),
+    ):
+        if learner_id != me:
+            return problem(404, "Learner not found", f"Learner '{learner_id}' does not exist.")
         repo.save_unit_progress(
             learner_id=learner_id, unit_id=payload.unit_id, status=payload.status
         )

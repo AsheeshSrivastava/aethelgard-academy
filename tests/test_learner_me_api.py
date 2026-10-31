@@ -345,3 +345,58 @@ def test_injection_in_unit_id_is_rejected_and_harmless(client, repo):
 
 def test_non_numeric_stage_is_rejected(client):
     assert client.get("/api/v1/learners/me/proficiency?stage=abc").status_code == 422
+
+
+# --- Ledger security (SPEC-12 criterion 6) ---
+
+
+def test_my_ledger_is_newest_first(client, repo):
+    older = make_entry(days_ago=3)
+    newer = make_entry(days_ago=1)
+    repo.record_evidence(older)
+    repo.record_evidence(newer)
+
+    body = client.get("/api/v1/learners/me/ledger").json()
+
+    assert [e["entry_id"] for e in body] == [newer.entry_id, older.entry_id]
+
+
+def test_my_ledger_filters_by_skill_and_unit(client, repo):
+    repo.record_evidence(make_entry(skill_id="CO-1", unit_id="PY-1.1"))
+    repo.record_evidence(make_entry(skill_id="CO-2", unit_id="PY-1.1"))
+    repo.record_evidence(make_entry(skill_id="CO-1", unit_id="PY-1.2"))
+
+    assert len(client.get("/api/v1/learners/me/ledger?skill_id=CO-1").json()) == 2
+    assert len(client.get("/api/v1/learners/me/ledger?unit_id=PY-1.1").json()) == 2
+    assert len(client.get("/api/v1/learners/me/ledger?skill_id=CO-1&unit_id=PY-1.2").json()) == 1
+
+
+def test_my_ledger_never_returns_another_learners_entries(client, repo):
+    repo.record_evidence(make_entry(learner_id="someone_else"))
+
+    res = client.get("/api/v1/learners/me/ledger?learner_id=someone_else")
+
+    assert res.status_code == 200
+    assert res.json() == []
+
+
+def test_old_ledger_route_answers_only_for_the_local_learner(client, repo):
+    repo.record_evidence(make_entry())
+    repo.record_evidence(make_entry(learner_id="someone_else"))
+
+    assert len(client.get(f"/api/v1/learners/{LOCAL_LEARNER_ID}/ledger").json()) == 1
+    assert_problem(client.get("/api/v1/learners/someone_else/ledger"), 404)
+
+
+def test_old_progress_route_answers_only_for_the_local_learner(client, repo):
+    payload = {"unit_id": "PY-1.1", "status": "Completed"}
+
+    assert client.post(f"/api/v1/learners/{LOCAL_LEARNER_ID}/progress", json=payload).status_code == 200
+    assert_problem(client.post("/api/v1/learners/someone_else/progress", json=payload), 404)
+    assert repo.get_unit_progress("someone_else", "PY-1.1") is None
+
+
+def test_me_is_not_treated_as_a_learner_id_on_the_old_routes(client):
+    payload = {"unit_id": "PY-1.1", "status": "Completed"}
+
+    assert_problem(client.post("/api/v1/learners/me/progress", json=payload), 404)

@@ -82,7 +82,7 @@ def test_axis_consult_socratic(client):
 
 
 def test_learner_progress_and_ledger(client):
-    learner_id = "test_user_42"
+    learner_id = "default_learner"
 
     # Save progress
     progress_payload = {"unit_id": "PY-0.4", "status": "Completed"}
