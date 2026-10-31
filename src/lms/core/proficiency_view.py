@@ -1,0 +1,193 @@
+"""Assembles the learner-facing ProficiencyView from units and evidence.
+
+Governed by:
+- SPEC-12 section 6 (ProficiencyView)
+- ADR-0016 (Proficiency Estimation and Progression Decisions)
+
+Deterministic and pure: no LLM, no I/O (ADR-0010). Skills repeat across units at
+different target levels, so a unit is decided against its own target, and a skill
+row is decided against the highest target among the units in scope.
+"""
+
+from datetime import datetime
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
+
+from pydantic import BaseModel
+
+from lms.core.cold_check import ColdCheckState, ColdCheckStatus
+from lms.core.models import (
+    ActivityType,
+    EvidenceCategory,
+    EvidenceEntry,
+    ProficiencyLevel,
+    ProgressionDecision,
+    Unit,
+)
+from lms.core.proficiency import (
+    DECISION_ORDER,
+    DEFAULT_CONFIG,
+    LEVEL_ORDER,
+    Confidence,
+    EstimatorConfig,
+    SkillDecision,
+    consecutive_shaky_checks,
+    decide_skill,
+    decide_unit,
+    evidence_counts,
+    is_concept_check,
+)
+
+_DONE = (ProgressionDecision.PROGRESS, ProgressionDecision.ACCELERATE)
+
+
+class EvidenceCounts(BaseModel):
+    explain: int = 0
+    perform: int = 0
+    diagnose: int = 0
+
+
+class SkillView(BaseModel):
+    skill_id: str
+    target_level: ProficiencyLevel
+    current_level: Optional[ProficiencyLevel] = None
+    confidence: Optional[Confidence] = None
+    evidence_counts: EvidenceCounts
+    decision: ProgressionDecision
+    reason: str
+    entry_ids: List[str]
+
+
+class UnitView(BaseModel):
+    unit_id: str
+    decision: ProgressionDecision
+
+
+class NextAction(BaseModel):
+    unit_id: str
+    skill_id: str
+    activity: str                      # "explain", "predict", ..., "cold_check"
+    decision: ProgressionDecision
+    message: str
+
+
+class ProficiencyView(BaseModel):
+    skills: List[SkillView]
+    units: List[UnitView]
+    next_action: Optional[NextAction] = None   # None when nothing can be done right now
+
+
+def build_proficiency_view(
+    units: List[Unit],
+    entries: Iterable[EvidenceEntry],
+    cold_check_status_of: Callable[[str], ColdCheckStatus],
+    now: datetime,
+    config: EstimatorConfig = DEFAULT_CONFIG,
+) -> ProficiencyView:
+    """Decide every unit and skill in scope; `units` must be in curriculum order."""
+    ledger = list(entries)
+    unit_rows: List[Tuple[Unit, List[SkillDecision]]] = []
+    # skill_id -> (highest target, most shaky checks) across the units in scope
+    scope: Dict[str, Tuple[ProficiencyLevel, int]] = {}
+
+    for unit in units:
+        shaky = consecutive_shaky_checks(ledger, unit.unit_id)
+        decisions = []
+        for skill in unit.target_skills:
+            decisions.append(
+                decide_skill(
+                    skill.goal_level,
+                    ledger,
+                    skill.skill_id,
+                    now=now,
+                    consecutive_shaky=shaky,
+                    config=config,
+                )
+            )
+            target, most_shaky = scope.get(skill.skill_id, (skill.goal_level, 0))
+            scope[skill.skill_id] = (
+                max(target, skill.goal_level, key=LEVEL_ORDER.index),
+                max(most_shaky, shaky),
+            )
+        unit_rows.append((unit, decisions))
+
+    return ProficiencyView(
+        skills=[
+            _skill_view(skill_id, target, shaky, ledger, now, config)
+            for skill_id, (target, shaky) in scope.items()
+        ],
+        units=[
+            UnitView(unit_id=unit.unit_id, decision=decide_unit(decisions))
+            for unit, decisions in unit_rows
+        ],
+        next_action=_next_action(unit_rows, ledger, cold_check_status_of),
+    )
+
+
+def _skill_view(
+    skill_id: str,
+    target: ProficiencyLevel,
+    shaky: int,
+    ledger: List[EvidenceEntry],
+    now: datetime,
+    config: EstimatorConfig,
+) -> SkillView:
+    decided = decide_skill(target, ledger, skill_id, now=now, consecutive_shaky=shaky, config=config)
+    counts = evidence_counts(ledger, skill_id, now=now, config=config)
+    return SkillView(
+        skill_id=skill_id,
+        target_level=target,
+        current_level=decided.estimate.level,
+        confidence=decided.estimate.confidence,
+        evidence_counts=EvidenceCounts(
+            explain=counts[EvidenceCategory.EXPLAIN_REASON],
+            perform=counts[EvidenceCategory.PERFORM_SOLVE],
+            diagnose=counts[EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER],
+        ),
+        decision=decided.decision,
+        reason=decided.reason,
+        entry_ids=decided.entry_ids,
+    )
+
+
+def _next_action(
+    unit_rows: List[Tuple[Unit, List[SkillDecision]]],
+    ledger: List[EvidenceEntry],
+    cold_check_status_of: Callable[[str], ColdCheckStatus],
+) -> Optional[NextAction]:
+    """First unit in curriculum order with something to do now."""
+    for unit, decisions in unit_rows:
+        if not decisions or decide_unit(decisions) in _DONE:
+            continue
+        state = cold_check_status_of(unit.unit_id).state
+        if state == ColdCheckState.WAITING:
+            continue  # A Cold Check wait never blocks learning (ADR-0016 2.6).
+        weakest = min(decisions, key=lambda d: DECISION_ORDER.index(d.decision))
+        return NextAction(
+            unit_id=unit.unit_id,
+            skill_id=weakest.skill_id,
+            activity=_next_activity(unit, weakest.decision, state, ledger),
+            decision=weakest.decision,
+            message=weakest.reason,
+        )
+    return None
+
+
+def _next_activity(
+    unit: Unit,
+    decision: ProgressionDecision,
+    state: ColdCheckState,
+    ledger: List[EvidenceEntry],
+) -> str:
+    """The smallest next probe: an activity of the unit (ADR-0016 2.5)."""
+    if decision == ProgressionDecision.REBUILD:
+        return ActivityType.EXPLAIN.value.lower()
+    if state == ColdCheckState.AVAILABLE:
+        return "cold_check"
+
+    tried = set()
+    for e in ledger:
+        if e.unit_id == unit.unit_id:
+            tried.add(ActivityType.EXPLAIN if is_concept_check(e) else e.activity)
+    untried = [activity for activity in unit.methods if activity not in tried]
+    # Everything tried: practise again on the unit's last activity.
+    return (untried[0] if untried else unit.methods[-1]).value.lower()

@@ -1,0 +1,347 @@
+"""Tests for the /learners/me proficiency and Cold Check routes (SPEC-12 sections 4.1 and 6)."""
+
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Optional
+
+import pytest
+from fastapi.testclient import TestClient
+
+from lms.adapters.ai.mock_axis import MockAxisCompanion
+from lms.adapters.curriculum.loader import CurriculumCatalog, load_roadmap_from_file
+from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
+from lms.adapters.runner.subprocess_runner import SubprocessRunner
+from lms.api.app import LOCAL_LEARNER_ID, create_app
+from lms.core.models import (
+    ActivityType,
+    AssistanceLevel,
+    EvidenceCategory,
+    EvidenceEntry,
+    EvidenceStrength,
+    ProficiencyLevel,
+    TargetSkill,
+    Unit,
+)
+
+T0 = datetime(2026, 6, 1, 9, 0, tzinfo=timezone.utc)
+DAY = timedelta(hours=24)
+
+
+class FakeClock:
+    def __init__(self, now: datetime):
+        self.now = now
+
+    def __call__(self) -> datetime:
+        return self.now
+
+    def advance(self, delta: timedelta) -> None:
+        self.now += delta
+
+
+def make_unit(unit_id: str, stage: int, skill_id: str = "CO-1") -> Unit:
+    return Unit(
+        unit_id=unit_id,
+        title=unit_id,
+        stage=stage,
+        concept_line="Concept",
+        target_skills=[
+            TargetSkill(skill_id=skill_id, skill_name=skill_id, goal_level=ProficiencyLevel.APPLY)
+        ],
+        methods=[ActivityType.EXPLAIN, ActivityType.PREDICT],
+    )
+
+
+def make_entry(learner_id: str = LOCAL_LEARNER_ID, days_ago: int = 1, **overrides) -> EvidenceEntry:
+    fields = dict(
+        learner_id=learner_id,
+        unit_id="PY-1.1",
+        skill_id="CO-1",
+        evidence_category=EvidenceCategory.PERFORM_SOLVE,
+        evidence_strength=EvidenceStrength.STRONG,
+        assistance_level=AssistanceLevel.NONE,
+        demonstration_context="Task",
+        recorded_at=T0 - timedelta(days=days_ago),
+    )
+    fields.update(overrides)
+    return EvidenceEntry(**fields)
+
+
+@pytest.fixture
+def clock():
+    return FakeClock(T0)
+
+
+@pytest.fixture
+def repo():
+    repository = SQLiteLearnerRepository(db_path=":memory:")
+    repository.initialize()
+    return repository
+
+
+@pytest.fixture
+def client(repo, clock):
+    catalog = CurriculumCatalog()
+    catalog.add_unit(make_unit("PY-1.1", 1, "CO-1"))
+    catalog.add_unit(make_unit("PY-1.2", 1, "CO-2"))
+    catalog.add_unit(make_unit("PY-2.1", 2, "CO-3"))
+    catalog.add_unit(make_unit("BE-1.1", 1, "BU-1"))
+    app = create_app(
+        repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=clock
+    )
+    return TestClient(app)
+
+
+def proficiency(client, query: Optional[str] = None):
+    url = "/api/v1/learners/me/proficiency"
+    res = client.get(f"{url}?{query}" if query else url)
+    assert res.status_code == 200
+    return res.json()
+
+
+def assert_problem(res, status: int) -> None:
+    assert res.status_code == status
+    assert res.headers["content-type"].startswith("application/problem+json")
+    body = res.json()
+    assert body["status"] == status
+    assert {"type", "title", "status", "detail"} <= set(body)
+
+
+# --- Proficiency ---
+
+
+def test_proficiency_matches_the_spec_shape(client):
+    body = proficiency(client, "course_id=python&stage=1")
+
+    assert set(body) == {"skills", "units", "next_action"}
+    assert set(body["skills"][0]) == {
+        "skill_id",
+        "target_level",
+        "current_level",
+        "confidence",
+        "evidence_counts",
+        "decision",
+        "reason",
+        "entry_ids",
+    }
+    assert set(body["skills"][0]["evidence_counts"]) == {"explain", "perform", "diagnose"}
+    assert set(body["units"][0]) == {"unit_id", "decision"}
+    assert set(body["next_action"]) == {"unit_id", "skill_id", "activity", "decision", "message"}
+
+
+def test_proficiency_without_filters_covers_the_whole_catalog(client):
+    body = proficiency(client)
+
+    assert [u["unit_id"] for u in body["units"]] == ["PY-1.1", "PY-1.2", "PY-2.1", "BE-1.1"]
+
+
+def test_proficiency_filters_by_course(client):
+    assert [u["unit_id"] for u in proficiency(client, "course_id=python")["units"]] == [
+        "PY-1.1",
+        "PY-1.2",
+        "PY-2.1",
+    ]
+    assert [u["unit_id"] for u in proficiency(client, "course_id=backend")["units"]] == ["BE-1.1"]
+
+
+def test_proficiency_filters_by_stage(client):
+    body = proficiency(client, "stage=2")
+
+    assert [u["unit_id"] for u in body["units"]] == ["PY-2.1"]
+    assert [s["skill_id"] for s in body["skills"]] == ["CO-3"]
+
+
+def test_proficiency_filters_by_course_and_stage(client):
+    body = proficiency(client, "course_id=python&stage=1")
+
+    assert [u["unit_id"] for u in body["units"]] == ["PY-1.1", "PY-1.2"]
+
+
+def test_known_course_without_units_is_an_empty_view(client):
+    body = proficiency(client, "course_id=ai-engineering")
+
+    assert body == {"skills": [], "units": [], "next_action": None}
+
+
+def test_stage_without_units_is_an_empty_view(client):
+    assert proficiency(client, "stage=99") == {"skills": [], "units": [], "next_action": None}
+
+
+def test_unknown_course_is_a_problem_response(client):
+    assert_problem(client.get("/api/v1/learners/me/proficiency?course_id=cooking"), 404)
+
+
+def test_proficiency_uses_the_injected_clock_for_the_recency_window(client, repo, clock):
+    repo.record_evidence(make_entry())
+    assert proficiency(client, "stage=1")["skills"][0]["evidence_counts"]["perform"] == 1
+
+    clock.advance(timedelta(days=100))
+
+    assert proficiency(client, "stage=1")["skills"][0]["evidence_counts"]["perform"] == 0
+
+
+def test_supported_evidence_gives_progress(client, repo):
+    repo.record_evidence(make_entry(days_ago=3))
+    repo.record_evidence(make_entry(days_ago=2, cold_check=True))
+
+    body = proficiency(client, "course_id=python&stage=1")
+    row = next(s for s in body["skills"] if s["skill_id"] == "CO-1")
+
+    assert row["current_level"] == "Apply"
+    assert row["confidence"] == "supported"
+    assert row["decision"] == "Progress"
+    assert len(row["entry_ids"]) == 2
+    assert body["units"][0] == {"unit_id": "PY-1.1", "decision": "Progress"}
+    assert body["next_action"]["unit_id"] == "PY-1.2"
+
+
+def test_two_entries_without_a_cold_check_stay_provisional(client, repo):
+    repo.record_evidence(make_entry(days_ago=3))
+    repo.record_evidence(make_entry(days_ago=2))
+
+    row = proficiency(client, "stage=1&course_id=python")["skills"][0]
+
+    assert row["confidence"] == "provisional"
+    assert row["decision"] == "Strengthen"
+
+
+def test_shaky_explain_route_feeds_the_rebuild_decision(client, repo):
+    payload = {"unit_id": "PY-1.1", "explanation": "Because it is code."}
+    assert client.post("/api/v1/explain", json=payload).json()["status"] == "Shaky"
+    assert client.post("/api/v1/explain", json=payload).json()["status"] == "Shaky"
+
+    body = proficiency(client, "course_id=python&stage=1")
+
+    assert body["units"][0] == {"unit_id": "PY-1.1", "decision": "Rebuild"}
+    assert body["next_action"]["activity"] == "explain"
+
+
+def test_available_cold_check_becomes_the_next_action(client, repo, clock):
+    repo.record_evidence(make_entry())
+    repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, "PY-1.1", T0)
+
+    assert proficiency(client, "course_id=python&stage=1")["next_action"]["unit_id"] == "PY-1.2"
+
+    clock.advance(DAY)
+    action = proficiency(client, "course_id=python&stage=1")["next_action"]
+
+    assert action["unit_id"] == "PY-1.1"
+    assert action["activity"] == "cold_check"
+
+
+def test_me_resolves_to_the_local_learner(client, repo):
+    repo.record_evidence(make_entry())
+
+    row = proficiency(client, "stage=1&course_id=python")["skills"][0]
+
+    assert row["evidence_counts"]["perform"] == 1
+
+
+def test_me_never_reads_another_learners_evidence(client, repo):
+    repo.record_evidence(make_entry(learner_id="someone_else"))
+
+    row = proficiency(client, "stage=1&course_id=python&learner_id=someone_else")["skills"][0]
+
+    assert row["evidence_counts"]["perform"] == 0
+
+
+def test_proficiency_is_read_only(client, repo):
+    repo.record_evidence(make_entry())
+
+    proficiency(client)
+
+    assert len(repo.get_evidence_ledger(LOCAL_LEARNER_ID)) == 1
+
+
+def test_real_roadmap_view(repo, clock):
+    catalog = load_roadmap_from_file(Path("reference/Python Subject Roadmap v3.md"))
+    app = create_app(
+        repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=clock
+    )
+    client = TestClient(app)
+
+    assert len(proficiency(client, "course_id=python")["units"]) == 78
+    body = proficiency(client, "course_id=python&stage=0")
+    assert [u["unit_id"] for u in body["units"]] == ["PY-0.4", "PY-0.1", "PY-0.3"]
+    assert body["next_action"]["activity"] == "explain"
+
+
+# --- Cold Check ---
+
+
+def cold_check(client, unit_id: str = "PY-1.1"):
+    res = client.get(f"/api/v1/learners/me/units/{unit_id}/cold-check")
+    assert res.status_code == 200
+    return res.json()
+
+
+def test_cold_check_not_ready(client):
+    assert cold_check(client) == {"state": "not_ready", "available_at": None, "last_attempt_at": None}
+
+
+def test_cold_check_waits_24_hours_then_opens(client, repo, clock):
+    repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, "PY-1.1", T0)
+
+    waiting = cold_check(client)
+    assert waiting["state"] == "waiting"
+    assert datetime.fromisoformat(waiting["available_at"].replace("Z", "+00:00")) == T0 + DAY
+
+    clock.advance(DAY - timedelta(seconds=1))
+    assert cold_check(client)["state"] == "waiting"
+
+    clock.advance(timedelta(seconds=1))
+    assert cold_check(client)["state"] == "available"
+
+
+def test_cold_check_fail_then_retry_then_pass(client, repo, clock):
+    repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, "PY-1.1", T0)
+    clock.advance(DAY)
+
+    repo.record_cold_check_attempt(LOCAL_LEARNER_ID, "PY-1.1", passed=False, attempted_at=clock())
+    failed = cold_check(client)
+    assert failed["state"] == "failed_waiting"
+    assert datetime.fromisoformat(failed["available_at"].replace("Z", "+00:00")) == T0 + 2 * DAY
+
+    clock.advance(DAY)
+    assert cold_check(client)["state"] == "available"
+
+    repo.record_cold_check_attempt(LOCAL_LEARNER_ID, "PY-1.1", passed=True, attempted_at=clock())
+    passed = cold_check(client)
+    assert passed["state"] == "passed"
+    assert passed["available_at"] is None
+
+
+def test_cold_check_is_per_learner(client, repo):
+    repo.mark_unit_activities_completed("someone_else", "PY-1.1", T0)
+
+    assert cold_check(client)["state"] == "not_ready"
+
+
+def test_cold_check_unknown_unit_is_a_problem_response(client):
+    assert_problem(client.get("/api/v1/learners/me/units/PY-99.9/cold-check"), 404)
+
+
+# --- Chaos: hostile input fails safely ---
+
+
+def test_injection_in_course_id_is_rejected_and_harmless(client, repo):
+    repo.record_evidence(make_entry())
+
+    res = client.get(
+        "/api/v1/learners/me/proficiency", params={"course_id": "python'; DROP TABLE evidence_ledger;--"}
+    )
+
+    assert_problem(res, 404)
+    assert len(repo.get_evidence_ledger(LOCAL_LEARNER_ID)) == 1
+
+
+def test_injection_in_unit_id_is_rejected_and_harmless(client, repo):
+    repo.record_evidence(make_entry())
+
+    res = client.get("/api/v1/learners/me/units/PY-1.1'%20OR%20'1'='1/cold-check")
+
+    assert_problem(res, 404)
+    assert len(repo.get_evidence_ledger(LOCAL_LEARNER_ID)) == 1
+
+
+def test_non_numeric_stage_is_rejected(client):
+    assert client.get("/api/v1/learners/me/proficiency?stage=abc").status_code == 422

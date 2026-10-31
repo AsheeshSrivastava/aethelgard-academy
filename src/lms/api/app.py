@@ -7,21 +7,27 @@ Provides versioned REST endpoints (/api/v1/) for:
 - Evidence Ledger queries and progress persistence
 """
 
+from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, Query
+from typing import Any, Callable, Dict, List, Optional
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from lms.adapters.ai.local_llm_companion import get_axis_companion
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.concepts import ConceptCatalog
-from lms.adapters.curriculum.loader import CurriculumCatalog, load_roadmap_from_file
+from lms.adapters.curriculum.loader import (
+    COURSE_UNIT_PREFIXES,
+    CurriculumCatalog,
+    load_roadmap_from_file,
+)
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
+from lms.core.cold_check import ColdCheckStatus, cold_check_status
 from lms.core.interfaces import (
     AxisMode,
     AxisQuery,
@@ -40,6 +46,23 @@ from lms.core.models import (
     EvidenceStrength,
     Unit,
 )
+from lms.core.proficiency_view import ProficiencyView, build_proficiency_view
+
+LOCAL_LEARNER_ID = "default_learner"
+
+
+def current_learner_id() -> str:
+    """Local-single mode (ADR-0015): "me" is always the one local learner."""
+    return LOCAL_LEARNER_ID
+
+
+def problem(status: int, title: str, detail: str) -> JSONResponse:
+    """RFC 9457 error body (SPEC-12 section 1)."""
+    return JSONResponse(
+        status_code=status,
+        media_type="application/problem+json",
+        content={"type": "about:blank", "title": title, "status": status, "detail": detail},
+    )
 
 
 class ExecuteCodeRequest(BaseModel):
@@ -73,6 +96,7 @@ def create_app(
     axis: Optional[IAXISCompanion] = None,
     catalog: Optional[CurriculumCatalog] = None,
     concepts: Optional[ConceptCatalog] = None,
+    clock: Optional[Callable[[], datetime]] = None,
 ) -> FastAPI:
     """Application factory for the LMS API Gateway."""
 
@@ -97,6 +121,9 @@ def create_app(
 
     if concepts is None:
         concepts = ConceptCatalog()
+
+    if clock is None:
+        clock = lambda: datetime.now(timezone.utc)
 
     app = FastAPI(
         title="LMS / KMS Production Platform Gateway",
@@ -261,6 +288,36 @@ def create_app(
         )
         resp = axis.consult(query)
         return {"unit_id": unit_id, "explanation": resp.reply}
+
+    # --- Learner-Scoped /me Routes (SPEC-12, ADR-0015) ---
+    @app.get("/api/v1/learners/me/proficiency", response_model=ProficiencyView)
+    def get_my_proficiency(
+        course_id: Optional[str] = Query(None),
+        stage: Optional[int] = Query(None),
+        learner_id: str = Depends(current_learner_id),
+    ):
+        if course_id is None:
+            units = catalog.list_all_units()
+        elif course_id in COURSE_UNIT_PREFIXES:
+            units = catalog.get_course_units(course_id)
+        else:
+            return problem(404, "Course not found", f"Course '{course_id}' does not exist.")
+        if stage is not None:
+            units = [u for u in units if u.stage == stage]
+
+        now = clock()
+        return build_proficiency_view(
+            units,
+            repo.get_evidence_ledger(learner_id),
+            lambda unit_id: cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), now),
+            now=now,
+        )
+
+    @app.get("/api/v1/learners/me/units/{unit_id}/cold-check", response_model=ColdCheckStatus)
+    def get_my_cold_check(unit_id: str, learner_id: str = Depends(current_learner_id)):
+        if not catalog.get_unit(unit_id):
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        return cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock())
 
     # --- Learner Progress & Evidence Ledger Routes ---
     @app.get("/api/v1/learners/{learner_id}/ledger", response_model=List[EvidenceEntry])

@@ -11,6 +11,9 @@ from typing import Dict, List, Optional, Set
 
 from lms.core.models import ActivityType, MediaAsset, ProficiencyLevel, TargetSkill, Unit
 
+# SPEC-12 course ids and the unit id prefix of their roadmaps.
+COURSE_UNIT_PREFIXES = {"python": "PY-", "backend": "BE-", "ai-engineering": "AI-"}
+
 
 def parse_skills_string(text: str) -> List[TargetSkill]:
     """Parse skill string like: 'CO-1 to Understand; VE-4 to Understand'"""
@@ -155,6 +158,10 @@ class CurriculumCatalog:
 
     def get_stage_units(self, stage: int) -> List[Unit]:
         return [u for u in self._units.values() if u.stage == stage]
+
+    def get_course_units(self, course_id: str) -> List[Unit]:
+        prefix = COURSE_UNIT_PREFIXES[course_id]
+        return [u for u in self._units.values() if u.unit_id.startswith(prefix)]
 
     def validate_dag(self) -> bool:
         """Verify that the prerequisite graph is a valid Directed Acyclic Graph."""

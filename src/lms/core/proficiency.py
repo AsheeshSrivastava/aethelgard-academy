@@ -11,7 +11,7 @@ recomputed from the append-only evidence ledger.
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -44,6 +44,8 @@ class EstimatorConfig:
 
 
 DEFAULT_CONFIG = EstimatorConfig()
+
+CONCEPT_CHECK_SKILL = "CO-6"
 
 LEVEL_ORDER: List[ProficiencyLevel] = [
     ProficiencyLevel.UNDERSTAND,
@@ -144,6 +146,43 @@ def _window(
 
 def _aware(moment: datetime) -> datetime:
     return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def evidence_counts(
+    entries: Iterable[EvidenceEntry],
+    skill_id: str,
+    now: Optional[datetime] = None,
+    config: EstimatorConfig = DEFAULT_CONFIG,
+) -> Dict[EvidenceCategory, int]:
+    """Entries per category inside the same window the decision uses."""
+    now = now or datetime.now(timezone.utc)
+    counts = {category: 0 for category in EvidenceCategory}
+    for e in _window(entries, skill_id, now, config):
+        counts[e.evidence_category] += 1
+    return counts
+
+
+def is_concept_check(entry: EvidenceEntry) -> bool:
+    """A CO-6 concept check from Explain; a CO-6 entry from another activity is not one."""
+    return (
+        entry.skill_id == CONCEPT_CHECK_SKILL
+        and entry.evidence_category == EvidenceCategory.EXPLAIN_REASON
+        and entry.activity in (None, ActivityType.EXPLAIN)
+    )
+
+
+def consecutive_shaky_checks(entries: Iterable[EvidenceEntry], unit_id: str) -> int:
+    """Newest run of Shaky concept checks for the unit (ADR-0016 2.5, Rebuild)."""
+    checks = sorted(
+        (e for e in entries if e.unit_id == unit_id and is_concept_check(e)),
+        key=lambda e: _aware(e.recorded_at),
+    )
+    run = 0
+    for e in reversed(checks):
+        if e.evidence_strength != EvidenceStrength.WEAK:
+            break
+        run += 1
+    return run
 
 
 def estimate_skill(
