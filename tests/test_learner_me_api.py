@@ -112,7 +112,7 @@ def assert_problem(res, status: int) -> None:
 def test_proficiency_matches_the_spec_shape(client):
     body = proficiency(client, "course_id=python&stage=1")
 
-    assert set(body) == {"skills", "units", "next_action"}
+    assert set(body) == {"stage", "skills", "units", "next_action"}
     assert set(body["skills"][0]) == {
         "skill_id",
         "target_level",
@@ -128,18 +128,72 @@ def test_proficiency_matches_the_spec_shape(client):
     assert set(body["next_action"]) == {"unit_id", "skill_id", "activity", "decision", "message"}
 
 
-def test_proficiency_without_filters_covers_the_whole_catalog(client):
+def supported(skill_id: str, unit_id: str):
+    return [
+        make_entry(skill_id=skill_id, unit_id=unit_id, days_ago=3),
+        make_entry(skill_id=skill_id, unit_id=unit_id, days_ago=2, cold_check=True),
+    ]
+
+
+def test_stage_defaults_to_the_stage_of_the_first_unfinished_unit(client):
+    body = proficiency(client, "course_id=python")
+
+    assert body["stage"] == 1
+    assert [u["unit_id"] for u in body["units"]] == ["PY-1.1", "PY-1.2"]
+
+
+def test_default_stage_moves_on_when_a_stage_is_finished(client, repo):
+    for entry in supported("CO-1", "PY-1.1") + supported("CO-2", "PY-1.2"):
+        repo.record_evidence(entry)
+
+    body = proficiency(client, "course_id=python")
+
+    assert body["stage"] == 2
+    assert [u["unit_id"] for u in body["units"]] == ["PY-2.1"]
+
+
+def test_default_stage_stays_put_while_a_cold_check_is_waiting(client, repo):
+    repo.record_evidence(make_entry())
+    repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, "PY-1.1", T0)
+
+    assert proficiency(client, "course_id=python")["stage"] == 1
+
+
+def test_finished_course_opens_on_its_last_stage(client, repo):
+    for entry in (
+        supported("CO-1", "PY-1.1") + supported("CO-2", "PY-1.2") + supported("CO-3", "PY-2.1")
+    ):
+        repo.record_evidence(entry)
+
+    body = proficiency(client, "course_id=python")
+
+    assert body["stage"] == 2
+    assert body["next_action"] is None
+
+
+def test_default_stage_without_a_course_stays_inside_one_course(client):
     body = proficiency(client)
 
-    assert [u["unit_id"] for u in body["units"]] == ["PY-1.1", "PY-1.2", "PY-2.1", "BE-1.1"]
+    assert body["stage"] == 1
+    assert [u["unit_id"] for u in body["units"]] == ["PY-1.1", "PY-1.2"]
+
+
+def test_default_stage_is_per_course(client, repo):
+    for entry in supported("CO-1", "PY-1.1") + supported("CO-2", "PY-1.2"):
+        repo.record_evidence(entry)
+
+    assert proficiency(client, "course_id=backend")["stage"] == 1
+    assert proficiency(client, "course_id=python")["stage"] == 2
+
+
+def test_explicit_stage_wins_and_is_echoed(client, repo):
+    for entry in supported("CO-1", "PY-1.1") + supported("CO-2", "PY-1.2"):
+        repo.record_evidence(entry)
+
+    assert proficiency(client, "course_id=python&stage=1")["stage"] == 1
 
 
 def test_proficiency_filters_by_course(client):
-    assert [u["unit_id"] for u in proficiency(client, "course_id=python")["units"]] == [
-        "PY-1.1",
-        "PY-1.2",
-        "PY-2.1",
-    ]
     assert [u["unit_id"] for u in proficiency(client, "course_id=backend")["units"]] == ["BE-1.1"]
 
 
@@ -159,11 +213,16 @@ def test_proficiency_filters_by_course_and_stage(client):
 def test_known_course_without_units_is_an_empty_view(client):
     body = proficiency(client, "course_id=ai-engineering")
 
-    assert body == {"skills": [], "units": [], "next_action": None}
+    assert body == {"stage": None, "skills": [], "units": [], "next_action": None}
 
 
 def test_stage_without_units_is_an_empty_view(client):
-    assert proficiency(client, "stage=99") == {"skills": [], "units": [], "next_action": None}
+    assert proficiency(client, "stage=99") == {
+        "stage": 99,
+        "skills": [],
+        "units": [],
+        "next_action": None,
+    }
 
 
 def test_unknown_course_is_a_problem_response(client):
@@ -259,10 +318,11 @@ def test_real_roadmap_view(repo, clock):
     )
     client = TestClient(app)
 
-    assert len(proficiency(client, "course_id=python")["units"]) == 78
-    body = proficiency(client, "course_id=python&stage=0")
+    body = proficiency(client, "course_id=python")
+    assert body["stage"] == 0
     assert [u["unit_id"] for u in body["units"]] == ["PY-0.4", "PY-0.1", "PY-0.3"]
     assert body["next_action"]["activity"] == "explain"
+    assert len(proficiency(client, "course_id=python&stage=6")["units"]) == 9
 
 
 # --- Cold Check ---

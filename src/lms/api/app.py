@@ -32,6 +32,7 @@ from lms.core.course_map import (
     CourseMap,
     build_course,
     build_course_map,
+    course_of,
 )
 from lms.core.interfaces import (
     AxisMode,
@@ -51,7 +52,11 @@ from lms.core.models import (
     EvidenceStrength,
     Unit,
 )
-from lms.core.proficiency_view import ProficiencyView, build_proficiency_view
+from lms.core.proficiency_view import (
+    ProficiencyView,
+    build_proficiency_view,
+    first_unfinished_unit,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -359,15 +364,24 @@ def create_app(
             units = catalog.get_course_units(course_id)
         else:
             return problem(404, "Course not found", f"Course '{course_id}' does not exist.")
+
+        now = clock()
+        ledger = repo.get_evidence_ledger(learner_id)
+
+        # My progress opens on the learner's current stage (owner decision, 2026-10-31).
+        if stage is None and units:
+            anchor = first_unfinished_unit(units, ledger, now) or units[-1]
+            stage = anchor.stage
+            units = [u for u in units if course_of(u.unit_id) == course_of(anchor.unit_id)]
         if stage is not None:
             units = [u for u in units if u.stage == stage]
 
-        now = clock()
         return build_proficiency_view(
             units,
-            repo.get_evidence_ledger(learner_id),
+            ledger,
             lambda unit_id: cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), now),
             now=now,
+            stage=stage,
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check", response_model=ColdCheckStatus)

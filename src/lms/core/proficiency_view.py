@@ -71,9 +71,42 @@ class NextAction(BaseModel):
 
 
 class ProficiencyView(BaseModel):
+    stage: Optional[int] = None                # Stage in view; None when there are no units
     skills: List[SkillView]
     units: List[UnitView]
     next_action: Optional[NextAction] = None   # None when nothing can be done right now
+
+
+def first_unfinished_unit(
+    units: List[Unit],
+    entries: Iterable[EvidenceEntry],
+    now: datetime,
+    config: EstimatorConfig = DEFAULT_CONFIG,
+) -> Optional[Unit]:
+    """The learner's place in `units` (curriculum order); None when all are finished."""
+    ledger = list(entries)
+    for unit in units:
+        decisions = _decide_unit_skills(unit, ledger, now, config)
+        if decisions and decide_unit(decisions) not in _DONE:
+            return unit
+    return None
+
+
+def _decide_unit_skills(
+    unit: Unit, ledger: List[EvidenceEntry], now: datetime, config: EstimatorConfig
+) -> List[SkillDecision]:
+    shaky = consecutive_shaky_checks(ledger, unit.unit_id)
+    return [
+        decide_skill(
+            skill.goal_level,
+            ledger,
+            skill.skill_id,
+            now=now,
+            consecutive_shaky=shaky,
+            config=config,
+        )
+        for skill in unit.target_skills
+    ]
 
 
 def build_proficiency_view(
@@ -81,6 +114,7 @@ def build_proficiency_view(
     entries: Iterable[EvidenceEntry],
     cold_check_status_of: Callable[[str], ColdCheckStatus],
     now: datetime,
+    stage: Optional[int] = None,
     config: EstimatorConfig = DEFAULT_CONFIG,
 ) -> ProficiencyView:
     """Decide every unit and skill in scope; `units` must be in curriculum order."""
@@ -91,26 +125,16 @@ def build_proficiency_view(
 
     for unit in units:
         shaky = consecutive_shaky_checks(ledger, unit.unit_id)
-        decisions = []
         for skill in unit.target_skills:
-            decisions.append(
-                decide_skill(
-                    skill.goal_level,
-                    ledger,
-                    skill.skill_id,
-                    now=now,
-                    consecutive_shaky=shaky,
-                    config=config,
-                )
-            )
             target, most_shaky = scope.get(skill.skill_id, (skill.goal_level, 0))
             scope[skill.skill_id] = (
                 max(target, skill.goal_level, key=LEVEL_ORDER.index),
                 max(most_shaky, shaky),
             )
-        unit_rows.append((unit, decisions))
+        unit_rows.append((unit, _decide_unit_skills(unit, ledger, now, config)))
 
     return ProficiencyView(
+        stage=stage,
         skills=[
             _skill_view(skill_id, target, shaky, ledger, now, config)
             for skill_id, (target, shaky) in scope.items()

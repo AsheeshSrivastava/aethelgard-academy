@@ -21,7 +21,7 @@ from lms.core.proficiency import (
     consecutive_shaky_checks,
     evidence_counts,
 )
-from lms.core.proficiency_view import build_proficiency_view
+from lms.core.proficiency_view import build_proficiency_view, first_unfinished_unit
 
 NOW = datetime(2026, 6, 1, 9, 0, tzinfo=timezone.utc)
 _ids = count(1)
@@ -233,6 +233,26 @@ def test_shaky_checks_elsewhere_do_not_rebuild_this_unit():
     entries = supported_apply() + [shaky("PY-9.9", 1.5), shaky("PY-9.9", 1)]
 
     assert view([unit()], entries).units[0].decision == ProgressionDecision.PROGRESS
+
+
+# --- first_unfinished_unit ---
+
+
+def test_first_unfinished_unit_for_a_fresh_learner_is_the_first_unit():
+    units = [unit("PY-1.1"), unit("PY-1.2")]
+
+    assert first_unfinished_unit(units, [], now=NOW).unit_id == "PY-1.1"
+
+
+def test_finished_units_are_passed_over():
+    units = [unit("PY-1.1", {"CO-1": ProficiencyLevel.APPLY}), unit("PY-1.2", {"CO-2": ProficiencyLevel.APPLY})]
+
+    assert first_unfinished_unit(units, supported_apply(), now=NOW).unit_id == "PY-1.2"
+
+
+def test_nothing_unfinished_gives_none():
+    assert first_unfinished_unit([unit()], supported_apply(), now=NOW) is None
+    assert first_unfinished_unit([], [], now=NOW) is None
 
 
 # --- next_action ---
