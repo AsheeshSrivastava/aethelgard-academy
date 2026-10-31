@@ -55,6 +55,36 @@ def weak(days_ago=0.5, **kw):
     return make(strength=EvidenceStrength.WEAK, days_ago=days_ago, **kw)
 
 
+# --- Amendment E: evidence counts per seed ----------------------------------
+
+
+def seeded(seed_id, days_ago, strength=EvidenceStrength.STRONG, cold_check=False):
+    entry = make(strength=strength, days_ago=days_ago, cold_check=cold_check)
+    return entry.model_copy(update={"seed_id": seed_id})
+
+
+def test_name_variants_of_a_seed_count_once():
+    est = estimate_skill([seeded("s1", 3), seeded("s1", 2, cold_check=True)], "CO-1", now=NOW)
+
+    assert len(est.qualifying_entry_ids) == 1
+    assert est.confidence == Confidence.PROVISIONAL
+
+
+def test_different_seeds_count_separately():
+    est = estimate_skill([seeded("s1", 3), seeded("s2", 2, cold_check=True)], "CO-1", now=NOW)
+
+    assert est.confidence == Confidence.SUPPORTED
+
+
+def test_the_newest_result_for_a_seed_is_the_one_kept():
+    entries = [seeded("s1", 3, EvidenceStrength.WEAK), seeded("s1", 2, EvidenceStrength.MODERATE)]
+
+    est = estimate_skill(entries, "CO-1", now=NOW)
+
+    assert est.level == ProficiencyLevel.APPLY
+    assert est.weak_streak == 0
+
+
 # --- Amendment A: a skill's main activity counts for Apply and Adapt --------
 
 MAIN = EstimatorConfig(main_activities={"CO-1": ActivityType.PREDICT})
@@ -223,7 +253,7 @@ def test_repeating_the_same_exercise_counts_once():
     repeat = make(exercise_id="ex-same", days_ago=1)
     est = estimate_skill([first, repeat], "CO-1", now=NOW)
     assert est.confidence == Confidence.PROVISIONAL
-    assert est.qualifying_entry_ids == [first.entry_id]
+    assert est.qualifying_entry_ids == [repeat.entry_id]
 
 
 # --- 2.4 Confidence ----------------------------------------------------------

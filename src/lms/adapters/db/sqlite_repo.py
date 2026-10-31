@@ -24,6 +24,7 @@ EVIDENCE_LEDGER_ADDED_COLUMNS = {
     "exercise_id": "TEXT",
     "activity": "TEXT",
     "cold_check": "INTEGER NOT NULL DEFAULT 0",
+    "seed_id": "TEXT",
 }
 
 
@@ -347,8 +348,8 @@ class SQLiteLearnerRepository:
                     entry_id, learner_id, unit_id, skill_id,
                     evidence_category, evidence_strength, assistance_level,
                     demonstration_context, observed_reasoning, recorded_at,
-                    exercise_id, activity, cold_check
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    exercise_id, activity, cold_check, seed_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -364,6 +365,7 @@ class SQLiteLearnerRepository:
                     entry.exercise_id,
                     entry.activity.value if entry.activity else None,
                     int(entry.cold_check),
+                    entry.seed_id,
                 ),
             )
 
@@ -407,6 +409,7 @@ class SQLiteLearnerRepository:
                     exercise_id=r["exercise_id"],
                     activity=ActivityType(r["activity"]) if r["activity"] else None,
                     cold_check=bool(r["cold_check"]),
+                    seed_id=r["seed_id"],
                 )
             )
         return entries

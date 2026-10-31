@@ -142,6 +142,12 @@ def test_new_evidence_fields_round_trip(repo):
     assert entry.cold_check is True
 
 
+def test_seed_id_round_trips(repo):
+    repo.record_evidence(_entry(seed_id="PY-0.1/predict-1"))
+
+    assert repo.get_evidence_ledger("learner_001")[0].seed_id == "PY-0.1/predict-1"
+
+
 def test_new_evidence_fields_default_when_absent(repo):
     repo.record_evidence(_entry())
 

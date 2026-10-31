@@ -142,12 +142,14 @@ def _window(
     )
     seen: set = set()
     unique: List[EvidenceEntry] = []
-    for e in relevant:
-        if e.exercise_id is not None:
-            if e.exercise_id in seen:
+    for e in reversed(relevant):  # Newest first, so the latest result for a seed is kept
+        exercise = e.seed_id or e.exercise_id
+        if exercise is not None:
+            if exercise in seen:
                 continue
-            seen.add(e.exercise_id)
+            seen.add(exercise)
         unique.append(e)
+    unique.reverse()
     return unique[-config.window_entries :]
 
 
