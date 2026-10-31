@@ -1,9 +1,9 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
 - **Branch:** `main` (tracking `origin/main` on Entire)
-- **Latest Commit:** `609aca8`
-- **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`, all 25 checkpoint refs synced)
-- **Current Phase:** Unified Platform Shell, Pedagogical Workspace & Concept Library Complete (`335` Tests Passing)
+- **Latest Commit:** `ed9b9ec` (this update follows it; 30 commits since `609aca8`)
+- **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). Push is on hold by owner decision; recent commits are local only.
+- **Current Phase:** Learner Experience Backend: steps 1 to 3 done, exercises (step 4) next (`530` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -13,8 +13,8 @@
 | Step | Milestone | Status | Deliverables / Artifacts |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
-| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 11)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0013) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell (`335` tests passing) |
+| **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 13)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0017) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks (`530` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups, syntax failures, malformed input streams |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -34,6 +34,9 @@
   - SPEC-08: Runtime-Agnostic Local LLM Companion & Rubric Classifier
   - SPEC-09: RAG Indexing & Hybrid Reranked Retriever
   - SPEC-10: Persistent Upstream Indexer & Warm Retriever Loader
+  - SPEC-11: Learner Workspace Frontend
+  - SPEC-12: Learner Experience API Contract
+  - SPEC-13: Exercise Seed Format (draft; no loader yet)
 - **Architecture Decision Records (ADRs):**
   - ADR-0001: Hexagonal Architecture and Pluggable Boundary Ports
   - ADR-0002: Dual-Store Strategy (SQLite for Evidence Ledger vs. Vector DB for RAG)
@@ -47,6 +50,18 @@
   - ADR-0010: Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack (Unsloth Desktop / OpenAI-compatible Local LLM + `bge-reranker-v2-m3`)
   - ADR-0011: RAG Chunking, Hybrid Retrieval, and Cross-Encoder Reranking
   - ADR-0012: Persistent RAG Artifacts & Upstream Documentation Indexer
+  - ADR-0013: Learner Workspace Frontend (section 1 superseded by ADR-0014)
+  - ADR-0014: React + TypeScript + Vite Learner Frontend
+  - ADR-0015: Learner Identity and Sessions (local-single mode now; sign-in deferred)
+  - ADR-0016: Proficiency Estimation and Progression Decisions (amended 2026-10-31)
+  - ADR-0017: Batch Exercise Variant Generation from Curator Seeds
+- **Learner Experience Backend (steps 1 to 3):**
+  - **Proficiency (`src/lms/core/proficiency.py`, `proficiency_view.py`):** whole-ledger estimator; a skill's main activity from Learning Method v2 counts for Apply and Adapt.
+  - **Evidence Ledger (`src/lms/adapters/db/sqlite_repo.py`):** stores `exercise_id`, `activity` and `cold_check`, with an idempotent migration.
+  - **Cold Check Timer (`src/lms/core/cold_check.py`):** 24-hour delay per learner and unit, with an injectable clock.
+  - **Catalog (`src/lms/core/course_map.py`, `curriculum/loader.py`):** all three roadmaps load (Python 78 units, Backend 79, AI Engineering 81), with stage build locks.
+  - **Curriculum Checks (`src/lms/core/curriculum_checks.py`):** run at load. 30 errors remain, all `own-needs-stage-build`, until stage builds are curated. The Cold Check check judges by activity type until seeds load.
+  - **Routes:** `/courses`, `/courses/{id}`, `/learners/me`, `/learners/me/proficiency`, `/learners/me/ledger`, `/learners/me/units/{id}/cold-check`. Older learner-id routes answer only for the local learner. CORS reads `LMS_ALLOWED_ORIGINS`.
 - **Core Engine & Adapters:**
   - **Persistent Upstream Ingestion & Fast Warm Loader (`src/lms/adapters/ai/rag/indexer.py`):**
     - Batch command: `uv run lms index-upstream` indexes 1,262 clean upstream sources into 12,667 verified exact-slice passages in 2.4 seconds.
@@ -106,9 +121,22 @@
       - `llamaindex-docs` (`619d746`): 109 sources (MIT, LlamaIndex data framework documentation)
       - `llama-index-core==0.14.25`: pinned in `pyproject.toml` (`[dependency-groups] variants`) for deterministic boundary evaluation.
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
-  - 330 automated tests passing.
+  - 530 automated tests passing.
 
 ---
 
-## 3. Next Action
-- Await user's benchmark evaluation results (BAAI/bge-m3 vs jina-embeddings-v2-base-en across 600 eval questions) to configure the upstream RAG chunking and indexing pipeline.
+## 3. Decisions Settled (2026-10-31)
+- My progress opens on the learner's current stage.
+- A skill's main activity counts for Apply and Adapt (ADR-0016 amendment A).
+- A passed Cold Check counts only for the skill it tests, through that skill's own activity. Explain, Specify and Decompose are graded through SPEC-13's deterministic item types; AI never grades a Cold Check (amendments B and C).
+- Every lesson shows the playground; it writes evidence only when the unit's methods include Modify or Build (SPEC-12 section 3.2).
+- Reset clears a unit's timer, including a passed Cold Check, and never touches the ledger.
+- Stage 0 seeds: Claude drafts, the owner approves.
+- Push is on hold.
+
+## 4. Next Action
+- Owner reviews the proposed Python stage titles (`docs/proposals/python-stage-titles.md`) and the Stage 0 seed drafts.
+- Then step 4: exercises (seed loader, grader, exercise, regenerate, reset, state and drafts routes, and the `playground` step in `Unit.activities`).
+- Then step 5 attempts and evidence, step 6 live runs and AXIS streaming, step 7 stage builds, then the frontend.
+- Known gap for step 5: `/explain` and `/axis/consult` still accept a `learner_id` in the request body.
+- Separate open item: benchmark results (BAAI/bge-m3 vs jina-embeddings-v2-base-en) for the upstream RAG pipeline.
