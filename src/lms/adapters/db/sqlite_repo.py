@@ -9,11 +9,20 @@ import sqlite3
 from typing import Any, Dict, List, Optional
 
 from lms.core.models import (
+    ActivityType,
     AssistanceLevel,
     EvidenceCategory,
     EvidenceEntry,
     EvidenceStrength,
 )
+
+# Added after the first release. initialize() adds any that are missing, so fresh
+# and existing databases go through one path and old rows are never rewritten.
+EVIDENCE_LEDGER_ADDED_COLUMNS = {
+    "exercise_id": "TEXT",
+    "activity": "TEXT",
+    "cold_check": "INTEGER NOT NULL DEFAULT 0",
+}
 
 
 class SQLiteLearnerRepository:
@@ -70,6 +79,10 @@ class SQLiteLearnerRepository:
                 ON evidence_ledger (learner_id, skill_id);
                 """
             )
+            existing = {row["name"] for row in conn.execute("PRAGMA table_info(evidence_ledger)")}
+            for column, definition in EVIDENCE_LEDGER_ADDED_COLUMNS.items():
+                if column not in existing:
+                    conn.execute(f"ALTER TABLE evidence_ledger ADD COLUMN {column} {definition}")
 
     def get_learner(self, learner_id: str) -> Optional[Dict[str, Any]]:
         return {"learner_id": learner_id}
@@ -107,8 +120,9 @@ class SQLiteLearnerRepository:
                 INSERT INTO evidence_ledger (
                     entry_id, learner_id, unit_id, skill_id,
                     evidence_category, evidence_strength, assistance_level,
-                    demonstration_context, observed_reasoning, recorded_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    demonstration_context, observed_reasoning, recorded_at,
+                    exercise_id, activity, cold_check
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -121,6 +135,9 @@ class SQLiteLearnerRepository:
                     entry.demonstration_context,
                     entry.observed_reasoning,
                     entry.recorded_at.isoformat(),
+                    entry.exercise_id,
+                    entry.activity.value if entry.activity else None,
+                    int(entry.cold_check),
                 ),
             )
 
@@ -161,6 +178,9 @@ class SQLiteLearnerRepository:
                     demonstration_context=r["demonstration_context"],
                     observed_reasoning=r["observed_reasoning"],
                     recorded_at=datetime.fromisoformat(r["recorded_at"]),
+                    exercise_id=r["exercise_id"],
+                    activity=ActivityType(r["activity"]) if r["activity"] else None,
+                    cold_check=bool(r["cold_check"]),
                 )
             )
         return entries
