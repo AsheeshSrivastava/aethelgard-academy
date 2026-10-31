@@ -115,6 +115,7 @@ def test_proficiency_matches_the_spec_shape(client):
     assert set(body) == {"stage", "skills", "units", "next_action"}
     assert set(body["skills"][0]) == {
         "skill_id",
+        "skill_name",
         "target_level",
         "current_level",
         "confidence",

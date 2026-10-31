@@ -12,7 +12,7 @@ from typing import Callable, Dict, List, Optional
 from pydantic import BaseModel
 
 from lms.core.cold_check import ColdCheckState
-from lms.core.models import ProficiencyLevel, Unit
+from lms.core.models import ProficiencyLevel, ProgressionDecision, Unit
 
 
 class CourseInfo(BaseModel):
@@ -50,6 +50,7 @@ class Course(BaseModel):
 
 class UnitSkill(BaseModel):
     skill_id: str
+    skill_name: str
     goal_level: ProficiencyLevel
 
 
@@ -59,6 +60,8 @@ class UnitSummary(BaseModel):
     concept_line: str
     target_skills: List[UnitSkill]
     authored: bool                     # Has a curator lesson package
+    decision: ProgressionDecision      # For the signed-in learner
+    cold_check_state: ColdCheckState
 
 
 class BuildSummary(BaseModel):
@@ -104,6 +107,7 @@ def build_course_map(
     units: List[Unit],
     stage_titles: Dict[int, str],
     cold_check_state_of: Callable[[str], ColdCheckState],
+    decision_of: Callable[[Unit], ProgressionDecision],
 ) -> CourseMap:
     """Group a course's units by stage number; units keep their teaching order."""
     by_stage: Dict[int, List[Unit]] = {}
@@ -113,7 +117,7 @@ def build_course_map(
     return CourseMap(
         course=build_course(course_id, units),
         stages=[
-            _stage_view(stage, by_stage[stage], stage_titles, cold_check_state_of)
+            _stage_view(stage, by_stage[stage], stage_titles, cold_check_state_of, decision_of)
             for stage in sorted(by_stage)
         ],
     )
@@ -124,12 +128,14 @@ def _stage_view(
     units: List[Unit],
     stage_titles: Dict[int, str],
     cold_check_state_of: Callable[[str], ColdCheckState],
+    decision_of: Callable[[Unit], ProgressionDecision],
 ) -> StageView:
-    pending = [u.unit_id for u in units if cold_check_state_of(u.unit_id) != ColdCheckState.PASSED]
+    states = {u.unit_id: cold_check_state_of(u.unit_id) for u in units}
+    pending = [unit_id for unit_id, state in states.items() if state != ColdCheckState.PASSED]
     return StageView(
         stage=stage,
         title=stage_titles.get(stage, f"Stage {stage}"),
-        units=[_unit_summary(u) for u in units],
+        units=[_unit_summary(u, decision_of(u), states[u.unit_id]) for u in units],
         # Every stage has one build (owner decision); curator data replaces these defaults.
         build=BuildSummary(
             title=f"Stage {stage} build",
@@ -140,13 +146,18 @@ def _stage_view(
     )
 
 
-def _unit_summary(unit: Unit) -> UnitSummary:
+def _unit_summary(
+    unit: Unit, decision: ProgressionDecision, cold_check_state: ColdCheckState
+) -> UnitSummary:
     return UnitSummary(
         unit_id=unit.unit_id,
         title=unit.title,
         concept_line=unit.concept_line,
         target_skills=[
-            UnitSkill(skill_id=s.skill_id, goal_level=s.goal_level) for s in unit.target_skills
+            UnitSkill(skill_id=s.skill_id, skill_name=s.skill_name, goal_level=s.goal_level)
+            for s in unit.target_skills
         ],
         authored=unit.lesson_markdown is not None,
+        decision=decision,
+        cold_check_state=cold_check_state,
     )

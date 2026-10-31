@@ -62,3 +62,8 @@ eval-out/
 data/
 data/index/
 
+# Frontend: dependencies and test output stay local; the build is committed (ADR-0014)
+node_modules/
+frontend/test-results/
+frontend/playwright-report/
+!src/lms/web/dist/

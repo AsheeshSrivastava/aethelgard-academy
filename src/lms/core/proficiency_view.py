@@ -48,6 +48,7 @@ class EvidenceCounts(BaseModel):
 
 class SkillView(BaseModel):
     skill_id: str
+    skill_name: str
     target_level: ProficiencyLevel
     current_level: Optional[ProficiencyLevel] = None
     confidence: Optional[Confidence] = None
@@ -141,10 +142,12 @@ def build_proficiency_view(
     unit_rows: List[Tuple[Unit, List[SkillDecision]]] = []
     # skill_id -> (highest target, most shaky checks) across the units in scope
     scope: Dict[str, Tuple[ProficiencyLevel, int]] = {}
+    names: Dict[str, str] = {}
 
     for unit in units:
         shaky = consecutive_shaky_checks(ledger, unit.unit_id)
         for skill in unit.target_skills:
+            names[skill.skill_id] = skill.skill_name
             target, most_shaky = scope.get(skill.skill_id, (skill.goal_level, 0))
             scope[skill.skill_id] = (
                 max(target, skill.goal_level, key=LEVEL_ORDER.index),
@@ -155,7 +158,7 @@ def build_proficiency_view(
     return ProficiencyView(
         stage=stage,
         skills=[
-            _skill_view(skill_id, target, shaky, ledger, now, config)
+            _skill_view(skill_id, names[skill_id], target, shaky, ledger, now, config)
             for skill_id, (target, shaky) in scope.items()
         ],
         units=[
@@ -168,6 +171,7 @@ def build_proficiency_view(
 
 def _skill_view(
     skill_id: str,
+    skill_name: str,
     target: ProficiencyLevel,
     shaky: int,
     ledger: List[EvidenceEntry],
@@ -178,6 +182,7 @@ def _skill_view(
     counts = evidence_counts(ledger, skill_id, now=now, config=config)
     return SkillView(
         skill_id=skill_id,
+        skill_name=skill_name,
         target_level=target,
         current_level=decided.estimate.level,
         confidence=decided.estimate.confidence,

@@ -202,12 +202,13 @@ def create_app(
     concepts: Optional[ConceptCatalog] = None,
     clock: Optional[Callable[[], datetime]] = None,
     run_limits: Optional[RunLimits] = None,
+    dist_dir: Optional[Path] = None,
 ) -> FastAPI:
     """Application factory for the LMS API Gateway."""
 
     # Default dependencies
     if repo is None:
-        sqlite_repo = SQLiteLearnerRepository()
+        sqlite_repo = SQLiteLearnerRepository(os.environ.get("LMS_DB_PATH", "lms_state.db"))
         sqlite_repo.initialize()
         repo = sqlite_repo
 
@@ -246,12 +247,19 @@ def create_app(
     if web_dir.exists():
         app.mount("/static", StaticFiles(directory=str(web_dir)), name="static")
 
-    @app.get("/", response_class=HTMLResponse)
-    def serve_index():
+    dist = (dist_dir or web_dir / "dist").resolve()
+
+    @app.get("/legacy", response_class=HTMLResponse)
+    def serve_legacy_shell():
         index_file = web_dir / "index.html"
         if index_file.exists():
             return FileResponse(index_file)
         return HTMLResponse("<h1>Aethelgard Academy Platform Shell Initializing...</h1>")
+
+    @app.get("/", response_class=HTMLResponse)
+    def serve_index():
+        index_file = dist / "index.html"
+        return FileResponse(index_file) if index_file.exists() else serve_legacy_shell()
 
     # --- System Routes ---
     @app.get("/api/v1/health")
@@ -316,6 +324,8 @@ def create_app(
         if course_id not in COURSES:
             return problem(404, "Course not found", f"Course '{course_id}' does not exist.")
         now = clock()
+        ledger = repo.get_evidence_ledger(learner_id)
+        config = EstimatorConfig(main_activities=catalog.main_activities)
         return build_course_map(
             course_id,
             catalog.get_course_units(course_id),
@@ -323,6 +333,7 @@ def create_app(
             lambda unit_id: cold_check_status(
                 repo.get_cold_check_timer(learner_id, unit_id), now
             ).state,
+            lambda unit: unit_decision(unit, ledger, now, config),
         )
 
     # --- Code Execution Sandbox Routes ---
@@ -867,6 +878,19 @@ def create_app(
             learner_id=learner_id, unit_id=payload.unit_id, status=payload.status
         )
         return {"success": True, "learner_id": learner_id, "unit_id": payload.unit_id}
+
+    # --- Frontend (ADR-0014): built files, then the app for client-side routes ---
+    @app.get("/{path:path}", include_in_schema=False)
+    def serve_frontend(path: str):
+        if path.startswith("api/"):
+            return problem(404, "Not found", f"No route for /{path}.")
+        candidate = (dist / path).resolve()
+        if candidate.is_relative_to(dist) and candidate.is_file():
+            return FileResponse(candidate)
+        index_file = dist / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        return problem(404, "Not found", f"No route for /{path}.")
 
     return app
 

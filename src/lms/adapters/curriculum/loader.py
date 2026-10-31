@@ -227,6 +227,14 @@ def load_main_activities(file_path: Path) -> Dict[str, ActivityType]:
     return table
 
 
+def load_skill_names(file_path: Path) -> Dict[str, str]:
+    """Read skill -> plain name from the same Learning Method table."""
+    if not file_path.exists():
+        return {}
+    pattern = r"^\|\s*\**([A-Z]{2}-\d+)\s+([^|*]+?)\**\s*\|"
+    return dict(re.findall(pattern, file_path.read_text(encoding="utf-8"), re.M))
+
+
 def load_seeds(curriculum_dir: Path) -> Tuple[Dict[str, List[ExerciseSeed]], List[Finding]]:
     """Load every SPEC-13 seed. A bad file is reported and skipped; it never stops the app."""
     seeds: Dict[str, List[ExerciseSeed]] = {}
@@ -259,6 +267,10 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
 
     # Findings are reported, never fatal: the curriculum belongs to the curator.
     catalog.main_activities = load_main_activities(reference_dir / LEARNING_METHOD_FILE)
+    skill_names = load_skill_names(reference_dir / LEARNING_METHOD_FILE)
+    for unit in catalog.list_all_units():
+        for skill in unit.target_skills:
+            skill.skill_name = skill_names.get(skill.skill_id, skill.skill_id)
     catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
     catalog.findings = seed_problems + check_curriculum(
         catalog.list_all_units(), main_activities=catalog.main_activities, seeds=catalog.seeds

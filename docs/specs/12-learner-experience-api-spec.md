@@ -40,7 +40,8 @@ Conventions:
 ```text
 Course     { course_id: "python" | "backend" | "ai-engineering", title, summary, stage_count, unit_count }
 CourseMap  { course: Course, stages: [ { stage, title, units: [UnitSummary], build: BuildSummary | null } ] }
-UnitSummary{ unit_id, title, concept_line, target_skills: [{skill_id, goal_level}], authored: bool }
+UnitSummary{ unit_id, title, concept_line, target_skills: [{skill_id, skill_name, goal_level}], authored: bool,
+             decision: Decision, cold_check_state }   // for the signed-in learner
 Unit.activities: ["video", "explain", ...unit.methods without "Explain", "playground" (section 3.2), "cold_check"]   // video and explain always first, cold_check always last
 BuildSummary { title, kind: "script" | "mini_project", locked: bool, pending_units: [unit_id] }  // locked until every unit in the stage passed its Cold Check
 StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
@@ -205,7 +206,8 @@ Assistance level for the entry is the highest level AXIS logged against that `ex
 
 ```text
 ProficiencyView {
-  skills: [ { skill_id, target_level, current_level | null, confidence: "provisional" | "supported" | null,
+  stage: int | null,
+  skills: [ { skill_id, skill_name, target_level, current_level | null, confidence: "provisional" | "supported" | null,
               evidence_counts: {explain, perform, diagnose}, decision: Decision, reason, entry_ids: [str] } ],
   units:  [ { unit_id, decision: Decision } ],
   next_action: { unit_id, skill_id, activity, decision: Decision, message } }

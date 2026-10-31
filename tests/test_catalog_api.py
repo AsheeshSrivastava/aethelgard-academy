@@ -179,8 +179,14 @@ def test_course_map_shape(client):
         "concept_line",
         "target_skills",
         "authored",
+        "decision",
+        "cold_check_state",
     }
-    assert set(body["stages"][0]["units"][0]["target_skills"][0]) == {"skill_id", "goal_level"}
+    assert set(body["stages"][0]["units"][0]["target_skills"][0]) == {
+        "skill_id",
+        "skill_name",
+        "goal_level",
+    }
     assert set(body["stages"][0]["build"]) == {"title", "kind", "locked", "pending_units"}
 
 
@@ -284,6 +290,33 @@ def test_failed_cold_check_keeps_the_build_locked():
     build = client.get("/api/v1/courses/python").json()["stages"][1]["build"]
 
     assert build["locked"] is True
+
+
+# --- What the frontend shows for the learner ---
+
+
+def test_course_map_units_carry_the_learners_decision_and_cold_check():
+    client, repo = make_client(small_catalog())
+    repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, "PY-1.1", T0)
+
+    unit = client.get("/api/v1/courses/python").json()["stages"][0]["units"][0]
+
+    assert unit["decision"] == "Undecided"
+    assert unit["cold_check_state"] == "waiting"
+
+
+def test_skill_names_come_from_the_learning_method(client):
+    unit = client.get("/api/v1/courses/python").json()["stages"][0]["units"][0]
+    skill = client.get("/api/v1/units/PY-0.1").json()["target_skills"][0]
+
+    assert unit["target_skills"][0]["skill_name"] == "Predict before running"
+    assert skill["skill_name"] == "Predict before running"
+
+
+def test_proficiency_rows_carry_the_skill_name(client):
+    rows = client.get("/api/v1/learners/me/proficiency?course_id=python&stage=0").json()["skills"]
+
+    assert next(r for r in rows if r["skill_id"] == "CO-1")["skill_name"] == "Predict before running"
 
 
 # --- Old shell and identity ---

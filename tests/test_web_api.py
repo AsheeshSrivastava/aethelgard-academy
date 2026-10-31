@@ -132,9 +132,56 @@ def test_explain_error_endpoint(test_client):
 
 
 
-def test_serves_landing_page(test_client):
+def test_old_shell_stays_at_legacy(test_client):
     client, _ = test_client
-    res = client.get("/")
+    res = client.get("/legacy")
     assert res.status_code == 200
     assert "text/html" in res.headers["content-type"]
     assert "Aethelgard Academy" in res.text
+
+
+@pytest.fixture
+def dist_client(tmp_path: Path):
+    dist = tmp_path / "dist"
+    (dist / "assets").mkdir(parents=True)
+    (dist / "index.html").write_text("<title>New app</title>", encoding="utf-8")
+    (dist / "assets" / "app.js").write_text("console.log(1)", encoding="utf-8")
+    (tmp_path / "secret.txt").write_text("outside", encoding="utf-8")
+    repo = SQLiteLearnerRepository(db_path=str(tmp_path / "t.db"))
+    repo.initialize()
+    app = create_app(repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), dist_dir=dist)
+    return TestClient(app)
+
+
+def test_new_app_is_served_at_the_root(dist_client):
+    assert "New app" in dist_client.get("/").text
+
+
+def test_client_side_routes_fall_back_to_the_app(dist_client):
+    for path in ("/courses", "/courses/python", "/units/PY-0.1", "/progress"):
+        res = dist_client.get(path)
+        assert res.status_code == 200
+        assert "New app" in res.text
+
+
+def test_built_assets_are_served(dist_client):
+    assert dist_client.get("/assets/app.js").text == "console.log(1)"
+
+
+def test_unknown_api_routes_stay_404(dist_client):
+    assert dist_client.get("/api/v1/nothing").status_code == 404
+
+
+def test_fallback_cannot_read_outside_the_build(dist_client):
+    res = dist_client.get("/..%2Fsecret.txt")
+
+    assert "outside" not in res.text
+
+
+def test_database_path_comes_from_the_environment(tmp_path, monkeypatch):
+    path = tmp_path / "chosen.db"
+    monkeypatch.setenv("LMS_DB_PATH", str(path))
+
+    create_app(runner=SubprocessRunner(), axis=MockAxisCompanion())
+
+    assert path.exists()
