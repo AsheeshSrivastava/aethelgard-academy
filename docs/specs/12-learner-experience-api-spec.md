@@ -86,19 +86,35 @@ Every lesson shows the interactive playground.
 | POST | `/learners/me/units/{unit_id}/activities/{activity}/exercises:regenerate` | `Exercise` (a new variant) |
 | POST | `/learners/me/units/{unit_id}/reset` | `204` |
 | GET / PUT | `/learners/me/units/{unit_id}/state` | `{step, done_steps: [str]}` |
-| PUT | `/learners/me/drafts/{exercise_id}` | `{files: {path: content}}` → `204` |
+| GET / PUT | `/learners/me/drafts/{exercise_id}` | `{files: {path: content}}`; PUT → `204` |
 
 ```text
 Exercise { exercise_id, unit_id, activity, origin: "authored" | "generated", variant_no,
-           prompt_markdown,
-           predict?:    { code, options: [{key, text}] },
-           trace?:      { code: [str], input: str },
-           playground?: { starter, tasks: [{id, label}] } }
+           item_type, prompt_markdown,
+           predict?:          { code, stdin, options: [{key, text}] },
+           trace?:            { code: [str], input: str },
+           playground?:       { starter, tasks: [{id, label}] },
+           debug?:            { broken_code, stdin },
+           debug_locate?:     { broken_code, stdin, error_types: [{key, text}] },
+           choice?:           { material, options: [{key, text}] },
+           specify_by_tests?: { function_name, signature, starter_tests },
+           specify_contract?: { material, fields: [{id, label, kind, options}] },
+           decompose_plan?:   { material, steps: [{id, text}] },
+           decompose_code?:   { entry_function, starter, structure },
+           explain_spot_flaw?:    { sentences: [{key, text}] },
+           explain_model_choice?: { material, options: [{key, text}] } }
 ```
+
+Each block is built from a list of allowed fields (SPEC-13 section 4), never by removing hidden ones, so a new hidden field cannot leak by accident.
+
+`activity` in URLs and `Unit.activities` is a slug: `video`, `explain`, `predict`, `trace`, `specify`, `decompose`, `modify`, `debug-validate`, `build`, `evaluate`, `direct`, `playground`, `cold_check`.
 
 Rules:
 - `explain` cannot be regenerated: `409`.
+- `video` has no exercise: `404`. A unit with no seed for an activity also returns `404`.
+- `explain` serves the unit's free-text concept check prompt. `playground` serves the package's `starter.py`.
 - `cold_check` can be regenerated only after an attempt on the current variant: `409` otherwise.
+- A seed with template slots gives one variant per slot value (SPEC-13 section 6); each is its own `exercise_id`.
 - Hidden checks (correct option, expected output, test code) never leave the server.
 - Regenerate serves the next unseen variant from the unit's verified pool (curator seeds first, then batch-generated variants; ADR-0017). No LLM is called at learner time. When the pool is exhausted, the oldest-seen variant is reused.
 - Cold Check variants come only from curator-approved pool entries.
@@ -116,7 +132,8 @@ ColdCheckStatus { state: "not_ready" | "waiting" | "available" | "passed" | "fai
 ```
 
 - `waiting` starts when the unit's last other activity is completed; `available_at` = completion + 24 h.
-- `GET .../activities/cold_check/exercise` before `available_at` returns `423 Locked`.
+- `GET .../activities/cold_check/exercise` before `available_at` returns `423 Locked`. Once passed, it returns `409`.
+- The Cold Check serves only seeds with `cold_check_eligible` and `curator_approved` both true. A unit with no such seed returns `404`.
 - AXIS requests carrying a Cold Check `exercise_id` return `403`; the frontend hides the AXIS panel on this step.
 - A fail sets `failed_waiting` with a new `available_at` 24 h later.
 - `GET /courses/{course_id}/stages/{stage}/build` and attempts on it return `423 Locked` while any unit in the stage lacks a passed Cold Check.

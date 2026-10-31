@@ -276,8 +276,7 @@ Rules for the unit (ADR-0016 amendment C):
 | `trace` | `code`, `input` |
 | `playground` | `starter`, `tasks`; a `debug` block serves `broken_code` as `starter`; `decompose_code` serves `starter` and `structure` |
 
-SPEC-12 needs these additions when exercises are built (not changed yet):
-- **Exercise:** optional `choice`, `specify_tests`, `specify_contract` and `decompose_plan` blocks, holding only the non-hidden fields.
+SPEC-12 section 4 lists the Exercise blocks served for every item type. It still needs these additions when attempts are built (step 5):
 - **Attempt:** optional `tests` (`specify_by_tests`), `fields` (`specify_contract`) and `plan` (`decompose_plan`, ordered step ids).
 - **AttemptResult:** optional `score: {passed, total}` for the partial feedback in section 4.
 
