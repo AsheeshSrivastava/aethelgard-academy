@@ -3,8 +3,7 @@
 ## Resume here
 
 - **State:** backend steps 1 to 6, the frontend (phases 1 and 2) and the Concept Library (SPEC-14) are done. A learner can work through a whole Stage 0 unit in the browser, including the Cold Check. All work up to `65277cd` was pushed to both remotes on 2026-10-31 at the owner's word; newer commits are local, and push is held again.
-- **Next:** the owner reviews the four draft concept notes. Wait for the owner before step 7 stage builds. Then more Cold Check seeds and retiring the old shell at `/legacy`.
-- **Open:** the old concept notes in `docs/concepts/` are no longer loaded (SPEC-14 section 2). Decide whether to move them to `curriculum/concepts/` or remove them. `/legacy` loses its `input()` and `print()` note links until then.
+- **Next:** the owner reviews the ten draft concept notes. Then step 7 stage builds, more Cold Check seeds, and retiring the old shell at `/legacy`.
 - **Temporary exception:** AXIS keeps retrieving from upstream documentation in `data/index` (ADR-0003 section 4). Review it before anyone else learns on the platform.
 
 - **Branch:** `main` (tracking `origin/main` on Entire)

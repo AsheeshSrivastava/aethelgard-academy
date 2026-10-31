@@ -27,14 +27,14 @@ In professional software development, consulting documentation is an engineer's 
 | **`print()`** | Built-in function that outputs data to the terminal console. | [Python Formatted Output](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/inputoutput.md) |
 | **f-strings (`f"..."`)** | Modern string formatting that dynamically injects variables into text inside `{curly_braces}`. | [Python Formatted String Literals](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/inputoutput.md) |
 
-Want more on any of these? Read the concept notes: [[comments-in-python]], [[variables]] and [[print-function]].
+Want more on any of these? Read the concept notes: [[comments-in-python]], [[built-in-input]], [[variables]], [[print-function]] and [[formatted-strings]].
 
 ---
 
 ## 3. Key Mental Models to Master
 
 ### A. Execution Order: Statement by Statement
-Python reads your script strictly from **top to bottom**. Line 1 runs before Line 2. A variable does not exist in memory until the line that creates it has executed.
+Python reads your script strictly from **top to bottom**. Line 1 runs before Line 2. A variable does not exist in memory until the line that creates it has executed. See [[sequential-execution]].
 
 ### B. Functions and Return Values
 When you call `input("Enter name: ")`:

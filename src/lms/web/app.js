@@ -79,12 +79,13 @@ function processWikiLinks(text) {
     /\[\[([a-z0-9\-]+)\|([^\]]+)\]\]/gi,
     '<a class="wiki-link" onclick="openConceptDrawer(\'$1\')">$2</a>'
   );
+  res = res.replace(/\[\[([a-z0-9\-]+)\]\]/gi, '<a class="wiki-link" onclick="openConceptDrawer(\'$1\')">$1</a>');
   res = res.replace(
     /\[([^\]]+)\]\(concept:([a-z0-9\-]+)\)/gi,
     '<a class="wiki-link" onclick="openConceptDrawer(\'$2\')">$1</a>'
   );
   res = res.replace(/`input\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-input\')">input()</code>');
-  res = res.replace(/`print\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'built-in-print\')">print()</code>');
+  res = res.replace(/`print\(\)`/g, '<code class="wiki-link" onclick="openConceptDrawer(\'print-function\')">print()</code>');
   return res;
 }
 

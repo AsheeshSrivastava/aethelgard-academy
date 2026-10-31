@@ -29,7 +29,7 @@ curriculum/concepts/
 Decisions:
 - **Files, not database rows.** Notes are curriculum: reviewed, versioned and committed like lessons (ADR-0008). They are loaded once at startup.
 - **Recent searches are learner state**, so they go in SQLite (ADR-0002).
-- The old notes in `docs/concepts/` are no longer loaded. They stay in the repository until the owner decides what to do with them. `DEFAULT_CONCEPTS` is removed.
+- The owner chose on 2026-10-31 to move six of the old `docs/concepts/` notes here as drafts. The three that overlapped the new notes (`built-in-print`, `comments-pseudocode`, `variables-memory`) were removed, with the script that generated them; git history keeps them. `DEFAULT_CONCEPTS` is removed.
 
 ### 2.1 File format
 

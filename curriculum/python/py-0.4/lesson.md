@@ -12,7 +12,7 @@ In Python, this exact lifecycle is managed through three core primitives:
 - String formatting: Packaging clean, normalized records (such as f-strings: `f"REGISTRATION: {name}"`).
 - `print()`: Transmits the packaged message to the standard output stream (`stdout`).
 
-Want more on any of these? Read the concept notes: [[variables]], [[expressions]] and [[print-function]].
+Want more on any of these? Read the concept notes: [[built-in-input]], [[variables]], [[expressions]], [[formatted-strings]], [[print-function]] and [[standard-streams]].
 
 ---
 
