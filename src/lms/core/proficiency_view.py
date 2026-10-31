@@ -92,6 +92,25 @@ def first_unfinished_unit(
     return None
 
 
+def unit_decision(
+    unit: Unit, entries: Iterable[EvidenceEntry], now: datetime, config: EstimatorConfig = DEFAULT_CONFIG
+) -> ProgressionDecision:
+    return decide_unit(_decide_unit_skills(unit, list(entries), now, config))
+
+
+def activities_attempted(unit: Unit, entries: Iterable[EvidenceEntry]) -> bool:
+    """Every activity of the unit has an entry, so its Cold Check clock can start."""
+    return all(activity in _tried_activities(unit, entries) for activity in unit.methods)
+
+
+def _tried_activities(unit: Unit, entries: Iterable[EvidenceEntry]) -> set:
+    tried = set()
+    for e in entries:
+        if e.unit_id == unit.unit_id and not e.cold_check:
+            tried.add(ActivityType.EXPLAIN if is_concept_check(e) else e.activity)
+    return tried
+
+
 def _decide_unit_skills(
     unit: Unit, ledger: List[EvidenceEntry], now: datetime, config: EstimatorConfig
 ) -> List[SkillDecision]:
@@ -208,10 +227,7 @@ def _next_activity(
     if state == ColdCheckState.AVAILABLE:
         return "cold_check"
 
-    tried = set()
-    for e in ledger:
-        if e.unit_id == unit.unit_id:
-            tried.add(ActivityType.EXPLAIN if is_concept_check(e) else e.activity)
+    tried = _tried_activities(unit, ledger)
     untried = [activity for activity in unit.methods if activity not in tried]
     # Everything tried: practise again on the unit's last activity.
     return (untried[0] if untried else unit.methods[-1]).slug

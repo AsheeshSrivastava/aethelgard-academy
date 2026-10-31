@@ -261,6 +261,12 @@ def grade(seed: ExerciseSeed, attempt: Attempt, runner: Runner) -> GradeResult:
     return _grade_hidden_checks(seed, attempt, runner)
 
 
+def highest_assistance(levels: List[AssistanceLevel]) -> AssistanceLevel:
+    """The strongest help logged. Enum order runs from none to supplied reasoning."""
+    order = list(AssistanceLevel)
+    return max(levels, key=order.index, default=AssistanceLevel.NONE)
+
+
 def evidence_strength(
     item_type: str, passed: bool, prior_attempts: int, assistance: AssistanceLevel, cold_check: bool
 ) -> EvidenceStrength:

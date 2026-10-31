@@ -36,13 +36,14 @@ class ExecutionResult(BaseModel):
 
 
 class AxisQuery(BaseModel):
-    learner_id: str
+    learner_id: str = ""               # Set by the server from the session; a client value is ignored
     unit_id: str
     mode: AxisMode
     current_activity: ActivityType
     user_prompt: str
     learner_code: Optional[str] = None
     execution_result: Optional[ExecutionResult] = None
+    exercise_id: Optional[str] = None  # Assistance is logged against this exercise (ADR-0009)
 
 
 class AxisResponse(BaseModel):
@@ -85,6 +86,30 @@ class ILearnerRepository(Protocol):
     def set_current_exercise(
         self, learner_id: str, unit_id: str, activity: str, exercise_id: str, served_at: datetime
     ) -> None:
+        ...
+
+    def clear_current_exercise(self, learner_id: str, unit_id: str, activity: str) -> None:
+        ...
+
+    def log_assistance(
+        self, learner_id: str, exercise_id: str, level: AssistanceLevel, logged_at: datetime
+    ) -> None:
+        ...
+
+    def get_assistance_levels(
+        self, learner_id: str, exercise_id: str, since: datetime
+    ) -> List[AssistanceLevel]:
+        ...
+
+    def get_cold_items(self, learner_id: str, unit_id: str) -> Dict[str, bool]:
+        ...
+
+    def record_cold_item(
+        self, learner_id: str, unit_id: str, skill_id: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        ...
+
+    def clear_failed_cold_items(self, learner_id: str, unit_id: str) -> None:
         ...
 
     def get_seen_exercises(self, learner_id: str, unit_id: str, activity: str) -> List[str]:

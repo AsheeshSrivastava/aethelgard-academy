@@ -16,7 +16,7 @@ from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_roadmap_from_file
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
-from lms.api.app import create_app
+from lms.api.app import LOCAL_LEARNER_ID, create_app
 
 
 @pytest.fixture
@@ -69,7 +69,6 @@ def test_explain_endpoint_solid(test_client):
     payload = {
         "unit_id": "PY-0.1",
         "explanation": "Statements execute top-to-bottom sequentially; input() returns unparsed string characters that must be converted before arithmetic.",
-        "learner_id": "test_learner",
     }
     res = client.post("/api/v1/explain", json=payload)
     assert res.status_code == 200
@@ -79,7 +78,7 @@ def test_explain_endpoint_solid(test_client):
     assert body["evidence_logged"] is True
 
     # Check evidence logged in DB
-    ledger = repo.get_evidence_ledger(learner_id="test_learner")
+    ledger = repo.get_evidence_ledger(learner_id=LOCAL_LEARNER_ID)
     assert len(ledger) >= 1
     assert ledger[0].skill_id == "CO-6"
     assert "Solid" in (ledger[0].observed_reasoning or "")

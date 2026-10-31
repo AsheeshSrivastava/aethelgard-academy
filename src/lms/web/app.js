@@ -672,7 +672,7 @@ async function verifyPlaygroundSolution() {
   const terminal = document.getElementById("terminal-screen");
   const status = document.getElementById("execution-status");
 
-  if (!STATE.currentUnit || !STATE.currentUnit.test_code) {
+  if (!STATE.currentUnit) {
     alert("No test suite available for this unit.");
     return;
   }
@@ -680,14 +680,10 @@ async function verifyPlaygroundSolution() {
   status.innerText = "Verifying assertions...";
 
   try {
-    const res = await fetch("/api/v1/execute", {
+    const res = await fetch(`/api/v1/learners/me/units/${STATE.activeUnitId}/playground:verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        code: code,
-        test_code: STATE.currentUnit.test_code,
-        timeout_seconds: 5.0
-      })
+      body: JSON.stringify({ code: code })
     });
 
     if (res.ok) {

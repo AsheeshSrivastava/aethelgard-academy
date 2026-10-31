@@ -34,14 +34,28 @@ from lms.core.course_map import (
     build_course_map,
     course_of,
 )
+from lms.core.curriculum_checks import ACTIVITY_EVIDENCE
 from lms.core.exercises import (
     COLD_CHECK,
     Exercise,
+    ExerciseSeed,
     choose_next,
+    cold_check_skills,
+    cold_pool_for_skill,
     explain_exercise,
+    find_seed_variant,
     find_variant,
     playground_exercise,
     pool_for,
+)
+from lms.core.grading import (
+    Attempt,
+    Check,
+    Reveal,
+    Score,
+    evidence_strength,
+    grade,
+    highest_assistance,
 )
 from lms.core.interfaces import (
     AxisMode,
@@ -59,13 +73,16 @@ from lms.core.models import (
     EvidenceCategory,
     EvidenceEntry,
     EvidenceStrength,
+    ProgressionDecision,
     Unit,
 )
 from lms.core.proficiency import EstimatorConfig
 from lms.core.proficiency_view import (
     ProficiencyView,
+    activities_attempted,
     build_proficiency_view,
     first_unfinished_unit,
+    unit_decision,
 )
 
 logger = logging.getLogger(__name__)
@@ -120,6 +137,31 @@ class Draft(BaseModel):
     files: Dict[str, str]
 
 
+class VerifyRequest(BaseModel):
+    code: str
+
+
+class AttemptResult(BaseModel):
+    outcome: str                       # "passed" | "failed"
+    feedback: str
+    checks: Optional[List[Check]] = None
+    score: Optional[Score] = None
+    reveal: Optional[Reveal] = None
+    evidence_entry_id: Optional[str] = None
+    unit_decision: ProgressionDecision
+
+
+def public_unit(unit: Unit) -> Unit:
+    """A unit for the browser: no hidden checks, no concept check rubric or keywords."""
+    config = unit.concept_check_config or {}
+    return unit.model_copy(
+        update={
+            "test_code": None,
+            "concept_check_config": {"prompt": config["prompt"]} if "prompt" in config else None,
+        }
+    )
+
+
 class ExecuteCodeRequest(BaseModel):
     code: str
     test_code: Optional[str] = None
@@ -135,7 +177,6 @@ class ProgressUpdateRequest(BaseModel):
 class ExplainRequest(BaseModel):
     unit_id: str
     explanation: str
-    learner_id: str = "default_learner"
 
 
 class ExplainResponse(BaseModel):
@@ -255,7 +296,7 @@ def create_app(
         unit = catalog.get_unit(unit_id)
         if not unit:
             raise HTTPException(status_code=404, detail=f"Unit '{unit_id}' not found.")
-        return unit
+        return public_unit(unit)
 
     @app.get("/api/v1/courses", response_model=List[Course])
     def list_courses():
@@ -287,12 +328,17 @@ def create_app(
 
     # --- AXIS AI Companion Routes ---
     @app.post("/api/v1/axis/consult", response_model=AxisResponse)
-    def consult_axis(query: AxisQuery):
-        return axis.consult(query)
+    def consult_axis(query: AxisQuery, learner_id: str = Depends(current_learner_id)):
+        response = axis.consult(query.model_copy(update={"learner_id": learner_id}))
+        if query.exercise_id:
+            repo.log_assistance(
+                learner_id, query.exercise_id, response.detected_assistance_level, clock()
+            )
+        return response
 
     # --- CO-6 Concept Check & Mental Model Route ---
     @app.post("/api/v1/explain", response_model=ExplainResponse)
-    def evaluate_explanation(payload: ExplainRequest):
+    def evaluate_explanation(payload: ExplainRequest, learner_id: str = Depends(current_learner_id)):
         clean_unit = payload.unit_id.upper()
         keywords = ["string", "text", "typeerror", "convert", "int"]
         concept_line = "A program takes input, transforms it, and produces output; input() always returns a string."
@@ -331,7 +377,7 @@ def create_app(
             )
 
         entry = EvidenceEntry(
-            learner_id=payload.learner_id,
+            learner_id=learner_id,
             unit_id=clean_unit,
             skill_id="CO-6",
             evidence_category=EvidenceCategory.EXPLAIN_REASON,
@@ -339,8 +385,12 @@ def create_app(
             assistance_level=AssistanceLevel.NONE,
             demonstration_context=f"CO-6 Concept Check for {clean_unit}",
             observed_reasoning=f"Mental model evaluated as {status}: {feedback}",
+            recorded_at=clock(),
         )
         repo.record_evidence(entry)
+        unit = catalog.get_unit(clean_unit)
+        if unit:
+            maybe_start_cold_check_clock(unit, learner_id)
 
         return ExplainResponse(
             unit_id=clean_unit,
@@ -351,12 +401,12 @@ def create_app(
 
     # --- Socratic Error Diagnostic Route ---
     @app.post("/api/v1/explain-error")
-    def explain_runtime_error(payload: Dict[str, Any]):
+    def explain_runtime_error(payload: Dict[str, Any], learner_id: str = Depends(current_learner_id)):
         unit_id = payload.get("unit_id", "PY-0.1").upper()
         code = payload.get("code", "")
         error_msg = payload.get("error", "")
         query = AxisQuery(
-            learner_id=payload.get("learner_id", "default_learner"),
+            learner_id=learner_id,
             unit_id=unit_id,
             mode=AxisMode.SOCRATIC,
             current_activity=ActivityType.DEBUG_VALIDATE,
@@ -437,13 +487,37 @@ def create_app(
         repo.set_current_exercise(learner_id, unit.unit_id, activity, exercise_id, clock())
         return find_variant(catalog.seeds.get(unit.unit_id, []), exercise_id)
 
+    def serving_pool(unit: Unit, activity: str, learner_id: str) -> List[str]:
+        seeds = catalog.seeds.get(unit.unit_id, [])
+        if activity != COLD_CHECK:
+            return pool_for(seeds, activity)
+        finished = repo.get_cold_items(learner_id, unit.unit_id)
+        pending = [s for s in cold_check_skills(unit, seeds) if s not in finished]
+        return cold_pool_for_skill(seeds, pending[0]) if pending else []
+
+    def maybe_start_cold_check_clock(unit: Unit, learner_id: str) -> None:
+        if activities_attempted(unit, repo.get_evidence_ledger(learner_id)):
+            repo.mark_unit_activities_completed(learner_id, unit.unit_id, clock())
+
+    def finish_cold_item(unit: Unit, seed: ExerciseSeed, passed: bool, learner_id: str) -> None:
+        now = clock()
+        repo.record_cold_item(learner_id, unit.unit_id, seed.skill_id, passed, now)
+        repo.clear_current_exercise(learner_id, unit.unit_id, COLD_CHECK)
+        items = repo.get_cold_items(learner_id, unit.unit_id)
+        required = cold_check_skills(unit, catalog.seeds.get(unit.unit_id, []))
+        if all(skill in items for skill in required):
+            round_passed = all(items[skill] for skill in required)
+            repo.record_cold_check_attempt(learner_id, unit.unit_id, round_passed, now)
+            if not round_passed:
+                repo.clear_failed_cold_items(learner_id, unit.unit_id)
+
     def current_exercise(unit: Unit, activity: str, learner_id: str) -> Optional[Exercise]:
         if activity == ActivityType.EXPLAIN.slug:
             return explain_exercise(unit)
         if activity == "playground":
             return playground_exercise(unit)
         seeds = catalog.seeds.get(unit.unit_id, [])
-        pool = pool_for(seeds, activity)
+        pool = serving_pool(unit, activity, learner_id)
         if not pool:
             return None
         current = repo.get_current_exercise(learner_id, unit.unit_id, activity)
@@ -516,12 +590,105 @@ def create_app(
             if not attempted:
                 return problem(409, "Cannot regenerate", "Attempt this Cold Check first.")
 
-        pool = pool_for(catalog.seeds.get(unit_id, []), activity)
+        pool = serving_pool(unit, activity, learner_id)
         if not pool:
             return problem(404, "No exercise yet", f"{unit_id} has no '{activity}' exercise yet.")
         seen = repo.get_seen_exercises(learner_id, unit_id, activity)
         next_id = choose_next(pool, seen, current.exercise_id if current else None)
         return serve(unit, activity, next_id, learner_id)
+
+    # --- Attempts and Evidence (SPEC-12 section 5) ---
+    def check_playground(unit: Unit, code: str) -> ExecutionResult:
+        return runner.execute(code=code, test_code=unit.test_code)
+
+    @app.post("/api/v1/learners/me/units/{unit_id}/playground:verify", response_model=ExecutionResult)
+    def verify_my_playground(
+        unit_id: str, payload: VerifyRequest, learner_id: str = Depends(current_learner_id)
+    ):
+        unit = catalog.get_unit(unit_id)
+        if not unit or not unit.test_code:
+            return problem(404, "No checks", f"{unit_id} has no playground checks.")
+        return check_playground(unit, payload.code)
+
+    @app.post(
+        "/api/v1/learners/me/attempts",
+        response_model=AttemptResult,
+        response_model_exclude_none=True,
+    )
+    def post_my_attempt(attempt: Attempt, learner_id: str = Depends(current_learner_id)):
+        unit_id = known_exercise(attempt.exercise_id)
+        if not unit_id:
+            return problem(404, "Exercise not found", f"Exercise '{attempt.exercise_id}' does not exist.")
+        unit = catalog.get_unit(unit_id)
+        activity = attempt.activity
+        config = EstimatorConfig(main_activities=catalog.main_activities)
+
+        if activity not in unit.activities or activity == "video":
+            return problem(422, "Unknown activity", f"{unit_id} has no '{activity}' activity.")
+        if activity == ActivityType.EXPLAIN.slug:
+            return problem(409, "Use the concept check", "Explain is submitted to /api/v1/explain.")
+        if activity == "playground":
+            code = (attempt.files or {}).get("solution.py", "")
+            result = check_playground(unit, code)
+            ledger = repo.get_evidence_ledger(learner_id)
+            return AttemptResult(
+                outcome="passed" if result.success else "failed",
+                feedback="All checks passed." if result.success else "Some checks failed.",
+                unit_decision=unit_decision(unit, ledger, clock(), config),
+            )
+
+        is_cold = activity == COLD_CHECK
+        if is_cold:
+            blocked = cold_check_blocked(unit_id, learner_id)
+            if blocked:
+                return blocked
+        current = repo.get_current_exercise(learner_id, unit_id, activity)
+        if current is None or current.exercise_id != attempt.exercise_id:
+            return problem(409, "Not your current exercise", "Fetch the current exercise and try again.")
+
+        seed, _ = find_seed_variant(catalog.seeds.get(unit_id, []), attempt.exercise_id)
+        graded = grade(seed, attempt, runner)
+
+        assistance = AssistanceLevel.NONE
+        if not is_cold:
+            assistance = highest_assistance(
+                repo.get_assistance_levels(learner_id, attempt.exercise_id, current.served_at)
+            )
+        prior = [e for e in repo.get_evidence_ledger(learner_id) if e.seed_id == seed.seed_id]
+        entry = EvidenceEntry(
+            learner_id=learner_id,
+            unit_id=unit_id,
+            skill_id=seed.skill_id,
+            evidence_category=ACTIVITY_EVIDENCE[seed.activity],
+            evidence_strength=evidence_strength(
+                seed.item_type, graded.passed, len(prior), assistance, is_cold
+            ),
+            assistance_level=assistance,
+            demonstration_context=f"{seed.activity.value} attempt on {attempt.exercise_id}",
+            recorded_at=clock(),
+            exercise_id=attempt.exercise_id,
+            seed_id=seed.seed_id,
+            activity=seed.activity,
+            cold_check=is_cold,
+        )
+        repo.record_evidence(entry)
+
+        if is_cold:
+            finish_cold_item(unit, seed, graded.passed, learner_id)
+        else:
+            maybe_start_cold_check_clock(unit, learner_id)
+
+        # A failed Cold Check item can come back, so it must not show its answer.
+        reveal = None if is_cold and not graded.passed else graded.reveal
+        return AttemptResult(
+            outcome="passed" if graded.passed else "failed",
+            feedback=graded.feedback,
+            checks=graded.checks,
+            score=graded.score,
+            reveal=reveal,
+            evidence_entry_id=entry.entry_id,
+            unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), clock(), config),
+        )
 
     @app.post("/api/v1/learners/me/units/{unit_id}/reset", status_code=204, response_model=None)
     def reset_my_unit(unit_id: str, learner_id: str = Depends(current_learner_id)):

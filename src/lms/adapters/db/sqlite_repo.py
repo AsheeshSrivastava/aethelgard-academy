@@ -135,6 +135,28 @@ class SQLiteLearnerRepository:
             )
             conn.execute(
                 """
+                CREATE TABLE IF NOT EXISTS assistance_log (
+                    learner_id TEXT NOT NULL,
+                    exercise_id TEXT NOT NULL,
+                    assistance_level TEXT NOT NULL,
+                    logged_at TEXT NOT NULL
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS cold_check_item (
+                    learner_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    skill_id TEXT NOT NULL,
+                    passed INTEGER NOT NULL,
+                    attempted_at TEXT NOT NULL,
+                    PRIMARY KEY (learner_id, unit_id, skill_id)
+                );
+                """
+            )
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS exercise_draft (
                     learner_id TEXT NOT NULL,
                     unit_id TEXT NOT NULL,
@@ -265,6 +287,73 @@ class SQLiteLearnerRepository:
                 (learner_id, unit_id, activity, exercise_id, learner_id),
             )
 
+    def clear_current_exercise(self, learner_id: str, unit_id: str, activity: str) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                "DELETE FROM exercise_pointer WHERE learner_id = ? AND unit_id = ? AND activity = ?",
+                (learner_id, unit_id, activity),
+            )
+
+    def log_assistance(
+        self, learner_id: str, exercise_id: str, level: AssistanceLevel, logged_at: datetime
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                "INSERT INTO assistance_log VALUES (?, ?, ?, ?)",
+                (learner_id, exercise_id, level.value, logged_at.isoformat()),
+            )
+
+    def get_assistance_levels(
+        self, learner_id: str, exercise_id: str, since: datetime
+    ) -> List[AssistanceLevel]:
+        rows = self._get_conn().execute(
+            """
+            SELECT assistance_level, logged_at FROM assistance_log
+            WHERE learner_id = ? AND exercise_id = ?
+            """,
+            (learner_id, exercise_id),
+        ).fetchall()
+        return [
+            AssistanceLevel(r["assistance_level"])
+            for r in rows
+            if datetime.fromisoformat(r["logged_at"]) >= since
+        ]
+
+    def get_cold_items(self, learner_id: str, unit_id: str) -> Dict[str, bool]:
+        """skill_id -> passed, for this Cold Check round and earlier passes."""
+        rows = self._get_conn().execute(
+            "SELECT skill_id, passed FROM cold_check_item WHERE learner_id = ? AND unit_id = ?",
+            (learner_id, unit_id),
+        ).fetchall()
+        return {r["skill_id"]: bool(r["passed"]) for r in rows}
+
+    def record_cold_item(
+        self, learner_id: str, unit_id: str, skill_id: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO cold_check_item (learner_id, unit_id, skill_id, passed, attempted_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(learner_id, unit_id, skill_id) DO UPDATE SET
+                    passed = excluded.passed,
+                    attempted_at = excluded.attempted_at
+                """,
+                (learner_id, unit_id, skill_id, int(passed), attempted_at.isoformat()),
+            )
+
+    def clear_failed_cold_items(self, learner_id: str, unit_id: str) -> None:
+        """End of a failed round: failed skills come back, passed ones stay passed."""
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                "DELETE FROM cold_check_item WHERE learner_id = ? AND unit_id = ? AND passed = 0",
+                (learner_id, unit_id),
+            )
+
     def get_seen_exercises(self, learner_id: str, unit_id: str, activity: str) -> List[str]:
         """Exercise ids this learner has been served, oldest first."""
         rows = self._get_conn().execute(
@@ -330,6 +419,7 @@ class SQLiteLearnerRepository:
             for table in (
                 "unit_progress",
                 "unit_cold_check",
+                "cold_check_item",
                 "exercise_pointer",
                 "unit_state",
                 "exercise_draft",

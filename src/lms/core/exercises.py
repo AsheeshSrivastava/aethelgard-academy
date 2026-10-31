@@ -338,12 +338,30 @@ def pool_for(seeds: Sequence[ExerciseSeed], activity: str) -> List[str]:
     return [f"{s.seed_id}/v{n}" for s in chosen for n, _ in seed_variants(s)]
 
 
-def find_variant(seeds: Sequence[ExerciseSeed], exercise_id: str) -> Optional[Exercise]:
+def find_seed_variant(
+    seeds: Sequence[ExerciseSeed], exercise_id: str
+) -> Optional[Tuple[ExerciseSeed, int]]:
+    """The filled seed behind an exercise id. It holds hidden fields: for the server only."""
     for seed in seeds:
         for n, variant in seed_variants(seed):
             if f"{seed.seed_id}/v{n}" == exercise_id:
-                return to_exercise(variant, n)
+                return variant, n
     return None
+
+
+def find_variant(seeds: Sequence[ExerciseSeed], exercise_id: str) -> Optional[Exercise]:
+    found = find_seed_variant(seeds, exercise_id)
+    return to_exercise(*found) if found else None
+
+
+def cold_check_skills(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[str]:
+    """Target skills with an approved Cold Check seed, in unit order."""
+    covered = {s.skill_id for s in seeds if s.cold_check_eligible and s.curator_approved}
+    return [s.skill_id for s in unit.target_skills if s.skill_id in covered]
+
+
+def cold_pool_for_skill(seeds: Sequence[ExerciseSeed], skill_id: str) -> List[str]:
+    return pool_for([s for s in seeds if s.skill_id == skill_id], COLD_CHECK)
 
 
 def choose_next(pool: Sequence[str], seen: Sequence[str], current: Optional[str]) -> str:

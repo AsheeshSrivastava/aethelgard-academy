@@ -180,10 +180,15 @@ def walk_everything(client, repo, clock, catalog):
             served.append(res)
             if activity == "explain":
                 continue
+            if activity == "cold_check":
+                for skill in unit.target_skills[1:]:
+                    previous = unit.target_skills[unit.target_skills.index(skill) - 1]
+                    repo.record_cold_item(LOCAL_LEARNER_ID, unit_id, previous.skill_id, True, clock())
+                    res = client.get(exercise_url(unit_id, activity))
+                    assert res.status_code == 200, (unit_id, activity, res.text)
+                    served.append(res)
+                continue
             for _ in range(8):
-                if activity == "cold_check":
-                    repo.record_cold_check_attempt(LOCAL_LEARNER_ID, unit_id, passed=False, attempted_at=clock())
-                    clock.advance(2 * DAY)
                 res = client.post(regenerate_url(unit_id, activity))
                 assert res.status_code == 200, (unit_id, activity, res.text)
                 served.append(res)
@@ -346,7 +351,7 @@ def test_cold_check_regenerate_needs_an_attempt_on_the_current_variant(client, r
     repo.record_cold_check_attempt(LOCAL_LEARNER_ID, "PY-0.1", passed=False, attempted_at=clock())
     clock.advance(DAY)
     second = regenerate(client, "PY-0.1", "cold_check")
-    assert second["exercise_id"] != first["exercise_id"]
+    assert second["exercise_id"] == first["exercise_id"]  # CO-1 has one Cold Check seed
 
     assert_problem(client.post(regenerate_url("PY-0.1", "cold_check")), 409)
 
