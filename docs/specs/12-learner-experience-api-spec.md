@@ -55,9 +55,18 @@ Course ids map to the three roadmaps: Python Subject Roadmap v3, Backend Enginee
 The curator decides each unit's content, activities, their order and their scaffolding. These live in the unit's package under `curriculum/` (`meta.json`, `lesson.md`, starters, hidden checks; ADR-0008), with the roadmap as fallback for units without a package. The backend reads and validates them and serves them through `Unit.activities`; it never chooses activities. The frontend renders whatever list it receives and holds no per-unit activity list. Regenerated variants keep the curator's activity, skill and level; only surface details change.
 
 Checks run when curriculum is loaded (and in CI):
-- **Error:** a unit's target level needs evidence its activities cannot produce (Apply needs a Perform/Solve activity; Adapt needs a Diagnose/Judge/Transfer activity; Own needs the stage build).
-- **Warning:** a stage does not use every activity type at least once across its units.
-- **Error:** a Cold Check would contain no deterministically graded activity.
+- **Error:** a unit's target level needs evidence its activities cannot produce (Apply needs a Perform/Solve activity or the skill's main activity; Adapt needs a Diagnose/Judge/Transfer activity or the skill's main activity; Own needs the stage build). Main activities come from Learning Method v2 (ADR-0016 amendment A).
+- **Warning:** a stage has no activity producing one of the three evidence categories (Explain/Reason, Perform/Solve, Diagnose/Judge/Transfer). A stage uses 5 to 6 activity types, not all 10.
+- **Error:** a Cold Check would contain no deterministically graded activity. Predict, Trace, Modify, Debug & Validate and Build are gradable; Evaluate and Direct are gradable when the exercise carries a curator-written fixed answer key (ADR-0016 amendment B, SPEC-13).
+
+Activities and evidence categories:
+
+| Category | Activities |
+| --- | --- |
+| Explain / Reason | Explain, Predict, Trace |
+| Perform / Solve | Specify, Decompose, Modify, Build, Direct |
+| Diagnose / Judge / Transfer | Debug & Validate, Evaluate |
+
 ---
 
 ## 4. Exercises, Regenerate and Reset

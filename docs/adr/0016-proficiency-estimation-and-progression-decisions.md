@@ -80,3 +80,30 @@ A unit's decision is the weakest decision among its target skills (Rebuild < Str
 ### Negative / Trade-offs
 - Thresholds are first guesses and need tuning against real learner data.
 - Existing `test_progression.py` cases that assume last-entry behaviour must be rewritten test-first.
+
+---
+
+## Amendment 2026-10-31: main activities and fixed answer keys
+
+Decided by the owner after the SPEC-12 section 3.1 curriculum checks ran on all three roadmaps. The checks found 115 skill targets that could never earn their level and 41 units with no gradable Cold Check. The roadmaps stay unchanged (AGENTS.md section 4); the rules were too narrow.
+
+### A. A skill's main activity counts for Apply and Adapt (changes section 2.3)
+Learning Method v2 gives every skill one main activity ("Which activities develop which skills"), and a unit's Methods list is built from that table. Section 2.3 ignored this: `CO-1` at Apply lists Predict, which is Explain / Reason evidence, so no learner could reach the target.
+
+An entry whose `activity` is its skill's main activity now also qualifies:
+
+| Level | Qualifying entry (amended) |
+| --- | --- |
+| Apply | Moderate or Strong **Perform / Solve**, or **the skill's main activity**, assistance ≤ small hint |
+| Adapt | Strong **Diagnose / Judge / Transfer**, or **the skill's main activity**, on a variant the learner had not seen, assistance ≤ syntax lookup |
+
+- **Only the "Main activity" column counts**, not "Also helps".
+- **Source:** the table in `reference/Learning Method v2.md`, read when the curriculum loads. There is no per-skill list in code.
+- **Understand and Own do not change.** Own still needs a Strong, unassisted stage build.
+- **The entry must name its activity.** Entries with no `activity` (older rows, concept checks recorded without one) use the original rule only. A Cold Check entry records the activity of the exercise taken, so a passed Cold Check can qualify under this rule.
+
+### B. Fixed-answer Evaluate and Direct are gradable (changes section 2.6)
+A Cold Check needs a deterministically graded activity. Evaluate and Direct now count when the exercise carries a curator-written fixed answer key, for example "choose the trustworthy output" or "pick the correct instruction". No AI grades them. The key format is defined in SPEC-13.
+
+### C. Consequences
+- Skills whose main activity is Explain (CO-3, CO-4, CO-5, CO-6) can reach Adapt on Strong Explain evidence. This is what the decision says; tune it if real learner data shows it is too easy.
