@@ -6,11 +6,15 @@ Unit domain models and validates the Directed Acyclic Graph (DAG) of prerequisit
 
 from pathlib import Path
 import json
+import logging
 import re
 from typing import Dict, List, Optional, Set, Tuple
 
 from lms.core.course_map import course_of
+from lms.core.curriculum_checks import Finding, Severity, check_curriculum
 from lms.core.models import ActivityType, MediaAsset, ProficiencyLevel, TargetSkill, Unit
+
+logger = logging.getLogger(__name__)
 
 ROADMAP_FILES = (
     "Python Subject Roadmap v3.md",
@@ -155,6 +159,7 @@ class CurriculumCatalog:
     def __init__(self) -> None:
         self._units: Dict[str, Unit] = {}
         self._stage_titles: Dict[Tuple[Optional[str], int], str] = {}
+        self.findings: List[Finding] = []  # SPEC-12 section 3.1 checks, set by load_all_roadmaps
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
@@ -212,6 +217,14 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
         path = reference_dir / file_name
         if path.exists():
             load_roadmap_from_file(path, catalog)
+
+    # Findings are reported, never fatal: the curriculum belongs to the curator.
+    catalog.findings = check_curriculum(catalog.list_all_units())
+    errors = sum(1 for f in catalog.findings if f.severity == Severity.ERROR)
+    if catalog.findings:
+        logger.warning(
+            "Curriculum checks: %d errors, %d warnings.", errors, len(catalog.findings) - errors
+        )
     return catalog
 
 
