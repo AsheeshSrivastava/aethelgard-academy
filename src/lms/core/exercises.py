@@ -9,6 +9,7 @@ Deterministic and pure: no LLM, no I/O. An Exercise is built from models listing
 only the fields a learner may see, so a hidden field can never leak by default.
 """
 
+from datetime import datetime
 import hashlib
 import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -184,6 +185,13 @@ ALLOWED_ITEM_TYPES: Dict[ActivityType, Tuple[str, ...]] = {
     ActivityType.DECOMPOSE: ("decompose_plan", "decompose_code"),
     ActivityType.EXPLAIN: ("explain_spot_flaw", "explain_model_choice"),
 }
+
+
+class CurrentExercise(BaseModel):
+    """The learner's pointer for one activity of a unit."""
+
+    exercise_id: str
+    served_at: datetime
 
 
 class ExerciseSeed(BaseModel):

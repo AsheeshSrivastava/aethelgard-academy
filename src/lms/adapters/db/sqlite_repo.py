@@ -9,6 +9,7 @@ import sqlite3
 from typing import Any, Dict, List, Optional
 
 from lms.core.cold_check import ColdCheckTimer
+from lms.core.exercises import CurrentExercise
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
@@ -96,6 +97,52 @@ class SQLiteLearnerRepository:
                 );
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS exercise_pointer (
+                    learner_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    activity TEXT NOT NULL,
+                    exercise_id TEXT NOT NULL,
+                    served_at TEXT NOT NULL,
+                    PRIMARY KEY (learner_id, unit_id, activity)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS exercise_seen (
+                    learner_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    activity TEXT NOT NULL,
+                    exercise_id TEXT NOT NULL,
+                    seen_order INTEGER NOT NULL,
+                    PRIMARY KEY (learner_id, exercise_id)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS unit_state (
+                    learner_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    step TEXT,
+                    done_steps TEXT NOT NULL,
+                    PRIMARY KEY (learner_id, unit_id)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS exercise_draft (
+                    learner_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    exercise_id TEXT NOT NULL,
+                    files TEXT NOT NULL,
+                    PRIMARY KEY (learner_id, exercise_id)
+                );
+                """
+            )
 
     def get_learner(self, learner_id: str) -> Optional[Dict[str, Any]]:
         return {"learner_id": learner_id}
@@ -175,11 +222,117 @@ class SQLiteLearnerRepository:
         if cursor.rowcount == 0:
             raise ValueError(f"Unit '{unit_id}' has no completed activities to Cold Check.")
 
-    def reset_unit(self, learner_id: str, unit_id: str) -> None:
-        """Clear a unit's progress and Cold Check timer. Never touches evidence_ledger."""
+    def get_current_exercise(
+        self, learner_id: str, unit_id: str, activity: str
+    ) -> Optional[CurrentExercise]:
+        row = self._get_conn().execute(
+            """
+            SELECT exercise_id, served_at FROM exercise_pointer
+            WHERE learner_id = ? AND unit_id = ? AND activity = ?
+            """,
+            (learner_id, unit_id, activity),
+        ).fetchone()
+        if row is None:
+            return None
+        return CurrentExercise(
+            exercise_id=row["exercise_id"], served_at=datetime.fromisoformat(row["served_at"])
+        )
+
+    def set_current_exercise(
+        self, learner_id: str, unit_id: str, activity: str, exercise_id: str, served_at: datetime
+    ) -> None:
         conn = self._get_conn()
         with conn:
-            for table in ("unit_progress", "unit_cold_check"):
+            conn.execute(
+                """
+                INSERT INTO exercise_pointer (learner_id, unit_id, activity, exercise_id, served_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(learner_id, unit_id, activity) DO UPDATE SET
+                    exercise_id = excluded.exercise_id,
+                    served_at = excluded.served_at
+                """,
+                (learner_id, unit_id, activity, exercise_id, served_at.isoformat()),
+            )
+            conn.execute(
+                """
+                INSERT INTO exercise_seen (learner_id, unit_id, activity, exercise_id, seen_order)
+                VALUES (?, ?, ?, ?, (
+                    SELECT COALESCE(MAX(seen_order), 0) + 1 FROM exercise_seen WHERE learner_id = ?
+                ))
+                ON CONFLICT(learner_id, exercise_id) DO UPDATE SET seen_order = excluded.seen_order
+                """,
+                (learner_id, unit_id, activity, exercise_id, learner_id),
+            )
+
+    def get_seen_exercises(self, learner_id: str, unit_id: str, activity: str) -> List[str]:
+        """Exercise ids this learner has been served, oldest first."""
+        rows = self._get_conn().execute(
+            """
+            SELECT exercise_id FROM exercise_seen
+            WHERE learner_id = ? AND unit_id = ? AND activity = ?
+            ORDER BY seen_order ASC
+            """,
+            (learner_id, unit_id, activity),
+        ).fetchall()
+        return [r["exercise_id"] for r in rows]
+
+    def get_unit_state(self, learner_id: str, unit_id: str) -> Dict[str, Any]:
+        row = self._get_conn().execute(
+            "SELECT step, done_steps FROM unit_state WHERE learner_id = ? AND unit_id = ?",
+            (learner_id, unit_id),
+        ).fetchone()
+        if row is None:
+            return {"step": None, "done_steps": []}
+        return {"step": row["step"], "done_steps": json.loads(row["done_steps"])}
+
+    def save_unit_state(
+        self, learner_id: str, unit_id: str, step: Optional[str], done_steps: List[str]
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO unit_state (learner_id, unit_id, step, done_steps)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(learner_id, unit_id) DO UPDATE SET
+                    step = excluded.step,
+                    done_steps = excluded.done_steps
+                """,
+                (learner_id, unit_id, step, json.dumps(done_steps)),
+            )
+
+    def get_draft(self, learner_id: str, exercise_id: str) -> Dict[str, str]:
+        row = self._get_conn().execute(
+            "SELECT files FROM exercise_draft WHERE learner_id = ? AND exercise_id = ?",
+            (learner_id, exercise_id),
+        ).fetchone()
+        return json.loads(row["files"]) if row else {}
+
+    def save_draft(
+        self, learner_id: str, unit_id: str, exercise_id: str, files: Dict[str, str]
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO exercise_draft (learner_id, unit_id, exercise_id, files)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(learner_id, exercise_id) DO UPDATE SET files = excluded.files
+                """,
+                (learner_id, unit_id, exercise_id, json.dumps(files)),
+            )
+
+    def reset_unit(self, learner_id: str, unit_id: str) -> None:
+        """Clear a unit's working state. Keeps exercise_seen, and never touches evidence_ledger."""
+        conn = self._get_conn()
+        with conn:
+            for table in (
+                "unit_progress",
+                "unit_cold_check",
+                "exercise_pointer",
+                "unit_state",
+                "exercise_draft",
+            ):
                 conn.execute(
                     f"DELETE FROM {table} WHERE learner_id = ? AND unit_id = ?",
                     (learner_id, unit_id),

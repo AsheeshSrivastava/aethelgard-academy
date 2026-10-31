@@ -168,6 +168,80 @@ def test_timer_survives_reopening_the_database(tmp_path):
     assert second.get_cold_check_timer(LEARNER, UNIT).completed_at == T0
 
 
+# --- Exercise pointers, unit state and drafts (SPEC-12 section 4) ---
+
+
+def test_no_current_exercise_at_first(repo):
+    assert repo.get_current_exercise(LEARNER, UNIT, "predict") is None
+    assert repo.get_seen_exercises(LEARNER, UNIT, "predict") == []
+
+
+def test_current_exercise_is_stored_and_marked_seen(repo):
+    repo.set_current_exercise(LEARNER, UNIT, "predict", "ex/v1", served_at=T0)
+
+    current = repo.get_current_exercise(LEARNER, UNIT, "predict")
+    assert current.exercise_id == "ex/v1"
+    assert current.served_at == T0
+    assert repo.get_seen_exercises(LEARNER, UNIT, "predict") == ["ex/v1"]
+
+
+def test_seen_exercises_are_oldest_first_and_reuse_moves_to_newest(repo):
+    for exercise_id in ("a", "b", "a"):
+        repo.set_current_exercise(LEARNER, UNIT, "predict", exercise_id, served_at=T0)
+
+    assert repo.get_seen_exercises(LEARNER, UNIT, "predict") == ["b", "a"]
+
+
+def test_pointers_are_per_learner_and_activity(repo):
+    repo.set_current_exercise(LEARNER, UNIT, "predict", "a", served_at=T0)
+
+    assert repo.get_current_exercise("someone_else", UNIT, "predict") is None
+    assert repo.get_current_exercise(LEARNER, UNIT, "trace") is None
+
+
+def test_unit_state_defaults_then_round_trips(repo):
+    assert repo.get_unit_state(LEARNER, UNIT) == {"step": None, "done_steps": []}
+
+    repo.save_unit_state(LEARNER, UNIT, "predict", ["video", "explain"])
+
+    assert repo.get_unit_state(LEARNER, UNIT) == {"step": "predict", "done_steps": ["video", "explain"]}
+
+
+def test_draft_defaults_then_round_trips(repo):
+    assert repo.get_draft(LEARNER, "ex/v1") == {}
+
+    repo.save_draft(LEARNER, UNIT, "ex/v1", {"solution.py": "print('hi')"})
+    repo.save_draft(LEARNER, UNIT, "ex/v1", {"solution.py": "print('bye')"})
+
+    assert repo.get_draft(LEARNER, "ex/v1") == {"solution.py": "print('bye')"}
+    assert repo.get_draft("someone_else", "ex/v1") == {}
+
+
+def test_reset_clears_state_drafts_and_pointers_but_not_seen(repo):
+    repo.set_current_exercise(LEARNER, UNIT, "predict", "a", served_at=T0)
+    repo.save_unit_state(LEARNER, UNIT, "predict", ["video"])
+    repo.save_draft(LEARNER, UNIT, "a", {"solution.py": "x"})
+
+    repo.reset_unit(LEARNER, UNIT)
+
+    assert repo.get_current_exercise(LEARNER, UNIT, "predict") is None
+    assert repo.get_unit_state(LEARNER, UNIT)["done_steps"] == []
+    assert repo.get_draft(LEARNER, "a") == {}
+    assert repo.get_seen_exercises(LEARNER, UNIT, "predict") == ["a"]
+
+
+def test_reset_leaves_other_units_alone(repo):
+    repo.save_unit_state(LEARNER, "PY-1.3", "predict", ["video"])
+    repo.save_draft(LEARNER, "PY-1.3", "b", {"solution.py": "x"})
+    repo.set_current_exercise(LEARNER, "PY-1.3", "predict", "b", served_at=T0)
+
+    repo.reset_unit(LEARNER, UNIT)
+
+    assert repo.get_unit_state(LEARNER, "PY-1.3")["step"] == "predict"
+    assert repo.get_draft(LEARNER, "b") != {}
+    assert repo.get_current_exercise(LEARNER, "PY-1.3", "predict") is not None
+
+
 # --- Reset ---
 
 

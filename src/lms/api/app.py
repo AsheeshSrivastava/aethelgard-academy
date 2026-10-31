@@ -25,7 +25,7 @@ from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
-from lms.core.cold_check import ColdCheckStatus, cold_check_status
+from lms.core.cold_check import ColdCheckState, ColdCheckStatus, cold_check_status
 from lms.core.course_map import (
     COURSES,
     Course,
@@ -33,6 +33,15 @@ from lms.core.course_map import (
     build_course,
     build_course_map,
     course_of,
+)
+from lms.core.exercises import (
+    COLD_CHECK,
+    Exercise,
+    choose_next,
+    explain_exercise,
+    find_variant,
+    playground_exercise,
+    pool_for,
 )
 from lms.core.interfaces import (
     AxisMode,
@@ -66,6 +75,8 @@ LOCAL_LEARNER_ID = "default_learner"
 # The Vite dev server. The built frontend is served from this app's own origin.
 DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
 
+MAX_DRAFT_CHARS = 256_000
+
 
 def allowed_origins() -> List[str]:
     """Origins from LMS_ALLOWED_ORIGINS. Never a wildcard: credentials are allowed (ADR-0015)."""
@@ -98,6 +109,15 @@ class LearnerProfile(BaseModel):
     learner_id: str
     display_name: str
     auth_mode: str
+
+
+class UnitState(BaseModel):
+    step: Optional[str] = None
+    done_steps: List[str] = []
+
+
+class Draft(BaseModel):
+    files: Dict[str, str]
 
 
 class ExecuteCodeRequest(BaseModel):
@@ -403,6 +423,151 @@ def create_app(
         if unit_id is not None:
             entries = [e for e in entries if e.unit_id == unit_id]
         return sorted(entries, key=lambda e: e.recorded_at, reverse=True)
+
+    # --- Exercises, Regenerate, Reset, State and Drafts (SPEC-12 section 4) ---
+    def cold_check_blocked(unit_id: str, learner_id: str) -> Optional[JSONResponse]:
+        status = cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock())
+        if status.state == ColdCheckState.PASSED:
+            return problem(409, "Cold Check passed", f"The Cold Check for {unit_id} is already passed.")
+        if status.state != ColdCheckState.AVAILABLE:
+            return problem(423, "Cold Check locked", f"Available at: {status.available_at}.")
+        return None
+
+    def serve(unit: Unit, activity: str, exercise_id: str, learner_id: str) -> Optional[Exercise]:
+        repo.set_current_exercise(learner_id, unit.unit_id, activity, exercise_id, clock())
+        return find_variant(catalog.seeds.get(unit.unit_id, []), exercise_id)
+
+    def current_exercise(unit: Unit, activity: str, learner_id: str) -> Optional[Exercise]:
+        if activity == ActivityType.EXPLAIN.slug:
+            return explain_exercise(unit)
+        if activity == "playground":
+            return playground_exercise(unit)
+        seeds = catalog.seeds.get(unit.unit_id, [])
+        pool = pool_for(seeds, activity)
+        if not pool:
+            return None
+        current = repo.get_current_exercise(learner_id, unit.unit_id, activity)
+        if current and current.exercise_id in pool:
+            return find_variant(seeds, current.exercise_id)
+        seen = repo.get_seen_exercises(learner_id, unit.unit_id, activity)
+        return serve(unit, activity, choose_next(pool, seen, None), learner_id)
+
+    def known_exercise(exercise_id: str) -> Optional[str]:
+        """The unit an exercise id belongs to, if it is a real exercise."""
+        unit = catalog.get_unit(exercise_id.split("/")[0])
+        if not unit:
+            return None
+        built_in = {f"{unit.unit_id}/explain/v1", f"{unit.unit_id}/playground/v1"}
+        seeds = catalog.seeds.get(unit.unit_id, [])
+        return unit.unit_id if exercise_id in built_in or find_variant(seeds, exercise_id) else None
+
+    @app.get(
+        "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercise",
+        response_model=Exercise,
+        response_model_exclude_none=True,
+    )
+    def get_my_exercise(unit_id: str, activity: str, learner_id: str = Depends(current_learner_id)):
+        unit = catalog.get_unit(unit_id)
+        if not unit:
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        if activity not in unit.activities or activity == "video":
+            return problem(404, "No such activity", f"{unit_id} has no exercise for '{activity}'.")
+        if activity == COLD_CHECK:
+            blocked = cold_check_blocked(unit_id, learner_id)
+            if blocked:
+                return blocked
+        exercise = current_exercise(unit, activity, learner_id)
+        if exercise is None:
+            return problem(404, "No exercise yet", f"{unit_id} has no '{activity}' exercise yet.")
+        return exercise
+
+    @app.post(
+        "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercises:regenerate",
+        response_model=Exercise,
+        response_model_exclude_none=True,
+    )
+    def regenerate_my_exercise(
+        unit_id: str, activity: str, learner_id: str = Depends(current_learner_id)
+    ):
+        unit = catalog.get_unit(unit_id)
+        if not unit:
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        if activity == ActivityType.EXPLAIN.slug:
+            return problem(409, "Cannot regenerate", "Explain cannot be regenerated.")
+        if activity not in unit.activities or activity == "video":
+            return problem(404, "No such activity", f"{unit_id} has no exercise for '{activity}'.")
+        if activity == "playground":
+            exercise = playground_exercise(unit)
+            if exercise is None:
+                return problem(404, "No exercise yet", f"{unit_id} has no playground yet.")
+            return exercise
+
+        current = repo.get_current_exercise(learner_id, unit_id, activity)
+        if activity == COLD_CHECK:
+            blocked = cold_check_blocked(unit_id, learner_id)
+            if blocked:
+                return blocked
+            timer = repo.get_cold_check_timer(learner_id, unit_id)
+            attempted = (
+                current is not None
+                and timer.last_attempt_at is not None
+                and timer.last_attempt_at >= current.served_at
+            )
+            if not attempted:
+                return problem(409, "Cannot regenerate", "Attempt this Cold Check first.")
+
+        pool = pool_for(catalog.seeds.get(unit_id, []), activity)
+        if not pool:
+            return problem(404, "No exercise yet", f"{unit_id} has no '{activity}' exercise yet.")
+        seen = repo.get_seen_exercises(learner_id, unit_id, activity)
+        next_id = choose_next(pool, seen, current.exercise_id if current else None)
+        return serve(unit, activity, next_id, learner_id)
+
+    @app.post("/api/v1/learners/me/units/{unit_id}/reset", status_code=204, response_model=None)
+    def reset_my_unit(unit_id: str, learner_id: str = Depends(current_learner_id)):
+        if not catalog.get_unit(unit_id):
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        repo.reset_unit(learner_id, unit_id)
+        return None
+
+    @app.get("/api/v1/learners/me/units/{unit_id}/state", response_model=UnitState)
+    def get_my_unit_state(unit_id: str, learner_id: str = Depends(current_learner_id)):
+        if not catalog.get_unit(unit_id):
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        return repo.get_unit_state(learner_id, unit_id)
+
+    @app.put("/api/v1/learners/me/units/{unit_id}/state", response_model=UnitState)
+    def put_my_unit_state(
+        unit_id: str, payload: UnitState, learner_id: str = Depends(current_learner_id)
+    ):
+        unit = catalog.get_unit(unit_id)
+        if not unit:
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        steps = set(payload.done_steps) | ({payload.step} if payload.step else set())
+        if not steps <= set(unit.activities):
+            return problem(422, "Unknown step", f"Steps must come from {unit.activities}.")
+        repo.save_unit_state(learner_id, unit_id, payload.step, payload.done_steps)
+        return payload
+
+    @app.get("/api/v1/learners/me/drafts/{exercise_id:path}", response_model=Draft)
+    def get_my_draft(exercise_id: str, learner_id: str = Depends(current_learner_id)):
+        if not known_exercise(exercise_id):
+            return problem(404, "Exercise not found", f"Exercise '{exercise_id}' does not exist.")
+        return Draft(files=repo.get_draft(learner_id, exercise_id))
+
+    @app.put(
+        "/api/v1/learners/me/drafts/{exercise_id:path}", status_code=204, response_model=None
+    )
+    def put_my_draft(
+        exercise_id: str, payload: Draft, learner_id: str = Depends(current_learner_id)
+    ):
+        unit_id = known_exercise(exercise_id)
+        if not unit_id:
+            return problem(404, "Exercise not found", f"Exercise '{exercise_id}' does not exist.")
+        if sum(len(content) for content in payload.files.values()) > MAX_DRAFT_CHARS:
+            return problem(413, "Draft too large", f"Drafts are limited to {MAX_DRAFT_CHARS} characters.")
+        repo.save_draft(learner_id, unit_id, exercise_id, payload.files)
+        return None
 
     # --- Learner Progress & Evidence Ledger Routes ---
     # Older routes that name a learner; they answer only for the signed-in learner.

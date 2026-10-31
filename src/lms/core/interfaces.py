@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Protocol
 from pydantic import BaseModel, Field
 
 from lms.core.cold_check import ColdCheckTimer
+from lms.core.exercises import CurrentExercise
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
@@ -73,6 +74,35 @@ class ILearnerRepository(Protocol):
 
     def record_cold_check_attempt(
         self, learner_id: str, unit_id: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        ...
+
+    def get_current_exercise(
+        self, learner_id: str, unit_id: str, activity: str
+    ) -> Optional[CurrentExercise]:
+        ...
+
+    def set_current_exercise(
+        self, learner_id: str, unit_id: str, activity: str, exercise_id: str, served_at: datetime
+    ) -> None:
+        ...
+
+    def get_seen_exercises(self, learner_id: str, unit_id: str, activity: str) -> List[str]:
+        ...
+
+    def get_unit_state(self, learner_id: str, unit_id: str) -> Dict[str, Any]:
+        ...
+
+    def save_unit_state(
+        self, learner_id: str, unit_id: str, step: Optional[str], done_steps: List[str]
+    ) -> None:
+        ...
+
+    def get_draft(self, learner_id: str, exercise_id: str) -> Dict[str, str]:
+        ...
+
+    def save_draft(
+        self, learner_id: str, unit_id: str, exercise_id: str, files: Dict[str, str]
     ) -> None:
         ...
 
