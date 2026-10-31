@@ -51,6 +51,10 @@ from lms.core.proficiency_view import ProficiencyView, build_proficiency_view
 LOCAL_LEARNER_ID = "default_learner"
 
 
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def current_learner_id() -> str:
     """Local-single mode (ADR-0015): "me" is always the one local learner."""
     return LOCAL_LEARNER_ID
@@ -123,7 +127,7 @@ def create_app(
         concepts = ConceptCatalog()
 
     if clock is None:
-        clock = lambda: datetime.now(timezone.utc)
+        clock = utc_now
 
     app = FastAPI(
         title="LMS / KMS Production Platform Gateway",
