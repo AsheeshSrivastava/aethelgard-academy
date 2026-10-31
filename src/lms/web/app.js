@@ -390,7 +390,7 @@ function goToStep(stepName) {
 // --- Catalog & Unit Loading ---
 async function loadUnitsCatalog() {
   try {
-    const res = await fetch("/api/v1/units");
+    const res = await fetch("/api/v1/units?course_id=python");
     if (res.ok) {
       STATE.units = await res.json();
     }

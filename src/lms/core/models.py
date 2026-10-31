@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class ProficiencyLevel(str, Enum):
@@ -126,6 +126,13 @@ class Unit(BaseModel):
     test_code: Optional[str] = None
     lesson_markdown: Optional[str] = None
     concept_check_config: Optional[Dict[str, Any]] = None
+
+    @computed_field
+    @property
+    def activities(self) -> List[str]:
+        """Lesson steps, in order (SPEC-12 section 3)."""
+        middle = [m.value.lower() for m in self.methods if m != ActivityType.EXPLAIN]
+        return ["video", "explain", *middle, "cold_check"]
 
 
 class EvidenceEntry(BaseModel):

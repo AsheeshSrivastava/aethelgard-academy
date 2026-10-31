@@ -22,14 +22,17 @@ from pydantic import BaseModel
 from lms.adapters.ai.local_llm_companion import get_axis_companion
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.concepts import ConceptCatalog
-from lms.adapters.curriculum.loader import (
-    COURSE_UNIT_PREFIXES,
-    CurriculumCatalog,
-    load_roadmap_from_file,
-)
+from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.core.cold_check import ColdCheckStatus, cold_check_status
+from lms.core.course_map import (
+    COURSES,
+    Course,
+    CourseMap,
+    build_course,
+    build_course_map,
+)
 from lms.core.interfaces import (
     AxisMode,
     AxisQuery,
@@ -85,6 +88,12 @@ def problem(status: int, title: str, detail: str) -> JSONResponse:
     )
 
 
+class LearnerProfile(BaseModel):
+    learner_id: str
+    display_name: str
+    auth_mode: str
+
+
 class ExecuteCodeRequest(BaseModel):
     code: str
     test_code: Optional[str] = None
@@ -133,11 +142,7 @@ def create_app(
         axis = get_axis_companion()
 
     if catalog is None:
-        roadmap_path = Path("reference/Python Subject Roadmap v3.md")
-        if roadmap_path.exists():
-            catalog = load_roadmap_from_file(roadmap_path)
-        else:
-            catalog = CurriculumCatalog()
+        catalog = load_all_roadmaps(Path("reference"))
 
     if concepts is None:
         concepts = ConceptCatalog()
@@ -193,8 +198,16 @@ def create_app(
 
     # --- Curriculum Routes ---
     @app.get("/api/v1/units", response_model=List[Dict[str, Any]])
-    def list_units(stage: Optional[int] = Query(None, description="Filter by stage number")):
+    def list_units(
+        stage: Optional[int] = Query(None, description="Filter by stage number"),
+        course_id: Optional[str] = Query(None, description="Filter by course"),
+    ):
         units = catalog.get_stage_units(stage) if stage is not None else catalog.list_all_units()
+        if course_id is not None:
+            if course_id not in COURSES:
+                return problem(404, "Course not found", f"Course '{course_id}' does not exist.")
+            course_units = {u.unit_id for u in catalog.get_course_units(course_id)}
+            units = [u for u in units if u.unit_id in course_units]
         return [
             {
                 "unit_id": u.unit_id,
@@ -217,6 +230,24 @@ def create_app(
         if not unit:
             raise HTTPException(status_code=404, detail=f"Unit '{unit_id}' not found.")
         return unit
+
+    @app.get("/api/v1/courses", response_model=List[Course])
+    def list_courses():
+        return [build_course(c, catalog.get_course_units(c)) for c in COURSES]
+
+    @app.get("/api/v1/courses/{course_id}", response_model=CourseMap)
+    def get_course_map(course_id: str, learner_id: str = Depends(current_learner_id)):
+        if course_id not in COURSES:
+            return problem(404, "Course not found", f"Course '{course_id}' does not exist.")
+        now = clock()
+        return build_course_map(
+            course_id,
+            catalog.get_course_units(course_id),
+            catalog.get_stage_titles(course_id),
+            lambda unit_id: cold_check_status(
+                repo.get_cold_check_timer(learner_id, unit_id), now
+            ).state,
+        )
 
     # --- Code Execution Sandbox Routes ---
     @app.post("/api/v1/execute", response_model=ExecutionResult)
@@ -310,6 +341,12 @@ def create_app(
         return {"unit_id": unit_id, "explanation": resp.reply}
 
     # --- Learner-Scoped /me Routes (SPEC-12, ADR-0015) ---
+    @app.get("/api/v1/learners/me", response_model=LearnerProfile)
+    def get_me(learner_id: str = Depends(current_learner_id)):
+        return LearnerProfile(
+            learner_id=learner_id, display_name="Local learner", auth_mode="local-single"
+        )
+
     @app.get("/api/v1/learners/me/proficiency", response_model=ProficiencyView)
     def get_my_proficiency(
         course_id: Optional[str] = Query(None),
@@ -318,7 +355,7 @@ def create_app(
     ):
         if course_id is None:
             units = catalog.list_all_units()
-        elif course_id in COURSE_UNIT_PREFIXES:
+        elif course_id in COURSES:
             units = catalog.get_course_units(course_id)
         else:
             return problem(404, "Course not found", f"Course '{course_id}' does not exist.")

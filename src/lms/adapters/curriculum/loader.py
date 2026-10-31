@@ -7,12 +7,16 @@ Unit domain models and validates the Directed Acyclic Graph (DAG) of prerequisit
 from pathlib import Path
 import json
 import re
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
+from lms.core.course_map import course_of
 from lms.core.models import ActivityType, MediaAsset, ProficiencyLevel, TargetSkill, Unit
 
-# SPEC-12 course ids and the unit id prefix of their roadmaps.
-COURSE_UNIT_PREFIXES = {"python": "PY-", "backend": "BE-", "ai-engineering": "AI-"}
+ROADMAP_FILES = (
+    "Python Subject Roadmap v3.md",
+    "Backend Engineering Roadmap v2.md",
+    "AI Engineering Roadmap v2.md",
+)
 
 
 def parse_skills_string(text: str) -> List[TargetSkill]:
@@ -85,20 +89,24 @@ def parse_prerequisites_string(text: str) -> List[str]:
         cleaned = cleaned.split("|")[0].strip()
 
     prereqs: List[str] = []
-    for part in cleaned.split(","):
-        p = part.strip()
-        if p and p.lower() != "none":
-            prereqs.append(p)
+    for item in cleaned.split(";"):
+        # "soft:" and "link:" notes are advice, not prerequisites.
+        if item.strip().lower().startswith(("soft:", "link:")):
+            continue
+        for part in item.split(","):
+            p = re.sub(r"\s*\(.*$", "", part).strip()
+            if p and p.lower() != "none":
+                prereqs.append(p)
     return prereqs
 
 
 def parse_unit_block(block: str, stage: int = 0) -> Unit:
-    """Parse a single markdown unit block starting with '#### PY-...'"""
+    """Parse a single markdown unit block starting with '#### PY-...', '#### BE-...' or '#### AI-...'"""
     lines = [line.strip() for line in block.strip().split("\n") if line.strip()]
 
     # First line: #### <UNIT_ID> <TITLE> [(metadata)]
     header = lines[0].lstrip("#").strip()
-    header_match = re.match(r"(PY-[\d.]+)\s+(.*?)(?:\s+\(.*?\))?$", header)
+    header_match = re.match(r"([A-Z]+-[\d.]+)\s+(.*?)(?:\s+\(.*?\))?$", header)
     if header_match:
         unit_id, title = header_match.groups()
     else:
@@ -146,9 +154,16 @@ class CurriculumCatalog:
 
     def __init__(self) -> None:
         self._units: Dict[str, Unit] = {}
+        self._stage_titles: Dict[Tuple[Optional[str], int], str] = {}
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
+
+    def set_stage_title(self, course_id: Optional[str], stage: int, title: str) -> None:
+        self._stage_titles[(course_id, stage)] = title
+
+    def get_stage_titles(self, course_id: str) -> Dict[int, str]:
+        return {stage: title for (c, stage), title in self._stage_titles.items() if c == course_id}
 
     def get_unit(self, unit_id: str) -> Optional[Unit]:
         return self._units.get(unit_id)
@@ -160,8 +175,7 @@ class CurriculumCatalog:
         return [u for u in self._units.values() if u.stage == stage]
 
     def get_course_units(self, course_id: str) -> List[Unit]:
-        prefix = COURSE_UNIT_PREFIXES[course_id]
-        return [u for u in self._units.values() if u.unit_id.startswith(prefix)]
+        return [u for u in self._units.values() if course_of(u.unit_id) == course_id]
 
     def validate_dag(self) -> bool:
         """Verify that the prerequisite graph is a valid Directed Acyclic Graph."""
@@ -191,26 +205,41 @@ class CurriculumCatalog:
         return True
 
 
-def load_roadmap_from_file(file_path: Path) -> CurriculumCatalog:
+def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
+    """Load every course's roadmap into one catalog, in course then teaching order."""
+    catalog = CurriculumCatalog()
+    for file_name in ROADMAP_FILES:
+        path = reference_dir / file_name
+        if path.exists():
+            load_roadmap_from_file(path, catalog)
+    return catalog
+
+
+def load_roadmap_from_file(
+    file_path: Path, catalog: Optional[CurriculumCatalog] = None
+) -> CurriculumCatalog:
     """Parse an entire markdown roadmap file and populate a CurriculumCatalog."""
     content = file_path.read_text(encoding="utf-8")
-    catalog = CurriculumCatalog()
+    catalog = catalog if catalog is not None else CurriculumCatalog()
 
     current_stage = 0
-    # Split content by markdown headers
-    stage_sections = re.split(r"\n###\s+Stage\s+(\d+)", content)
+    # Split content by markdown headers; a stage may appear more than once
+    stage_sections = re.split(r"\n###\s+Stage\s+(\d+)([^\n]*)", content)
 
     # First section contains pre-stage content
-    for i in range(1, len(stage_sections), 2):
+    for i in range(1, len(stage_sections), 3):
         stage_num = int(stage_sections[i])
-        stage_body = stage_sections[i + 1]
+        stage_title = re.sub(r"\s*\(.*\)$", "", stage_sections[i + 1].lstrip(": ")).strip()
+        stage_body = stage_sections[i + 2]
 
-        # Find unit blocks starting with #### PY-
-        unit_blocks = re.split(r"\n(?=####\s+PY-)", stage_body)
+        # Find unit blocks starting with an id such as #### PY-0.1
+        unit_blocks = re.split(r"\n(?=####\s+[A-Z]+-\d)", stage_body)
         for block in unit_blocks:
-            if block.strip().startswith("#### PY-"):
+            if re.match(r"####\s+[A-Z]+-\d", block.strip()):
                 unit = parse_unit_block(block, stage=stage_num)
                 catalog.add_unit(unit)
+                if stage_title:
+                    catalog.set_stage_title(course_of(unit.unit_id), stage_num, stage_title)
 
     curriculum_path = Path("curriculum")
     if curriculum_path.exists():
