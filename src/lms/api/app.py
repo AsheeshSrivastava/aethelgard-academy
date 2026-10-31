@@ -51,6 +51,7 @@ from lms.core.course_map import (
     course_of,
 )
 from lms.core.curriculum_checks import ACTIVITY_EVIDENCE
+from lms.core.models import stage_label
 from lms.core.exercises import (
     COLD_CHECK,
     Exercise,
@@ -411,7 +412,7 @@ def create_app(
             return problem(423, "Build locked", f"Pass the Cold Check in: {', '.join(pending)}.")
         build = catalog.builds.get((course_id, stage))
         if not build:
-            return problem(404, "No build yet", f"The build for stage {stage} is not written yet.")
+            return problem(404, "No build yet", f"The build for {stage_label(stage)} is not written yet.")
         return build
 
     def too_large(files: Dict[str, str], note: Optional[str]) -> bool:

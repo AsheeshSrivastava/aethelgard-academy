@@ -85,7 +85,7 @@ export function UnitMap() {
       <div className="unit-head">
         <div>
           <span className="mono muted">
-            {courseName} · Stage {data.stage} · Unit {data.unit_id}
+            {courseName} · {data.stage_label} · Unit {data.unit_id}
           </span>
           <h1 className="page-title">{data.title}</h1>
           <p className="lead">{data.concept_line}</p>

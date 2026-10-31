@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 from typing import Any, Dict, Optional
 
-from lms.adapters.curriculum.loader import load_roadmap_from_file
+from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.models import (
@@ -23,12 +23,8 @@ from lms.core.models import (
 
 
 def _get_default_catalog():
-    roadmap_path = Path("reference/Python Subject Roadmap v3.md")
-    if not roadmap_path.exists():
-        # Fallback to empty catalog if file missing
-        from lms.adapters.curriculum.loader import CurriculumCatalog
-        return CurriculumCatalog()
-    return load_roadmap_from_file(roadmap_path)
+    # A missing reference folder gives an empty catalog
+    return load_all_roadmaps(Path("reference"))
 
 
 def handle_list_command(stage: Optional[int] = None) -> str:
@@ -39,7 +35,7 @@ def handle_list_command(stage: Optional[int] = None) -> str:
     lines = ["Available Curriculum Units:", "-" * 40]
     for u in units:
         skills = ", ".join(f"{s.skill_id} ({s.goal_level.value})" for s in u.target_skills)
-        lines.append(f"[{u.unit_id}] Stage {u.stage}: {u.title}")
+        lines.append(f"[{u.unit_id}] {u.stage_label}: {u.title}")
         lines.append(f"  Concept: {u.concept_line}")
         lines.append(f"  Targets: {skills}")
         lines.append("")

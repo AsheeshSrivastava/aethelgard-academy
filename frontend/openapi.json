@@ -3032,6 +3032,24 @@
         ],
         "title": "Locate"
       },
+      "MakeStep": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "task"
+        ],
+        "title": "MakeStep"
+      },
       "MediaAsset": {
         "properties": {
           "media_id": {
@@ -3582,6 +3600,10 @@
             "type": "integer",
             "title": "Stage"
           },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
           "title": {
             "type": "string",
             "title": "Title"
@@ -3607,6 +3629,7 @@
         "type": "object",
         "required": [
           "stage",
+          "label",
           "title",
           "units"
         ],
@@ -3799,6 +3822,21 @@
             ],
             "title": "Concept Check Config"
           },
+          "make": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MakeStep"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stage_label": {
+            "type": "string",
+            "title": "Stage Label",
+            "readOnly": true
+          },
           "activities": {
             "items": {
               "type": "string"
@@ -3817,6 +3855,7 @@
           "concept_line",
           "target_skills",
           "methods",
+          "stage_label",
           "activities"
         ],
         "title": "Unit"

@@ -160,14 +160,16 @@ def test_a_new_catalog_has_no_findings():
     assert CurriculumCatalog().findings == []
 
 
-# Findings on the roadmaps after the ADR-0016 amendment (2026-10-31), reported to the
+# Findings on the roadmaps after the conversion approved on 2026-10-31, reported to the
 # owner. These counts may only go down: lower them when the curriculum is fixed.
 KNOWN_FINDINGS = {
     "apply-needs-perform": 0,
     "adapt-needs-diagnose": 0,
-    "cold-check-seed-missing": 816,  # Of 824 skill targets; falls as seeds are written
+    "cold-check-seed-missing": 933,  # Of 941 skill targets; falls as seeds are written
     "own-needs-stage-build": 30,     # Clears when stage builds are curated
     "stage-missing-evidence": 0,
+    "make-credit-invalid": 0,
+    "make-seed-wrong-skill": 0,
 }
 
 

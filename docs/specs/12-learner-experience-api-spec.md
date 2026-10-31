@@ -48,7 +48,9 @@ StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
              files: [{path, starter}], requirements: [{id, label, unit_id}] }   // full shape in SPEC-15
 ```
 
-Course ids map to the three roadmaps: Python Subject Roadmap v3, Backend Engineering Roadmap v2 (shown as "Python for Backend/AI"), AI Engineering Roadmap v2.
+Course ids map to the three spine roadmaps: Python Subject Roadmap v4, Backend Engineering Roadmap v3 (shown as "Python for Backend/AI"), AI Engineering Roadmap v2.
+
+Supporting roadmaps are slotted into a spine course (ADR-0020): Practical DSA, Git, Software Design and AI-Assisted Engineering into `python`; Networking and Database into `backend`. Units and stages follow Table 1 of Python v4 and Backend v3. `StageView.label` and `Unit.stage_label` give the stage's display name ("Stage 4", "DSA 0"); the frontend shows these, never a raw stage id. `Unit.make` is `{skill_id, task}` for a unit with a Make step, otherwise null.
 
 
 ### 3.1 Content ownership and curriculum checks
@@ -57,6 +59,7 @@ The curator decides each unit's content, activities, their order and their scaff
 
 Checks run when curriculum is loaded (and in CI):
 - **Error:** a unit's target level needs evidence its activities cannot produce (Apply needs a Perform/Solve activity or the skill's main activity; Adapt needs a Diagnose/Judge/Transfer activity or the skill's main activity; Own needs the stage build). Main activities come from Learning Method v2 (ADR-0016 amendment A).
+- **Error:** a Make step credits a skill that is not a target of the unit, or the unit has no Build method (`make-credit-invalid`), or a Build seed credits another skill (`make-seed-wrong-skill`). Learning Method v2 Amendment A1.3.
 - **Warning:** a stage has no activity producing one of the three evidence categories (Explain/Reason, Perform/Solve, Diagnose/Judge/Transfer). A stage uses 5 to 6 activity types, not all 10.
 - **Warning:** a target skill has no approved Cold Check seed (SPEC-13 section 8, rule 11). The skill stays provisional until it has one. Every activity has a deterministic form (ADR-0016 amendments B and C), so this replaces judging by activity type.
 

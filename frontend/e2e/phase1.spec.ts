@@ -37,6 +37,24 @@ test("a learner walks from the front page to a unit and back", async ({ page }) 
   await expect(page).toHaveURL(/\/courses\/python$/);
 });
 
+test("a slotted stage sits in the path under its own name", async ({ page }) => {
+  await page.goto("/courses/python");
+  await expect(page.getByRole("heading", { name: "Cost, sorting and search" })).toBeVisible();
+  const labels = await page.getByRole("region", { name: "Stages" }).locator(".stage-head .mono").allTextContents();
+  expect(labels.slice(3, 6)).toEqual(["Stage 3", "DSA 0", "Stage 4"]);
+  expect(labels).toContain("AAE 0");
+
+  await page.getByRole("link", { name: /DSA-0\.1/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: /Growth and the cost/ })).toBeVisible();
+  await expect(page.getByText(/Python · DSA 0 · Unit DSA-0\.1/)).toBeVisible();
+
+  await page.getByRole("link", { name: "Back to Python course map" }).click();
+  await expect(page).toHaveURL(/\/courses\/python$/);
+
+  await page.goto("/units/NET-0.1");
+  await expect(page.getByRole("link", { name: "Back to Python for Backend/AI course map" })).toBeVisible();
+});
+
 test("deep links survive a reload", async ({ page }) => {
   await page.goto("/units/PY-0.4");
   await expect(page.getByRole("heading", { level: 1, name: "Run a first program" })).toBeVisible();

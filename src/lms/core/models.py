@@ -70,6 +70,26 @@ class ActivityType(str, Enum):
 ACTIVITY_BY_SLUG: Dict[str, ActivityType] = {a.slug: a for a in ActivityType}
 GRADED_PLAYGROUND_ACTIVITIES = (ActivityType.MODIFY, ActivityType.BUILD)
 
+# Slotted roadmaps number their own stages from 0; these bases keep ids unique (ADR-0020).
+SLOTTED_STAGE_BASE: Dict[str, int] = {"DSA": 100, "GIT": 200, "SD": 300, "AAE": 400, "NET": 500, "DB": 600}
+
+
+def slotted_stage(unit_id: str, roadmap_stage: int) -> int:
+    """The stage id for a unit: its roadmap stage, plus the base if it is slotted."""
+    return SLOTTED_STAGE_BASE.get(unit_id.split("-")[0], 0) + roadmap_stage
+
+
+def is_slotted_stage(stage: int) -> bool:
+    return stage >= min(SLOTTED_STAGE_BASE.values())
+
+
+def stage_label(stage: int) -> str:
+    """The name a learner sees: "Stage 4", or the roadmap's own "DSA 0"."""
+    for name, base in SLOTTED_STAGE_BASE.items():
+        if base <= stage < base + 100:
+            return f"{name} {stage - base}"
+    return f"Stage {stage}"
+
 
 class TargetSkill(BaseModel):
     skill_id: str                      # e.g., "CO-1", "BU-1", "VE-6", "SP-1"
@@ -149,10 +169,15 @@ class MediaAsset(BaseModel):
     timestamps: List[Dict[str, str]] = Field(default_factory=list)  # e.g. [{"time": "02:15", "topic": "Standard Streams"}]
 
 
+class MakeStep(BaseModel):
+    skill_id: str                      # The target skill the Make step credits (Amendment A1.3)
+    task: str                          # The approved wording from the unit's outcome line
+
+
 class Unit(BaseModel):
     unit_id: str                       # e.g., "PY-1.2", "AI-0.2"
     title: str                         # e.g., "Numbers, booleans and None"
-    stage: int                         # e.g., 0, 1, 2
+    stage: int                         # e.g., 0, 1, 2; slotted stages use ids such as 100 (ADR-0020)
     concept_line: str                  # Canonical core concept
     target_skills: List[TargetSkill]   # 1 to 3 primary skills targeted for evaluation
     methods: List[ActivityType]        # Activity sequence (e.g., [EXPLAIN, PREDICT, DEBUG_VALIDATE])
@@ -164,6 +189,12 @@ class Unit(BaseModel):
     test_code: Optional[str] = None
     lesson_markdown: Optional[str] = None
     concept_check_config: Optional[Dict[str, Any]] = None
+    make: Optional[MakeStep] = None
+
+    @computed_field
+    @property
+    def stage_label(self) -> str:
+        return stage_label(self.stage)
 
     @computed_field
     @property

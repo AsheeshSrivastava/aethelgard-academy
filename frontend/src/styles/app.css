@@ -998,6 +998,7 @@ a.build-tile {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  max-width: 100%;
   font-size: 14px;
   color: var(--text-muted);
 }

@@ -18,3 +18,5 @@
 | [ADR-0014](0014-react-typescript-vite-frontend.md) | React + TypeScript + Vite Learner Frontend | **Accepted** | 2026-10-30 |
 | [ADR-0015](0015-learner-identity-and-sessions.md) | Learner Identity and Sessions | **Proposed** | 2026-10-30 |
 | [ADR-0016](0016-proficiency-estimation-and-progression-decisions.md) | Proficiency Estimation and Progression Decisions over the Whole Ledger | **Proposed** | 2026-10-30 |
+| [ADR-0017](0017-batch-exercise-variant-generation.md) | Batch Exercise Variant Generation from Curator Seeds | **Accepted** | 2026-10-30 |
+| [ADR-0020](0020-slotted-units-and-path-order.md) | Slotted Units, Stage Ids and Path Order | **Proposed** | 2026-10-31 |

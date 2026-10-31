@@ -34,11 +34,22 @@ const STEP_DESCRIPTIONS: Record<string, string> = {
   cold_check: "A delayed check, with no AXIS help.",
 };
 
-const COURSE_PREFIXES: Record<string, string> = { PY: "python", BE: "backend", AI: "ai-engineering" };
+const COURSE_PREFIXES: Record<string, string> = {
+  PY: "python",
+  BE: "backend",
+  AI: "ai-engineering",
+  // Slotted units belong to the course they are taught in (ADR-0020).
+  DSA: "python",
+  GIT: "python",
+  SD: "python",
+  AAE: "python",
+  NET: "backend",
+  DB: "backend",
+};
 
 export const stepName = (step: string) => STEP_NAMES[step] ?? step;
 export const stepDescription = (step: string) => STEP_DESCRIPTIONS[step] ?? "";
-export const courseOfUnit = (unitId: string) => COURSE_PREFIXES[unitId.slice(0, 2)] ?? "python";
+export const courseOfUnit = (unitId: string) => COURSE_PREFIXES[unitId.split("-")[0] ?? ""] ?? "python";
 
 /** A fresh start is not a verdict, so "Undecided" is shown as not started. */
 export const decisionLabel = (decision: Decision) => (decision === "Undecided" ? "Not started" : decision);

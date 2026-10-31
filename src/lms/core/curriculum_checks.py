@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from lms.core.course_map import course_of
 from lms.core.exercises import ExerciseSeed
-from lms.core.models import ActivityType, EvidenceCategory, ProficiencyLevel, Unit
+from lms.core.models import ActivityType, EvidenceCategory, ProficiencyLevel, Unit, stage_label
 
 # What each activity can show, from the evidence category examples in the
 # Proficiency & Progression System.
@@ -65,10 +65,34 @@ def check_curriculum(
     findings: List[Finding] = []
     for unit in units:
         findings.extend(_check_target_levels(unit, stages_with_build, main_activities))
+        findings.extend(_check_make_step(unit))
         if seeds is not None:
             findings.extend(_check_seeds(unit, seeds.get(unit.unit_id, ()), main_activities))
     findings.extend(_check_stage_coverage(units))
     return findings
+
+
+def _check_make_step(unit: Unit) -> List[Finding]:
+    """Learning Method v2 Amendment A1.3: Make is a Build that credits one of the unit's targets."""
+    if unit.make is None:
+        return []
+    if (
+        ActivityType.BUILD in unit.methods
+        and unit.make.skill_id in {s.skill_id for s in unit.target_skills}
+    ):
+        return []
+    return [
+        Finding(
+            severity=Severity.ERROR,
+            code="make-credit-invalid",
+            message=f"{unit.unit_id}: Make credits {unit.make.skill_id}, which needs a Build method "
+            "and to be a target skill.",
+            unit_id=unit.unit_id,
+            skill_id=unit.make.skill_id,
+            course_id=course_of(unit.unit_id),
+            stage=unit.stage,
+        )
+    ]
 
 
 def _check_seeds(
@@ -99,6 +123,8 @@ def _check_seeds(
             report(Severity.ERROR, "seed-wrong-skill", f"{seed.seed_id} tests {seed.skill_id}, which is not a target skill.", seed.skill_id)
         elif seed.level != goals[seed.skill_id]:
             report(Severity.ERROR, "seed-wrong-level", f"{seed.seed_id} is at {seed.level.value}; the goal is {goals[seed.skill_id].value}.", seed.skill_id)
+        if unit.make and seed.activity == ActivityType.BUILD and seed.skill_id != unit.make.skill_id:
+            report(Severity.ERROR, "make-seed-wrong-skill", f"{seed.seed_id} is a Build seed; the Make step credits {unit.make.skill_id}.", seed.skill_id)
         if seed.cold_check_eligible:
             if main_activities.get(seed.skill_id, seed.activity) != seed.activity:
                 report(Severity.ERROR, "seed-not-main-activity", f"{seed.seed_id} must test {seed.skill_id} through its main activity.", seed.skill_id)
@@ -164,7 +190,7 @@ def _check_stage_coverage(units: List[Unit]) -> List[Finding]:
                 Finding(
                     severity=Severity.WARNING,
                     code="stage-missing-evidence",
-                    message=f"{course_id} stage {stage} produces no: {', '.join(missing)}.",
+                    message=f"{course_id} {stage_label(stage)} produces no: {', '.join(missing)}.",
                     course_id=course_id,
                     stage=stage,
                 )

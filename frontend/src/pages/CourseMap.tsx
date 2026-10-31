@@ -37,7 +37,7 @@ function StageCard({ courseId, stage, current }: { courseId: string; stage: Stag
   return (
     <div className={`card stage${current ? " stage-current" : ""}`}>
       <div className="stage-head">
-        <span className="mono muted">Stage {stage.stage}</span>
+        <span className="mono muted">{stage.label}</span>
         <h2>{stage.title}</h2>
         <span className="muted small stage-count">{stage.units.length} units</span>
       </div>

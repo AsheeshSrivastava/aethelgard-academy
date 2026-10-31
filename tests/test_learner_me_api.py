@@ -335,7 +335,7 @@ def test_proficiency_is_read_only(client, repo):
 
 
 def test_real_roadmap_view(repo, clock):
-    catalog = load_roadmap_from_file(Path("reference/Python Subject Roadmap v3.md"))
+    catalog = load_roadmap_from_file(Path("reference/Python Subject Roadmap v4.md"))
     app = create_app(
         repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=clock
     )

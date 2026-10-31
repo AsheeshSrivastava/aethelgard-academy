@@ -83,3 +83,6 @@ docs/proposals/
 # Upstream Reference Corpus (1400+ third-party doc files; reproducible via scripts/fetch_upstream.py)
 reference/upstream/
 
+
+# Superseded roadmaps and notes (kept locally, not tracked)
+reference/legacy/

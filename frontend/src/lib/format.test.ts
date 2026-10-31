@@ -13,6 +13,20 @@ import {
 
 const NOW = new Date("2026-06-01T09:00:00Z");
 
+describe("courseOfUnit with slotted units", () => {
+  it.each([
+    ["DSA-0.1", "python"],
+    ["GIT-2.1", "python"],
+    ["SD-1.4", "python"],
+    ["AAE-0.7", "python"],
+    ["NET-0.1", "backend"],
+    ["DB-1.6", "backend"],
+    ["BE-2.1", "backend"],
+  ])("%s belongs to %s", (unitId, course) => {
+    expect(courseOfUnit(unitId)).toBe(course);
+  });
+});
+
 describe("countdown", () => {
   it("shows hours and minutes", () => {
     expect(countdown("2026-06-01T12:30:00Z", NOW)).toBe("3 h 30 min");

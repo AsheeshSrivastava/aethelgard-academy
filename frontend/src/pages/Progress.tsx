@@ -94,6 +94,7 @@ export function Progress() {
   }
 
   const { skills, units, next_action: next, stage: shownStage } = view.data;
+  const shownLabel = map.data?.stages.find((s) => s.stage === shownStage)?.label ?? `Stage ${shownStage}`;
 
   return (
     <main className="container page">
@@ -109,7 +110,7 @@ export function Progress() {
             >
               {map.data.stages.map((s) => (
                 <option key={s.stage} value={s.stage}>
-                  {s.stage}: {s.title}
+                  {s.label}: {s.title}
                 </option>
               ))}
             </select>
@@ -134,7 +135,7 @@ export function Progress() {
           <section className="card panel" aria-labelledby="skills">
             <div className="section-head">
               <h2 id="skills" className="panel-title">
-                Skills · Stage {shownStage}
+                Skills · {shownLabel}
               </h2>
               <span className="legend small muted">
                 <span>
@@ -157,7 +158,7 @@ export function Progress() {
           <Ledger skills={skills} />
         </div>
         <aside className="unit-aside">
-          <Panel title={`Units · Stage ${shownStage}`} id="units">
+          <Panel title={`Units · ${shownLabel}`} id="units">
             <ul className="plain-list">
               {units.map((unit) => (
                 <li key={unit.unit_id}>

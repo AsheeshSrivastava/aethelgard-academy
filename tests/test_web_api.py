@@ -28,7 +28,7 @@ def test_client(tmp_path: Path):
     runner = SubprocessRunner()
     axis = MockAxisCompanion()
     
-    roadmap_path = Path("reference/Python Subject Roadmap v3.md")
+    roadmap_path = Path("reference/Python Subject Roadmap v4.md")
     catalog = load_roadmap_from_file(roadmap_path) if roadmap_path.exists() else CurriculumCatalog()
 
     app = create_app(repo=repo, runner=runner, axis=axis, catalog=catalog)

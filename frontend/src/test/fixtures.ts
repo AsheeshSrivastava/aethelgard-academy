@@ -1,8 +1,8 @@
 import type { Schemas } from "../api/client";
 
 export const courses: Schemas["Course"][] = [
-  { course_id: "python", title: "Python", summary: "Read and build Python.", stage_count: 14, unit_count: 78 },
-  { course_id: "backend", title: "Python for Backend/AI", summary: "Backend services.", stage_count: 18, unit_count: 79 },
+  { course_id: "python", title: "Python", summary: "Read and build Python.", stage_count: 22, unit_count: 111 },
+  { course_id: "backend", title: "Python for Backend/AI", summary: "Backend services.", stage_count: 21, unit_count: 98 },
   { course_id: "ai-engineering", title: "AI Engineering", summary: "Model applications.", stage_count: 18, unit_count: 81 },
 ];
 
@@ -11,6 +11,7 @@ export const courseMap: Schemas["CourseMap"] = {
   stages: [
     {
       stage: 0,
+      label: "Stage 0",
       title: "Running your first program",
       units: [
         {
@@ -36,6 +37,7 @@ export const courseMap: Schemas["CourseMap"] = {
     },
     {
       stage: 1,
+      label: "Stage 1",
       title: "Values, text and collections",
       units: [
         {
@@ -57,6 +59,7 @@ export const unit = {
   unit_id: "PY-0.1",
   title: "Python as an executing program",
   stage: 0,
+  stage_label: "Stage 0",
   concept_line: "Python runs statements in order, and each statement can change the program's state.",
   target_skills: [
     { skill_id: "CO-1", skill_name: "Predict before running", goal_level: "Understand" },

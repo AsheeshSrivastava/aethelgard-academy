@@ -15,7 +15,7 @@ from lms.core.models import (
 
 
 def test_overlay_curriculum_packages():
-    roadmap_path = Path("reference/Python Subject Roadmap v3.md")
+    roadmap_path = Path("reference/Python Subject Roadmap v4.md")
     catalog = load_roadmap_from_file(roadmap_path)
     curriculum_dir = Path("curriculum")
 

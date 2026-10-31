@@ -1137,6 +1137,13 @@ export interface components {
             /** Error Type */
             error_type: string;
         };
+        /** MakeStep */
+        MakeStep: {
+            /** Skill Id */
+            skill_id: string;
+            /** Task */
+            task: string;
+        };
         /**
          * MediaAsset
          * @description Rich media asset attached to a curriculum unit (video walkthrough, lecture, slide deck).
@@ -1333,6 +1340,8 @@ export interface components {
         StageView: {
             /** Stage */
             stage: number;
+            /** Label */
+            label: string;
             /** Title */
             title: string;
             /** Units */
@@ -1399,6 +1408,9 @@ export interface components {
             concept_check_config?: {
                 [key: string]: unknown;
             } | null;
+            make?: components["schemas"]["MakeStep"] | null;
+            /** Stage Label */
+            readonly stage_label: string;
             /**
              * Activities
              * @description Lesson steps, in order (SPEC-12 sections 3 and 3.2).

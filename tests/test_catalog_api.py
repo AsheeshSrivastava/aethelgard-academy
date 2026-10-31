@@ -90,7 +90,7 @@ def test_prerequisites_keep_units_and_drop_soft_and_link_notes():
 
 @pytest.mark.parametrize(
     "prefix, units, stages",
-    [("PY-", 78, 14), ("BE-", 79, 18), ("AI-", 81, 18)],
+    [("PY-", 79, 14), ("BE-", 79, 18), ("AI-", 81, 18)],
 )
 def test_all_roadmaps_load_with_their_counts(full_catalog, prefix, units, stages):
     loaded = [u for u in full_catalog.list_all_units() if u.unit_id.startswith(prefix)]
@@ -163,7 +163,7 @@ def test_courses_lists_the_three_courses_with_counts(client):
 
     assert res.status_code == 200
     counts = {c["course_id"]: (c["stage_count"], c["unit_count"]) for c in res.json()}
-    assert counts == {"python": (14, 78), "backend": (18, 79), "ai-engineering": (18, 81)}
+    assert counts == {"python": (22, 111), "backend": (21, 98), "ai-engineering": (18, 81)}
     assert all(c["title"] and c["summary"] for c in res.json())
 
 
@@ -172,7 +172,7 @@ def test_course_map_shape(client):
 
     assert set(body) == {"course", "stages"}
     assert body["course"]["course_id"] == "python"
-    assert set(body["stages"][0]) == {"stage", "title", "units", "build"}
+    assert set(body["stages"][0]) == {"stage", "label", "title", "units", "build"}
     assert set(body["stages"][0]["units"][0]) == {
         "unit_id",
         "title",
@@ -190,18 +190,22 @@ def test_course_map_shape(client):
     assert set(body["stages"][0]["build"]) == {"title", "kind", "locked", "pending_units", "authored", "status"}
 
 
-def test_course_map_lists_stages_in_number_order_with_units_in_teaching_order(client):
+def stage_by_number(body, stage: int):
+    return next(s for s in body["stages"] if s["stage"] == stage)
+
+
+def test_course_map_lists_numbered_stages_in_order_with_units_in_teaching_order(client):
     body = client.get("/api/v1/courses/backend").json()
 
-    assert [s["stage"] for s in body["stages"]] == list(range(18))
-    assert [u["unit_id"] for u in body["stages"][11]["units"]][:2] == ["BE-11.1", "BE-11.2"]
+    assert [s["stage"] for s in body["stages"] if s["stage"] < 100] == list(range(18))
+    assert [u["unit_id"] for u in stage_by_number(body, 11)["units"]][:2] == ["BE-11.1", "BE-11.2"]
 
 
 def test_stage_title_comes_from_the_roadmap(client):
     body = client.get("/api/v1/courses/backend").json()
 
-    assert body["stages"][0]["title"] == "Backend service mental model"
-    assert body["stages"][11]["title"] == "Backend testing"
+    assert stage_by_number(body, 0)["title"] == "Backend service mental model"
+    assert stage_by_number(body, 11)["title"] == "Backend testing"
 
 
 def test_stage_without_a_roadmap_title_falls_back_to_its_number():
@@ -213,7 +217,8 @@ def test_stage_without_a_roadmap_title_falls_back_to_its_number():
 
 
 def test_python_stages_have_the_approved_titles(client):
-    titles = [s["title"] for s in client.get("/api/v1/courses/python").json()["stages"]]
+    stages = client.get("/api/v1/courses/python").json()["stages"]
+    titles = [s["title"] for s in stages if s["stage"] < 100]
 
     assert titles == [
         "Running your first program",
@@ -327,7 +332,7 @@ def test_proficiency_rows_carry_the_skill_name(client):
 def test_units_can_be_filtered_by_course(client):
     units = client.get("/api/v1/units?course_id=python").json()
 
-    assert len(units) == 78
+    assert len(units) == 111
     assert client.get("/api/v1/units?course_id=cooking").status_code == 404
 
 

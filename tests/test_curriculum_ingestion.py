@@ -60,13 +60,13 @@ def test_parse_unit_block():
 
 
 def test_load_full_python_roadmap():
-    roadmap_path = Path("reference/Python Subject Roadmap v3.md")
+    roadmap_path = Path("reference/Python Subject Roadmap v4.md")
     assert roadmap_path.exists(), "Reference roadmap file must exist"
 
     catalog = load_roadmap_from_file(roadmap_path)
     units = catalog.list_all_units()
 
-    # There are over 25 units in the Python Subject Roadmap v3
+    # There are over 25 units in the Python Subject Roadmap v4
     assert len(units) >= 25
 
     # Check that PY-0.4 exists

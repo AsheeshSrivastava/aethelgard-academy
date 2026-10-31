@@ -1,6 +1,6 @@
 """Curriculum Ingestion Engine and Catalog.
 
-Parses Markdown roadmaps (such as Python Subject Roadmap v3) into strongly-typed
+Parses Markdown roadmaps (such as Python Subject Roadmap v4) into strongly-typed
 Unit domain models and validates the Directed Acyclic Graph (DAG) of prerequisites.
 """
 
@@ -17,14 +17,31 @@ from lms.core.concepts import check_concept_links
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity, check_curriculum
 from lms.core.exercises import ExerciseSeed, SeedError, parse_seed
-from lms.core.models import ActivityType, MediaAsset, ProficiencyLevel, TargetSkill, Unit
+from lms.core.models import (
+    ActivityType,
+    MakeStep,
+    MediaAsset,
+    ProficiencyLevel,
+    TargetSkill,
+    Unit,
+    slotted_stage,
+)
 
 logger = logging.getLogger(__name__)
 
+PYTHON_ROADMAP = "Python Subject Roadmap v4.md"
+BACKEND_ROADMAP = "Backend Engineering Roadmap v3.md"
+PATH_FILES = (PYTHON_ROADMAP, BACKEND_ROADMAP)  # Their Table 1 sets the path order (ADR-0020)
 ROADMAP_FILES = (
-    "Python Subject Roadmap v3.md",
-    "Backend Engineering Roadmap v2.md",
+    PYTHON_ROADMAP,
+    BACKEND_ROADMAP,
     "AI Engineering Roadmap v2.md",
+    "Practical DSA Roadmap v3.md",
+    "Git Version Control Roadmap v2.md",
+    "Software Design Roadmap v2.md",
+    "AI-Assisted Engineering Roadmap v2.md",
+    "Networking Web Foundations Roadmap v2.md",
+    "Database SQL Roadmap v2.md",
 )
 LEARNING_METHOD_FILE = "Learning Method v2.md"
 
@@ -110,6 +127,12 @@ def parse_prerequisites_string(text: str) -> List[str]:
     return prereqs
 
 
+def parse_make_step(outcome: str) -> Optional[MakeStep]:
+    """Read 'Make (VE-6): a tip calculator...' from an outcome line, up to the next skill."""
+    match = re.search(r"Make \(([A-Z]{2}-\d+)\):\s*(.+?)(?=\s+[A-Z]{2}-\d+(?: and [A-Z]{2}-\d+)?:|$)", outcome)
+    return MakeStep(skill_id=match.group(1), task=match.group(2)) if match else None
+
+
 def parse_unit_block(block: str, stage: int = 0) -> Unit:
     """Parse a single markdown unit block starting with '#### PY-...', '#### BE-...' or '#### AI-...'"""
     lines = [line.strip() for line in block.strip().split("\n") if line.strip()]
@@ -131,6 +154,7 @@ def parse_unit_block(block: str, stage: int = 0) -> Unit:
     target_skills: List[TargetSkill] = []
     methods: List[ActivityType] = [ActivityType.EXPLAIN]
     prerequisites: List[str] = []
+    make: Optional[MakeStep] = None
 
     for line in lines[1:]:
         if line.startswith("- **The concept (Explain):**"):
@@ -144,6 +168,8 @@ def parse_unit_block(block: str, stage: int = 0) -> Unit:
         elif line.startswith("- **Prerequisites:**"):
             prereqs_part = line.split("**Prerequisites:**", 1)[1].strip()
             prerequisites = parse_prerequisites_string(prereqs_part)
+        elif line.startswith("- **Outcome"):
+            make = parse_make_step(line)
 
     if not concept_line:
         concept_line = f"Core concepts of {title}"
@@ -151,11 +177,12 @@ def parse_unit_block(block: str, stage: int = 0) -> Unit:
     return Unit(
         unit_id=unit_id,
         title=title,
-        stage=stage,
+        stage=slotted_stage(unit_id, stage),
         concept_line=concept_line,
         target_skills=target_skills,
         methods=methods,
         prerequisites=prerequisites,
+        make=make,
     )
 
 
@@ -172,6 +199,11 @@ class CurriculumCatalog:
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
+
+    def apply_path_order(self, unit_ids: List[str]) -> None:
+        """Put the listed units first, in that order; any others keep their place after them."""
+        ordered = {i: self._units[i] for i in unit_ids if i in self._units}
+        self._units = {**ordered, **self._units}
 
     def set_stage_title(self, course_id: Optional[str], stage: int, title: str) -> None:
         self._stage_titles[(course_id, stage)] = title
@@ -219,6 +251,14 @@ class CurriculumCatalog:
         return True
 
 
+def load_path_order(file_path: Path) -> List[str]:
+    """Read unit ids, in order, from a roadmap's Table 1."""
+    if not file_path.exists():
+        return []
+    section = re.search(r"^## Table 1\b.*?(?=^## |\Z)", file_path.read_text(encoding="utf-8"), re.M | re.S)
+    return re.findall(r"^\|\s*\d+\s*\|\s*([A-Z]+-[\d.]+)\s", section.group(0), re.M) if section else []
+
+
 def load_main_activities(file_path: Path) -> Dict[str, ActivityType]:
     """Read skill -> main activity from the Learning Method skill-to-activity table."""
     if not file_path.exists():
@@ -263,12 +303,13 @@ def load_seeds(curriculum_dir: Path) -> Tuple[Dict[str, List[ExerciseSeed]], Lis
 
 
 def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
-    """Load every course's roadmap into one catalog, in course then teaching order."""
+    """Load every roadmap into one catalog, in course then path order."""
     catalog = CurriculumCatalog()
     for file_name in ROADMAP_FILES:
         path = reference_dir / file_name
         if path.exists():
             load_roadmap_from_file(path, catalog)
+    catalog.apply_path_order([i for name in PATH_FILES for i in load_path_order(reference_dir / name)])
 
     # Findings are reported, never fatal: the curriculum belongs to the curator.
     catalog.main_activities = load_main_activities(reference_dir / LEARNING_METHOD_FILE)
@@ -324,7 +365,7 @@ def load_roadmap_from_file(
                 unit = parse_unit_block(block, stage=stage_num)
                 catalog.add_unit(unit)
                 if stage_title:
-                    catalog.set_stage_title(course_of(unit.unit_id), stage_num, stage_title)
+                    catalog.set_stage_title(course_of(unit.unit_id), unit.stage, stage_title)
 
     curriculum_path = Path("curriculum")
     if curriculum_path.exists():

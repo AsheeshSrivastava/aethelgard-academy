@@ -79,7 +79,7 @@ describe("courses page", () => {
     renderAt("/courses");
 
     expect(await screen.findByRole("link", { name: /Python for Backend\/AI/ })).toHaveAttribute("href", "/courses/backend");
-    expect(screen.getByText("14 stages · 78 units")).toBeInTheDocument();
+    expect(screen.getByText("22 stages · 111 units")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/");
   });
 });
