@@ -1,5 +1,21 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
+## Resume here (paused 2026-10-31, owner's usage limit)
+
+- **Last code commit:** `800ba28`. Suite green at 678 tests. Push on hold. Order agreed: step 5, step 6, then the frontend.
+- **Stash:** `git stash pop` restores the unfinished step 5 tests: new `tests/test_attempts_api.py` (42 tests, 41 failing until the code below exists), and edits to `tests/test_web_api.py` and `tests/test_exercise_api.py`. Do this first.
+- **Step 5 done:** SPEC-12 section 5 rules, ADR-0016 amendment E, per-seed evidence (`seed_id`, newest result kept), and the grader for all 12 item types (`src/lms/core/grading.py`).
+- **Step 5 left:**
+  1. Repo: `log_assistance`, `get_assistance_levels(learner, exercise_id, since)`, `record_cold_item`, `get_cold_items`, clear failed items at round end, `clear_current_exercise`. Reset also clears cold items.
+  2. `POST /learners/me/attempts`: must be on the current exercise (409); client evidence fields already refused by `Attempt`; ungraded playground records nothing; explain returns 409; cold locked 423.
+  3. Cold Check round: pool is the first unfinished target skill; one try per item; clear the pointer after an attempt; at round end record pass or fail and keep only failed skills for the retry; assistance always none; no `reveal` on a failed item.
+  4. Start the clock once every method activity has an entry and Explain has a concept check; call this after attempts and after `/explain`.
+  5. `/explain`, `/explain-error` and `/axis/consult` use the resolved learner and ignore any body `learner_id`. Add optional `exercise_id` to `AxisQuery` and log assistance against it.
+  6. `GET /units/{id}` stops sending `test_code` and the rubric (keep `prompt`). Add `POST /learners/me/units/{id}/playground:verify`, and point `src/lms/web/app.js` Verify at it.
+  7. Then run deliberate-break checks and report.
+- **Step 6 left, all of it:** `WS /api/v1/runs` with `input()` pausing and limits (5 s CPU, 120 s wall, 64 KB, no network; SPEC-12 section 7). `POST /api/v1/axis/stream` as SSE with `exercise_id` and `page`, sentence buffering in Socratic mode, guardrail before `done`, assistance logged (section 8). AXIS returns 403 during a Cold Check, on consult and stream. Must work with `MOCK_AI=true` and the local OpenAI-compatible model through existing config. Never print keys.
+- **Open interpretations to report:** a seed's newest result counts, so a failed first try does not stick. A failed activity attempt still counts as completing it, so the clock starts. Attempted activities, not passed ones, start the clock. A Cold Check retry covers only the failed skills. With one Cold Check seed per skill, a retry repeats the same item, so `reveal` stays off on failure.
+
 - **Branch:** `main` (tracking `origin/main` on Entire)
 - **Latest Commit:** `ddcddc3` (this update follows it)
 - **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). Push is on hold by owner decision; recent commits are local only.
