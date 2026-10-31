@@ -69,3 +69,17 @@ frontend/playwright-report/
 !src/lms/web/dist/
 !frontend/src/lib/
 frontend/lms_state.db
+
+# Internal Scaffolding & Agent Orchestration (Private to Workspace)
+portfolio_workflow_guide.md
+skills/
+.agents/
+.entire/
+AGENTS.md
+PROGRESS.md
+docs/sessions/
+docs/proposals/
+
+# Upstream Reference Corpus (1400+ third-party doc files; reproducible via scripts/fetch_upstream.py)
+reference/upstream/
+
