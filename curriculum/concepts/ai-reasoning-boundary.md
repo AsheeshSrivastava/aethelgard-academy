@@ -3,7 +3,7 @@ id: ai-reasoning-boundary
 title: Tool help versus your own reasoning
 category: AI discipline
 summary: AI can write code, but you own whether it is right.
-status: draft
+status: approved
 units: ["PY-0.3"]
 related: []
 aliases: ["DE-3", "AI code", "ownership", "verify AI output", "review AI code"]

@@ -82,12 +82,12 @@ class FakeRunner:
 # --- Loading ---
 
 
-def test_the_stage_0_build_loads_clean_as_a_draft():
+def test_the_stage_0_build_loads_clean_and_approved():
     builds, problems = load_builds(Path("curriculum"))
 
     assert problems == []
     build = builds[("python", 0)]
-    assert build.status == "draft"
+    assert build.status == "approved"
     assert build.entry == "checkin.py"
     assert "check_sample_run" in build.checks_source
 
@@ -391,7 +391,7 @@ def test_an_unlocked_build_is_served(client, repo):
 
     assert data["exercise_id"] == EXERCISE
     assert data["title"] == "Relief centre check-in script"
-    assert data["status"] == "draft"
+    assert data["status"] == "approved"
     assert data["entry"] == "checkin.py"
     assert [f["path"] for f in data["files"]] == ["checkin.py", "README.md"]
     assert data["requirements"][0] == {"id": "plan", "label": "Plan written as comments", "unit_id": "PY-0.1"}
@@ -605,7 +605,7 @@ def test_the_course_map_shows_the_real_build(client, repo):
 
     assert stage["build"]["title"] == "Relief centre check-in script"
     assert stage["build"]["authored"] is True
-    assert stage["build"]["status"] == "draft"
+    assert stage["build"]["status"] == "approved"
     assert stage["build"]["locked"] is True
 
 

@@ -3,7 +3,7 @@ id: formatted-strings
 title: f-strings
 category: Core tools
 summary: An f-string is text with values placed inside it, written in curly braces.
-status: draft
+status: approved
 units: ["PY-0.1", "PY-0.4"]
 related: ["print-function", "expressions", "variables"]
 aliases: ["f-string", "fstring", "formatted string", "string formatting", "curly braces", "{}"]

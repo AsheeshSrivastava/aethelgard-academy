@@ -3,7 +3,7 @@ id: variables
 title: Variables
 category: Core tools
 summary: A variable is a name that points to a value, so your program can use it later.
-status: draft
+status: approved
 units: ["PY-0.1", "PY-0.4"]
 related: ["expressions", "print-function"]
 aliases: ["variable", "=", "assignment", "name", "store a value", "state"]

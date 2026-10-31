@@ -3,7 +3,7 @@ id: standard-streams
 title: Standard streams
 category: System basics
 summary: Every program has three channels to the outside world, called stdin, stdout and stderr.
-status: draft
+status: approved
 units: ["PY-0.1", "PY-0.4"]
 related: ["built-in-input", "print-function"]
 aliases: ["stdin", "stdout", "stderr", "streams", "standard input", "standard output"]

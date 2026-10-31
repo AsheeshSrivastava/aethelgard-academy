@@ -3,7 +3,7 @@ id: built-in-input
 title: input() function
 category: Core tools
 summary: input() pauses the program, reads what the person types, and always gives it back as text.
-status: draft
+status: approved
 units: ["PY-0.1", "PY-0.4"]
 related: ["print-function", "variables", "assignment-evaluation", "standard-streams"]
 aliases: ["input", "keyboard", "ingress", "stdin", "read text"]

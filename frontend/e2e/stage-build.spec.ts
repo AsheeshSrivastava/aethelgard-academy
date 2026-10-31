@@ -73,7 +73,7 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await page.goto("/courses/python");
   await page.getByRole("link", { name: /Relief centre check-in script/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Relief centre check-in script" })).toBeVisible();
-  await expect(page.getByText("Draft")).toBeVisible();
+  await expect(page.getByText("Draft")).toHaveCount(0);
   await expect(submit(page)).toBeDisabled();
   await expect(page.getByText("Socratic during builds")).toBeVisible();
   await shot(page, "build-start");

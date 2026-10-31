@@ -285,14 +285,14 @@ def test_used_in_joins_declared_and_linked_units_in_teaching_order():
 NOTES = Path("curriculum/concepts")
 
 
-def test_the_four_draft_notes_load_clean():
+def test_the_owner_approved_notes_load_clean():
     items, problems = load_concepts(NOTES)
 
     assert problems == []
     assert {"comments-in-python", "print-function", "variables", "expressions"} <= {
         i.concept_id for i in items
     }
-    assert all(i.status == ConceptStatus.DRAFT for i in items)
+    assert all(i.status == ConceptStatus.APPROVED for i in items)
 
 
 def test_every_python_block_in_the_notes_compiles():

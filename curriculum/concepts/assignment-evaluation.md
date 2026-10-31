@@ -3,7 +3,7 @@ id: assignment-evaluation
 title: Right-to-left assignment order
 category: Execution model
 summary: In a line with =, Python works out the right side first, then gives the result the name on the left.
-status: draft
+status: approved
 units: ["PY-0.1"]
 related: ["variables", "expressions", "sequential-execution"]
 aliases: ["assignment", "right hand side", "evaluation order", "="]

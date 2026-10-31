@@ -3,7 +3,7 @@ id: sequential-execution
 title: Top-to-bottom execution
 category: Execution model
 summary: Python runs statements one at a time, from the top of the file to the bottom.
-status: draft
+status: approved
 units: ["PY-0.1", "PY-0.4"]
 related: ["variables", "assignment-evaluation"]
 aliases: ["execution order", "line by line", "statements", "top to bottom", "NameError"]

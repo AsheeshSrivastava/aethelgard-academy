@@ -4,7 +4,7 @@
   "stage": 0,
   "title": "Relief centre check-in script",
   "kind": "script",
-  "status": "draft",
+  "status": "approved",
   "brief_markdown": "The municipal relief centre has one desk and a long queue. People arrive tired, and they type in messy ways.\n\nWrite one script for the desk. It asks for a person's name, then the service they need, then prints a slip the desk officer can read aloud. Clean both answers first, so the slip looks right however they were typed.",
   "sample_run": [
     "Name:    meera ",

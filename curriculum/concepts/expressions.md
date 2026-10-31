@@ -3,7 +3,7 @@ id: expressions
 title: Expressions
 category: Core tools
 summary: An expression is any piece of code that Python can work out to a single value.
-status: draft
+status: approved
 units: ["PY-0.4"]
 related: ["variables", "print-function"]
 aliases: ["expression", "evaluate", "value", "statement"]

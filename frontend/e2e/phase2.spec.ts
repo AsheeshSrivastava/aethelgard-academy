@@ -210,7 +210,7 @@ test("a learner finds a concept by search, and by a wiki link in a lesson", asyn
 
   // The note
   await expect(page.getByRole("heading", { level: 1, name: "print() function" })).toBeVisible();
-  await expect(page.getByText("Draft")).toBeVisible();
+  await expect(page.getByText("Draft")).toHaveCount(0);
   await expect(page.locator(".prose pre code").first()).toBeVisible();
   await expect(page.locator(".prose")).not.toContainText("[[");
   await shot(page, "concept-note");

@@ -3,7 +3,7 @@ id: comments-in-python
 title: Comments in Python
 category: Core tools
 summary: A comment is a note for people, and Python skips it.
-status: draft
+status: approved
 units: ["PY-0.1"]
 related: ["print-function", "variables"]
 aliases: ["#", "comment", "hash", "pseudocode", "notes in code"]

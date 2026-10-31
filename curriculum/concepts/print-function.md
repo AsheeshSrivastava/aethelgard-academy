@@ -3,7 +3,7 @@ id: print-function
 title: print() function
 category: Core tools
 summary: print() shows values on the terminal, which is how a program talks back.
-status: draft
+status: approved
 units: ["PY-0.1", "PY-0.4"]
 related: ["variables", "expressions", "comments-in-python"]
 aliases: ["print", "output", "egress", "stdout", "show on screen"]
