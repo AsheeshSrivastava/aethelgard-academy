@@ -28,6 +28,9 @@ EVIDENCE_LEDGER_ADDED_COLUMNS = {
 }
 
 
+RECENT_CONCEPTS = 5
+
+
 class SQLiteLearnerRepository:
     """SQLite-backed repository for the Evidence Ledger and Progress Tracking."""
 
@@ -163,6 +166,16 @@ class SQLiteLearnerRepository:
                     exercise_id TEXT NOT NULL,
                     files TEXT NOT NULL,
                     PRIMARY KEY (learner_id, exercise_id)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS concept_recent (
+                    learner_id TEXT NOT NULL,
+                    concept_id TEXT NOT NULL,
+                    opened_order INTEGER NOT NULL,
+                    PRIMARY KEY (learner_id, concept_id)
                 );
                 """
             )
@@ -411,6 +424,37 @@ class SQLiteLearnerRepository:
                 """,
                 (learner_id, unit_id, exercise_id, json.dumps(files)),
             )
+
+    def record_concept_opened(self, learner_id: str, concept_id: str) -> None:
+        """Move the note to the top of the learner's recent list. Not evidence (SPEC-14)."""
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO concept_recent (learner_id, concept_id, opened_order)
+                VALUES (?, ?, (
+                    SELECT COALESCE(MAX(opened_order), 0) + 1 FROM concept_recent WHERE learner_id = ?
+                ))
+                ON CONFLICT(learner_id, concept_id) DO UPDATE SET opened_order = excluded.opened_order
+                """,
+                (learner_id, concept_id, learner_id),
+            )
+            conn.execute(
+                """
+                DELETE FROM concept_recent WHERE learner_id = ? AND concept_id NOT IN (
+                    SELECT concept_id FROM concept_recent WHERE learner_id = ?
+                    ORDER BY opened_order DESC LIMIT ?
+                )
+                """,
+                (learner_id, learner_id, RECENT_CONCEPTS),
+            )
+
+    def get_recent_concepts(self, learner_id: str) -> List[str]:
+        rows = self._get_conn().execute(
+            "SELECT concept_id FROM concept_recent WHERE learner_id = ? ORDER BY opened_order DESC",
+            (learner_id,),
+        ).fetchall()
+        return [row["concept_id"] for row in rows]
 
     def reset_unit(self, learner_id: str, unit_id: str) -> None:
         """Clear a unit's working state. Keeps exercise_seen, and never touches evidence_ledger."""

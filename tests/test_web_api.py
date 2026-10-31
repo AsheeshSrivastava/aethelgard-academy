@@ -41,16 +41,16 @@ def test_list_and_search_concepts(test_client):
     res = client.get("/api/v1/concepts")
     assert res.status_code == 200
     concepts = res.json()
-    assert len(concepts) >= 5
+    assert len(concepts) >= 4
     ids = [c["concept_id"] for c in concepts]
-    assert "built-in-input" in ids
-    assert "sequential-execution" in ids
+    assert "print-function" in ids
+    assert "variables" in ids
 
     # Search
-    search_res = client.get("/api/v1/concepts?search=input")
+    search_res = client.get("/api/v1/concepts?search=print")
     assert search_res.status_code == 200
     filtered = search_res.json()
-    assert any("input" in c["name"].lower() for c in filtered)
+    assert any("print" in c["name"].lower() for c in filtered)
 
 
 def test_unit_full_metadata(test_client):

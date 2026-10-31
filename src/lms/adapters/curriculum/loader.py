@@ -10,6 +10,8 @@ import logging
 import re
 from typing import Dict, List, Optional, Set, Tuple
 
+from lms.adapters.curriculum.concepts import load_concepts
+from lms.core.concepts import check_concept_links
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity, check_curriculum
 from lms.core.exercises import ExerciseSeed, SeedError, parse_seed
@@ -272,8 +274,14 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
         for skill in unit.target_skills:
             skill.skill_name = skill_names.get(skill.skill_id, skill.skill_id)
     catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
-    catalog.findings = seed_problems + check_curriculum(
-        catalog.list_all_units(), main_activities=catalog.main_activities, seeds=catalog.seeds
+    concepts, concept_problems = load_concepts(reference_dir.parent / "curriculum" / "concepts")
+    catalog.findings = (
+        seed_problems
+        + check_curriculum(
+            catalog.list_all_units(), main_activities=catalog.main_activities, seeds=catalog.seeds
+        )
+        + concept_problems
+        + check_concept_links(concepts, catalog.list_all_units())
     )
     errors = sum(1 for f in catalog.findings if f.severity == Severity.ERROR)
     if catalog.findings:

@@ -378,6 +378,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/concepts/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Recent Concepts */
+        get: operations["get_my_recent_concepts_api_v1_learners_me_concepts_recent_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learners/me/concepts/recent/{concept_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put My Recent Concept */
+        put: operations["put_my_recent_concept_api_v1_learners_me_concepts_recent__concept_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learners/me/units/{unit_id}/reset": {
         parameters: {
             query?: never;
@@ -626,10 +660,10 @@ export interface components {
             last_attempt_at?: string | null;
         };
         /**
-         * ConceptItem
-         * @description Canonical concept entity for the Concept Library / KMS.
+         * ConceptDetail
+         * @description One note for the note page, with links worked out from the catalog.
          */
-        ConceptItem: {
+        ConceptDetail: {
             /** Concept Id */
             concept_id: string;
             /** Name */
@@ -638,14 +672,63 @@ export interface components {
             category: string;
             /** Summary */
             summary: string;
-            /** Execution Rules */
-            execution_rules: string;
-            /** Doc Url */
-            doc_url: string;
+            status: components["schemas"]["ConceptStatus"];
             /** Units */
             units?: string[];
+            /**
+             * Doc Url
+             * @default
+             */
+            doc_url: string;
+            /** Aliases */
+            aliases?: string[];
             /** Content Markdown */
             content_markdown?: string | null;
+            /** Related */
+            related?: components["schemas"]["ConceptRef"][];
+            /** Used In */
+            used_in?: components["schemas"]["ConceptUnitRef"][];
+        };
+        /** ConceptRef */
+        ConceptRef: {
+            /** Concept Id */
+            concept_id: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * ConceptStatus
+         * @enum {string}
+         */
+        ConceptStatus: "draft" | "approved";
+        /**
+         * ConceptSummary
+         * @description A concept in a list: what search results and the recent list show (SPEC-14).
+         */
+        ConceptSummary: {
+            /** Concept Id */
+            concept_id: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Summary */
+            summary: string;
+            status: components["schemas"]["ConceptStatus"];
+            /** Units */
+            units?: string[];
+            /**
+             * Doc Url
+             * @default
+             */
+            doc_url: string;
+        };
+        /** ConceptUnitRef */
+        ConceptUnitRef: {
+            /** Unit Id */
+            unit_id: string;
+            /** Title */
+            title: string;
         };
         /** ConceptWikiLink */
         ConceptWikiLink: {
@@ -1272,6 +1355,7 @@ export interface operations {
     get_concepts_api_v1_concepts_get: {
         parameters: {
             query?: {
+                q?: string | null;
                 search?: string | null;
             };
             header?: never;
@@ -1286,7 +1370,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConceptItem"][];
+                    "application/json": components["schemas"]["ConceptSummary"][];
                 };
             };
             /** @description Validation Error */
@@ -1317,7 +1401,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConceptItem"];
+                    "application/json": components["schemas"]["ConceptDetail"];
                 };
             };
             /** @description Validation Error */
@@ -1851,6 +1935,55 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AttemptResult"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_recent_concepts_api_v1_learners_me_concepts_recent_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConceptSummary"][];
+                };
+            };
+        };
+    };
+    put_my_recent_concept_api_v1_learners_me_concepts_recent__concept_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                concept_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

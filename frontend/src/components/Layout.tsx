@@ -60,11 +60,15 @@ export function Layout() {
               <path d="M7.5 13h9" />
             </svg>
           </span>
-          Aethelgard
+          <span className="wordmark-text">Aethelgard</span>
         </Link>
         <nav aria-label="Primary" className="primary-nav">
           <Link to="/courses" activeProps={{ className: "active", "aria-current": "page" }}>
             Courses
+          </Link>
+          <Link to="/concepts" aria-label="Concept library" activeProps={{ className: "active", "aria-current": "page" }}>
+            <span className="on-wide">Concept library</span>
+            <span className="on-narrow">Concepts</span>
           </Link>
           <Link to="/progress" activeProps={{ className: "active", "aria-current": "page" }}>
             My progress

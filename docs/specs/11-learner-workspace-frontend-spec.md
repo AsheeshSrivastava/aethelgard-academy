@@ -73,6 +73,8 @@ Follows the **3-Phase Pedagogical Activity Sequence**:
 ## 4. API Endpoints & Contracts
 
 ### 4.1 Concept Library
+SPEC-14 replaces this section for the Concept Library.
+
 - **`GET /api/v1/concepts`**
   - Query parameters: `search: Optional[str]`, `category: Optional[str]`
   - Response:

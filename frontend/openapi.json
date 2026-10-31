@@ -70,13 +70,31 @@
         "operationId": "get_concepts_api_v1_concepts_get",
         "parameters": [
           {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
             "name": "search",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 200
                 },
                 {
                   "type": "null"
@@ -94,7 +112,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ConceptItem"
+                    "$ref": "#/components/schemas/ConceptSummary"
                   },
                   "title": "Response Get Concepts Api V1 Concepts Get"
                 }
@@ -135,7 +153,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConceptItem"
+                  "$ref": "#/components/schemas/ConceptDetail"
                 }
               }
             }
@@ -866,6 +884,60 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/concepts/recent": {
+      "get": {
+        "summary": "Get My Recent Concepts",
+        "operationId": "get_my_recent_concepts_api_v1_learners_me_concepts_recent_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConceptSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Recent Concepts Api V1 Learners Me Concepts Recent Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/concepts/recent/{concept_id}": {
+      "put": {
+        "summary": "Put My Recent Concept",
+        "operationId": "put_my_recent_concept_api_v1_learners_me_concepts_recent__concept_id__put",
+        "parameters": [
+          {
+            "name": "concept_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Concept Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1726,7 +1798,7 @@
         ],
         "title": "ColdCheckStatus"
       },
-      "ConceptItem": {
+      "ConceptDetail": {
         "properties": {
           "concept_id": {
             "type": "string",
@@ -1744,13 +1816,8 @@
             "type": "string",
             "title": "Summary"
           },
-          "execution_rules": {
-            "type": "string",
-            "title": "Execution Rules"
-          },
-          "doc_url": {
-            "type": "string",
-            "title": "Doc Url"
+          "status": {
+            "$ref": "#/components/schemas/ConceptStatus"
           },
           "units": {
             "items": {
@@ -1758,6 +1825,18 @@
             },
             "type": "array",
             "title": "Units"
+          },
+          "doc_url": {
+            "type": "string",
+            "title": "Doc Url",
+            "default": ""
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
           },
           "content_markdown": {
             "anyOf": [
@@ -1769,6 +1848,20 @@
               }
             ],
             "title": "Content Markdown"
+          },
+          "related": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptRef"
+            },
+            "type": "array",
+            "title": "Related"
+          },
+          "used_in": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptUnitRef"
+            },
+            "type": "array",
+            "title": "Used In"
           }
         },
         "type": "object",
@@ -1777,11 +1870,99 @@
           "name",
           "category",
           "summary",
-          "execution_rules",
-          "doc_url"
+          "status"
         ],
-        "title": "ConceptItem",
-        "description": "Canonical concept entity for the Concept Library / KMS."
+        "title": "ConceptDetail",
+        "description": "One note for the note page, with links worked out from the catalog."
+      },
+      "ConceptRef": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "title": "Concept Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "name"
+        ],
+        "title": "ConceptRef"
+      },
+      "ConceptStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "approved"
+        ],
+        "title": "ConceptStatus"
+      },
+      "ConceptSummary": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "title": "Concept Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConceptStatus"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "doc_url": {
+            "type": "string",
+            "title": "Doc Url",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "name",
+          "category",
+          "summary",
+          "status"
+        ],
+        "title": "ConceptSummary",
+        "description": "A concept in a list: what search results and the recent list show (SPEC-14)."
+      },
+      "ConceptUnitRef": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "title"
+        ],
+        "title": "ConceptUnitRef"
       },
       "ConceptWikiLink": {
         "properties": {

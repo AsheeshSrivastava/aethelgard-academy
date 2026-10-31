@@ -22,7 +22,7 @@ Then open http://localhost:5173.
 ## Where things are
 
 - `src/pages/`: one file per route. `Lesson.tsx` holds the step rail, steps and Cold Check flow.
-- `src/lesson/`: item forms for every SPEC-13 item type, the editor, the terminal and the AXIS panel. The editor and terminal load only on lesson pages.
+- `src/lesson/`: item forms for every SPEC-13 item type, the editor, the terminal and the AXIS panel. The editor and terminal load only on lesson pages. `wikiLinks.ts` turns `[[slug]]` into concept links (SPEC-14).
 - `e2e/`: browser tests. The 24-hour wait is simulated by moving a timestamp in the throwaway test database, so the app has no test backdoor.
 
 ## Commands

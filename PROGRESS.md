@@ -2,14 +2,15 @@
 
 ## Resume here
 
-- **State:** backend steps 1 to 6 and the frontend (phases 1 and 2) are done. A learner can work through a whole Stage 0 unit in the browser, including the Cold Check. Push is on hold.
-- **Next:** the owner tests with the local model. Then step 7 stage builds, more Cold Check seeds, and retiring the old shell at `/legacy`.
-- **Owner decision open:** AXIS at runtime retrieves from `data/index`, which holds upstream documentation, not only the proprietary curriculum. That appears to conflict with the Provenance Firewall (AGENTS.md section 5, ADR-0003). The front page wording depends on this decision.
+- **State:** backend steps 1 to 6, the frontend (phases 1 and 2) and the Concept Library (SPEC-14) are done. A learner can work through a whole Stage 0 unit in the browser, including the Cold Check. All work up to `65277cd` was pushed to both remotes on 2026-10-31 at the owner's word; newer commits are local, and push is held again.
+- **Next:** the owner reviews the four draft concept notes. Wait for the owner before step 7 stage builds. Then more Cold Check seeds and retiring the old shell at `/legacy`.
+- **Open:** the old concept notes in `docs/concepts/` are no longer loaded (SPEC-14 section 2). Decide whether to move them to `curriculum/concepts/` or remove them. `/legacy` loses its `input()` and `print()` note links until then.
+- **Temporary exception:** AXIS keeps retrieving from upstream documentation in `data/index` (ADR-0003 section 4). Review it before anyone else learns on the platform.
 
 - **Branch:** `main` (tracking `origin/main` on Entire)
 - **Latest Commit:** see `git log`
-- **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). Push is on hold by owner decision; recent commits are local only.
-- **Current Phase:** Backend steps 1 to 6 and frontend phases 1 and 2 done (`808` backend, `122` component and `15` browser tests passing)
+- **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). `github` is the second remote. Push is held unless the owner says otherwise for a given push.
+- **Current Phase:** Backend steps 1 to 6, frontend phases 1 and 2 and the Concept Library done (`891` backend, `155` component and `16` browser tests passing)
 - **Status:** In Progress
 
 ---
@@ -42,7 +43,8 @@
   - SPEC-10: Persistent Upstream Indexer & Warm Retriever Loader
   - SPEC-11: Learner Workspace Frontend
   - SPEC-12: Learner Experience API Contract
-  - SPEC-13: Exercise Seed Format (draft; no loader yet)
+  - SPEC-13: Exercise Seed Format
+  - SPEC-14: Concept Library
 - **Architecture Decision Records (ADRs):**
   - ADR-0001: Hexagonal Architecture and Pluggable Boundary Ports
   - ADR-0002: Dual-Store Strategy (SQLite for Evidence Ledger vs. Vector DB for RAG)
@@ -138,7 +140,9 @@
 - Every lesson shows the playground; it writes evidence only when the unit's methods include Modify or Build (SPEC-12 section 3.2).
 - Reset clears a unit's timer, including a passed Cold Check, and never touches the ledger.
 - Stage 0 seeds: Claude drafts, the owner approves.
-- Push is on hold.
+- Push is held; the owner allows each push by name.
+- Upstream citations in AXIS stay for now, as a temporary exception (ADR-0003 section 4).
+- Concept notes are Markdown files in `curriculum/concepts/`. Recent searches are per learner in SQLite and are not evidence (SPEC-14).
 
 ## 4. Next Action
 - Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before other learners use it.

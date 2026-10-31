@@ -27,6 +27,8 @@ In professional software development, consulting documentation is an engineer's 
 | **`print()`** | Built-in function that outputs data to the terminal console. | [Python Formatted Output](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/inputoutput.md) |
 | **f-strings (`f"..."`)** | Modern string formatting that dynamically injects variables into text inside `{curly_braces}`. | [Python Formatted String Literals](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/inputoutput.md) |
 
+Want more on any of these? Read the concept notes: [[comments-in-python]], [[variables]] and [[print-function]].
+
 ---
 
 ## 3. Key Mental Models to Master
@@ -39,13 +41,13 @@ When you call `input("Enter name: ")`:
 - Python displays the prompt.
 - The user types their name and presses `Enter`.
 - The function finishes and **returns** the text.
-- The `=` operator catches that returned text and stores it in your variable:
+- The `=` operator catches that returned text and stores it in your [[variables|variable]]:
   ```python
   applicant_name = input("Enter name: ")
   ```
 
 ### C. Screen Output vs. Code Layout
-Leaving a blank line in your Python file does **not** create a blank line on the terminal. To print a blank line on the terminal, you must explicitly call the output function with no arguments:
+Leaving a blank line in your Python file does **not** create a blank line on the terminal. To print a blank line on the terminal, you must explicitly call the [[print-function|output function]] with no arguments:
 ```python
 print()
 ```

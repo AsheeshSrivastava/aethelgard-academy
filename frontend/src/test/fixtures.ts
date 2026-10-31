@@ -145,3 +145,17 @@ export const ledger = [
     cold_check: false,
   },
 ];
+
+export const concepts: Schemas["ConceptSummary"][] = [
+  { concept_id: "print-function", name: "print() function", category: "Core tools", summary: "Shows values.", status: "draft", units: [], doc_url: "" },
+  { concept_id: "variables", name: "Variables", category: "State", summary: "A name for a value.", status: "draft", units: [], doc_url: "" },
+];
+
+export const conceptNote: Schemas["ConceptDetail"] = {
+  ...concepts[1]!,
+  aliases: ["names"],
+  doc_url: "https://docs.python.org/3/",
+  content_markdown: "Use `input()` here, then see [[print-function|the print() function]].",
+  related: [{ concept_id: "print-function", name: "print() function" }],
+  used_in: [{ unit_id: "PY-0.1", title: "Python as an executing program" }],
+};

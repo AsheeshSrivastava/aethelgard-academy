@@ -12,6 +12,8 @@ export type UnitState = Schemas["UnitState"];
 export type Exercise = Schemas["Exercise"];
 export type AttemptResult = Schemas["AttemptResult"];
 export type ExplainResponse = Schemas["ExplainResponse"];
+export type ConceptSummary = Schemas["ConceptSummary"];
+export type ConceptDetail = Schemas["ConceptDetail"];
 
 const BASE = "/api/v1";
 
@@ -67,4 +69,9 @@ export const api = {
   getDraft: (exerciseId: string) => request<Schemas["Draft"]>(`/learners/me/drafts/${exerciseId}`),
   saveDraft: (exerciseId: string, files: Record<string, string>) =>
     request<void>(`/learners/me/drafts/${exerciseId}`, json("PUT", { files })),
+  concepts: (q?: string) => request<ConceptSummary[]>(`/concepts${query({ q })}`),
+  concept: (slug: string) => request<ConceptDetail>(`/concepts/${encodeURIComponent(slug)}`),
+  recentConcepts: () => request<ConceptSummary[]>("/learners/me/concepts/recent"),
+  conceptOpened: (slug: string) =>
+    request<void>(`/learners/me/concepts/recent/${encodeURIComponent(slug)}`, { method: "PUT" }),
 };

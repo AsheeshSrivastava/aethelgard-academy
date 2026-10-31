@@ -97,16 +97,45 @@ class ConceptWikiLink(BaseModel):
     wiki_slug: str                     # e.g., "concepts/python/type-casting"
 
 
-class ConceptItem(BaseModel):
-    """Canonical concept entity for the Concept Library / KMS."""
-    concept_id: str
-    name: str
+class ConceptStatus(str, Enum):
+    DRAFT = "draft"
+    APPROVED = "approved"
+
+
+class ConceptSummary(BaseModel):
+    """A concept in a list: what search results and the recent list show (SPEC-14)."""
+    concept_id: str                    # The slug
+    name: str                          # The title
     category: str
     summary: str
-    execution_rules: str
-    doc_url: str
+    status: ConceptStatus
     units: List[str] = Field(default_factory=list)
+    doc_url: str = ""
+
+
+class ConceptItem(ConceptSummary):
+    """Canonical concept entity for the Concept Library / KMS."""
+    aliases: List[str] = Field(default_factory=list)
+    related: List[str] = Field(default_factory=list)
     content_markdown: Optional[str] = None
+
+
+class ConceptRef(BaseModel):
+    concept_id: str
+    name: str
+
+
+class ConceptUnitRef(BaseModel):
+    unit_id: str
+    title: str
+
+
+class ConceptDetail(ConceptSummary):
+    """One note for the note page, with links worked out from the catalog."""
+    aliases: List[str] = Field(default_factory=list)
+    content_markdown: Optional[str] = None
+    related: List[ConceptRef] = Field(default_factory=list)
+    used_in: List[ConceptUnitRef] = Field(default_factory=list)
 
 
 class MediaAsset(BaseModel):

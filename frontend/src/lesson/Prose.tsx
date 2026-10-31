@@ -1,8 +1,13 @@
 import { pythonLanguage } from "@codemirror/lang-python";
 import { classHighlighter, highlightCode } from "@lezer/highlight";
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+import { api } from "../api/client";
+import { remarkWikiLinks } from "./wikiLinks";
 
 function highlightPython(code: string): ReactNode[] {
   const parts: ReactNode[] = [];
@@ -68,13 +73,39 @@ const components: Components = {
   img: ({ alt }) => <span>{alt}</span>,
 };
 
+function ConceptLink({ slug, label }: { slug: string; label?: string }) {
+  const concepts = useQuery({ queryKey: ["concepts"], queryFn: () => api.concepts() });
+  const concept = concepts.data?.find((item) => item.concept_id === slug);
+  const unknown = concepts.isSuccess && !concept;
+
+  useEffect(() => {
+    if (unknown && import.meta.env.DEV) console.warn(`Wiki link to unknown concept: ${slug}`);
+  }, [unknown, slug]);
+
+  if (!concept) return <span>{label ?? slug}</span>;
+  return (
+    <Link to="/concepts/$slug" params={{ slug }}>
+      {label ?? concept.name}
+    </Link>
+  );
+}
+
+const withConceptLinks = { ...components, "concept-link": ConceptLink } as Components;
+
 const onlyWebLinks = (url: string) => (/^https?:\/\//i.test(url) ? url : "");
 
+const PLUGINS = [remarkGfm];
+const PLUGINS_WITH_LINKS = [remarkGfm, remarkWikiLinks];
+
 /** Curriculum text and AXIS replies. Raw HTML is shown as text, never run. */
-export function Prose({ children }: { children: string }) {
+export function Prose({ children, wikiLinks = false }: { children: string; wikiLinks?: boolean }) {
   return (
     <div className="prose">
-      <Markdown remarkPlugins={[remarkGfm]} urlTransform={onlyWebLinks} components={components}>
+      <Markdown
+        remarkPlugins={wikiLinks ? PLUGINS_WITH_LINKS : PLUGINS}
+        urlTransform={onlyWebLinks}
+        components={wikiLinks ? withConceptLinks : components}
+      >
         {children}
       </Markdown>
     </div>

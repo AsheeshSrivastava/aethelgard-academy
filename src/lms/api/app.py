@@ -30,6 +30,7 @@ from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
 from lms.core.cold_check import ColdCheckState, ColdCheckStatus, cold_check_status
+from lms.core.concepts import used_in
 from lms.core.course_map import (
     COURSES,
     Course,
@@ -73,7 +74,9 @@ from lms.core.interfaces import (
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
-    ConceptItem,
+    ConceptDetail,
+    ConceptRef,
+    ConceptSummary,
     EvidenceCategory,
     EvidenceEntry,
     EvidenceStrength,
@@ -97,6 +100,7 @@ LOCAL_LEARNER_ID = "default_learner"
 DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
 
 MAX_DRAFT_CHARS = 256_000
+MAX_CONCEPT_QUERY = 200
 
 
 def allowed_origins() -> List[str]:
@@ -267,18 +271,28 @@ def create_app(
         return {"status": "ok", "version": "0.1.0"}
 
     # --- Concept Library (KMS) Routes ---
-    @app.get("/api/v1/concepts", response_model=List[ConceptItem])
-    def get_concepts(search: Optional[str] = Query(None)):
-        if search:
-            return concepts.search(search)
-        return concepts.list_all()
+    @app.get("/api/v1/concepts", response_model=List[ConceptSummary])
+    def get_concepts(
+        q: Optional[str] = Query(None, max_length=MAX_CONCEPT_QUERY),
+        search: Optional[str] = Query(None, max_length=MAX_CONCEPT_QUERY),
+    ):
+        query = (q or search or "").strip()
+        return concepts.search(query) if query else concepts.list_all()
 
-    @app.get("/api/v1/concepts/{concept_id}", response_model=ConceptItem)
+    def concept_not_found(concept_id: str) -> JSONResponse:
+        return problem(404, "Concept not found", f"Concept '{concept_id}' does not exist.")
+
+    @app.get("/api/v1/concepts/{concept_id}", response_model=ConceptDetail)
     def get_concept_by_id(concept_id: str):
         concept = concepts.get(concept_id)
         if not concept:
-            raise HTTPException(status_code=404, detail=f"Concept '{concept_id}' not found.")
-        return concept
+            return concept_not_found(concept_id)
+        related = [concepts.get(slug) for slug in concept.related]
+        return ConceptDetail(
+            **concept.model_dump(exclude={"related"}),
+            related=[ConceptRef(concept_id=c.concept_id, name=c.name) for c in related if c],
+            used_in=used_in(concept, catalog.list_all_units()),
+        )
 
     # --- Curriculum Routes ---
     @app.get("/api/v1/units", response_model=List[Dict[str, Any]])
@@ -813,6 +827,18 @@ def create_app(
             evidence_entry_id=entry.entry_id,
             unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), clock(), config),
         )
+
+    @app.get("/api/v1/learners/me/concepts/recent", response_model=List[ConceptSummary])
+    def get_my_recent_concepts(learner_id: str = Depends(current_learner_id)):
+        found = [concepts.get(slug) for slug in repo.get_recent_concepts(learner_id)]
+        return [concept for concept in found if concept]
+
+    @app.put("/api/v1/learners/me/concepts/recent/{concept_id}", status_code=204, response_model=None)
+    def put_my_recent_concept(concept_id: str, learner_id: str = Depends(current_learner_id)):
+        if not concepts.get(concept_id):
+            return concept_not_found(concept_id)
+        repo.record_concept_opened(learner_id, concept_id)
+        return None
 
     @app.post("/api/v1/learners/me/units/{unit_id}/reset", status_code=204, response_model=None)
     def reset_my_unit(unit_id: str, learner_id: str = Depends(current_learner_id)):

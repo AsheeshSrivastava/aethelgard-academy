@@ -126,7 +126,7 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
   return (
     <div className="card lesson-card">
       <h1 className="step-title">{unit.concept_line}</h1>
-      {unit.lesson_markdown && <Prose>{splitLessonForExplain(unit.lesson_markdown)}</Prose>}
+      {unit.lesson_markdown && <Prose wikiLinks>{splitLessonForExplain(unit.lesson_markdown)}</Prose>}
       <form
         className="concept-check"
         onSubmit={(event) => {

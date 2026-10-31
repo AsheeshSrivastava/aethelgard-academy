@@ -192,6 +192,78 @@ test("AXIS shows code as code, and its panel can be dragged wider", async ({ pag
   expect((await axis(page).boundingBox())!.width).toBeCloseTo(after.width, -1);
 });
 
+test("a learner finds a concept by search, and by a wiki link in a lesson", async ({ page, request }) => {
+  const ledgerBefore = (await (await request.get("/api/v1/learners/me/ledger")).json()).length;
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // From the top bar, by search
+  await page.goto("/");
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Concept library" }).click();
+  await expect(page).toHaveURL(/\/concepts$/);
+  await shot(page, "concepts-empty");
+  const box = page.getByRole("searchbox", { name: "Search concepts" });
+  await box.fill("print");
+  await expect(page).toHaveURL(/q=print/);
+  await expect(page.getByRole("status")).toContainText("concept");
+  await shot(page, "concepts-results");
+  await page.getByRole("link", { name: /print\(\) function/ }).click();
+
+  // The note
+  await expect(page.getByRole("heading", { level: 1, name: "print() function" })).toBeVisible();
+  await expect(page.getByText("Draft")).toBeVisible();
+  await expect(page.locator(".prose pre code").first()).toBeVisible();
+  await expect(page.locator(".prose")).not.toContainText("[[");
+  await shot(page, "concept-note");
+
+  // A wiki link inside a note goes to the next note
+  await page.locator(".prose").getByRole("link", { name: "variable" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Variables" })).toBeVisible();
+
+  // The back arrow, and the recent list. Only what was opened from search is listed.
+  await page.getByRole("link", { name: "Back to Concept library" }).click();
+  const recent = page.getByRole("region", { name: "Recently opened" });
+  await expect(recent.getByRole("link", { name: /print\(\) function/ })).toBeVisible();
+  await expect(recent.getByRole("link", { name: /Variables/ })).toHaveCount(0);
+  await shot(page, "concepts-recent");
+
+  // By keyboard
+  await box.fill("variables");
+  await box.press("Enter");
+  await expect(page.getByRole("heading", { level: 1, name: "Variables" })).toBeVisible();
+
+  // From a lesson's Explain text
+  await page.goto("/units/PY-0.1/explain");
+  await expect(page.locator(".prose")).not.toContainText("[[");
+  await page.locator(".prose").getByRole("link", { name: "Comments in Python" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Comments in Python" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Used in units" }).getByRole("link", { name: /PY-0\.1/ })).toBeVisible();
+
+  // Dark, then phone
+  await page.getByRole("button", { name: /switch to dark theme/i }).click();
+  await page.goto("/concepts/expressions");
+  await expect(page.getByRole("heading", { level: 1, name: "Expressions" })).toBeVisible();
+  await expect(page.locator(".prose table")).toBeVisible();
+  await shot(page, "dark-concept-note");
+  await page.goto("/concepts");
+  await expect(page.getByRole("region", { name: "Recently opened" })).toBeVisible();
+  await shot(page, "dark-concepts");
+  await page.getByRole("button", { name: /switch to light theme/i }).click();
+
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/concepts");
+  await expect(page.getByRole("region", { name: "Recently opened" })).toBeVisible();
+  await expectNoSideScroll(page);
+  await shot(page, "phone-concepts");
+  await page.goto("/concepts/expressions");
+  await expect(page.getByRole("heading", { level: 1, name: "Expressions" })).toBeVisible();
+  await expectNoSideScroll(page);
+  await shot(page, "phone-concept-note");
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  const ledgerAfter = (await (await request.get("/api/v1/learners/me/ledger")).json()).length;
+  expect(ledgerAfter).toBe(ledgerBefore);
+});
+
 test("a verified playground writes no evidence", async ({ page, request }) => {
   const before = (await (await request.get("/api/v1/learners/me/ledger")).json()).length;
 

@@ -1,177 +1,113 @@
-"""Concept Library & Knowledge Management System (KMS) Catalog.
+"""Concept Library catalog: Markdown notes from curriculum/concepts/ (SPEC-14).
 
-Maintains canonical technical concepts, operational definitions, execution rules,
-official upstream documentation anchors, and cross-references to curriculum units.
-Supports loading full markdown notes from `docs/concepts/*.md`.
+A bad note is reported as a finding and skipped; it never stops the app.
 """
 
 from pathlib import Path
 import re
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from pydantic import ValidationError
+import yaml
+
+from lms.core.concepts import SLUG, rank_concepts
+from lms.core.curriculum_checks import Finding, Severity
 from lms.core.models import ConceptItem
 
+DEFAULT_CONCEPTS_DIR = Path("curriculum/concepts")
 
-DEFAULT_CONCEPTS: List[ConceptItem] = [
-    ConceptItem(
-        concept_id="sequential-execution",
-        name="Sequential Statement Execution (Top-to-Bottom)",
-        category="Execution Model",
-        summary="Python reads and executes statements one at a time strictly in order from top to bottom.",
-        execution_rules="Line N executes completely before Line N+1 begins. Variables created on Line N do not exist prior to that line.",
-        doc_url="https://docs.python.org/3/reference/executionmodel.html",
-        units=["PY-0.1", "PY-0.4"],
-    ),
-    ConceptItem(
-        concept_id="assignment-evaluation",
-        name="Right-to-Left Assignment Order",
-        category="Execution Model",
-        summary="In any assignment statement (variable = expression), the right-hand side executes first.",
-        execution_rules="Python evaluates the right-hand expression completely, produces a return value, and then binds that value to the variable name on the left.",
-        doc_url="https://docs.python.org/3/reference/simple_stmts.html#assignment-statements",
-        units=["PY-0.1"],
-    ),
-    ConceptItem(
-        concept_id="built-in-input",
-        name="input() Built-in Function",
-        category="Core Primitives",
-        summary="Pauses execution, reads user text from standard input (stdin), and returns it as a string.",
-        execution_rules="Always returns a string (str), even if the user typed numbers. Trailing newlines are stripped from the return value.",
-        doc_url="https://docs.python.org/3/library/functions.html#input",
-        units=["PY-0.1", "PY-0.4"],
-    ),
-    ConceptItem(
-        concept_id="built-in-print",
-        name="print() Built-in Function",
-        category="Core Primitives",
-        summary="Writes formatted text to standard output (stdout).",
-        execution_rules="Calling print() with no arguments writes an empty line to stdout. A blank line in code does not produce a blank line on screen.",
-        doc_url="https://docs.python.org/3/library/functions.html#print",
-        units=["PY-0.1", "PY-0.4"],
-    ),
-    ConceptItem(
-        concept_id="variables-memory",
-        name="Variables & Identifiers in Memory",
-        category="State & Memory",
-        summary="A named label in memory that references a stored value.",
-        execution_rules="Variables in Python do not have static type declarations; they point to objects in heap memory. Referencing an unassigned variable raises NameError.",
-        doc_url="https://docs.python.org/3/reference/executionmodel.html#naming-and-binding",
-        units=["PY-0.1"],
-    ),
-    ConceptItem(
-        concept_id="formatted-strings",
-        name="Formatted String Literals (f-strings)",
-        category="String Formatting",
-        summary="Prefixing a string with 'f' allows embedding Python expressions directly inside {curly_braces}.",
-        execution_rules="Expressions inside {brackets} are evaluated at runtime and converted to strings before output.",
-        doc_url="https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals",
-        units=["PY-0.1", "PY-0.4"],
-    ),
-    ConceptItem(
-        concept_id="comments-pseudocode",
-        name="Comments as Pseudocode Blueprint",
-        category="Engineering Discipline",
-        summary="Lines starting with '#' are ignored by Python and used to plan steps before writing syntax.",
-        execution_rules="Comments produce zero bytecode and have zero runtime effect. Used for decomposition (Activity 5).",
-        doc_url="https://docs.python.org/3/tutorial/introduction.html#first-steps-towards-programming",
-        units=["PY-0.1", "PY-0.3"],
-    ),
-    ConceptItem(
-        concept_id="standard-streams",
-        name="Standard Streams (stdin, stdout, stderr)",
-        category="System Architecture",
-        summary="The fundamental input and output communication channels connecting an operating system process to the outside world.",
-        execution_rules="stdin handles ingress (read by input()), stdout handles normal egress (written by print()), stderr handles error reporting.",
-        doc_url="https://docs.python.org/3/library/sys.html#sys.stdin",
-        units=["PY-0.1", "PY-0.4"],
-    ),
-    ConceptItem(
-        concept_id="ai-reasoning-boundary",
-        name="Tool Help vs Developer Reasoning (DE-3)",
-        category="AI Discipline",
-        summary="AI can generate candidate code, but the human architect owns correctness, verification, and boundary integrity.",
-        execution_rules="Code provided by AI must be audited against official documentation and tested against deterministic assertions before deployment.",
-        doc_url="https://docs.python.org/3/tutorial/errors.html",
-        units=["PY-0.3"],
-    ),
-]
+_REQUIRED = ("id", "title", "category", "summary", "status")
+_LISTS = ("units", "related", "aliases")
+_OPTIONAL = (*_LISTS, "doc_url")
+_NOTE = re.compile(r"^---[ \t]*\n(.*?)\n---[ \t]*\n(.*)$", re.S)
 
 
-def load_concepts_from_directory(concepts_dir: Path) -> List[ConceptItem]:
-    """Parse markdown concept notes with YAML frontmatter from docs/concepts/."""
-    if not concepts_dir.exists():
-        return list(DEFAULT_CONCEPTS)
+class ConceptError(ValueError):
+    """Says what is wrong with a note."""
 
-    items: List[ConceptItem] = []
-    defaults_by_id = {c.concept_id: c for c in DEFAULT_CONCEPTS}
 
-    for path in sorted(concepts_dir.glob("*.md")):
-        raw = path.read_text(encoding="utf-8")
-        # Parse frontmatter between --- and ---
-        fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", raw, re.DOTALL)
-        if not fm_match:
-            continue
+def _frontmatter(raw: str) -> Tuple[Dict[str, Any], str]:
+    match = _NOTE.match(raw)
+    if not match:
+        raise ConceptError("no frontmatter between --- lines")
+    try:
+        meta = yaml.safe_load(match.group(1))
+    except yaml.YAMLError as error:
+        raise ConceptError(f"frontmatter is not valid YAML: {error}") from error
+    if not isinstance(meta, dict):
+        raise ConceptError("frontmatter must be key: value lines")
+    return meta, match.group(2).strip()
 
-        fm_text, body_markdown = fm_match.groups()
-        meta = {}
-        for line in fm_text.splitlines():
-            if ":" in line:
-                k, v = line.split(":", 1)
-                k = k.strip()
-                v = v.strip().strip('"').strip("'")
-                if k == "units":
-                    # Parse json/python list e.g. ["PY-0.1", "PY-0.4"]
-                    units_val = [u.strip().strip('"').strip("'") for u in v.strip("[]").split(",") if u.strip()]
-                    meta[k] = units_val
-                else:
-                    meta[k] = v
 
-        cid = meta.get("id", path.stem)
-        default_item = defaults_by_id.get(cid)
+def parse_note(path: Path) -> ConceptItem:
+    meta, body = _frontmatter(path.read_text(encoding="utf-8"))
 
-        name = meta.get("title", default_item.name if default_item else path.stem)
-        category = meta.get("category", default_item.category if default_item else "General")
-        doc_url = meta.get("doc_url", default_item.doc_url if default_item else "")
-        units = meta.get("units", default_item.units if default_item else [])
-        summary = default_item.summary if default_item else name
-        execution_rules = default_item.execution_rules if default_item else ""
+    unknown = sorted(str(key) for key in set(meta) - set(_REQUIRED) - set(_OPTIONAL))
+    if unknown:
+        raise ConceptError(f"unknown field: {', '.join(unknown)}")
+    for field in _REQUIRED:
+        value = meta.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise ConceptError(f"{field} is required and must be text")
+    for field in _LISTS:
+        value = meta.get(field, [])
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            raise ConceptError(f"{field} must be a list of text")
 
-        items.append(
-            ConceptItem(
-                concept_id=cid,
-                name=name,
-                category=category,
-                summary=summary,
-                execution_rules=execution_rules,
-                doc_url=doc_url,
-                units=units,
-                content_markdown=body_markdown.strip(),
-            )
+    slug = meta["id"]
+    if not SLUG.match(slug):
+        raise ConceptError("id must be lowercase words joined by hyphens")
+    if slug != path.stem:
+        raise ConceptError(f"id '{slug}' must equal the file name")
+    doc_url = meta.get("doc_url", "")
+    if doc_url and not re.match(r"^https?://", str(doc_url), re.I):
+        raise ConceptError("doc_url must start with http:// or https://")
+    if not body:
+        raise ConceptError("the body is empty")
+
+    try:
+        return ConceptItem(
+            concept_id=slug,
+            name=meta["title"],
+            category=meta["category"],
+            summary=meta["summary"],
+            status=meta["status"],
+            units=meta.get("units", []),
+            related=meta.get("related", []),
+            aliases=meta.get("aliases", []),
+            doc_url=doc_url,
+            content_markdown=body,
         )
+    except ValidationError as error:
+        raise ConceptError("status must be draft or approved") from error
 
-    return items if items else list(DEFAULT_CONCEPTS)
+
+def load_concepts(concepts_dir: Path) -> Tuple[List[ConceptItem], List[Finding]]:
+    """Load every note in the folder, A to Z by file name."""
+    items: List[ConceptItem] = []
+    problems: List[Finding] = []
+    for path in sorted(concepts_dir.glob("*.md")):
+        try:
+            items.append(parse_note(path))
+        except ValueError as error:  # ConceptError, and UnicodeDecodeError for a bad file
+            problems.append(
+                Finding(severity=Severity.ERROR, code="concept-invalid", message=f"{path.name}: {error}")
+            )
+    return items, problems
 
 
 class ConceptCatalog:
-    """In-memory searchable registry of technical concepts."""
+    """In-memory searchable registry of concept notes."""
 
     def __init__(self, concepts_dir: Optional[Path] = None):
-        dir_to_use = concepts_dir or Path("docs/concepts")
-        self._concepts = load_concepts_from_directory(dir_to_use)
+        items, self.findings = load_concepts(concepts_dir or DEFAULT_CONCEPTS_DIR)
+        self._concepts = sorted(items, key=lambda c: c.name.lower())
 
     def list_all(self) -> List[ConceptItem]:
         return list(self._concepts)
 
     def search(self, query: str) -> List[ConceptItem]:
-        q = query.lower().strip()
-        if not q:
-            return []
-        return [
-            c for c in self._concepts
-            if q in c.name.lower() or q in c.summary.lower() or q in c.category.lower() or any(q in u.lower() for u in c.units) or (c.content_markdown and q in c.content_markdown.lower())
-        ]
+        return rank_concepts(self._concepts, query)
 
     def get(self, concept_id: str) -> Optional[ConceptItem]:
-        for c in self._concepts:
-            if c.concept_id == concept_id:
-                return c
-        return None
+        return next((c for c in self._concepts if c.concept_id == concept_id), None)
