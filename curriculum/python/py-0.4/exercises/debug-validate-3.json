@@ -11,7 +11,7 @@
     "Read the error and fix the script so it registers the citizen who typed their name."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "debug": {
     "broken_code": [
       "print(\"Registering\", citizen)",

@@ -11,7 +11,7 @@
     "Commit to your answer before you run anything: what appears on the terminal?"
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "template": {
     "slots": {
       "person": {

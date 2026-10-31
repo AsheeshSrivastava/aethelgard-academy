@@ -11,7 +11,7 @@
     "Read the error, find what it points at, and fix the script."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "debug": {
     "broken_code": [
       "ward = input()",

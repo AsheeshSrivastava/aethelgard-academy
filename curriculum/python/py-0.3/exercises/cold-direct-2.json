@@ -11,7 +11,7 @@
     "Which of these is fine to delegate to the tool?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "options": [
       {

@@ -11,7 +11,7 @@
     "What should you do before you keep it?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "options": [
       {

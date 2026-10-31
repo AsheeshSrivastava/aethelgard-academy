@@ -11,7 +11,7 @@
     "What is the best thing to ask the tool next?"
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "options": [
       {

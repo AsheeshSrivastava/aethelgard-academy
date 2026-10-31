@@ -11,7 +11,7 @@
     "Write the value of `count` after each line, then what the terminal shows."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "trace": {
     "code": [
       "count = 0",

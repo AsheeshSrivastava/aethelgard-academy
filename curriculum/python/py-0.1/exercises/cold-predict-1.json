@@ -11,7 +11,7 @@
     "What appears on the terminal?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "predict": {
     "code": [
       "print(\"Queue open\")",

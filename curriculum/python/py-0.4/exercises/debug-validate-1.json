@@ -11,7 +11,7 @@
     "Run it, read the error's type, message and line number, then fix the script."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "debug": {
     "broken_code": [
       "citizen = input()",
