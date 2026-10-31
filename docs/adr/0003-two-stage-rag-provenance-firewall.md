@@ -56,3 +56,20 @@ We establish an **IP & Provenance Firewall** dividing RAG into two strictly isol
 
 ### Trade-offs / Mitigations
 - Requires a human-in-the-loop authoring step between research ingestion and curriculum publication. This is a deliberate educational choice to maintain high quality.
+
+---
+
+## 4. Amendment (2026-10-31): Temporary Exception for Upstream Citations
+
+**What is true today.** At runtime AXIS retrieves from `data/index`, which holds upstream documentation (Python, FastAPI, pytest and others), not only our curriculum. AXIS replies show those sources as citation chips. This does not match Stage 3 above.
+
+**Decision.** The owner has seen the chips and is fine with them for now. We keep the upstream index and its citations as a deliberate, temporary exception to Stage 3. This is a recorded exception, not a change to the firewall: Stage 3 stays the target.
+
+**What holds during the exception.**
+- Retrieval stays limited to the curated, licence-tracked `data/index`. Direct web search and ungrounded chat stay prohibited.
+- A chip shows a readable source name, never a raw passage id, and never passage text.
+- Cold Checks stay free of AXIS.
+
+**What it costs.** While the exception holds, the Positive consequences above are not fully met: AXIS can use terms our lessons do not use, and the licence safety rests on AXIS not repeating upstream text at length.
+
+**When it must be looked at again.** Before anyone other than the owner learns on the platform, or when the curriculum and concept notes are large enough to ground AXIS on their own, whichever comes first. That review decides whether AXIS moves to the Stage 3 target.

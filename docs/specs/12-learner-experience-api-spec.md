@@ -251,7 +251,7 @@ event: error     data: {message}
 The Socratic guardrail (ADR-0009) runs on the full reply before `done`; in Socratic mode tokens are buffered per sentence so no code fragment is streamed before it is checked. The assistance level is logged against `exercise_id`.
 
 - A request whose `exercise_id` is a Cold Check item returns `403`, on this route and on `/axis/consult`.
-- `citation` events go out before `done`, built from the reply's cited concepts.
+- `citation` events go out before `done`, built from the reply's cited concepts. A cited passage id becomes a readable source name, such as `Python docs: Expressions`, and each title is sent once (ADR-0003 section 4).
 - If the local model cannot be reached and fallback is on, the mock companion answers. If fallback is off, the stream sends `error` and stops.
 
 ---

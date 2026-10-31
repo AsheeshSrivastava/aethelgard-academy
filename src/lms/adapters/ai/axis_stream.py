@@ -6,7 +6,8 @@ learner first. Other modes stream as the model writes.
 """
 
 import re
-from typing import Any, Dict, Iterable, Iterator, List, Tuple
+from pathlib import PurePosixPath
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from lms.adapters.ai.socratic_guardrail import (
     GUIDING_INQUIRY,
@@ -20,6 +21,47 @@ from lms.core.interfaces import AxisMode, AxisQuery
 
 _BOUNDARY = re.compile(r"(?<=[.!?])\s+|\n")
 _FENCES = ("```", "~~~")
+
+# The shape make_passage_id gives: source@version#cstart-end~digest.
+_PASSAGE_ID = re.compile(r"^(?P<source>[^@]+)@[^#]+#c\d+-\d+~[0-9a-f]+$")
+
+_SOURCE_NAMES = {
+    "dspy-docs": "DSPy docs",
+    "fastapi-docs": "FastAPI docs",
+    "generative-ai-for-beginners": "Generative AI for Beginners",
+    "httpx-docs": "HTTPX docs",
+    "huggingface-course": "Hugging Face course",
+    "llamaindex-docs": "LlamaIndex docs",
+    "llms-from-scratch": "LLMs from Scratch",
+    "openai-evals": "OpenAI Evals",
+    "prompt-engineering-guide": "Prompt Engineering Guide",
+    "pydantic-docs": "Pydantic docs",
+    "pytest-docs": "pytest docs",
+    "python-docs": "Python docs",
+    "ruff-docs": "Ruff docs",
+    "uv-docs": "uv docs",
+    "zed-docs": "Zed docs",
+}
+
+
+def _readable(name: str) -> str:
+    return name.replace("-", " ").replace("_", " ").strip().capitalize()
+
+
+def citation_title(cited: str) -> Optional[str]:
+    """A readable source name for a retrieved passage id; None for anything else."""
+    match = _PASSAGE_ID.match(cited)
+    if not match:
+        return None
+    collection, *folders, file_name = match["source"].split("/")
+    source = _SOURCE_NAMES.get(collection, _readable(collection))
+    stem = PurePosixPath(file_name).stem
+    page = stem
+    if stem.lower() in ("index", "readme"):
+        page = folders[-1] if folders else ""
+    elif stem.isdigit() and folders:
+        page = f"{folders[-1]} {stem}"
+    return f"{source}: {_readable(page)}" if page else source
 
 
 class SocraticStreamFilter:

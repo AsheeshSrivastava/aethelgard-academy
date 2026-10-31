@@ -8,7 +8,12 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from lms.adapters.ai.axis_stream import SocraticStreamFilter, stream_axis, strip_prompt_tags
+from lms.adapters.ai.axis_stream import (
+    SocraticStreamFilter,
+    citation_title,
+    stream_axis,
+    strip_prompt_tags,
+)
 from lms.adapters.ai.local_llm_companion import LocalLLMCompanion, LocalLLMError
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -120,6 +125,45 @@ def test_citations_come_before_done(repo, catalog):
     citation = next(data for name, data in events if name == "citation")
     assert set(citation) == {"concept_id", "title", "doc_url"}
     assert events[-1][1]["cited_concepts"]
+
+
+def citations(events):
+    return [data for name, data in events if name == "citation"]
+
+
+@pytest.mark.parametrize(
+    "passage_id, title",
+    [
+        ("python-docs/reference/expressions.rst@pinned#c0-727~5906b36a0fdd", "Python docs: Expressions"),
+        ("fastapi-docs/advanced/async-tests.md@pinned#c1-2~5906b36a0fdd", "FastAPI docs: Async tests"),
+        ("pytest-docs/how-to/fixtures.rst@pinned#c1-2~5906b36a0fdd", "pytest docs: Fixtures"),
+        ("uv-docs/concepts/authentication/index.md@pinned#c1-2~5906b36a0fdd", "uv docs: Authentication"),
+        ("zed-docs/README.md@pinned#c1-2~5906b36a0fdd", "Zed docs"),
+        ("huggingface-course/chapter1/10.mdx@pinned#c1-2~5906b36a0fdd", "Hugging Face course: Chapter1 10"),
+        ("new-source/some_page.md@pinned#c1-2~5906b36a0fdd", "New source: Some page"),
+    ],
+)
+def test_a_passage_id_becomes_a_readable_title(passage_id, title):
+    assert citation_title(passage_id) == title
+
+
+@pytest.mark.parametrize("name", ["Operational Communication Cycle", "", "python-docs/x.md"])
+def test_anything_else_is_not_a_passage_id(name):
+    assert citation_title(name) is None
+
+
+def test_a_chip_never_shows_a_raw_passage_id(repo, catalog):
+    raw = "python-docs/reference/expressions.rst@pinned#c0-727~5906b36a0fdd"
+    events = stream(make_client(repo, catalog, ScriptedCompanion(["Hello."], cited=[raw])), mode="Coach")
+
+    assert citations(events) == [{"concept_id": raw, "title": "Python docs: Expressions", "doc_url": ""}]
+
+
+def test_passages_from_one_source_make_one_chip(repo, catalog):
+    same = [f"python-docs/reference/expressions.rst@pinned#c{n}-9~5906b36a0fdd" for n in (1, 2, 3)]
+    events = stream(make_client(repo, catalog, ScriptedCompanion(["Hello."], cited=same)), mode="Coach")
+
+    assert [c["title"] for c in citations(events)] == ["Python docs: Expressions"]
 
 
 def test_stream_logs_assistance_against_the_exercise(repo, catalog):

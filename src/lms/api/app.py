@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Streamin
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from lms.adapters.ai.axis_stream import stream_axis
+from lms.adapters.ai.axis_stream import citation_title, stream_axis
 from lms.adapters.ai.local_llm_companion import get_axis_companion
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -407,6 +407,9 @@ def create_app(
         return problem(403, "AXIS is off", "AXIS does not help during a Cold Check.")
 
     def citation_for(name: str) -> Dict[str, str]:
+        title = citation_title(name)
+        if title:
+            return {"concept_id": name, "title": title, "doc_url": ""}
         concept = concepts.get(name) or next(iter(concepts.search(name)), None)
         if concept:
             return {"concept_id": concept.concept_id, "title": concept.name, "doc_url": concept.doc_url}
@@ -422,10 +425,14 @@ def create_app(
             return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
         def events() -> Iterator[str]:
+            shown = set()
             try:
                 for event, data in stream_axis(axis, query, guardrail, classifier):
                     if event == "citation":
-                        yield sse(event, citation_for(data["name"]))
+                        citation = citation_for(data["name"])
+                        if citation["title"] not in shown:
+                            shown.add(citation["title"])
+                            yield sse(event, citation)
                         continue
                     if event == "done" and query.exercise_id:
                         repo.log_assistance(
