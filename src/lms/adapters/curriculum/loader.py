@@ -21,6 +21,7 @@ ROADMAP_FILES = (
     "Backend Engineering Roadmap v2.md",
     "AI Engineering Roadmap v2.md",
 )
+LEARNING_METHOD_FILE = "Learning Method v2.md"
 
 
 def parse_skills_string(text: str) -> List[TargetSkill]:
@@ -160,6 +161,7 @@ class CurriculumCatalog:
         self._units: Dict[str, Unit] = {}
         self._stage_titles: Dict[Tuple[Optional[str], int], str] = {}
         self.findings: List[Finding] = []  # SPEC-12 section 3.1 checks, set by load_all_roadmaps
+        self.main_activities: Dict[str, ActivityType] = {}  # Set by load_all_roadmaps
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
@@ -210,6 +212,19 @@ class CurriculumCatalog:
         return True
 
 
+def load_main_activities(file_path: Path) -> Dict[str, ActivityType]:
+    """Read skill -> main activity from the Learning Method skill-to-activity table."""
+    if not file_path.exists():
+        return {}
+    activities = {a.value: a for a in ActivityType}
+    table: Dict[str, ActivityType] = {}
+    for line in file_path.read_text(encoding="utf-8").splitlines():
+        match = re.match(r"\|\s*\**([A-Z]{2}-\d+)\b[^|]*\|\s*([^|]+?)\s*\|", line)
+        if match and match.group(2) in activities:
+            table[match.group(1)] = activities[match.group(2)]
+    return table
+
+
 def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
     """Load every course's roadmap into one catalog, in course then teaching order."""
     catalog = CurriculumCatalog()
@@ -219,7 +234,10 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
             load_roadmap_from_file(path, catalog)
 
     # Findings are reported, never fatal: the curriculum belongs to the curator.
-    catalog.findings = check_curriculum(catalog.list_all_units())
+    catalog.main_activities = load_main_activities(reference_dir / LEARNING_METHOD_FILE)
+    catalog.findings = check_curriculum(
+        catalog.list_all_units(), main_activities=catalog.main_activities
+    )
     errors = sum(1 for f in catalog.findings if f.severity == Severity.ERROR)
     if catalog.findings:
         logger.warning(

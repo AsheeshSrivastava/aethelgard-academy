@@ -55,6 +55,85 @@ def weak(days_ago=0.5, **kw):
     return make(strength=EvidenceStrength.WEAK, days_ago=days_ago, **kw)
 
 
+# --- Amendment A: a skill's main activity counts for Apply and Adapt --------
+
+MAIN = EstimatorConfig(main_activities={"CO-1": ActivityType.PREDICT})
+
+
+def predict(strength=EvidenceStrength.MODERATE, assistance=AssistanceLevel.NONE, **kw):
+    return make(EvidenceCategory.EXPLAIN_REASON, strength, assistance, activity=ActivityType.PREDICT, **kw)
+
+
+def test_main_activity_reaches_apply():
+    assert estimate_skill([predict()], "CO-1", now=NOW, config=MAIN).level == ProficiencyLevel.APPLY
+
+
+def test_without_the_mapping_the_original_rule_applies():
+    assert estimate_skill([predict()], "CO-1", now=NOW).level == ProficiencyLevel.UNDERSTAND
+
+
+def test_a_helper_activity_does_not_count_as_the_main_activity():
+    entry = make(EvidenceCategory.EXPLAIN_REASON, activity=ActivityType.TRACE)
+
+    assert estimate_skill([entry], "CO-1", now=NOW, config=MAIN).level == ProficiencyLevel.UNDERSTAND
+
+
+def test_main_activity_of_another_skill_does_not_count():
+    config = EstimatorConfig(main_activities={"CO-2": ActivityType.PREDICT})
+
+    assert estimate_skill([predict()], "CO-1", now=NOW, config=config).level == ProficiencyLevel.UNDERSTAND
+
+
+def test_entry_without_an_activity_uses_the_original_rule():
+    entry = make(EvidenceCategory.EXPLAIN_REASON, activity=None)
+
+    assert estimate_skill([entry], "CO-1", now=NOW, config=MAIN).level == ProficiencyLevel.UNDERSTAND
+
+
+def test_apply_keeps_its_assistance_limit():
+    entry = predict(assistance=AssistanceLevel.STRUCTURAL_DIRECTION)
+
+    assert estimate_skill([entry], "CO-1", now=NOW, config=MAIN).level is None
+
+
+def test_adapt_on_main_activity_needs_strong():
+    assert estimate_skill([predict()], "CO-1", now=NOW, config=MAIN).level != ProficiencyLevel.ADAPT
+
+
+def test_adapt_on_main_activity_keeps_its_assistance_limit():
+    entry = predict(EvidenceStrength.STRONG, AssistanceLevel.SMALL_HINT)
+
+    assert estimate_skill([entry], "CO-1", now=NOW, config=MAIN).level == ProficiencyLevel.APPLY
+
+
+def test_one_strong_main_activity_entry_reaches_adapt_but_stays_provisional():
+    est = estimate_skill([predict(EvidenceStrength.STRONG)], "CO-1", now=NOW, config=MAIN)
+
+    assert est.level == ProficiencyLevel.ADAPT
+    assert est.confidence == Confidence.PROVISIONAL
+
+
+def test_main_activity_does_not_reach_own():
+    entries = [predict(EvidenceStrength.STRONG), predict(EvidenceStrength.STRONG)]
+
+    assert estimate_skill(entries, "CO-1", now=NOW, config=MAIN).level == ProficiencyLevel.ADAPT
+
+
+def test_supplied_reasoning_never_qualifies_through_the_main_activity():
+    entry = predict(EvidenceStrength.STRONG, AssistanceLevel.SUPPLIED_REASONING)
+
+    assert estimate_skill([entry], "CO-1", now=NOW, config=MAIN).level is None
+
+
+def test_main_activity_with_a_cold_check_supports_the_target():
+    entries = [predict(days_ago=3), predict(days_ago=2, cold_check=True)]
+
+    decision = decide_skill(ProficiencyLevel.APPLY, entries, "CO-1", now=NOW, config=MAIN)
+
+    assert decision.estimate.confidence == Confidence.SUPPORTED
+    assert decision.decision == ProgressionDecision.PROGRESS
+
+
 # --- 2.3 Level rules -------------------------------------------------------
 
 

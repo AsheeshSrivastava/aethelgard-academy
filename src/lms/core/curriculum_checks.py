@@ -10,7 +10,7 @@ raised, because the curriculum belongs to the curator (SPEC-12 section 3.1).
 """
 
 from enum import Enum
-from typing import AbstractSet, Dict, List, Optional, Set, Tuple
+from typing import AbstractSet, Dict, List, Mapping, Optional, Set, Tuple
 
 from pydantic import BaseModel
 
@@ -33,12 +33,16 @@ ACTIVITY_EVIDENCE: Dict[ActivityType, EvidenceCategory] = {
 }
 
 # Activities a machine can grade with no AI: fixed answers or sandbox checks.
+# Evaluate and Direct count only when the exercise carries a curator-written
+# answer key (ADR-0016 amendment B, SPEC-13).
 DETERMINISTIC_ACTIVITIES = {
     ActivityType.PREDICT,
     ActivityType.TRACE,
     ActivityType.MODIFY,
     ActivityType.DEBUG_VALIDATE,
     ActivityType.BUILD,
+    ActivityType.EVALUATE,
+    ActivityType.DIRECT,
 }
 
 
@@ -60,11 +64,16 @@ class Finding(BaseModel):
 def check_curriculum(
     units: List[Unit],
     stages_with_build: AbstractSet[Tuple[str, int]] = frozenset(),
+    main_activities: Optional[Mapping[str, ActivityType]] = None,
 ) -> List[Finding]:
-    """Run every check. `stages_with_build` holds (course_id, stage) pairs with a curated build."""
+    """Run every check.
+
+    `stages_with_build` holds (course_id, stage) pairs with a curated build.
+    `main_activities` maps each skill to its Learning Method main activity.
+    """
     findings: List[Finding] = []
     for unit in units:
-        findings.extend(_check_target_levels(unit, stages_with_build))
+        findings.extend(_check_target_levels(unit, stages_with_build, main_activities or {}))
         if not DETERMINISTIC_ACTIVITIES.intersection(unit.methods):
             findings.append(
                 Finding(
@@ -81,19 +90,23 @@ def check_curriculum(
 
 
 def _check_target_levels(
-    unit: Unit, stages_with_build: AbstractSet[Tuple[str, int]]
+    unit: Unit,
+    stages_with_build: AbstractSet[Tuple[str, int]],
+    main_activities: Mapping[str, ActivityType],
 ) -> List[Finding]:
     course_id = course_of(unit.unit_id)
     categories = {ACTIVITY_EVIDENCE[m] for m in unit.methods}
     findings: List[Finding] = []
 
     for skill in unit.target_skills:
+        has_main_activity = main_activities.get(skill.skill_id) in unit.methods
         if skill.goal_level == ProficiencyLevel.APPLY:
-            ok = EvidenceCategory.PERFORM_SOLVE in categories
-            code, needs = "apply-needs-perform", "a Perform / Solve activity"
+            ok = has_main_activity or EvidenceCategory.PERFORM_SOLVE in categories
+            code, needs = "apply-needs-perform", "a Perform / Solve activity or its main activity"
         elif skill.goal_level == ProficiencyLevel.ADAPT:
-            ok = EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER in categories
-            code, needs = "adapt-needs-diagnose", "a Diagnose / Judge / Transfer activity"
+            ok = has_main_activity or EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER in categories
+            code = "adapt-needs-diagnose"
+            needs = "a Diagnose / Judge / Transfer activity or its main activity"
         elif skill.goal_level == ProficiencyLevel.OWN:
             ok = (course_id, unit.stage) in stages_with_build
             code, needs = "own-needs-stage-build", "a stage build"
@@ -116,19 +129,20 @@ def _check_target_levels(
 
 
 def _check_stage_coverage(units: List[Unit]) -> List[Finding]:
-    used: Dict[Tuple[Optional[str], int], Set[ActivityType]] = {}
+    used: Dict[Tuple[Optional[str], int], Set[EvidenceCategory]] = {}
     for unit in units:
-        used.setdefault((course_of(unit.unit_id), unit.stage), set()).update(unit.methods)
+        categories = used.setdefault((course_of(unit.unit_id), unit.stage), set())
+        categories.update(ACTIVITY_EVIDENCE[m] for m in unit.methods)
 
     findings: List[Finding] = []
-    for (course_id, stage), activities in used.items():
-        missing = [a.value for a in ActivityType if a not in activities]
+    for (course_id, stage), categories in used.items():
+        missing = [c.value for c in EvidenceCategory if c not in categories]
         if missing:
             findings.append(
                 Finding(
                     severity=Severity.WARNING,
-                    code="stage-missing-activity",
-                    message=f"{course_id} stage {stage} never uses: {', '.join(missing)}.",
+                    code="stage-missing-evidence",
+                    message=f"{course_id} stage {stage} produces no: {', '.join(missing)}.",
                     course_id=course_id,
                     stage=stage,
                 )

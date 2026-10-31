@@ -253,6 +253,28 @@ def test_supported_evidence_gives_progress(client, repo):
     assert body["next_action"]["unit_id"] == "PY-1.2"
 
 
+def test_main_activity_evidence_reaches_the_target(repo, clock):
+    catalog = CurriculumCatalog()
+    catalog.add_unit(make_unit("PY-1.1", 1, "CO-1"))
+    catalog.main_activities = {"CO-1": ActivityType.PREDICT}
+    app = create_app(
+        repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=clock
+    )
+    predict = dict(
+        evidence_category=EvidenceCategory.EXPLAIN_REASON,
+        evidence_strength=EvidenceStrength.MODERATE,
+        activity=ActivityType.PREDICT,
+    )
+    repo.record_evidence(make_entry(days_ago=3, **predict))
+    repo.record_evidence(make_entry(days_ago=2, cold_check=True, **predict))
+
+    body = proficiency(TestClient(app), "course_id=python&stage=1")
+
+    assert body["skills"][0]["current_level"] == "Apply"
+    assert body["units"][0]["decision"] == "Progress"
+    assert body["next_action"] is None
+
+
 def test_two_entries_without_a_cold_check_stay_provisional(client, repo):
     repo.record_evidence(make_entry(days_ago=3))
     repo.record_evidence(make_entry(days_ago=2))

@@ -8,10 +8,10 @@ Deterministic and pure: no LLM, no I/O (ADR-0010). Results can always be
 recomputed from the append-only evidence ledger.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Mapping, Optional
 
 from pydantic import BaseModel, Field
 
@@ -41,6 +41,8 @@ class EstimatorConfig:
     weak_streak_to_lower: int = 2
     rebuild_weak_entries: int = 3
     rebuild_shaky_checks: int = 2
+    # skill_id -> main activity, loaded from Learning Method v2 (ADR-0016 amendment A).
+    main_activities: Mapping[str, ActivityType] = field(default_factory=dict)
 
 
 DEFAULT_CONFIG = EstimatorConfig()
@@ -86,21 +88,26 @@ class SkillDecision(BaseModel):
     entry_ids: List[str] = Field(default_factory=list)
 
 
-def qualifies(entry: EvidenceEntry, level: ProficiencyLevel) -> bool:
-    """Level rules, ADR-0016 section 2.3."""
+def qualifies(
+    entry: EvidenceEntry, level: ProficiencyLevel, config: EstimatorConfig = DEFAULT_CONFIG
+) -> bool:
+    """Level rules, ADR-0016 section 2.3 and amendment A."""
     if entry.assistance_level == AssistanceLevel.SUPPLIED_REASONING:
         return False
+    is_main_activity = (
+        entry.activity is not None and config.main_activities.get(entry.skill_id) == entry.activity
+    )
     if level == ProficiencyLevel.UNDERSTAND:
         return entry.evidence_strength in _GOOD and entry.assistance_level in _UP_TO_SMALL_HINT
     if level == ProficiencyLevel.APPLY:
         return (
-            entry.evidence_category == EvidenceCategory.PERFORM_SOLVE
+            (entry.evidence_category == EvidenceCategory.PERFORM_SOLVE or is_main_activity)
             and entry.evidence_strength in _GOOD
             and entry.assistance_level in _UP_TO_SMALL_HINT
         )
     if level == ProficiencyLevel.ADAPT:
         return (
-            entry.evidence_category == EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER
+            (entry.evidence_category == EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER or is_main_activity)
             and entry.evidence_strength == EvidenceStrength.STRONG
             and entry.assistance_level in _UP_TO_SYNTAX
         )
@@ -205,7 +212,7 @@ def estimate_skill(
 
     level_index = -1
     for i, level in enumerate(LEVEL_ORDER):
-        if not any(qualifies(e, level) for e in window):
+        if not any(qualifies(e, level, config) for e in window):
             break
         level_index = i
 
@@ -220,7 +227,7 @@ def estimate_skill(
             return SkillEstimate(skill_id=sid, weak_streak=weak_streak, weak_count=weak_count)
 
     level = LEVEL_ORDER[level_index]
-    backing = [e for e in window if qualifies(e, level)]
+    backing = [e for e in window if qualifies(e, level, config)]
     supported = (
         not lowered
         and weak_streak == 0

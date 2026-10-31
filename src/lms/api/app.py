@@ -52,6 +52,7 @@ from lms.core.models import (
     EvidenceStrength,
     Unit,
 )
+from lms.core.proficiency import EstimatorConfig
 from lms.core.proficiency_view import (
     ProficiencyView,
     build_proficiency_view,
@@ -367,10 +368,11 @@ def create_app(
 
         now = clock()
         ledger = repo.get_evidence_ledger(learner_id)
+        config = EstimatorConfig(main_activities=catalog.main_activities)
 
         # My progress opens on the learner's current stage (owner decision, 2026-10-31).
         if stage is None and units:
-            anchor = first_unfinished_unit(units, ledger, now) or units[-1]
+            anchor = first_unfinished_unit(units, ledger, now, config) or units[-1]
             stage = anchor.stage
             units = [u for u in units if course_of(u.unit_id) == course_of(anchor.unit_id)]
         if stage is not None:
@@ -382,6 +384,7 @@ def create_app(
             lambda unit_id: cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), now),
             now=now,
             stage=stage,
+            config=config,
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check", response_model=ColdCheckStatus)

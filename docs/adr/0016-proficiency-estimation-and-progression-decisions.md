@@ -107,3 +107,4 @@ A Cold Check needs a deterministically graded activity. Evaluate and Direct now 
 
 ### C. Consequences
 - Skills whose main activity is Explain (CO-3, CO-4, CO-5, CO-6) can reach Adapt on Strong Explain evidence. This is what the decision says; tune it if real learner data shows it is too easy.
+- One Strong, unassisted entry on a main activity meets the Understand, Apply and Adapt rules at once, so it reaches Adapt straight away. It stays provisional until a second exercise and a passed Cold Check, so it decides Strengthen, not Accelerate.
