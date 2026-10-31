@@ -174,6 +174,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Stage Review */
+        get: operations["get_my_stage_review_api_v1_learners_me_courses__course_id__stages__stage__review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review/exercise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Stage Review Exercise */
+        get: operations["get_my_stage_review_exercise_api_v1_learners_me_courses__course_id__stages__stage__review_exercise_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learners/me/reviews/due": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Due Reviews */
+        get: operations["get_my_due_reviews_api_v1_learners_me_reviews_due_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/learners/me/reviews/{skill_id}/{days}/exercise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Recheck Exercise */
+        get: operations["get_my_recheck_exercise_api_v1_learners_me_reviews__skill_id___days__exercise_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courses/{course_id}/stages/{stage}/build": {
         parameters: {
             query?: never;
@@ -729,6 +797,7 @@ export interface components {
             authored: boolean;
             /** Status */
             status?: string | null;
+            review_state?: components["schemas"]["ReviewState"] | null;
         };
         /** Check */
         Check: {
@@ -937,6 +1006,25 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** DueReview */
+        DueReview: {
+            /** Skill Id */
+            skill_id: string;
+            /** Skill Name */
+            skill_name: string;
+            /** Days */
+            days: number;
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string;
+            /**
+             * Items
+             * @default 0
+             */
+            items: number;
+        };
         /**
          * EvidenceCategory
          * @enum {string}
@@ -992,6 +1080,8 @@ export interface components {
              * @default false
              */
             cold_check: boolean;
+            /** Review Kind */
+            review_kind?: string | null;
         };
         /**
          * EvidenceStrength
@@ -1262,6 +1352,11 @@ export interface components {
              */
             why: string[];
         };
+        /**
+         * ReviewState
+         * @enum {string}
+         */
+        ReviewState: "not_ready" | "unavailable" | "available" | "failed_waiting" | "passed";
         /** Score */
         Score: {
             /** Passed */
@@ -1335,6 +1430,34 @@ export interface components {
             proves: components["schemas"]["BuildProof"][];
             /** Submitted */
             submitted: boolean;
+        };
+        /** StageReviewStatus */
+        StageReviewStatus: {
+            state: components["schemas"]["ReviewState"];
+            /** Available At */
+            available_at?: string | null;
+            /** Last Attempt At */
+            last_attempt_at?: string | null;
+            /**
+             * Pending Units
+             * @default []
+             */
+            pending_units: string[];
+            /**
+             * Failed Units
+             * @default []
+             */
+            failed_units: string[];
+            /**
+             * Items Total
+             * @default 0
+             */
+            items_total: number;
+            /**
+             * Items Done
+             * @default 0
+             */
+            items_done: number;
         };
         /** StageView */
         StageView: {
@@ -1733,6 +1856,122 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseMap"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_stage_review_api_v1_learners_me_courses__course_id__stages__stage__review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageReviewStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_stage_review_exercise_api_v1_learners_me_courses__course_id__stages__stage__review_exercise_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Exercise"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_due_reviews_api_v1_learners_me_reviews_due_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DueReview"][];
+                };
+            };
+        };
+    };
+    get_my_recheck_exercise_api_v1_learners_me_reviews__skill_id___days__exercise_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+                days: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Exercise"];
                 };
             };
             /** @description Validation Error */

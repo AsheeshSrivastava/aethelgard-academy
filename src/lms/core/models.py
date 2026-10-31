@@ -225,3 +225,4 @@ class EvidenceEntry(BaseModel):
     seed_id: Optional[str] = None                 # Seed behind the variant; repeats of a seed count once (ADR-0016)
     activity: Optional[ActivityType] = None       # Activity that produced the entry; BUILD qualifies for Own
     cold_check: bool = False                      # Recorded by a delayed Cold Check (ADR-0016 section 2.6)
+    review_kind: Optional[str] = None             # "stage_review" or "recheck" (SPEC-16)

@@ -13,6 +13,12 @@ import {
 
 const NOW = new Date("2026-06-01T09:00:00Z");
 
+describe("buildLockMessage with a stage review", () => {
+  it("names the review when every unit has passed", () => {
+    expect(buildLockMessage([])).toBe("Locked until you pass the stage review");
+  });
+});
+
 describe("courseOfUnit with slotted units", () => {
   it.each([
     ["DSA-0.1", "python"],

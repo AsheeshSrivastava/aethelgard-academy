@@ -15,7 +15,7 @@ from typing import AbstractSet, Dict, List, Mapping, Optional, Sequence, Set, Tu
 from pydantic import BaseModel
 
 from lms.core.course_map import course_of
-from lms.core.exercises import ExerciseSeed
+from lms.core.exercises import COLD_CHECK, ExerciseSeed, cold_round, pool_for
 from lms.core.models import ActivityType, EvidenceCategory, ProficiencyLevel, Unit, stage_label
 
 # What each activity can show, from the evidence category examples in the
@@ -69,7 +69,34 @@ def check_curriculum(
         if seeds is not None:
             findings.extend(_check_seeds(unit, seeds.get(unit.unit_id, ()), main_activities))
     findings.extend(_check_stage_coverage(units))
+    if seeds is not None:
+        findings.extend(_check_stage_review_items(units, seeds))
     return findings
+
+
+def _check_stage_review_items(
+    units: List[Unit], seeds: Mapping[str, Sequence[ExerciseSeed]]
+) -> List[Finding]:
+    """SPEC-16 section 3.4: a stage with no spare items runs no review, so the curator is told."""
+    short: Dict[Tuple[Optional[str], int], List[str]] = {}
+    for unit in units:
+        unit_seeds = seeds.get(unit.unit_id, ())
+        spare = len(pool_for(unit_seeds, COLD_CHECK)) - len(cold_round(unit, unit_seeds))
+        key = (course_of(unit.unit_id), unit.stage)
+        short.setdefault(key, [])
+        if spare < 1:
+            short[key].append(unit.unit_id)
+    return [
+        Finding(
+            severity=Severity.WARNING,
+            code="stage-review-short",
+            message=f"{course_id} {stage_label(stage)}: no spare Cold Check item in {', '.join(lacking)}.",
+            course_id=course_id,
+            stage=stage,
+        )
+        for (course_id, stage), lacking in short.items()
+        if lacking
+    ]
 
 
 def _check_make_step(unit: Unit) -> List[Finding]:

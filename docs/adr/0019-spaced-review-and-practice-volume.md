@@ -21,7 +21,8 @@ Decided by the owner on 2026-10-31: Cold Check at both unit end and stage end.
 2. **Stage review (new).** Opens when every unit of the stage has passed its unit Cold Check. A mixed set of items drawn from all the stage's units, roughly 2 per unit, at least one per target skill at Apply or above, AXIS off, deterministic grading, unseen curator-approved variants. **Passing it unlocks the stage build**, replacing ADR-0016's rule that the build unlocks when every unit has passed Cold Check. Fail → the result names the units whose items failed; the learner strengthens those and retries after 24 hours.
 3. **Rechecks.** Passing a skill in a stage review schedules a recheck at **+7 days** and **+30 days**: 2 to 4 items for that skill alone, shown on My progress as "Due for review". Results go to the evidence ledger like any Cold Check, and the whole-ledger estimator (ADR-0016) uses them. A failed recheck lowers the estimate; it does not reset the unit or lock later work.
 4. **Scheduling** is computed from the ledger when the learner opens the app. No background worker and no Temporal. A recheck that is overdue simply stays due.
-5. **Volume targets** (15 to 20 graded items per unit in Python Stages 0 to 5, at least 3 Make; 8 to 12 later) become a curriculum check: a warning when a unit's seed pool and approved variants fall short. They set the pool size that `lms variants generate` aims for.
+5. **No items, no gate.** A stage with no unseen approved item cannot run a review, so its build opens once every unit has passed, as under ADR-0016. A curriculum warning names the stage. Missing content must never lock a learner out. Details in SPEC-16.
+6. **Volume targets** (15 to 20 graded items per unit in Python Stages 0 to 5, at least 3 Make; 8 to 12 later) become a curriculum check: a warning when a unit's seed pool and approved variants fall short. They set the pool size that `lms variants generate` aims for.
 
 ---
 

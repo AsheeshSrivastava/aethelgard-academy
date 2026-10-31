@@ -170,6 +170,7 @@ KNOWN_FINDINGS = {
     "stage-missing-evidence": 0,
     "make-credit-invalid": 0,
     "make-seed-wrong-skill": 0,
+    "stage-review-short": 61,        # Every stage; clears as spare seeds are written
 }
 
 

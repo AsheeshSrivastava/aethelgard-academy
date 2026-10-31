@@ -360,6 +360,172 @@
         }
       }
     },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review": {
+      "get": {
+        "summary": "Get My Stage Review",
+        "operationId": "get_my_stage_review_api_v1_learners_me_courses__course_id__stages__stage__review_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageReviewStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review/exercise": {
+      "get": {
+        "summary": "Get My Stage Review Exercise",
+        "operationId": "get_my_stage_review_exercise_api_v1_learners_me_courses__course_id__stages__stage__review_exercise_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Exercise"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/reviews/due": {
+      "get": {
+        "summary": "Get My Due Reviews",
+        "operationId": "get_my_due_reviews_api_v1_learners_me_reviews_due_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DueReview"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Due Reviews Api V1 Learners Me Reviews Due Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/me/reviews/{skill_id}/{days}/exercise": {
+      "get": {
+        "summary": "Get My Recheck Exercise",
+        "operationId": "get_my_recheck_exercise_api_v1_learners_me_reviews__skill_id___days__exercise_get",
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skill Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Exercise"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/courses/{course_id}/stages/{stage}/build": {
       "get": {
         "summary": "Get Stage Build",
@@ -1946,6 +2112,16 @@
               }
             ],
             "title": "Status"
+          },
+          "review_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewState"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -2490,6 +2666,40 @@
         ],
         "title": "Draft"
       },
+      "DueReview": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "skill_name": {
+            "type": "string",
+            "title": "Skill Name"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At"
+          },
+          "items": {
+            "type": "integer",
+            "title": "Items",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "skill_name",
+          "days",
+          "due_at"
+        ],
+        "title": "DueReview"
+      },
       "EvidenceCategory": {
         "type": "string",
         "enum": [
@@ -2603,6 +2813,17 @@
             "type": "boolean",
             "title": "Cold Check",
             "default": false
+          },
+          "review_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Kind"
           }
         },
         "type": "object",
@@ -3377,6 +3598,17 @@
         ],
         "title": "Reveal"
       },
+      "ReviewState": {
+        "type": "string",
+        "enum": [
+          "not_ready",
+          "unavailable",
+          "available",
+          "failed_waiting",
+          "passed"
+        ],
+        "title": "ReviewState"
+      },
       "Score": {
         "properties": {
           "passed": {
@@ -3593,6 +3825,68 @@
         ],
         "title": "StageBuild",
         "description": "What a learner sees, built from a list of allowed fields (SPEC-15 section 3)."
+      },
+      "StageReviewStatus": {
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/ReviewState"
+          },
+          "available_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available At"
+          },
+          "last_attempt_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Attempt At"
+          },
+          "pending_units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Pending Units",
+            "default": []
+          },
+          "failed_units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Units",
+            "default": []
+          },
+          "items_total": {
+            "type": "integer",
+            "title": "Items Total",
+            "default": 0
+          },
+          "items_done": {
+            "type": "integer",
+            "title": "Items Done",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "StageReviewStatus"
       },
       "StageView": {
         "properties": {

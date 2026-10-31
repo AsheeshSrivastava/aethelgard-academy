@@ -55,6 +55,7 @@ export const courseOfUnit = (unitId: string) => COURSE_PREFIXES[unitId.split("-"
 export const decisionLabel = (decision: Decision) => (decision === "Undecided" ? "Not started" : decision);
 
 export function buildLockMessage(pending: string[]): string {
+  if (pending.length === 0) return "Locked until you pass the stage review";
   if (pending.length === 1) return `Locked until ${pending[0]} passes its Cold Check`;
   if (pending.length === 2) return `Locked until ${pending[0]} and ${pending[1]} pass their Cold Checks`;
   return `Locked until ${pending.length} units pass their Cold Checks`;

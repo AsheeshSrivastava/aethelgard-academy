@@ -37,11 +37,18 @@ function passColdChecks() {
   const script = `
 import sqlite3, sys
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 db = sqlite3.connect(sys.argv[1])
 past = (datetime.now(timezone.utc) - timedelta(hours=25)).isoformat()
 with db:
     for unit in sys.argv[2:]:
         db.execute("INSERT OR REPLACE INTO unit_cold_check VALUES ('default_learner', ?, ?, ?, 1)", (unit, past, past))
+        # A real round serves its items, so no unseen item is left for a stage review.
+        for seed in Path("curriculum/python", unit.lower(), "exercises").glob("cold-*.json"):
+            db.execute(
+                "INSERT OR REPLACE INTO exercise_seen VALUES ('default_learner', ?, 'cold_check', ?, 1)",
+                (unit, f"{unit}/{seed.stem}/v1"),
+            )
 `;
   execFileSync("uv", ["run", "--no-sync", "python", "-c", script, process.env.LMS_E2E_DB!, ...STAGE_0], { cwd: ".." });
 }

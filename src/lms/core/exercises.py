@@ -11,6 +11,7 @@ only the fields a learner may see, so a hidden field can never leak by default.
 
 from datetime import datetime
 import hashlib
+from itertools import islice, zip_longest
 import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -20,6 +21,8 @@ from lms.core.models import ActivityType, ProficiencyLevel, Unit
 
 SCHEMA_VERSION = 2
 COLD_CHECK = "cold_check"
+COLD_ITEMS_MIN = 3
+COLD_ITEMS_MAX = 5
 _SLOT = re.compile(r"\{\{(\w+)\}\}")
 
 
@@ -354,14 +357,16 @@ def find_variant(seeds: Sequence[ExerciseSeed], exercise_id: str) -> Optional[Ex
     return to_exercise(*found) if found else None
 
 
-def cold_check_skills(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[str]:
-    """Target skills with an approved Cold Check seed, in unit order."""
-    covered = {s.skill_id for s in seeds if s.cold_check_eligible and s.curator_approved}
-    return [s.skill_id for s in unit.target_skills if s.skill_id in covered]
-
-
-def cold_pool_for_skill(seeds: Sequence[ExerciseSeed], skill_id: str) -> List[str]:
-    return pool_for([s for s in seeds if s.skill_id == skill_id], COLD_CHECK)
+def cold_round(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[ExerciseSeed]:
+    """The unit Cold Check's items: skills first, then round again to 3, at most 5 (SPEC-16 section 2)."""
+    by_skill = [
+        [s for s in seeds if s.skill_id == skill.skill_id and s.cold_check_eligible and s.curator_approved]
+        for skill in unit.target_skills
+    ]
+    by_skill = [group for group in by_skill if group]
+    size = min(COLD_ITEMS_MAX, max(COLD_ITEMS_MIN, len(by_skill)))
+    in_turn = (s for row in zip_longest(*by_skill) for s in row if s is not None)
+    return list(islice(in_turn, size))
 
 
 def choose_next(pool: Sequence[str], seen: Sequence[str], current: Optional[str]) -> str:

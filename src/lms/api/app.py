@@ -52,13 +52,27 @@ from lms.core.course_map import (
 )
 from lms.core.curriculum_checks import ACTIVITY_EVIDENCE
 from lms.core.models import stage_label
+from lms.core.review import (
+    RECHECK,
+    STAGE_REVIEW,
+    DueReview,
+    ReviewItem,
+    ReviewState,
+    StageReviewStatus,
+    build_is_open,
+    due_reviews,
+    plan_recheck,
+    plan_stage_review,
+    recheck_scope,
+    stage_review_status,
+    stage_scope,
+)
 from lms.core.exercises import (
     COLD_CHECK,
     Exercise,
     ExerciseSeed,
     choose_next,
-    cold_check_skills,
-    cold_pool_for_skill,
+    cold_round,
     explain_exercise,
     find_seed_variant,
     find_variant,
@@ -390,17 +404,19 @@ def create_app(
                 for (course, stage), build in catalog.builds.items()
                 if course == course_id
             },
+            {
+                stage: review_status(course_id, stage, learner_id).state
+                for stage in {u.stage for u in catalog.get_course_units(course_id)}
+            },
         )
 
     # --- Stage Builds (SPEC-15) ---
     def stage_units(course_id: str, stage: int) -> List[Unit]:
         return [u for u in catalog.get_course_units(course_id) if u.stage == stage]
 
-    def open_build(course_id: str, stage: int, learner_id: str) -> Union[StageBuildSpec, JSONResponse]:
-        """The build if this learner may have it, otherwise the problem to answer with."""
-        units = stage_units(course_id, stage) if course_id in COURSES else []
-        if not units:
-            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+    # --- Stage Review and Rechecks (SPEC-16) ---
+    def review_status(course_id: str, stage: int, learner_id: str) -> StageReviewStatus:
+        units = stage_units(course_id, stage)
         now = clock()
         pending = [
             u.unit_id
@@ -408,8 +424,169 @@ def create_app(
             if cold_check_status(repo.get_cold_check_timer(learner_id, u.unit_id), now).state
             != ColdCheckState.PASSED
         ]
-        if pending:
-            return problem(423, "Build locked", f"Pass the Cold Check in: {', '.join(pending)}.")
+        scope = stage_scope(course_id, stage)
+        items = repo.get_review_items(learner_id, STAGE_REVIEW, scope)
+        has_items = bool(items) or (
+            not pending
+            and bool(plan_stage_review(units, catalog.seeds, repo.get_all_seen_exercises(learner_id)))
+        )
+        result = repo.get_review_result(learner_id, STAGE_REVIEW, scope)
+        return stage_review_status(pending, has_items, result, items, now)
+
+    def open_stage_round(course_id: str, stage: int, learner_id: str) -> List[ReviewItem]:
+        """The stored round: made once, and after a fail its failed items are replaced."""
+        scope = stage_scope(course_id, stage)
+        items = repo.get_review_items(learner_id, STAGE_REVIEW, scope)
+        seen = repo.get_all_seen_exercises(learner_id)
+        if not items:
+            repo.save_review_items(
+                learner_id, STAGE_REVIEW, scope, plan_stage_review(stage_units(course_id, stage), catalog.seeds, seen)
+            )
+        elif all(i.passed is not None for i in items):
+            for item in (i for i in items if i.passed is False):
+                skill_seeds = [s for s in catalog.seeds.get(item.unit_id, []) if s.skill_id == item.skill_id]
+                pool = pool_for(skill_seeds, COLD_CHECK)
+                fresh = [e for e in pool if e not in seen] or [e for e in pool if e != item.exercise_id]
+                replacement = fresh[0] if fresh else item.exercise_id
+                repo.reopen_review_item(learner_id, STAGE_REVIEW, scope, item.position, replacement)
+                seen = seen | {replacement}
+        return repo.get_review_items(learner_id, STAGE_REVIEW, scope)
+
+    def serve_review_item(items: List[ReviewItem], kind: str, learner_id: str) -> Optional[Exercise]:
+        item = next((i for i in items if i.passed is None), None)
+        if item is None:
+            return None
+        repo.set_current_exercise(learner_id, item.unit_id, kind, item.exercise_id, clock())
+        return find_variant(catalog.seeds.get(item.unit_id, []), item.exercise_id)
+
+    def attempt_review(attempt: Attempt, learner_id: str) -> Union[AttemptResult, JSONResponse]:
+        kind = attempt.activity
+        found = repo.find_open_review_item(learner_id, kind, attempt.exercise_id)
+        not_current = problem(409, "Not your current exercise", "Fetch the current review item and try again.")
+        if found is None:
+            return not_current
+        scope, item = found
+        items = repo.get_review_items(learner_id, kind, scope)
+        if next(i for i in items if i.passed is None).position != item.position:
+            return not_current
+        unit = catalog.get_unit(item.unit_id)
+        variant = find_seed_variant(catalog.seeds.get(item.unit_id, []), attempt.exercise_id)
+        if unit is None or variant is None:
+            return problem(404, "Exercise not found", f"Exercise '{attempt.exercise_id}' does not exist.")
+
+        seed, _ = variant
+        graded = grade(seed, attempt, runner)
+        now = clock()
+        entry = EvidenceEntry(
+            learner_id=learner_id,
+            unit_id=item.unit_id,
+            skill_id=seed.skill_id,
+            evidence_category=ACTIVITY_EVIDENCE[seed.activity],
+            evidence_strength=evidence_strength(seed.item_type, graded.passed, 0, AssistanceLevel.NONE, True),
+            assistance_level=AssistanceLevel.NONE,
+            demonstration_context=f"{seed.activity.value} {kind} on {attempt.exercise_id}",
+            recorded_at=now,
+            exercise_id=attempt.exercise_id,
+            seed_id=seed.seed_id,
+            activity=seed.activity,
+            cold_check=True,
+            review_kind=kind,
+        )
+        repo.record_evidence(entry)
+        repo.answer_review_item(learner_id, kind, scope, item.position, graded.passed)
+        items = repo.get_review_items(learner_id, kind, scope)
+        if all(i.passed is not None for i in items):
+            repo.record_review_result(learner_id, kind, scope, all(i.passed for i in items), now)
+
+        config = EstimatorConfig(main_activities=catalog.main_activities)
+        return AttemptResult(
+            outcome="passed" if graded.passed else "failed",
+            feedback=graded.feedback,
+            checks=graded.checks,
+            score=graded.score,
+            # A failed item can come back, so it must not show its answer.
+            reveal=graded.reveal if graded.passed else None,
+            evidence_entry_id=entry.entry_id,
+            unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), now, config),
+        )
+
+    def rechecks_due(learner_id: str) -> List[DueReview]:
+        ledger = repo.get_evidence_ledger(learner_id)
+        finished = repo.get_finished_reviews(learner_id, RECHECK)
+        seen = repo.get_all_seen_exercises(learner_id)
+        names = {s.skill_id: s.skill_name for u in catalog.list_all_units() for s in u.target_skills}
+        due: List[DueReview] = []
+        for review in due_reviews(ledger, finished, clock()):
+            stored = repo.get_review_items(
+                learner_id, RECHECK, recheck_scope(review.skill_id, review.days)
+            )
+            count = len(stored or plan_recheck(review.skill_id, catalog.seeds, seen))
+            if count:
+                due.append(
+                    review.model_copy(
+                        update={"items": count, "skill_name": names.get(review.skill_id, review.skill_id)}
+                    )
+                )
+        return due
+
+    @app.get("/api/v1/learners/me/courses/{course_id}/stages/{stage}/review", response_model=StageReviewStatus)
+    def get_my_stage_review(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
+        if course_id not in COURSES or not stage_units(course_id, stage):
+            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+        return review_status(course_id, stage, learner_id)
+
+    @app.get(
+        "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review/exercise",
+        response_model=Exercise,
+        response_model_exclude_none=True,
+    )
+    def get_my_stage_review_exercise(
+        course_id: str, stage: int, learner_id: str = Depends(current_learner_id)
+    ):
+        if course_id not in COURSES or not stage_units(course_id, stage):
+            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+        status = review_status(course_id, stage, learner_id)
+        if status.state == ReviewState.PASSED:
+            return problem(409, "Stage review passed", "This stage review is already passed.")
+        if status.state == ReviewState.UNAVAILABLE:
+            return problem(404, "No review yet", "This stage has no review items yet.")
+        if status.state != ReviewState.AVAILABLE:
+            return problem(423, "Stage review locked", f"Available at: {status.available_at}.")
+        exercise = serve_review_item(open_stage_round(course_id, stage, learner_id), STAGE_REVIEW, learner_id)
+        if exercise is None:
+            return problem(404, "No review yet", "This stage has no review items yet.")
+        return exercise
+
+    @app.get("/api/v1/learners/me/reviews/due", response_model=List[DueReview])
+    def get_my_due_reviews(learner_id: str = Depends(current_learner_id)):
+        return rechecks_due(learner_id)
+
+    @app.get(
+        "/api/v1/learners/me/reviews/{skill_id}/{days}/exercise",
+        response_model=Exercise,
+        response_model_exclude_none=True,
+    )
+    def get_my_recheck_exercise(skill_id: str, days: int, learner_id: str = Depends(current_learner_id)):
+        not_due = problem(404, "Recheck not due", f"No {days}-day recheck is due for {skill_id}.")
+        if not any(d.skill_id == skill_id and d.days == days for d in rechecks_due(learner_id)):
+            return not_due
+        scope = recheck_scope(skill_id, days)
+        if not repo.get_review_items(learner_id, RECHECK, scope):
+            seen = repo.get_all_seen_exercises(learner_id)
+            repo.save_review_items(learner_id, RECHECK, scope, plan_recheck(skill_id, catalog.seeds, seen))
+        exercise = serve_review_item(repo.get_review_items(learner_id, RECHECK, scope), RECHECK, learner_id)
+        return exercise if exercise else not_due
+
+    def open_build(course_id: str, stage: int, learner_id: str) -> Union[StageBuildSpec, JSONResponse]:
+        """The build if this learner may have it, otherwise the problem to answer with."""
+        units = stage_units(course_id, stage) if course_id in COURSES else []
+        if not units:
+            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+        review = review_status(course_id, stage, learner_id)
+        if not build_is_open(review.state):
+            if review.pending_units:
+                return problem(423, "Build locked", f"Pass the Cold Check in: {', '.join(review.pending_units)}.")
+            return problem(423, "Build locked", "Pass the stage review first.")
         build = catalog.builds.get((course_id, stage))
         if not build:
             return problem(404, "No build yet", f"The build for {stage_label(stage)} is not written yet.")
@@ -799,8 +976,8 @@ def create_app(
         if activity != COLD_CHECK:
             return pool_for(seeds, activity)
         finished = repo.get_cold_items(learner_id, unit.unit_id)
-        pending = [s for s in cold_check_skills(unit, seeds) if s not in finished]
-        return cold_pool_for_skill(seeds, pending[0]) if pending else []
+        pending = [s for s in cold_round(unit, seeds) if s.seed_id not in finished]
+        return pool_for(pending[:1], COLD_CHECK)
 
     def maybe_start_cold_check_clock(unit: Unit, learner_id: str) -> None:
         if activities_attempted(unit, repo.get_evidence_ledger(learner_id)):
@@ -808,12 +985,12 @@ def create_app(
 
     def finish_cold_item(unit: Unit, seed: ExerciseSeed, passed: bool, learner_id: str) -> None:
         now = clock()
-        repo.record_cold_item(learner_id, unit.unit_id, seed.skill_id, passed, now)
+        repo.record_cold_item(learner_id, unit.unit_id, seed.seed_id, passed, now)
         repo.clear_current_exercise(learner_id, unit.unit_id, COLD_CHECK)
         items = repo.get_cold_items(learner_id, unit.unit_id)
-        required = cold_check_skills(unit, catalog.seeds.get(unit.unit_id, []))
-        if all(skill in items for skill in required):
-            round_passed = all(items[skill] for skill in required)
+        required = [s.seed_id for s in cold_round(unit, catalog.seeds.get(unit.unit_id, []))]
+        if all(seed_id in items for seed_id in required):
+            round_passed = all(items[seed_id] for seed_id in required)
             repo.record_cold_check_attempt(learner_id, unit.unit_id, round_passed, now)
             if not round_passed:
                 repo.clear_failed_cold_items(learner_id, unit.unit_id)
@@ -926,6 +1103,8 @@ def create_app(
         response_model_exclude_none=True,
     )
     def post_my_attempt(attempt: Attempt, learner_id: str = Depends(current_learner_id)):
+        if attempt.activity in (STAGE_REVIEW, RECHECK):
+            return attempt_review(attempt, learner_id)
         build_target = parse_exercise_id(attempt.exercise_id)
         if build_target:
             return attempt_build(build_target, attempt, learner_id)

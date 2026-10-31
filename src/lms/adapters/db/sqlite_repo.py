@@ -6,7 +6,7 @@ Stores learner progress, session state, and the append-only Evidence Ledger.
 from datetime import datetime, timezone
 import json
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from lms.core.cold_check import ColdCheckTimer
 from lms.core.events import EVIDENCE_RECORDED, EventBus, EvidenceRecorded, LedgerWriteRefused
@@ -18,6 +18,7 @@ from lms.core.models import (
     EvidenceEntry,
     EvidenceStrength,
 )
+from lms.core.review import ReviewItem, ReviewResult
 
 # Added after the first release. initialize() adds any that are missing, so fresh
 # and existing databases go through one path and old rows are never rewritten.
@@ -26,6 +27,7 @@ EVIDENCE_LEDGER_ADDED_COLUMNS = {
     "activity": "TEXT",
     "cold_check": "INTEGER NOT NULL DEFAULT 0",
     "seed_id": "TEXT",
+    "review_kind": "TEXT",
 }
 
 
@@ -153,10 +155,41 @@ class SQLiteLearnerRepository:
                 CREATE TABLE IF NOT EXISTS cold_check_item (
                     learner_id TEXT NOT NULL,
                     unit_id TEXT NOT NULL,
-                    skill_id TEXT NOT NULL,
+                    item_id TEXT NOT NULL,
                     passed INTEGER NOT NULL,
                     attempted_at TEXT NOT NULL,
-                    PRIMARY KEY (learner_id, unit_id, skill_id)
+                    PRIMARY KEY (learner_id, unit_id, item_id)
+                );
+                """
+            )
+            # Rounds were per skill before SPEC-16; a part-done old round simply asks again.
+            cold_columns = {row["name"] for row in conn.execute("PRAGMA table_info(cold_check_item)")}
+            if "skill_id" in cold_columns:
+                conn.execute("ALTER TABLE cold_check_item RENAME COLUMN skill_id TO item_id")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS review_item (
+                    learner_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    scope TEXT NOT NULL,
+                    position INTEGER NOT NULL,
+                    exercise_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    skill_id TEXT NOT NULL,
+                    passed INTEGER,
+                    PRIMARY KEY (learner_id, kind, scope, position)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS review_result (
+                    learner_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    scope TEXT NOT NULL,
+                    last_attempt_at TEXT NOT NULL,
+                    passed INTEGER NOT NULL,
+                    PRIMARY KEY (learner_id, kind, scope)
                 );
                 """
             )
@@ -337,28 +370,145 @@ class SQLiteLearnerRepository:
         ]
 
     def get_cold_items(self, learner_id: str, unit_id: str) -> Dict[str, bool]:
-        """skill_id -> passed, for this Cold Check round and earlier passes."""
+        """seed id -> passed, for this Cold Check round and earlier passes."""
         rows = self._get_conn().execute(
-            "SELECT skill_id, passed FROM cold_check_item WHERE learner_id = ? AND unit_id = ?",
+            "SELECT item_id, passed FROM cold_check_item WHERE learner_id = ? AND unit_id = ?",
             (learner_id, unit_id),
         ).fetchall()
-        return {r["skill_id"]: bool(r["passed"]) for r in rows}
+        return {r["item_id"]: bool(r["passed"]) for r in rows}
 
     def record_cold_item(
-        self, learner_id: str, unit_id: str, skill_id: str, passed: bool, attempted_at: datetime
+        self, learner_id: str, unit_id: str, item_id: str, passed: bool, attempted_at: datetime
     ) -> None:
         conn = self._get_conn()
         with conn:
             conn.execute(
                 """
-                INSERT INTO cold_check_item (learner_id, unit_id, skill_id, passed, attempted_at)
+                INSERT INTO cold_check_item (learner_id, unit_id, item_id, passed, attempted_at)
                 VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(learner_id, unit_id, skill_id) DO UPDATE SET
+                ON CONFLICT(learner_id, unit_id, item_id) DO UPDATE SET
                     passed = excluded.passed,
                     attempted_at = excluded.attempted_at
                 """,
-                (learner_id, unit_id, skill_id, int(passed), attempted_at.isoformat()),
+                (learner_id, unit_id, item_id, int(passed), attempted_at.isoformat()),
             )
+
+    @staticmethod
+    def _review_item(row: sqlite3.Row) -> ReviewItem:
+        return ReviewItem(
+            position=row["position"],
+            exercise_id=row["exercise_id"],
+            unit_id=row["unit_id"],
+            skill_id=row["skill_id"],
+            passed=None if row["passed"] is None else bool(row["passed"]),
+        )
+
+    def get_review_items(self, learner_id: str, kind: str, scope: str) -> List[ReviewItem]:
+        rows = self._get_conn().execute(
+            """
+            SELECT * FROM review_item WHERE learner_id = ? AND kind = ? AND scope = ?
+            ORDER BY position ASC
+            """,
+            (learner_id, kind, scope),
+        ).fetchall()
+        return [self._review_item(r) for r in rows]
+
+    def save_review_items(
+        self, learner_id: str, kind: str, scope: str, items: List[ReviewItem]
+    ) -> None:
+        """Store a round once. The first plan wins, so a round cannot change under a learner."""
+        conn = self._get_conn()
+        with conn:
+            conn.executemany(
+                """
+                INSERT INTO review_item
+                    (learner_id, kind, scope, position, exercise_id, unit_id, skill_id, passed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+                ON CONFLICT(learner_id, kind, scope, position) DO NOTHING
+                """,
+                [
+                    (learner_id, kind, scope, i.position, i.exercise_id, i.unit_id, i.skill_id)
+                    for i in items
+                ],
+            )
+
+    def find_open_review_item(
+        self, learner_id: str, kind: str, exercise_id: str
+    ) -> Optional[Tuple[str, ReviewItem]]:
+        row = self._get_conn().execute(
+            """
+            SELECT * FROM review_item
+            WHERE learner_id = ? AND kind = ? AND exercise_id = ? AND passed IS NULL
+            """,
+            (learner_id, kind, exercise_id),
+        ).fetchone()
+        return (row["scope"], self._review_item(row)) if row else None
+
+    def answer_review_item(
+        self, learner_id: str, kind: str, scope: str, position: int, passed: bool
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                UPDATE review_item SET passed = ?
+                WHERE learner_id = ? AND kind = ? AND scope = ? AND position = ?
+                """,
+                (int(passed), learner_id, kind, scope, position),
+            )
+
+    def reopen_review_item(
+        self, learner_id: str, kind: str, scope: str, position: int, exercise_id: str
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                UPDATE review_item SET passed = NULL, exercise_id = ?
+                WHERE learner_id = ? AND kind = ? AND scope = ? AND position = ?
+                """,
+                (exercise_id, learner_id, kind, scope, position),
+            )
+
+    def get_review_result(self, learner_id: str, kind: str, scope: str) -> Optional[ReviewResult]:
+        row = self._get_conn().execute(
+            "SELECT * FROM review_result WHERE learner_id = ? AND kind = ? AND scope = ?",
+            (learner_id, kind, scope),
+        ).fetchone()
+        if row is None:
+            return None
+        return ReviewResult(
+            last_attempt_at=datetime.fromisoformat(row["last_attempt_at"]), passed=bool(row["passed"])
+        )
+
+    def record_review_result(
+        self, learner_id: str, kind: str, scope: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO review_result (learner_id, kind, scope, last_attempt_at, passed)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(learner_id, kind, scope) DO UPDATE SET
+                    last_attempt_at = excluded.last_attempt_at,
+                    passed = excluded.passed
+                """,
+                (learner_id, kind, scope, attempted_at.isoformat(), int(passed)),
+            )
+
+    def get_finished_reviews(self, learner_id: str, kind: str) -> Set[str]:
+        rows = self._get_conn().execute(
+            "SELECT scope FROM review_result WHERE learner_id = ? AND kind = ?",
+            (learner_id, kind),
+        ).fetchall()
+        return {r["scope"] for r in rows}
+
+    def get_all_seen_exercises(self, learner_id: str) -> Set[str]:
+        rows = self._get_conn().execute(
+            "SELECT exercise_id FROM exercise_seen WHERE learner_id = ?", (learner_id,)
+        ).fetchall()
+        return {r["exercise_id"] for r in rows}
 
     def clear_failed_cold_items(self, learner_id: str, unit_id: str) -> None:
         """End of a failed round: failed skills come back, passed ones stay passed."""
@@ -486,8 +636,8 @@ class SQLiteLearnerRepository:
                     entry_id, learner_id, unit_id, skill_id,
                     evidence_category, evidence_strength, assistance_level,
                     demonstration_context, observed_reasoning, recorded_at,
-                    exercise_id, activity, cold_check, seed_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    exercise_id, activity, cold_check, seed_id, review_kind
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -504,6 +654,7 @@ class SQLiteLearnerRepository:
                     entry.activity.value if entry.activity else None,
                     int(entry.cold_check),
                     entry.seed_id,
+                    entry.review_kind,
                 ),
             )
         self.events.publish(
@@ -560,6 +711,7 @@ class SQLiteLearnerRepository:
                     activity=ActivityType(r["activity"]) if r["activity"] else None,
                     cold_check=bool(r["cold_check"]),
                     seed_id=r["seed_id"],
+                    review_kind=r["review_kind"],
                 )
             )
         return entries

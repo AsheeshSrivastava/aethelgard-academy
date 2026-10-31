@@ -2,7 +2,7 @@
 
 Governed by:
 - SPEC-12 section 3 (Catalog)
-- ADR-0016 section 2.6 (a stage build unlocks when every unit has a passed Cold Check)
+- ADR-0019 and SPEC-16 section 3.4 (a passed stage review opens the stage build)
 
 Deterministic and pure: units and Cold Check states come in, views come out.
 """
@@ -19,6 +19,7 @@ from lms.core.models import (
     is_slotted_stage,
     stage_label,
 )
+from lms.core.review import ReviewState, build_is_open
 
 
 class CourseInfo(BaseModel):
@@ -80,6 +81,7 @@ class BuildSummary(BaseModel):
     pending_units: List[str]
     authored: bool = False             # False: a placeholder until the curator writes it
     status: Optional[str] = None       # "draft" | "approved"
+    review_state: Optional[ReviewState] = None  # None when the caller gives no review (SPEC-16)
 
 
 class AuthoredBuild(NamedTuple):
@@ -145,6 +147,7 @@ def build_course_map(
     cold_check_state_of: Callable[[str], ColdCheckState],
     decision_of: Callable[[Unit], ProgressionDecision],
     builds: Mapping[int, AuthoredBuild] = {},
+    reviews: Mapping[int, ReviewState] = {},
 ) -> CourseMap:
     """Group a course's units by stage, in path order; units keep their teaching order."""
     by_stage: Dict[int, List[Unit]] = {}
@@ -154,7 +157,15 @@ def build_course_map(
     return CourseMap(
         course=build_course(course_id, units),
         stages=[
-            _stage_view(stage, by_stage[stage], stage_titles, cold_check_state_of, decision_of, builds.get(stage))
+            _stage_view(
+                stage,
+                by_stage[stage],
+                stage_titles,
+                cold_check_state_of,
+                decision_of,
+                builds.get(stage),
+                reviews.get(stage),
+            )
             for stage in stages_in_path_order(units)
         ],
     )
@@ -167,6 +178,7 @@ def _stage_view(
     cold_check_state_of: Callable[[str], ColdCheckState],
     decision_of: Callable[[Unit], ProgressionDecision],
     authored: Optional[AuthoredBuild] = None,
+    review: Optional[ReviewState] = None,
 ) -> StageView:
     states = {u.unit_id: cold_check_state_of(u.unit_id) for u in units}
     pending = [unit_id for unit_id, state in states.items() if state != ColdCheckState.PASSED]
@@ -180,10 +192,11 @@ def _stage_view(
         build=BuildSummary(
             title=authored.title if authored else f"{label} build",
             kind=authored.kind if authored else "script",
-            locked=bool(pending),
+            locked=not build_is_open(review) if review else bool(pending),
             pending_units=pending,
             authored=authored is not None,
             status=authored.status if authored else None,
+            review_state=review,
         ),
     )
 

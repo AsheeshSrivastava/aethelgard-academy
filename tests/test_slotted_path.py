@@ -310,6 +310,7 @@ class SimpleSeed:
         self.level = ProficiencyLevel.UNDERSTAND
         self.cold_check_eligible = False
         self.curator_approved = True
+        self.template = None
 
 
 # --- Old roadmaps ---

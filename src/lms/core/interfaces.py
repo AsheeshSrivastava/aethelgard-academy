@@ -8,7 +8,7 @@ Follows Hexagonal Architecture:
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Optional, Protocol, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Protocol, Set, Tuple
 from pydantic import BaseModel, Field
 
 from lms.core.cold_check import ColdCheckTimer
@@ -18,6 +18,7 @@ from lms.core.models import (
     AssistanceLevel,
     EvidenceEntry,
 )
+from lms.core.review import ReviewItem, ReviewResult
 
 
 class AxisMode(str, Enum):
@@ -105,8 +106,45 @@ class ILearnerRepository(Protocol):
         ...
 
     def record_cold_item(
-        self, learner_id: str, unit_id: str, skill_id: str, passed: bool, attempted_at: datetime
+        self, learner_id: str, unit_id: str, item_id: str, passed: bool, attempted_at: datetime
     ) -> None:
+        ...
+
+    def get_review_items(self, learner_id: str, kind: str, scope: str) -> List[ReviewItem]:
+        ...
+
+    def save_review_items(
+        self, learner_id: str, kind: str, scope: str, items: List[ReviewItem]
+    ) -> None:
+        ...
+
+    def find_open_review_item(
+        self, learner_id: str, kind: str, exercise_id: str
+    ) -> Optional[Tuple[str, ReviewItem]]:
+        ...
+
+    def answer_review_item(
+        self, learner_id: str, kind: str, scope: str, position: int, passed: bool
+    ) -> None:
+        ...
+
+    def reopen_review_item(
+        self, learner_id: str, kind: str, scope: str, position: int, exercise_id: str
+    ) -> None:
+        ...
+
+    def get_review_result(self, learner_id: str, kind: str, scope: str) -> Optional[ReviewResult]:
+        ...
+
+    def record_review_result(
+        self, learner_id: str, kind: str, scope: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        ...
+
+    def get_finished_reviews(self, learner_id: str, kind: str) -> Set[str]:
+        ...
+
+    def get_all_seen_exercises(self, learner_id: str) -> Set[str]:
         ...
 
     def clear_failed_cold_items(self, learner_id: str, unit_id: str) -> None:

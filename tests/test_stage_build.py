@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 import json
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ from lms.core.builds import (
     public_build,
 )
 from lms.core.events import EVIDENCE_RECORDED, EventBus, EvidenceRecorded, LedgerWriteRefused
+from lms.core.exercises import COLD_CHECK, pool_for
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
@@ -343,10 +345,18 @@ def client(repo, catalog):
     return TestClient(create_app(repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=lambda: T0))
 
 
+@cache
+def cold_exercises():
+    return {u: pool_for(s, COLD_CHECK) for u, s in load_all_roadmaps(Path("reference")).seeds.items()}
+
+
 def pass_cold_checks(repo, units=STAGE_0):
     for unit_id in units:
         repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, unit_id, T0 - timedelta(days=2))
         repo.record_cold_check_attempt(LOCAL_LEARNER_ID, unit_id, True, T0 - timedelta(days=1))
+        # A real round serves its items, so no unseen item is left for a stage review.
+        for exercise_id in cold_exercises().get(unit_id, []):
+            repo.set_current_exercise(LOCAL_LEARNER_ID, unit_id, COLD_CHECK, exercise_id, T0 - timedelta(days=1))
 
 
 def submit(client, files=None, note=NOTE, **extra):

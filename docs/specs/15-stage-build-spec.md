@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-Each stage ends in one build: a small piece of real work that pulls the stage's units together. It is the only place a learner can show Own (ADR-0016). A build unlocks when every unit in its stage has a passed Cold Check.
+Each stage ends in one build: a small piece of real work that pulls the stage's units together. It is the only place a learner can show Own (ADR-0016). A build unlocks when its stage review passes, or when every unit has a passed Cold Check and the stage has no review items (SPEC-16 section 3.4).
 
 Out of scope for now: generated briefs (the canvas's Regenerate brief button). A stage has one authored brief. Other stages keep placeholders until their briefs are written.
 
@@ -83,7 +83,7 @@ StageBuild { exercise_id, course_id, stage, title, kind, status, brief_markdown,
 | Case | Answer |
 | :--- | :--- |
 | Unknown course or stage | `404` |
-| A unit in the stage lacks a passed Cold Check | `423`, and the detail names the units |
+| A unit lacks a passed Cold Check, or the stage review is not passed | `423`, and the detail says which |
 | Unlocked, and no build is written yet | `404` |
 
 The first successful read records when the learner was served the build. Assistance is counted from then.
@@ -171,7 +171,7 @@ Route `/courses/:courseId/stages/:stage/build`, loaded only when opened. The cou
 
 ## 8. Acceptance
 
-1. A stage returns `423` until every unit has a passed Cold Check, on the build, on `build:check` and on attempts.
+1. A stage returns `423` until its build is open (SPEC-16 section 3.4), on the build, on `build:check` and on attempts.
 2. No response holds `check`, `checks.py` or `solution.py` content.
 3. Each check kind is met and not met as specified; a syntax error is reported, not raised.
 4. `sys.exit(0)` and `os._exit(0)` scripts do not pass a behaviour check.

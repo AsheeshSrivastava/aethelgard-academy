@@ -125,3 +125,7 @@ With amendment A, one Strong entry can reach a level above a unit's target while
 - Skills whose main activity is Explain (CO-3, CO-4, CO-5, CO-6) can reach Adapt on Strong Explain evidence. This is what the decision says; tune it if real learner data shows it is too easy.
 - Authoring grows: every target skill needs a Cold Check item, so up to 190 targets need the new item types.
 - One Strong, unassisted entry on a main activity meets the Understand, Apply and Adapt rules at once, so it reaches Adapt straight away. It stays provisional until a second exercise and a passed Cold Check, so it decides Strengthen, not Accelerate.
+
+## Amendment 2026-10-31: stage review
+
+ADR-0019 changes section 2.6. A stage build no longer opens because every unit passed its Cold Check: a passed stage review opens it. When a stage has no unseen item for a review, the old rule still applies (SPEC-16 section 3.4).

@@ -43,7 +43,7 @@ CourseMap  { course: Course, stages: [ { stage, title, units: [UnitSummary], bui
 UnitSummary{ unit_id, title, concept_line, target_skills: [{skill_id, skill_name, goal_level}], authored: bool,
              decision: Decision, cold_check_state }   // for the signed-in learner
 Unit.activities: ["video", "explain", ...unit.methods without "Explain", "playground" (section 3.2), "cold_check"]   // video and explain always first, cold_check always last
-BuildSummary { title, kind: "script" | "mini_project", locked: bool, pending_units: [unit_id] }  // locked until every unit in the stage passed its Cold Check
+BuildSummary { title, kind: "script" | "mini_project", locked: bool, pending_units: [unit_id], review_state }  // SPEC-16 section 3.4
 StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
              files: [{path, starter}], requirements: [{id, label, unit_id}] }   // full shape in SPEC-15
 ```
@@ -140,7 +140,7 @@ ColdCheckStatus { state: "not_ready" | "waiting" | "available" | "passed" | "fai
 - The Cold Check serves only seeds with `cold_check_eligible` and `curator_approved` both true. A unit with no such seed returns `404`.
 - AXIS requests carrying a Cold Check `exercise_id` return `403`; the frontend hides the AXIS panel on this step.
 - A fail sets `failed_waiting` with a new `available_at` 24 h later.
-- `GET /courses/{course_id}/stages/{stage}/build` and attempts on it return `423 Locked` while any unit in the stage lacks a passed Cold Check.
+- `GET /courses/{course_id}/stages/{stage}/build` and attempts on it return `423 Locked` until the build is open (SPEC-16 section 3.4).
 
 ---
 
@@ -177,8 +177,8 @@ Rules:
 
 Cold Check attempts:
 - Accepted only when the status is `available`: `423` otherwise.
-- One item per target skill, one try each. After an attempt the next item for an unfinished skill is served.
-- When the round ends, the unit's Cold Check passes if every item passed. Otherwise it fails and retries in 24 hours, on the failed skills only.
+- A round is 3 to 5 items (SPEC-16 section 2), one try each. After an attempt the next unfinished item is served.
+- When the round ends, the unit's Cold Check passes if every item passed. Otherwise it fails and retries in 24 hours, on the failed items only.
 - `reveal` is never sent on a failed Cold Check, because the same item may come back. AXIS is off, so assistance is always none.
 
 The server derives the evidence entry:

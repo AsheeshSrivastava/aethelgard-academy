@@ -13,7 +13,7 @@ from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.api.app import LOCAL_LEARNER_ID, create_app
-from lms.core.exercises import HIDDEN_REQUIRED, parse_seed, seed_variants, to_exercise
+from lms.core.exercises import HIDDEN_REQUIRED, cold_round, parse_seed, seed_variants, to_exercise
 from lms.core.models import (
     AssistanceLevel,
     EvidenceCategory,
@@ -181,9 +181,8 @@ def walk_everything(client, repo, clock, catalog):
             if activity == "explain":
                 continue
             if activity == "cold_check":
-                for skill in unit.target_skills[1:]:
-                    previous = unit.target_skills[unit.target_skills.index(skill) - 1]
-                    repo.record_cold_item(LOCAL_LEARNER_ID, unit_id, previous.skill_id, True, clock())
+                for previous in cold_round(unit, catalog.seeds[unit_id])[:-1]:
+                    repo.record_cold_item(LOCAL_LEARNER_ID, unit_id, previous.seed_id, True, clock())
                     res = client.get(exercise_url(unit_id, activity))
                     assert res.status_code == 200, (unit_id, activity, res.text)
                     served.append(res)
