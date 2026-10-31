@@ -6,13 +6,15 @@ learner first. Other modes stream as the model writes.
 """
 
 import re
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Tuple
 
 from lms.adapters.ai.socratic_guardrail import (
     GUIDING_INQUIRY,
+    PROMPT_TAG_NAMES,
     REFLECTION_PROMPT,
     AssistanceClassifier,
     SocraticGuardrail,
+    remove_prompt_tags,
 )
 from lms.core.interfaces import AxisMode, AxisQuery
 
@@ -67,6 +69,24 @@ class SocraticStreamFilter:
         return [chunk]
 
 
+def strip_prompt_tags(deltas: Iterable[str]) -> Iterator[str]:
+    """Remove echoed prompt tags, even when a tag is split across deltas."""
+    held = ""
+    for delta in deltas:
+        held = remove_prompt_tags(held + delta)
+        # Keep back only text that could still become a tag.
+        start = held.rfind("<")
+        possible = start >= 0 and any(
+            f"<{name}>".startswith(held[start:]) or f"</{name}>".startswith(held[start:])
+            for name in PROMPT_TAG_NAMES
+        )
+        ready, held = (held[:start], held[start:]) if possible else (held, "")
+        if ready:
+            yield ready
+    if held:
+        yield held
+
+
 def stream_axis(
     axis: Any,
     query: AxisQuery,
@@ -78,7 +98,7 @@ def stream_axis(
     gate = SocraticStreamFilter(guardrail) if query.mode == AxisMode.SOCRATIC else None
     sent: List[str] = []
 
-    for delta in deltas:
+    for delta in strip_prompt_tags(deltas):
         for chunk in gate.feed(delta) if gate else [delta]:
             sent.append(chunk)
             yield "token", {"text": chunk}

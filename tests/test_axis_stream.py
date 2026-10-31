@@ -8,7 +8,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from lms.adapters.ai.axis_stream import SocraticStreamFilter, stream_axis
+from lms.adapters.ai.axis_stream import SocraticStreamFilter, stream_axis, strip_prompt_tags
 from lms.adapters.ai.local_llm_companion import LocalLLMCompanion, LocalLLMError
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -269,6 +269,34 @@ def test_prose_about_code_still_passes(sentence):
     assert sentence in filtered([sentence + " "])
 
 
+def test_anything_inside_a_fence_is_withheld_even_plain_words():
+    text = filtered(["```\nThis looks like plain words.\n```\nWhat next?"])
+
+    assert "plain words" not in text
+    assert "What next?" in text
+
+
+def test_no_empty_chunks_are_released():
+    gate = SocraticStreamFilter(GUARD)
+
+    released = gate.feed("What now? ") + gate.finish()
+
+    assert all(released)
+
+
+def test_the_model_sees_the_resolved_learner(repo, catalog):
+    seen = []
+
+    class Spy(MockAxisCompanion):
+        def stream(self, query):
+            seen.append(query.learner_id)
+            return super().stream(query)
+
+    stream(make_client(repo, catalog, Spy()), learner_id="someone_else")
+
+    assert seen == [LOCAL_LEARNER_ID]
+
+
 def test_every_released_chunk_is_clean_on_its_own():
     gate = SocraticStreamFilter(GUARD)
     released = []
@@ -310,6 +338,44 @@ def test_socratic_stream_never_emits_a_code_block_end_to_end(repo, catalog):
     assert "run_intake" not in tokens(events)
     assert events[-1][0] == "done"
     assert events[-1][1]["assistance_level"] != AssistanceLevel.SUPPLIED_REASONING.value
+
+
+# --- Prompt tags echoed by a model ---
+
+
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        ["<learner_query>What type is it?</learner_query>"],
+        ["<learner", "_query>What ", "type is it?</lear", "ner_query>"],
+        ["<learner_code>What type is it?"],
+        ["What type is it?<execution_stderr>"],
+    ],
+)
+def test_echoed_prompt_tags_never_reach_the_learner(chunks):
+    assert "".join(strip_prompt_tags(iter(chunks))) == "What type is it?"
+
+
+def test_ordinary_angle_brackets_survive():
+    assert "".join(strip_prompt_tags(iter(["if a <", " b then ", "<3 stays"]))) == "if a < b then <3 stays"
+
+
+def test_tags_are_stripped_in_every_mode(repo, catalog):
+    client = make_client(repo, catalog, ScriptedCompanion(["<learner_query>Hello there.</learner_query>"]))
+
+    for mode in ("Socratic", "Coach", "Hybrid"):
+        assert "learner_query" not in tokens(stream(client, mode=mode))
+
+
+def test_consult_strips_echoed_tags():
+    def handler(request):
+        return httpx.Response(
+            200, json={"choices": [{"message": {"content": "<learner_query>What type?</learner_query>"}}]}
+        )
+
+    response = local_companion(handler).consult(query())
+
+    assert "learner_query" not in response.reply
 
 
 # --- The local model ---

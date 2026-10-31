@@ -22,7 +22,11 @@ import httpx
 from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
-from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
+from lms.adapters.ai.socratic_guardrail import (
+    AssistanceClassifier,
+    SocraticGuardrail,
+    remove_prompt_tags,
+)
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse, IAXISCompanion
 from lms.core.rag_contracts import verify_passage
 
@@ -242,7 +246,7 @@ class LocalLLMCompanion:
             # Handle deep-thinking/reasoning models (e.g. Qwen3.6-35B-A3B) where answer is in reasoning_content or content
             if not raw_content.strip() and "reasoning_content" in choice:
                 raw_content = choice["reasoning_content"] or ""
-            raw_reply = str(raw_content).strip()
+            raw_reply = remove_prompt_tags(str(raw_content)).strip()
             self.last_backend_used = f"LocalLLM ({target_model} @ {self.base_url})"
         except Exception as exc:
             if self.fallback_to_mock:

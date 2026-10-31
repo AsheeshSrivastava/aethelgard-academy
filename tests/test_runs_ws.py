@@ -106,10 +106,13 @@ def test_learner_code_cannot_read_the_pause_token():
 
 
 def test_wall_clock_limit_ends_a_program_waiting_for_input():
+    started = time.monotonic()
+
     events = run("input()", limits=RunLimits(wall_seconds=0.5))
 
     assert events[-1]["type"] == "exit"
     assert events[-1]["timed_out"] is True
+    assert time.monotonic() - started < 10
 
 
 def test_cpu_limit_ends_a_busy_loop():

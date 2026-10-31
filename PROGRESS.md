@@ -2,13 +2,14 @@
 
 ## Resume here
 
-- **State:** steps 1 to 5 done. Step 6 is next, then the frontend. Push is on hold.
-- **Step 6:** `WS /api/v1/runs` with `input()` pausing and limits (5 s CPU, 120 s wall, 64 KB, no network; SPEC-12 section 7). `POST /api/v1/axis/stream` as SSE with `exercise_id` and `page`, sentence buffering in Socratic mode, guardrail before `done`, assistance logged (section 8). AXIS returns 403 during a Cold Check, on consult and stream. Must work with `MOCK_AI=true` and the local OpenAI-compatible model through existing config. Never print keys.
+- **State:** backend steps 1 to 6 done. The frontend is next, then step 7 stage builds. Push is on hold.
+- **Before running:** stop any running `lms serve`, then run `uv sync` once. A running server holds `lms.exe`, so `websockets` was installed with `uv pip install`.
+- **Owner decision open:** AXIS at runtime retrieves from `data/index`, which holds upstream documentation, not only the proprietary curriculum. That appears to conflict with the Provenance Firewall (AGENTS.md section 5, ADR-0003).
 
 - **Branch:** `main` (tracking `origin/main` on Entire)
 - **Latest Commit:** see `git log`
 - **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). Push is on hold by owner decision; recent commits are local only.
-- **Current Phase:** Learner Experience Backend: steps 1 to 5 done, live runs and AXIS streaming (step 6) next (`725` Tests Passing)
+- **Current Phase:** Learner Experience Backend: steps 1 to 6 done, frontend next (`799` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -19,7 +20,7 @@
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
 | **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 13)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0017) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks, Exercise Seeds, Attempts and Grader (`725` tests passing) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks, Exercise Seeds, Attempts and Grader, Interactive Runs, AXIS Streaming (`799` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups, syntax failures, malformed input streams |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -126,7 +127,7 @@
       - `llamaindex-docs` (`619d746`): 109 sources (MIT, LlamaIndex data framework documentation)
       - `llama-index-core==0.14.25`: pinned in `pyproject.toml` (`[dependency-groups] variants`) for deterministic boundary evaluation.
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
-  - 725 automated tests passing.
+  - 799 automated tests passing.
 
 ---
 
@@ -141,6 +142,6 @@
 
 ## 4. Next Action
 - Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before other learners use it.
-- Steps 4 and 5 are done: exercises, attempts, the grader and the Cold Check round.
-- Next is step 6 live runs and AXIS streaming, then the frontend, then step 7 stage builds. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
+- Steps 4 to 6 are done: exercises, attempts, the grader, the Cold Check round, interactive runs and AXIS streaming.
+- Next is the frontend, then step 7 stage builds. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
 - Separate open item: benchmark results (BAAI/bge-m3 vs jina-embeddings-v2-base-en) for the upstream RAG pipeline.

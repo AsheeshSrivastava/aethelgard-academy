@@ -18,6 +18,14 @@ GUIDING_INQUIRY = (
 )
 REFLECTION_PROMPT = "\n\nWhat is your hypothesis for why this step behaves the way it does?"
 
+PROMPT_TAG_NAMES = ("learner_query", "learner_code", "execution_stderr")
+PROMPT_TAG_PATTERN = re.compile(rf"</?(?:{'|'.join(PROMPT_TAG_NAMES)})>")
+
+
+def remove_prompt_tags(text: str) -> str:
+    """Models sometimes echo the tags our prompt wraps learner text in."""
+    return PROMPT_TAG_PATTERN.sub("", text)
+
 
 class SocraticBoundaryViolation(Exception):
     """Raised when an AI response violates the Socratic zero-code boundary."""
