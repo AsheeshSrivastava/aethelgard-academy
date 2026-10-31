@@ -1,0 +1,89 @@
+/* Design tokens from the owner-approved canvas (ADR-0014). */
+:root {
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --accent: #0b6e6e;
+  --accent-strong: #084f4f;
+  --accent-soft: #e3f0ef;
+  --accent-line: #a9cfcd;
+  --on-accent: #ffffff;
+
+  --ground: #f4f5f7;
+  --surface: #ffffff;
+  --surface-muted: #f9fafb;
+  --line: #e3e6eb;
+  --line-strong: #d5dae1;
+  --text: #12161c;
+  --text-soft: #3d4651;
+  --text-muted: #5b6470;
+
+  --warm: #fbf6ee;
+  --warm-line: #ead9bf;
+  --warm-text: #8a5200;
+  --danger: #a4262c;
+  --danger-soft: #fdecec;
+
+  --band: #12161c;
+  --band-line: #2a313b;
+  --band-text: #c9ced6;
+  --band-accent: #7fd3d1;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --accent: #5cc4c0;
+  --accent-strong: #8fdcd9;
+  --accent-soft: #15302f;
+  --accent-line: #2f6462;
+  --on-accent: #06201f;
+
+  --ground: #0f1318;
+  --surface: #171c23;
+  --surface-muted: #1d232b;
+  --line: #2a313b;
+  --line-strong: #39424e;
+  --text: #e8ecf1;
+  --text-soft: #c9ced6;
+  --text-muted: #9aa4b1;
+
+  --warm: #2a2115;
+  --warm-line: #4d3c22;
+  --warm-text: #e7bf85;
+  --danger: #f2a0a0;
+  --danger-soft: #3a1c1e;
+
+  --band: #0a0d11;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --accent: #5cc4c0;
+    --accent-strong: #8fdcd9;
+    --accent-soft: #15302f;
+    --accent-line: #2f6462;
+    --on-accent: #06201f;
+
+    --ground: #0f1318;
+    --surface: #171c23;
+    --surface-muted: #1d232b;
+    --line: #2a313b;
+    --line-strong: #39424e;
+    --text: #e8ecf1;
+    --text-soft: #c9ced6;
+    --text-muted: #9aa4b1;
+
+    --warm: #2a2115;
+    --warm-line: #4d3c22;
+    --warm-text: #e7bf85;
+    --danger: #f2a0a0;
+    --danger-soft: #3a1c1e;
+
+    --band: #0a0d11;
+
+    color-scheme: dark;
+  }
+}

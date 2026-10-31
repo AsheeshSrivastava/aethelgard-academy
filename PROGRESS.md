@@ -2,7 +2,7 @@
 
 ## Resume here
 
-- **State:** backend steps 1 to 6 done. The frontend is next, then step 7 stage builds. Push is on hold.
+- **State:** backend steps 1 to 6 and frontend phase 1 done (front page, courses, course map, unit map, My progress). Frontend phase 2 is next: the lesson page. Then step 7 stage builds. Push is on hold.
 - **Before running:** stop any running `lms serve`, then run `uv sync` once. A running server holds `lms.exe`, so `websockets` was installed with `uv pip install`.
 - **Owner decision open:** AXIS at runtime retrieves from `data/index`, which holds upstream documentation, not only the proprietary curriculum. That appears to conflict with the Provenance Firewall (AGENTS.md section 5, ADR-0003).
 
@@ -143,5 +143,5 @@
 ## 4. Next Action
 - Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before other learners use it.
 - Steps 4 to 6 are done: exercises, attempts, the grader, the Cold Check round, interactive runs and AXIS streaming.
-- Next is the frontend, then step 7 stage builds. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
+- Frontend phase 1 is done; phase 2 (lesson page) is next, then step 7 stage builds. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
 - Separate open item: benchmark results (BAAI/bge-m3 vs jina-embeddings-v2-base-en) for the upstream RAG pipeline.
