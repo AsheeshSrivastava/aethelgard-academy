@@ -33,8 +33,10 @@ ACTIVITY_EVIDENCE: Dict[ActivityType, EvidenceCategory] = {
 }
 
 # Activities a machine can grade with no AI: fixed answers or sandbox checks.
-# Evaluate and Direct count only when the exercise carries a curator-written
-# answer key (ADR-0016 amendment B, SPEC-13).
+# Evaluate and Direct need a curator-written answer key (ADR-0016 amendment B).
+# Explain, Specify and Decompose need a SPEC-13 item type (amendment C).
+# This judges by type only, because seeds do not load yet, so every real unit
+# passes. SPEC-13 section 8 replaces it with a per-skill seed check.
 DETERMINISTIC_ACTIVITIES = {
     ActivityType.PREDICT,
     ActivityType.TRACE,
@@ -43,6 +45,9 @@ DETERMINISTIC_ACTIVITIES = {
     ActivityType.BUILD,
     ActivityType.EVALUATE,
     ActivityType.DIRECT,
+    ActivityType.EXPLAIN,
+    ActivityType.SPECIFY,
+    ActivityType.DECOMPOSE,
 }
 
 

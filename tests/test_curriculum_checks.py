@@ -85,15 +85,16 @@ def test_own_needs_a_stage_build():
     assert errors([own], stages_with_build={("backend", 1)}) == ["own-needs-stage-build"]
 
 
-def test_cold_check_needs_a_deterministic_activity():
-    assert errors([unit(methods=[ActivityType.EXPLAIN, ActivityType.SPECIFY])]) == [
-        "cold-check-not-graded"
-    ]
+def test_cold_check_needs_a_gradable_activity():
+    no_activities = unit().model_copy(update={"methods": []})
+
+    assert errors([no_activities]) == ["cold-check-not-graded"]
 
 
-@pytest.mark.parametrize("activity", [ActivityType.EVALUATE, ActivityType.DIRECT])
-def test_fixed_answer_activities_can_carry_a_cold_check(activity):
-    assert errors([unit(methods=[ActivityType.EXPLAIN, activity])]) == []
+@pytest.mark.parametrize("activity", list(ActivityType))
+def test_every_activity_type_has_a_gradable_form(activity):
+    """By type until seeds load; SPEC-13 section 8 then checks per skill."""
+    assert errors([unit(methods=[activity])]) == []
 
 
 def test_finding_names_the_unit_and_skill():
@@ -176,7 +177,7 @@ def test_a_new_catalog_has_no_findings():
 KNOWN_FINDINGS = {
     "apply-needs-perform": 0,
     "adapt-needs-diagnose": 0,
-    "cold-check-not-graded": 2,   # BE-7.1 and AI-0.1
+    "cold-check-not-graded": 0,
     "own-needs-stage-build": 30,  # Clears when stage builds are curated
     "stage-missing-evidence": 0,
 }
