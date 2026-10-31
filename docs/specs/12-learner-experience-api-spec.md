@@ -57,7 +57,7 @@ The curator decides each unit's content, activities, their order and their scaff
 Checks run when curriculum is loaded (and in CI):
 - **Error:** a unit's target level needs evidence its activities cannot produce (Apply needs a Perform/Solve activity or the skill's main activity; Adapt needs a Diagnose/Judge/Transfer activity or the skill's main activity; Own needs the stage build). Main activities come from Learning Method v2 (ADR-0016 amendment A).
 - **Warning:** a stage has no activity producing one of the three evidence categories (Explain/Reason, Perform/Solve, Diagnose/Judge/Transfer). A stage uses 5 to 6 activity types, not all 10.
-- **Error:** a Cold Check would contain no deterministically graded activity. Predict, Trace, Modify, Debug & Validate and Build are gradable; Evaluate and Direct are gradable when the exercise carries a curator-written fixed answer key (ADR-0016 amendment B, SPEC-13).
+- **Error:** a Cold Check would contain no deterministically graded activity. Predict, Trace, Modify, Debug & Validate and Build are gradable; Evaluate and Direct are gradable with a curator-written fixed answer key (ADR-0016 amendment B); Explain, Specify and Decompose are gradable only through SPEC-13's item types (ADR-0016 amendment C). Until seeds load, this is judged by activity type; the seed loader replaces it with a per-skill check (SPEC-13 section 8).
 
 Activities and evidence categories:
 
@@ -142,6 +142,7 @@ The server derives the evidence entry:
 | debug & validate | Diagnose / Judge / Transfer | Strong if fixed and verified |
 | cold_check | category of the skill probed | Strong if passed, Weak if not (assistance always none) |
 | build | Perform / Solve (Own context per ADR-0016) | Strong if all requirements met |
+| SPEC-13 item types | category of the activity | Strong if the item passes first try, Moderate after retries, Weak if not |
 
 Assistance level for the entry is the highest level AXIS logged against that `exercise_id` since it was served (ADR-0009). `SUPPLIED_REASONING` forces Weak.
 

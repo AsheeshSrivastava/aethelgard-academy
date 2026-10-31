@@ -105,6 +105,17 @@ An entry whose `activity` is its skill's main activity now also qualifies:
 ### B. Fixed-answer Evaluate and Direct are gradable (changes section 2.6)
 A Cold Check needs a deterministically graded activity. Evaluate and Direct now count when the exercise carries a curator-written fixed answer key, for example "choose the trustworthy output" or "pick the correct instruction". No AI grades them. The key format is defined in SPEC-13.
 
-### C. Consequences
+### C. A Cold Check counts only for what it tests (decided 2026-10-31)
+190 skill targets have Explain, Specify or Decompose as their main activity, and amendment B left those activities with no machine-graded form. The owner rejected giving blanket credit at the unit's target level: a pass would then record evidence for a skill that was never tested, which a production platform cannot defend.
+
+- **A passed Cold Check counts only for the skill it tests, through that skill's own main activity.** One item gives evidence for one skill. A unit needs an item for each target skill.
+- **Explain, Specify and Decompose are Cold Check eligible through deterministic item types** defined in SPEC-13: `specify_by_tests`, `specify_contract`, `decompose_plan`, `decompose_code`, `explain_spot_flaw` and `explain_model_choice`.
+- **Free-text explanation stays ungraded practice:** the CO-6 Solid/Shaky check works as before and is never part of a Cold Check. AI never grades a Cold Check.
+- **Until a skill has an item, it stays provisional.** The platform says "not yet proven" rather than claiming support it cannot show.
+
+The sentence in section 2.6 that a pass records an entry "at the unit's target level" is read with this rule: the entry is for the tested skill only.
+
+### D. Consequences
 - Skills whose main activity is Explain (CO-3, CO-4, CO-5, CO-6) can reach Adapt on Strong Explain evidence. This is what the decision says; tune it if real learner data shows it is too easy.
+- Authoring grows: every target skill needs a Cold Check item, so up to 190 targets need the new item types.
 - One Strong, unassisted entry on a main activity meets the Understand, Apply and Adapt rules at once, so it reaches Adapt straight away. It stays provisional until a second exercise and a passed Cold Check, so it decides Strengthen, not Accelerate.
