@@ -279,7 +279,7 @@ def test_fresh_learner_starts_with_explain_in_the_first_unit():
 def test_next_activity_is_the_first_one_not_yet_tried():
     entries = [solid(), make(activity=ActivityType.PREDICT, category=EvidenceCategory.EXPLAIN_REASON)]
 
-    assert view([unit()], entries).next_action.activity == "debug & validate"
+    assert view([unit()], entries).next_action.activity == "debug-validate"
 
 
 def test_finished_units_are_skipped():
@@ -329,7 +329,7 @@ def test_after_a_failed_cold_check_the_learner_practises_the_unit():
     action = view([unit()], tried, statuses(PY_1_1=ColdCheckState.FAILED_WAITING)).next_action
 
     assert action.decision == ProgressionDecision.STRENGTHEN
-    assert action.activity == "debug & validate"
+    assert action.activity == "debug-validate"
 
 
 def test_a_unit_without_target_skills_is_listed_but_gives_no_next_action():

@@ -52,9 +52,8 @@ def test_cli_pull_and_verify_command(tmp_path):
     assert verify_result["success"] is True
     assert "Verification passed" in verify_result["message"]
 
-    # Check evidence was recorded in ledger
-    ledger = repo.get_evidence_ledger(learner_id="local_dev_learner")
-    assert len(ledger) > 0
+    # PY-0.4's playground is ungraded practice (SPEC-12 section 3.2)
+    assert repo.get_evidence_ledger(learner_id="local_dev_learner") == []
 
 
 def test_cli_ask_socratic_guardrail(tmp_path):

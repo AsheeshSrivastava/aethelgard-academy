@@ -65,7 +65,7 @@ class UnitView(BaseModel):
 class NextAction(BaseModel):
     unit_id: str
     skill_id: str
-    activity: str                      # "explain", "predict", ..., "cold_check"
+    activity: str                      # A slug: "explain", "debug-validate", "cold_check"
     decision: ProgressionDecision
     message: str
 
@@ -204,7 +204,7 @@ def _next_activity(
 ) -> str:
     """The smallest next probe: an activity of the unit (ADR-0016 2.5)."""
     if decision == ProgressionDecision.REBUILD:
-        return ActivityType.EXPLAIN.value.lower()
+        return ActivityType.EXPLAIN.slug
     if state == ColdCheckState.AVAILABLE:
         return "cold_check"
 
@@ -214,4 +214,4 @@ def _next_activity(
             tried.add(ActivityType.EXPLAIN if is_concept_check(e) else e.activity)
     untried = [activity for activity in unit.methods if activity not in tried]
     # Everything tried: practise again on the unit's last activity.
-    return (untried[0] if untried else unit.methods[-1]).value.lower()
+    return (untried[0] if untried else unit.methods[-1]).slug

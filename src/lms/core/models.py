@@ -61,6 +61,15 @@ class ActivityType(str, Enum):
     EVALUATE = "Evaluate"                # Compare trade-offs, review AI output, verify trust
     DIRECT = "Direct"                    # Direct AI/tool purposefully with boundary control
 
+    @property
+    def slug(self) -> str:
+        """URL form, e.g. "debug-validate"."""
+        return self.value.lower().replace(" & ", "-")
+
+
+ACTIVITY_BY_SLUG: Dict[str, ActivityType] = {a.slug: a for a in ActivityType}
+GRADED_PLAYGROUND_ACTIVITIES = (ActivityType.MODIFY, ActivityType.BUILD)
+
 
 class TargetSkill(BaseModel):
     skill_id: str                      # e.g., "CO-1", "BU-1", "VE-6", "SP-1"
@@ -130,9 +139,15 @@ class Unit(BaseModel):
     @computed_field
     @property
     def activities(self) -> List[str]:
-        """Lesson steps, in order (SPEC-12 section 3)."""
-        middle = [m.value.lower() for m in self.methods if m != ActivityType.EXPLAIN]
+        """Lesson steps, in order (SPEC-12 sections 3 and 3.2)."""
+        middle = [m.slug for m in self.methods if m != ActivityType.EXPLAIN]
+        if not self.has_graded_playground:
+            middle.append("playground")
         return ["video", "explain", *middle, "cold_check"]
+
+    @property
+    def has_graded_playground(self) -> bool:
+        return any(m in GRADED_PLAYGROUND_ACTIVITIES for m in self.methods)
 
 
 class EvidenceEntry(BaseModel):

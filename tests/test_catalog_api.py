@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,7 +17,7 @@ from lms.adapters.curriculum.loader import (
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.api.app import LOCAL_LEARNER_ID, create_app
-from lms.core.models import ActivityType, ProficiencyLevel, TargetSkill, Unit
+from lms.core.models import ACTIVITY_BY_SLUG, ActivityType, ProficiencyLevel, TargetSkill, Unit
 
 T0 = datetime(2026, 6, 1, 9, 0, tzinfo=timezone.utc)
 
@@ -120,7 +121,31 @@ def test_activities_start_with_video_explain_and_end_with_cold_check():
         "PY-1.1", 1, [ActivityType.EXPLAIN, ActivityType.PREDICT, ActivityType.DEBUG_VALIDATE]
     )
 
-    assert unit.activities == ["video", "explain", "predict", "debug & validate", "cold_check"]
+    assert unit.activities == [
+        "video",
+        "explain",
+        "predict",
+        "debug-validate",
+        "playground",
+        "cold_check",
+    ]
+
+
+@pytest.mark.parametrize("activity", [ActivityType.MODIFY, ActivityType.BUILD])
+def test_graded_playground_activities_add_no_separate_step(activity):
+    unit = make_unit("PY-1.1", 1, [ActivityType.EXPLAIN, activity])
+
+    assert unit.activities == ["video", "explain", activity.slug, "cold_check"]
+
+
+def test_every_activity_slug_maps_back_to_its_type():
+    assert ACTIVITY_BY_SLUG["debug-validate"] == ActivityType.DEBUG_VALIDATE
+    assert {a: ACTIVITY_BY_SLUG[a.slug] for a in ActivityType} == {a: a for a in ActivityType}
+
+
+def test_activities_are_safe_in_urls(full_catalog):
+    for unit in full_catalog.list_all_units():
+        assert all(re.fullmatch(r"[a-z_-]+", a) for a in unit.activities), unit.unit_id
 
 
 def test_unit_route_returns_activities(client):

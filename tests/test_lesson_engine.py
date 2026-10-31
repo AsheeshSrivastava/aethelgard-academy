@@ -105,12 +105,31 @@ def test_cli_verify_authored_lesson(tmp_path):
     pass_res = handle_verify_command("PY-0.4", workspace, learner_id="learner_001", repo=repo)
     assert pass_res["success"] is True
 
-    # Check evidence was logged to ledger
+    # PY-0.4 has no Modify or Build, so its playground is practice (SPEC-12 section 3.2)
+    assert pass_res["evidence_logged"] is False
+    assert repo.get_evidence_ledger("learner_001") == []
+
+
+def test_cli_verify_logs_evidence_when_the_unit_has_a_graded_playground(tmp_path):
+    workspace = tmp_path / "workspace"
+    unit_dir = workspace / "PY-1.7"
+    unit_dir.mkdir(parents=True)
+    (unit_dir / "solution.py").write_text("x = 1\n", encoding="utf-8")
+    (unit_dir / "test_solution.py").write_text(
+        "def test_x():\n    assert x == 1\n", encoding="utf-8"
+    )
+    repo = SQLiteLearnerRepository(db_path=":memory:")
+    repo.initialize()
+
+    result = handle_verify_command("PY-1.7", workspace, learner_id="learner_001", repo=repo)
+
+    assert result["success"] is True
+    assert result["evidence_logged"] is True
     entries = repo.get_evidence_ledger("learner_001")
-    assert len(entries) >= 1
-    assert entries[0].skill_id == "CO-1"
+    assert entries[0].skill_id == "BU-1"
     assert entries[0].evidence_category == EvidenceCategory.PERFORM_SOLVE
     assert entries[0].evidence_strength == EvidenceStrength.STRONG
+    assert entries[0].activity == ActivityType.MODIFY
 
 
 def test_cli_concept_check_soft_gate(tmp_path):

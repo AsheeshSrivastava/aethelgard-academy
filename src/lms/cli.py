@@ -13,6 +13,7 @@ from lms.adapters.curriculum.loader import load_roadmap_from_file
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.models import (
+    GRADED_PLAYGROUND_ACTIVITIES,
     AssistanceLevel,
     ConceptCheck,
     EvidenceCategory,
@@ -140,32 +141,41 @@ def handle_verify_command(
             "errors": result.assertion_errors,
         }
 
-    # Record evidence in repository
     if repo is None:
         repo = SQLiteLearnerRepository()
         repo.initialize()
 
     catalog = _get_default_catalog()
     unit = catalog.get_unit(unit_id)
-    skill_id = unit.target_skills[0].skill_id if (unit and unit.target_skills) else "CO-1"
+    repo.save_unit_progress(learner_id=learner_id, unit_id=unit_id, status="Completed")
+
+    # The playground is ungraded practice unless the unit has Modify or Build (SPEC-12 section 3.2).
+    if not (unit and unit.has_graded_playground):
+        return {
+            "success": True,
+            "message": f"Verification passed for {unit_id}! This practice records no evidence.",
+            "duration_ms": result.duration_ms,
+            "evidence_logged": False,
+        }
 
     entry = EvidenceEntry(
         learner_id=learner_id,
         unit_id=unit_id,
-        skill_id=skill_id,
+        skill_id=unit.target_skills[0].skill_id if unit.target_skills else "CO-1",
         evidence_category=EvidenceCategory.PERFORM_SOLVE,
         evidence_strength=EvidenceStrength.STRONG,
         assistance_level=AssistanceLevel.NONE,
         demonstration_context=f"Local CLI verify for {unit_id}",
         observed_reasoning=f"Passed all local assertions in {result.duration_ms}ms",
+        activity=next(m for m in unit.methods if m in GRADED_PLAYGROUND_ACTIVITIES),
     )
     repo.record_evidence(entry)
-    repo.save_unit_progress(learner_id=learner_id, unit_id=unit_id, status="Completed")
 
     return {
         "success": True,
         "message": f"Verification passed for {unit_id}! Evidence logged to ledger.",
         "duration_ms": result.duration_ms,
+        "evidence_logged": True,
     }
 
 
