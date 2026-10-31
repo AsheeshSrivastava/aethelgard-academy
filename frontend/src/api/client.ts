@@ -9,6 +9,9 @@ export type ProficiencyView = Schemas["ProficiencyView"];
 export type EvidenceEntry = Schemas["EvidenceEntry"];
 export type Decision = Schemas["ProgressionDecision"];
 export type UnitState = Schemas["UnitState"];
+export type Exercise = Schemas["Exercise"];
+export type AttemptResult = Schemas["AttemptResult"];
+export type ExplainResponse = Schemas["ExplainResponse"];
 
 const BASE = "/api/v1";
 
@@ -36,6 +39,10 @@ function query(params: Record<string, string | number | undefined>): string {
   return pairs.length ? `?${search}` : "";
 }
 
+function json(method: string, body: unknown): RequestInit {
+  return { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+}
+
 export const api = {
   courses: () => request<Course[]>("/courses"),
   courseMap: (courseId: string) => request<CourseMap>(`/courses/${courseId}`),
@@ -48,4 +55,16 @@ export const api = {
       `/learners/me/proficiency${query({ course_id: params.courseId, stage: params.stage })}`,
     ),
   ledger: (skillId?: string) => request<EvidenceEntry[]>(`/learners/me/ledger${query({ skill_id: skillId })}`),
+  saveUnitState: (unitId: string, state: UnitState) =>
+    request<UnitState>(`/learners/me/units/${unitId}/state`, json("PUT", state)),
+  exercise: (unitId: string, activity: string) =>
+    request<Exercise>(`/learners/me/units/${unitId}/activities/${activity}/exercise`),
+  regenerate: (unitId: string, activity: string) =>
+    request<Exercise>(`/learners/me/units/${unitId}/activities/${activity}/exercises:regenerate`, { method: "POST" }),
+  attempt: (attempt: Schemas["Attempt"]) => request<AttemptResult>("/learners/me/attempts", json("POST", attempt)),
+  explain: (unitId: string, explanation: string) =>
+    request<ExplainResponse>("/explain", json("POST", { unit_id: unitId, explanation })),
+  getDraft: (exerciseId: string) => request<Schemas["Draft"]>(`/learners/me/drafts/${exerciseId}`),
+  saveDraft: (exerciseId: string, files: Record<string, string>) =>
+    request<void>(`/learners/me/drafts/${exerciseId}`, json("PUT", { files })),
 };

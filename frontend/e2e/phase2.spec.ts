@@ -1,0 +1,223 @@
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
+
+import { expect, test, type Page } from "@playwright/test";
+
+const SHOTS = process.env.SCREENSHOT_DIR;
+const UNIT = "/units/PY-0.1";
+
+async function shot(page: Page, name: string) {
+  if (SHOTS) await page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true });
+}
+
+/** Stands in for the 24-hour wait: only the throwaway test database changes, never the app. */
+function moveClockForward(unitId: string) {
+  const script = `
+import sqlite3, sys
+from datetime import datetime, timedelta, timezone
+db = sqlite3.connect(sys.argv[1])
+past = (datetime.now(timezone.utc) - timedelta(hours=25)).isoformat()
+with db:
+    db.execute("UPDATE unit_cold_check SET completed_at = ?, last_attempt_at = CASE WHEN last_attempt_at IS NULL THEN NULL ELSE ? END WHERE unit_id = ?", (past, past, sys.argv[2]))
+`;
+  execFileSync("uv", ["run", "--no-sync", "python", "-c", script, process.env.LMS_E2E_DB!, unitId], { cwd: ".." });
+}
+
+async function replaceCode(page: Page, code: string) {
+  await page.locator(".cm-content").click();
+  await page.keyboard.press("Control+A");
+  await page.keyboard.press("Delete");
+  await page.keyboard.insertText(code);
+}
+
+async function expectNoSideScroll(page: Page) {
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+}
+
+const rail = (page: Page) => page.getByRole("navigation", { name: "Lesson steps" });
+const axis = (page: Page) => page.getByRole("complementary", { name: "AXIS facilitator" });
+
+test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.request.post("/api/v1/learners/me/units/PY-0.1/reset");
+
+  // Unit map into the lesson
+  await page.goto(UNIT);
+  await page.getByRole("link", { name: /Start lesson|Continue lesson/ }).click();
+  await expect(page).toHaveURL(/\/units\/PY-0\.1\/\w+/);
+  await page.goto(`${UNIT}/video`);
+
+  // Video
+  await expect(page.getByRole("heading", { name: /How Python Executes/i })).toBeVisible();
+  await expect(page.getByText(/video for this unit is not ready/i)).toBeVisible();
+  await shot(page, "lesson-video");
+  await page.getByRole("button", { name: "Mark as watched" }).click();
+  await page.getByRole("link", { name: "Next: Explain" }).click();
+
+  // Explain: a Shaky answer never blocks
+  await expect(page.getByLabel("Your explanation")).toBeVisible();
+  await page.getByLabel("Your explanation").fill("Because it is code.");
+  await page.getByRole("button", { name: "Check my explanation" }).click();
+  await expect(page.getByText("Shaky", { exact: true })).toBeVisible();
+  await shot(page, "lesson-explain");
+  await page.getByRole("link", { name: "Next: Predict" }).click();
+
+  // Predict: nothing revealed before the attempt
+  await expect(page.getByRole("button", { name: "Submit answer" })).toBeDisabled();
+  await expect(page.getByText("Statements run from top to bottom")).toHaveCount(0);
+  await shot(page, "lesson-predict");
+  await page.getByRole("radio").first().check();
+  await page.getByRole("button", { name: "Submit answer" }).click();
+  await expect(page.getByRole("status", { name: "Result" })).toContainText("Passed");
+  await expect(page.getByText("Statements run from top to bottom")).toBeVisible();
+  await shot(page, "lesson-predict-result");
+
+  // Regenerate gives a new variant and clears the result
+  await page.getByRole("button", { name: "Regenerate" }).click();
+  await expect(page.getByText(/variant 2/)).toBeVisible();
+  await expect(page.getByRole("status", { name: "Result" })).toHaveCount(0);
+
+  // AXIS answers, streaming, in the mock
+  await axis(page).getByLabel("Message AXIS").fill("Why does this happen?");
+  await axis(page).getByRole("button", { name: "Send" }).click();
+  await expect(axis(page).getByText(/expected type of your variable/)).toBeVisible();
+  await expect(axis(page).locator(".citation").first()).toBeVisible();
+  await shot(page, "lesson-axis");
+
+  // Trace
+  await page.goto(`${UNIT}/trace`);
+  await page.getByLabel(/terminal shows/i).fill("waiting\nchecked in");
+  await page.getByRole("button", { name: "Submit answer" }).click();
+  await expect(page.getByRole("status", { name: "Result" })).toContainText("Passed");
+  await shot(page, "lesson-trace");
+
+  // Playground: a real program pauses at input() and resumes
+  await page.goto(`${UNIT}/playground`);
+  await expect(page.locator(".cm-content")).toBeVisible();
+  await replaceCode(page, 'name = input("Name: ")\nprint("Hello", name.strip().title())\n');
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.getByText("Waiting for your input")).toBeVisible();
+  await page.locator(".terminal-host .xterm-helper-textarea").focus();
+  await page.keyboard.type("  amara okafor ");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".terminal-host")).toContainText("Hello Amara Okafor");
+  await expect(page.locator(".terminal-host")).toContainText("exit code 0");
+  await shot(page, "lesson-playground");
+
+  // Drafts are saved
+  await page.waitForTimeout(1200);
+  await page.reload();
+  await expect(page.locator(".cm-content")).toContainText("Hello");
+
+  // The clock has started
+  await page.goto(`${UNIT}/cold_check`);
+  await expect(page.getByText(/Opens in/)).toBeVisible();
+  await expect(rail(page).getByRole("link", { name: /Cold Check.*locked/ })).toBeVisible();
+  await expect(axis(page)).toHaveCount(0);
+  await shot(page, "lesson-cold-waiting");
+
+  // A day later
+  moveClockForward("PY-0.1");
+  await page.reload();
+  await expect(page.getByRole("note")).toContainText("AXIS is off");
+  await expect(axis(page)).toHaveCount(0);
+  await shot(page, "lesson-cold-item");
+
+  // CO-1: fail this one on purpose
+  await page.getByRole("radio").first().check();
+  await page.getByRole("button", { name: "Submit, one try" }).click();
+
+  // CO-2
+  await expect(page.getByLabel(/terminal shows/i)).toBeVisible();
+  await page.getByLabel(/terminal shows/i).fill("B A");
+  await page.getByRole("button", { name: "Submit, one try" }).click();
+
+  // CO-6, then the round ends with a fail and no answers shown
+  await page.getByRole("radio", { name: /stores the code/ }).check();
+  await page.getByRole("button", { name: "Submit, one try" }).click();
+  await expect(page.getByText(/Try again in/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Your result" })).toContainText("Not yet");
+  await shot(page, "lesson-cold-failed");
+
+  // The retry covers only the failed skill
+  moveClockForward("PY-0.1");
+  await page.reload();
+  await expect(page.getByText("Kofi Mensah").first()).toBeVisible();
+  await page.getByRole("radio").nth(1).check();
+  await page.getByRole("button", { name: "Submit, one try" }).click();
+  await expect(page.getByText("Passed.", { exact: true })).toBeVisible();
+  await shot(page, "lesson-cold-passed");
+
+  // My progress shows it, and the stage build lock moved
+  await page.getByRole("link", { name: "See My progress" }).click();
+  await expect(page.getByRole("table", { name: "Evidence ledger" }).getByText("Cold Check").first()).toBeVisible();
+  await shot(page, "progress-after-cold-check");
+});
+
+test("a verified playground writes no evidence", async ({ page, request }) => {
+  const before = (await (await request.get("/api/v1/learners/me/ledger")).json()).length;
+
+  await page.goto("/units/PY-0.4/playground");
+  await expect(page.locator(".cm-content")).toBeVisible();
+  await replaceCode(
+    page,
+    [
+      'raw_name = input("Applicant Name: ")',
+      'raw_ward = input("Ward Code: ")',
+      "clean_name = raw_name.strip().title()",
+      "clean_ward = raw_ward.strip().upper()",
+      "queue_number = 7",
+      'ticket = "TICKET-" + str(queue_number)',
+      'print(f"REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}] {ticket}")',
+      "",
+    ].join("\n"),
+  );
+  await page.getByRole("button", { name: "Verify" }).click();
+
+  await expect(page.getByRole("status", { name: "Result" })).toContainText("Passed");
+  const after = (await (await request.get("/api/v1/learners/me/ledger")).json()).length;
+  expect(after).toBe(before);
+});
+
+test("a program that never ends is stopped", async ({ page }) => {
+  await page.goto("/units/PY-0.4/playground");
+  await expect(page.locator(".cm-content")).toBeVisible();
+  await replaceCode(page, "while True:\n    pass\n");
+  await page.getByRole("button", { name: "Run" }).click();
+
+  await expect(page.locator(".terminal-host")).toContainText("Stopped", { timeout: 20_000 });
+});
+
+test("lessons fit a phone, and work in dark mode", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  for (const [path, name] of [
+    [`${UNIT}/video`, "phone-lesson-video"],
+    [`${UNIT}/explain`, "phone-lesson-explain"],
+    [`${UNIT}/predict`, "phone-lesson-predict"],
+    ["/units/PY-0.4/playground", "phone-lesson-playground"],
+    ["/units/PY-0.3/direct", "phone-lesson-direct"],
+  ] as const) {
+    await page.goto(path);
+    await rail(page).waitFor();
+    await page.waitForLoadState("networkidle");
+    await expectNoSideScroll(page);
+    await shot(page, name);
+  }
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/units/PY-0.4/predict");
+  await page.getByRole("button", { name: /switch to dark theme/i }).click();
+  await page.waitForLoadState("networkidle");
+  await shot(page, "dark-lesson-predict");
+  await page.goto("/units/PY-0.4/playground");
+  await expect(page.locator(".cm-content")).toBeVisible();
+  await shot(page, "dark-lesson-playground");
+});
+
+test("a unit with no seeds says so, and still shows its steps", async ({ page }) => {
+  await page.goto("/units/PY-1.2/predict");
+
+  await expect(page.getByText(/not written yet/i)).toBeVisible();
+  await expect(rail(page)).toBeVisible();
+});

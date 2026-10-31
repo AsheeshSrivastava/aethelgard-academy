@@ -5,6 +5,9 @@ import { defineConfig } from "@playwright/test";
 
 const PORT = 8123;
 
+// Workers load this file too, so the path is fixed once and shared through the environment.
+process.env.LMS_E2E_DB ??= join(tmpdir(), `lms-e2e-${process.pid}.db`);
+
 // End-to-end tests run against the real API with no AI and a throwaway database (ADR-0014).
 export default defineConfig({
   testDir: "./e2e",
@@ -24,7 +27,7 @@ export default defineConfig({
     timeout: 60_000,
     env: {
       MOCK_AI: "true",
-      LMS_DB_PATH: join(tmpdir(), `lms-e2e-${Date.now()}.db`),
+      LMS_DB_PATH: process.env.LMS_E2E_DB,
     },
   },
 });

@@ -123,7 +123,7 @@ export function Progress() {
             Next learning action
           </h2>
           <p className="next-message">{nextActionMessage(next)}</p>
-          <Link to="/units/$unitId" params={{ unitId: next.unit_id }} className="button button-primary">
+          <Link to="/units/$unitId/$step" params={{ unitId: next.unit_id, step: next.activity }} className="button button-primary">
             {stepName(next.activity)} in {next.unit_id}
           </Link>
         </section>

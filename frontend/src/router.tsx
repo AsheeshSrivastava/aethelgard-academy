@@ -3,6 +3,7 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   type RouterHistory,
 } from "@tanstack/react-router";
 
@@ -20,6 +21,12 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/courses", component: Courses }),
   createRoute({ getParentRoute: () => rootRoute, path: "/courses/$courseId", component: CourseMap }),
   createRoute({ getParentRoute: () => rootRoute, path: "/units/$unitId", component: UnitMap }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/units/$unitId/$step",
+    // The editor and terminal are large, so they load only on lesson pages.
+    component: lazyRouteComponent(() => import("./pages/Lesson"), "Lesson"),
+  }),
   createRoute({
     getParentRoute: () => rootRoute,
     path: "/progress",

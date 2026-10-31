@@ -1,10 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { api } from "../api/client";
 import type { ColdCheckStatus, Unit } from "../api/client";
 import { BackLink, ErrorNote, Loading, Panel } from "../components/common";
+import { ResetUnit } from "../components/ResetUnit";
 import { coldCheckMessage, courseOfUnit, stepDescription, stepName } from "../lib/format";
 
 const COURSE_NAMES: Record<string, string> = {
@@ -22,42 +23,6 @@ function useNow(intervalMs: number): Date {
   return now;
 }
 
-function ResetUnit({ unitId }: { unitId: string }) {
-  const [confirming, setConfirming] = useState(false);
-  const client = useQueryClient();
-  const reset = useMutation({
-    mutationFn: () => api.resetUnit(unitId),
-    onSuccess: () => {
-      setConfirming(false);
-      return client.invalidateQueries();
-    },
-  });
-
-  if (!confirming) {
-    return (
-      <button type="button" className="button" onClick={() => setConfirming(true)}>
-        Reset unit
-      </button>
-    );
-  }
-  return (
-    <div className="reset-confirm" role="group" aria-label="Confirm reset">
-      <p className="small">
-        This clears your place, your drafts and this unit's Cold Check. Your evidence ledger is kept.
-      </p>
-      {reset.isError && <ErrorNote error={reset.error} />}
-      <div className="actions">
-        <button type="button" className="button button-danger" disabled={reset.isPending} onClick={() => reset.mutate()}>
-          Yes, reset
-        </button>
-        <button type="button" className="button" onClick={() => setConfirming(false)}>
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function LessonPath({ unit, done, current, cold }: { unit: Unit; done: string[]; current: string | null; cold?: ColdCheckStatus }) {
   const now = useNow(60_000);
   return (
@@ -66,7 +31,8 @@ function LessonPath({ unit, done, current, cold }: { unit: Unit; done: string[];
         const isDone = done.includes(step);
         const isCurrent = step === current && !isDone;
         return (
-          <li key={step} className={isCurrent ? "path-row path-current" : "path-row"}>
+          <li key={step}>
+            <Link to="/units/$unitId/$step" params={{ unitId: unit.unit_id, step }} className={isCurrent ? "path-row path-current" : "path-row"}>
             <span className={`path-dot${isDone ? " path-dot-done" : isCurrent ? " path-dot-current" : ""}`} aria-hidden="true">
               {isDone ? "✓" : index + 1}
             </span>
@@ -78,6 +44,7 @@ function LessonPath({ unit, done, current, cold }: { unit: Unit; done: string[];
             </span>
             {isDone && <span className="path-state">Done</span>}
             {isCurrent && <span className="path-state path-state-current">In progress</span>}
+            </Link>
           </li>
         );
       })}
@@ -123,7 +90,12 @@ export function UnitMap() {
           <h1 className="page-title">{data.title}</h1>
           <p className="lead">{data.concept_line}</p>
         </div>
-        <ResetUnit unitId={unitId} />
+        <div className="actions">
+          <ResetUnit unitId={unitId} />
+          <Link to="/units/$unitId/$step" params={{ unitId, step: state.data?.step ?? "video" }} className="button button-primary">
+            {state.data?.step ? "Continue lesson" : "Start lesson"}
+          </Link>
+        </div>
       </div>
 
       <div className="unit-layout">

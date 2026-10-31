@@ -9,11 +9,11 @@ type Reply = unknown | ((url: URL, init?: RequestInit) => unknown);
 
 /** Answer API calls from a route table; anything unlisted fails loudly. */
 export function stubApi(routes: Record<string, Reply>) {
-  const calls: { method: string; url: string }[] = [];
+  const calls: { method: string; url: string; body?: string }[] = [];
   const stub = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input), "http://test");
     const method = init?.method ?? "GET";
-    calls.push({ method, url: url.pathname + url.search });
+    calls.push({ method, url: url.pathname + url.search, body: typeof init?.body === "string" ? init.body : undefined });
     const key = `${method} ${url.pathname}`;
     if (!(key in routes)) {
       return new Response(JSON.stringify({ title: "Not stubbed", status: 500, detail: key }), {
@@ -22,6 +22,7 @@ export function stubApi(routes: Record<string, Reply>) {
     }
     const reply = routes[key];
     const body = typeof reply === "function" ? (reply as (u: URL, i?: RequestInit) => unknown)(url, init) : reply;
+    if (body instanceof Response) return body;
     if (body === null) return new Response(null, { status: 204 });
     return new Response(JSON.stringify(body), {
       status: 200,

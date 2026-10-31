@@ -420,6 +420,6 @@ def playground_exercise(unit: Unit) -> Optional[Exercise]:
         unit_id=unit.unit_id,
         activity="playground",
         item_type="playground",
-        prompt_markdown=f"Practise {unit.title}. This is not graded.",
+        prompt_markdown="Try it yourself. This practice is not graded.",
         playground=PlaygroundBlock(starter=unit.starter_code.splitlines()),
     )

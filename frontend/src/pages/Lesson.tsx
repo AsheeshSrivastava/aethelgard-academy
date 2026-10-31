@@ -1,0 +1,447 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { api, ApiError, type ColdCheckStatus, type Exercise, type Unit } from "../api/client";
+import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ResetUnit } from "../components/ResetUnit";
+import { AxisPanel } from "../lesson/AxisPanel";
+import { CodeWorkspace, ItemForm, type Answer } from "../lesson/items";
+import { Prose } from "../lesson/Prose";
+import { NextLink, Result } from "../lesson/Result";
+import { nextStep, splitLessonForExplain } from "../lesson/steps";
+import { coldCheckMessage, stepName } from "../lib/format";
+
+function useNow(intervalMs: number): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(timer);
+  }, [intervalMs]);
+  return now;
+}
+
+function useLessonState(unitId: string) {
+  const client = useQueryClient();
+  const key = ["unitState", unitId];
+  const state = useQuery({ queryKey: key, queryFn: () => api.unitState(unitId) });
+
+  const save = useCallback(
+    (step: string | null, done: string[]) => {
+      client.setQueryData(key, { step, done_steps: done });
+      void api.saveUnitState(unitId, { step, done_steps: done }).catch(() => undefined);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [client, unitId],
+  );
+
+  const markDone = useCallback(
+    (step: string) => {
+      const current = client.getQueryData<{ step?: string | null; done_steps?: string[] }>(key);
+      const done = current?.done_steps ?? [];
+      if (!done.includes(step)) save(current?.step ?? step, [...done, step]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [client, save],
+  );
+
+  return { state, save, markDone };
+}
+
+function StepRail({ unit, step, done, cold }: { unit: Unit; step: string; done: string[]; cold?: ColdCheckStatus }) {
+  return (
+    <nav className="step-rail" aria-label="Lesson steps">
+      {(unit.activities ?? []).map((name) => {
+        const isDone = done.includes(name) || (name === "cold_check" && cold?.state === "passed");
+        const locked = name === "cold_check" && cold !== undefined && cold.state !== "available" && cold.state !== "passed";
+        const note = isDone ? " (done)" : locked ? " (locked)" : "";
+        return (
+          <Link
+            key={name}
+            to="/units/$unitId/$step"
+            params={{ unitId: unit.unit_id, step: name }}
+            className={`rail-step${name === step ? " rail-current" : ""}${isDone ? " rail-done" : ""}${locked ? " rail-locked" : ""}`}
+            aria-label={`${stepName(name)}${note}`}
+          >
+            <span aria-hidden="true">{isDone ? "✓ " : ""}</span>
+            {stepName(name)}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function VideoStep({ unit, next, onDone, done }: { unit: Unit; next: string | null; onDone: () => void; done: boolean }) {
+  const media = unit.media?.find((item) => item.kind === "video");
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="card lesson-card">
+      {media && !failed ? (
+        <video className="video" controls preload="metadata" src={media.url} aria-label={media.title} onError={() => setFailed(true)}>
+          Your browser cannot play this video.
+        </video>
+      ) : (
+        <p className="video-placeholder">The video for this unit is not ready yet. You can go straight to Explain.</p>
+      )}
+      <h1 className="step-title">{media?.title ?? unit.title}</h1>
+      {!!media?.timestamps?.length && (
+        <div>
+          <h2 className="eyebrow">Chapters</h2>
+          <ul className="plain-list chapters">
+            {media.timestamps.map((chapter) => (
+              <li key={chapter.time}>
+                <span className="mono muted">{chapter.time}</span> {chapter.topic}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="actions">
+        {!done && (
+          <button type="button" className="button" onClick={onDone}>
+            Mark as watched
+          </button>
+        )}
+        <NextLink unitId={unit.unit_id} step={next} />
+      </div>
+    </div>
+  );
+}
+
+function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; onDone: () => void }) {
+  const [text, setText] = useState("");
+  const client = useQueryClient();
+  const check = useMutation({
+    mutationFn: () => api.explain(unit.unit_id, text),
+    onSuccess: () => {
+      onDone();
+      return client.invalidateQueries({ queryKey: ["coldCheck", unit.unit_id] });
+    },
+  });
+  const prompt = unit.concept_check_config?.prompt as string | undefined;
+
+  return (
+    <div className="card lesson-card">
+      <h1 className="step-title">{unit.concept_line}</h1>
+      {unit.lesson_markdown && <Prose>{splitLessonForExplain(unit.lesson_markdown)}</Prose>}
+      <form
+        className="concept-check"
+        onSubmit={(event) => {
+          event.preventDefault();
+          check.mutate();
+        }}
+      >
+        <h2 className="panel-title">Concept check</h2>
+        <p className="small">{prompt ?? `Explain in your own words: ${unit.concept_line}`}</p>
+        <label className="field">
+          <span>Your explanation</span>
+          <textarea rows={5} value={text} onChange={(event) => setText(event.target.value)} />
+        </label>
+        <div className="actions">
+          <button type="submit" className="button button-primary" disabled={!text.trim() || check.isPending}>
+            {check.isPending ? "Checking…" : "Check my explanation"}
+          </button>
+        </div>
+        <p className="small muted">A shaky answer never blocks you. It tells AXIS what to revisit with you.</p>
+      </form>
+      {check.isError && <ErrorNote error={check.error} />}
+      {check.data && (
+        <div className={`result ${check.data.status === "Solid" ? "result-passed" : "result-failed"}`}>
+          <p className="result-title">{check.data.status}</p>
+          <p className="small">{check.data.feedback}</p>
+          <NextLink unitId={unit.unit_id} step={next} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function useAttempt(exercise: Exercise | undefined, activity: string, onDone: () => void) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (answer: Answer) => api.attempt({ exercise_id: exercise?.exercise_id ?? "", activity, ...answer }),
+    onSuccess: () => {
+      onDone();
+      void client.invalidateQueries({ queryKey: ["ledger"] });
+      void client.invalidateQueries({ queryKey: ["proficiency"] });
+      void client.invalidateQueries({ queryKey: ["coldCheck"] });
+    },
+  });
+}
+
+function ExerciseStep({ unit, step, next, onDone, onExercise }: { unit: Unit; step: string; next: string | null; onDone: () => void; onExercise: (id?: string) => void }) {
+  const client = useQueryClient();
+  const key = ["exercise", unit.unit_id, step];
+  const exercise = useQuery({ queryKey: key, queryFn: () => api.exercise(unit.unit_id, step), retry: false });
+  const attempt = useAttempt(exercise.data, step, onDone);
+  const regenerate = useMutation({
+    mutationFn: () => api.regenerate(unit.unit_id, step),
+    onSuccess: (fresh) => {
+      attempt.reset();
+      client.setQueryData(key, fresh);
+    },
+  });
+
+  useEffect(() => {
+    onExercise(exercise.data?.exercise_id);
+    return () => onExercise(undefined);
+  }, [exercise.data?.exercise_id, onExercise]);
+
+  if (exercise.isPending) return <Loading what="the exercise" />;
+  if (exercise.isError) {
+    const missing = exercise.error instanceof ApiError && exercise.error.status === 404;
+    return (
+      <div className="card lesson-card">
+        <h1 className="step-title">{stepName(step)}</h1>
+        {missing ? (
+          <>
+            <p>This activity is not written yet.</p>
+            <NextLink unitId={unit.unit_id} step={next} />
+          </>
+        ) : (
+          <ErrorNote error={exercise.error} />
+        )}
+      </div>
+    );
+  }
+
+  const data = exercise.data;
+  return (
+    <div className="card lesson-card">
+      <div className="exercise-head">
+        <span className="eyebrow">
+          {stepName(step)} · {data.origin === "authored" ? "Authored" : "Generated"} variant {data.variant_no}
+        </span>
+        <button type="button" className="button button-small" disabled={regenerate.isPending} onClick={() => regenerate.mutate()}>
+          Regenerate
+        </button>
+      </div>
+      <Prose>{data.prompt_markdown}</Prose>
+      <ItemForm key={data.exercise_id} exercise={data} busy={attempt.isPending} submitLabel="Submit answer" onSubmit={(answer) => attempt.mutate(answer)} />
+      {regenerate.isError && <ErrorNote error={regenerate.error} />}
+      {attempt.isError && <ErrorNote error={attempt.error} />}
+      {attempt.data && <Result result={attempt.data} unitId={unit.unit_id} next={next} />}
+    </div>
+  );
+}
+
+function PlaygroundStep({ unit, next, onDone, onCode }: { unit: Unit; next: string | null; onDone: () => void; onCode: (get: (() => string) | undefined) => void }) {
+  const exercise = useQuery({ queryKey: ["exercise", unit.unit_id, "playground"], queryFn: () => api.exercise(unit.unit_id, "playground"), retry: false });
+  const attempt = useAttempt(exercise.data, "playground", onDone);
+
+  if (exercise.isPending) return <Loading what="the playground" />;
+  if (exercise.isError) {
+    return (
+      <div className="card lesson-card">
+        <h1 className="step-title">Playground</h1>
+        <p>The playground for this unit is not written yet.</p>
+        <NextLink unitId={unit.unit_id} step={next} />
+      </div>
+    );
+  }
+
+  const data = exercise.data;
+  return (
+    <div className="card lesson-card">
+      <div className="exercise-head">
+        <span className="eyebrow">Playground · Practice, not graded</span>
+      </div>
+      <h1 className="step-title">{data.prompt_markdown}</h1>
+      <CodeWorkspace exerciseId={data.exercise_id} starter={data.playground?.starter ?? []} label="Your code">
+        {(getCode) => {
+          onCode(getCode);
+          return (
+            <div className="actions">
+              <button type="button" className="button button-primary" disabled={attempt.isPending} onClick={() => attempt.mutate({ files: { "solution.py": getCode() } })}>
+                {attempt.isPending ? "Checking…" : "Verify"}
+              </button>
+            </div>
+          );
+        }}
+      </CodeWorkspace>
+      {attempt.isError && <ErrorNote error={attempt.error} />}
+      {attempt.data && <Result result={attempt.data} unitId={unit.unit_id} next={next} />}
+    </div>
+  );
+}
+
+function ColdSummary({ unitId }: { unitId: string }) {
+  const ledger = useQuery({ queryKey: ["ledger", "cold", unitId], queryFn: () => api.ledger() });
+  const latest = new Map<string, boolean>();
+  [...(ledger.data ?? [])]
+    .filter((entry) => entry.cold_check && entry.unit_id === unitId)
+    .reverse()
+    .forEach((entry) => latest.set(entry.skill_id, entry.evidence_strength === "Strong"));
+  if (latest.size === 0) return null;
+
+  return (
+    <section className="cold-summary" aria-labelledby="cold-result">
+      <h2 id="cold-result" className="panel-title">
+        Your result
+      </h2>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Skill</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...latest].map(([skill, passed]) => (
+              <tr key={skill}>
+                <td className="mono">{skill}</td>
+                <td>{passed ? "Passed" : "Not yet"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function ColdCheckItem({ unit }: { unit: Unit }) {
+  const client = useQueryClient();
+  const key = ["exercise", unit.unit_id, "cold_check"];
+  const exercise = useQuery({ queryKey: key, queryFn: () => api.exercise(unit.unit_id, "cold_check"), retry: false });
+  const attempt = useAttempt(exercise.data, "cold_check", () => undefined);
+
+  if (exercise.isPending) return <Loading what="the Cold Check" />;
+  if (exercise.isError) {
+    const missing = exercise.error instanceof ApiError && exercise.error.status === 404;
+    return missing ? <p>This unit's Cold Check is not written yet.</p> : <ErrorNote error={exercise.error} />;
+  }
+
+  const data = exercise.data;
+  return (
+    <>
+      <Prose>{data.prompt_markdown}</Prose>
+      <ItemForm
+        key={data.exercise_id}
+        exercise={data}
+        busy={attempt.isPending}
+        submitLabel="Submit, one try"
+        onSubmit={(answer) =>
+          attempt.mutate(answer, {
+            onSuccess: () => {
+              attempt.reset();
+              void client.invalidateQueries({ queryKey: key });
+            },
+          })
+        }
+      />
+      {attempt.isError && <ErrorNote error={attempt.error} />}
+    </>
+  );
+}
+
+function ColdCheckStep({ unit, cold }: { unit: Unit; cold?: ColdCheckStatus }) {
+  const now = useNow(30_000);
+  const client = useQueryClient();
+  const opensAt = cold?.available_at ? new Date(cold.available_at).getTime() : 0;
+  const waiting = cold?.state === "waiting" || cold?.state === "failed_waiting";
+  const shouldRefresh = waiting && opensAt > 0 && now.getTime() >= opensAt;
+
+  useEffect(() => {
+    if (shouldRefresh) void client.invalidateQueries({ queryKey: ["coldCheck", unit.unit_id] });
+  }, [shouldRefresh, client, unit.unit_id]);
+
+  return (
+    <div className="card lesson-card">
+      <h1 className="step-title">Cold Check</h1>
+      {!cold && <Loading what="the Cold Check" />}
+      {cold && cold.state !== "available" && <p className="cold-message">{coldCheckMessage(cold, now)}</p>}
+      {cold?.state === "available" && (
+        <>
+          <p className="cold-notice" role="note">
+            One try for each skill. AXIS is off, so this shows what you can do on your own.
+          </p>
+          <ColdCheckItem unit={unit} />
+        </>
+      )}
+      {cold && cold.state !== "not_ready" && cold.state !== "waiting" && <ColdSummary unitId={unit.unit_id} />}
+      {cold?.state === "passed" && (
+        <Link to="/progress" className="button button-primary">
+          See My progress
+        </Link>
+      )}
+    </div>
+  );
+}
+
+export function Lesson() {
+  const { unitId, step } = useParams({ from: "/units/$unitId/$step" });
+  const unit = useQuery({ queryKey: ["unit", unitId], queryFn: () => api.unit(unitId) });
+  const cold = useQuery({ queryKey: ["coldCheck", unitId], queryFn: () => api.coldCheck(unitId) });
+  const { state, save, markDone } = useLessonState(unitId);
+  const [exerciseId, setExerciseId] = useState<string | undefined>();
+  const codeGetter = useRef<(() => string) | undefined>(undefined);
+
+  const stepKnown = unit.data?.activities?.includes(step);
+  const stateReady = state.isSuccess;
+  const doneSteps = state.data?.done_steps ?? [];
+
+  useEffect(() => {
+    if (stepKnown && stateReady && state.data?.step !== step) save(step, doneSteps);
+    // Only entering a step should record it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, stepKnown, stateReady]);
+
+  const finish = useCallback(() => markDone(step), [markDone, step]);
+  const onCode = useCallback((get: (() => string) | undefined) => {
+    codeGetter.current = get;
+  }, []);
+
+  useEffect(() => () => {
+    codeGetter.current = undefined;
+  }, [step]);
+
+  if (unit.isPending) {
+    return (
+      <main className="lesson-page">
+        <Loading what="the lesson" />
+      </main>
+    );
+  }
+  if (unit.isError) {
+    return (
+      <main className="lesson-page">
+        <ErrorNote error={unit.error} />
+      </main>
+    );
+  }
+
+  const data = unit.data;
+  const steps = data.activities ?? [];
+  const next = nextStep(steps, step);
+  const onColdCheck = step === "cold_check";
+
+  return (
+    <main className="lesson-page">
+      <div className="lesson-top">
+        <BackLink to="/units/$unitId" params={{ unitId }} label={unitId} />
+        <StepRail unit={data} step={step} done={doneSteps} cold={cold.data} />
+        <ResetUnit unitId={unitId} />
+      </div>
+
+      {!stepKnown ? (
+        <ErrorNote error={new Error(`This unit has no step called "${step}".`)} />
+      ) : (
+        <div className="lesson-layout">
+          <section className="lesson-content" aria-label="Lesson content">
+            {step === "video" && <VideoStep unit={data} next={next} onDone={finish} done={doneSteps.includes("video")} />}
+            {step === "explain" && <ExplainStep unit={data} next={next} onDone={finish} />}
+            {step === "playground" && <PlaygroundStep unit={data} next={next} onDone={finish} onCode={onCode} />}
+            {onColdCheck && <ColdCheckStep unit={data} cold={cold.data} />}
+            {!["video", "explain", "playground", "cold_check"].includes(step) && (
+              <ExerciseStep key={step} unit={data} step={step} next={next} onDone={finish} onExercise={setExerciseId} />
+            )}
+          </section>
+          {!onColdCheck && <AxisPanel unitId={unitId} step={step} exerciseId={exerciseId} getCode={() => codeGetter.current?.()} />}
+        </div>
+      )}
+    </main>
+  );
+}

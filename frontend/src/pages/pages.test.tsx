@@ -204,7 +204,7 @@ describe("my progress", () => {
 
     const next = await screen.findByRole("region", { name: /next learning action/i });
     expect(within(next).getByText(proficiency.next_action!.message)).toBeInTheDocument();
-    expect(within(next).getByRole("link", { name: /PY-0\.1/ })).toHaveAttribute("href", "/units/PY-0.1");
+    expect(within(next).getByRole("link", { name: /PY-0\.1/ })).toHaveAttribute("href", "/units/PY-0.1/debug-validate");
     expect(await screen.findByRole("heading", { name: /Skills · Stage 0/ })).toBeInTheDocument();
     expect(calls.find((c) => c.url.includes("/proficiency"))!.url).not.toContain("stage=");
   });
