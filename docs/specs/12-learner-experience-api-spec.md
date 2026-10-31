@@ -228,6 +228,11 @@ server → {type: "exit", code, duration_ms, timed_out: bool}
 
 Limits: 5 s CPU, 120 s wall clock including time waiting for input, 64 KB output, no network. Runs never write evidence; only attempts do.
 
+- `files` keys must be plain file names ending in `.py`, and `entry` must be one of them. A bad `start` gets `{type: "error", message}` and the socket closes.
+- A run exceeding a limit is stopped and reports `timed_out: true`. Output past 64 KB is cut off with a final `stderr` notice.
+- Learner code runs with a minimal environment, so it never sees API keys or `.env` values.
+- On this subprocess runner, the network limit blocks Python sockets. It is not an OS sandbox. Hosting other people's code needs the Docker runner (ADR-0005).
+
 ---
 
 ## 8. AXIS Streaming
@@ -238,9 +243,14 @@ Limits: 5 s CPU, 120 s wall clock including time waiting for input, 64 KB output
 event: token     data: {text}
 event: citation  data: {concept_id, title, doc_url}
 event: done      data: {assistance_level, cited_concepts: [str]}
+event: error     data: {message}
 ```
 
 The Socratic guardrail (ADR-0009) runs on the full reply before `done`; in Socratic mode tokens are buffered per sentence so no code fragment is streamed before it is checked. The assistance level is logged against `exercise_id`.
+
+- A request whose `exercise_id` is a Cold Check item returns `403`, on this route and on `/axis/consult`.
+- `citation` events go out before `done`, built from the reply's cited concepts.
+- If the local model cannot be reached and fallback is on, the mock companion answers. If fallback is off, the stream sends `error` and stops.
 
 ---
 

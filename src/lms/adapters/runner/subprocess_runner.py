@@ -12,6 +12,7 @@ import tempfile
 import time
 from typing import List, Optional
 
+from lms.adapters.runner.interactive import safe_env
 from lms.core.interfaces import ExecutionResult
 
 
@@ -67,6 +68,7 @@ class SubprocessRunner:
                     text=True,
                     timeout=timeout_seconds,
                     cwd=tmpdir,
+                    env=safe_env(),
                 )
                 duration_ms = (time.perf_counter() - start_time) * 1000
 

@@ -11,6 +11,14 @@ from lms.core.interfaces import AxisMode
 from lms.core.models import AssistanceLevel
 
 
+GUIDING_INQUIRY = (
+    "\n\n*(In Socratic mode, direct code solutions are withheld.)*\n"
+    "Consider the data flow: What is the exact input type entering this step, "
+    "and what specific transformation is required before egress?"
+)
+REFLECTION_PROMPT = "\n\nWhat is your hypothesis for why this step behaves the way it does?"
+
+
 class SocraticBoundaryViolation(Exception):
     """Raised when an AI response violates the Socratic zero-code boundary."""
     pass
@@ -31,11 +39,19 @@ class SocraticGuardrail:
         re.MULTILINE,
     )
 
+    # A whole line that is code: a bare call, a block header, or any assignment
+    CODE_LINE_PATTERN = re.compile(
+        r"^\s*(?:[\w.\[\]]+\(.*\)"
+        r"|(?:for|while|if|elif|else|try|except|with)\b.*:"
+        r"|[A-Za-z_][\w.\[\]]*\s*[-+*/%]?=\s*\S.*)\s*$",
+        re.MULTILINE,
+    )
+
     def contains_code(self, text: str) -> bool:
         """Determines if the text contains executable code blocks or definitions."""
         if "```" in text or "~~~" in text:
             return True
-        if self.STATEMENT_PATTERN.search(text):
+        if self.STATEMENT_PATTERN.search(text) or self.CODE_LINE_PATTERN.search(text):
             return True
         if self.INLINE_RETURN_PATTERN.search(text) and ("def " in text or "(" in text):
             return True
@@ -65,20 +81,17 @@ class SocraticGuardrail:
             sanitized = self.CODE_FENCE_PATTERN.sub("", reply)
             lines = [
                 line for line in sanitized.splitlines()
-                if not self.STATEMENT_PATTERN.search(line) and not self.ASSIGNMENT_PATTERN.search(line)
+                if not self.STATEMENT_PATTERN.search(line)
+                and not self.ASSIGNMENT_PATTERN.search(line)
+                and not self.CODE_LINE_PATTERN.search(line)
             ]
             sanitized_text = "\n".join(lines).strip()
 
-            guiding_inquiry = (
-                "\n\n*(In Socratic mode, direct code solutions are withheld.)*\n"
-                "Consider the data flow: What is the exact input type entering this step, "
-                "and what specific transformation is required before egress?"
-            )
-            reply = sanitized_text + guiding_inquiry
+            reply = sanitized_text + GUIDING_INQUIRY
 
         # Socratic mode must always provoke learner reflection
         if "?" not in reply:
-            reply += "\n\nWhat is your hypothesis for why this step behaves the way it does?"
+            reply += REFLECTION_PROMPT
 
         return reply
 

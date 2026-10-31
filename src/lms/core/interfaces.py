@@ -8,7 +8,7 @@ Follows Hexagonal Architecture:
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Dict, Iterator, List, Optional, Protocol, Tuple
 from pydantic import BaseModel, Field
 
 from lms.core.cold_check import ColdCheckTimer
@@ -160,4 +160,8 @@ class IAXISCompanion(Protocol):
     """Port for the AI pedagogical assistant (AXIS AI)."""
 
     def consult(self, query: AxisQuery) -> AxisResponse:
+        ...
+
+    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
+        """The reply as text deltas, plus the concepts it cites."""
         ...

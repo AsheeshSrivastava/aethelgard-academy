@@ -16,7 +16,7 @@ import json
 import os
 from pathlib import Path
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 import httpx
 
 from lms.adapters.ai.concept_store import ConceptStore
@@ -268,6 +268,54 @@ class LocalLLMCompanion:
             cited_concepts=cited_concepts,
             detected_assistance_level=assistance,
         )
+
+    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
+        """Stream the model's reply. Returns (deltas, cited concepts)."""
+        grounded_text, cited_concepts = self._retrieve_grounded_passages(
+            query.unit_id, query.user_prompt
+        )
+        sys_prompt = self._build_system_prompt(query.mode, grounded_text)
+        return self._stream_deltas(query, sys_prompt), cited_concepts
+
+    def _stream_deltas(self, query: AxisQuery, sys_prompt: str) -> Iterator[str]:
+        sent_any = False
+        reasoning: List[str] = []
+        try:
+            target_model = self.resolve_model()
+            with self._client.stream(
+                "POST",
+                f"{self.base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json={
+                    "model": target_model,
+                    "messages": [
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": self._build_user_message(query)},
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 1024,
+                    "stream": True,
+                },
+            ) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_lines():
+                    if not line.startswith("data: ") or line.strip() == "data: [DONE]":
+                        continue
+                    delta = json.loads(line[6:])["choices"][0].get("delta", {})
+                    if delta.get("content"):
+                        sent_any = True
+                        yield delta["content"]
+                    elif delta.get("reasoning_content"):
+                        reasoning.append(delta["reasoning_content"])
+            self.last_backend_used = f"LocalLLM ({target_model} @ {self.base_url})"
+            if not sent_any and reasoning:
+                # Deep-thinking models may answer only in reasoning_content, as in consult().
+                yield "".join(reasoning)
+        except Exception as exc:
+            if sent_any or not self.fallback_to_mock:
+                raise LocalLLMError(f"Local LLM stream failed: {type(exc).__name__}") from exc
+            self.last_backend_used = f"Offline Mock (Fallback reason: {type(exc).__name__})"
+            yield from self._mock_fallback.stream(query)[0]
 
     def evaluate_concept_check(
         self,

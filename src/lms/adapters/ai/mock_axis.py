@@ -4,7 +4,8 @@ Provides deterministic responses for Coach, Hybrid, and Socratic modes
 without incurring external API calls or network dependency (MOCK_AI=true).
 """
 
-from typing import List
+import re
+from typing import Iterator, List, Tuple
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
 from lms.core.models import AssistanceLevel
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -16,6 +17,11 @@ class MockAxisCompanion:
     def __init__(self, guardrail: SocraticGuardrail = None, classifier: AssistanceClassifier = None):
         self.guardrail = guardrail or SocraticGuardrail()
         self.classifier = classifier or AssistanceClassifier()
+
+    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
+        """The consult reply, word by word. Returns (deltas, cited concepts)."""
+        response = self.consult(query)
+        return iter(re.findall(r"\S+\s*", response.reply)), response.cited_concepts
 
     def consult(self, query: AxisQuery) -> AxisResponse:
         cited: List[str] = ["Operational Communication Cycle"]

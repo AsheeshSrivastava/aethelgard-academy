@@ -7,24 +7,28 @@ Provides versioned REST endpoints (/api/v1/) for:
 - Evidence Ledger queries and progress persistence
 """
 
+import asyncio
 from datetime import datetime, timezone
 import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
-from fastapi import Depends, FastAPI, HTTPException, Query
+from typing import Any, Callable, Dict, Iterator, List, Optional
+from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from lms.adapters.ai.axis_stream import stream_axis
 from lms.adapters.ai.local_llm_companion import get_axis_companion
 from lms.adapters.ai.mock_axis import MockAxisCompanion
+from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
+from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
 from lms.core.cold_check import ColdCheckState, ColdCheckStatus, cold_check_status
 from lms.core.course_map import (
     COURSES,
@@ -141,6 +145,10 @@ class VerifyRequest(BaseModel):
     code: str
 
 
+class AxisStreamRequest(AxisQuery):
+    page: Optional[str] = None         # "video", "explain", "predict", "trace", "playground", "build", "progress"
+
+
 class AttemptResult(BaseModel):
     outcome: str                       # "passed" | "failed"
     feedback: str
@@ -193,6 +201,7 @@ def create_app(
     catalog: Optional[CurriculumCatalog] = None,
     concepts: Optional[ConceptCatalog] = None,
     clock: Optional[Callable[[], datetime]] = None,
+    run_limits: Optional[RunLimits] = None,
 ) -> FastAPI:
     """Application factory for the LMS API Gateway."""
 
@@ -326,9 +335,106 @@ def create_app(
             stdin_input=payload.stdin_input,
         )
 
+    # --- Interactive Runs (SPEC-12 section 7) ---
+    @app.websocket("/api/v1/runs")
+    async def run_interactively(websocket: WebSocket):
+        await websocket.accept()
+        start = await websocket.receive_json()
+        files = start.get("files") or {}
+        entry = start.get("entry") or ""
+        problem_text = (
+            "The first message must be start."
+            if start.get("type") != "start"
+            else valid_start(files, entry)
+        )
+        if problem_text:
+            await websocket.send_json({"type": "error", "message": problem_text})
+            await websocket.close()
+            return
+
+        interactive = InteractiveRun(files, entry, run_limits or RunLimits())
+
+        async def send_events() -> None:
+            while True:
+                event = await asyncio.to_thread(interactive.next_event, 0.1)
+                if event is None:
+                    continue
+                await websocket.send_json(event)
+                if event["type"] == "exit":
+                    return
+
+        async def receive_stdin() -> None:
+            while True:
+                message = await websocket.receive_json()
+                if message.get("type") == "stdin":
+                    interactive.send_stdin(str(message.get("data", "")))
+
+        sender = asyncio.create_task(send_events())
+        receiver = asyncio.create_task(receive_stdin())
+        try:
+            await asyncio.wait({sender, receiver}, return_when=asyncio.FIRST_COMPLETED)
+        except WebSocketDisconnect:
+            pass
+        finally:
+            sender.cancel()
+            receiver.cancel()
+            interactive.stop()
+        if sender.done() and not sender.cancelled():
+            await websocket.close()
+
     # --- AXIS AI Companion Routes ---
+    guardrail = SocraticGuardrail()
+    classifier = AssistanceClassifier()
+
+    def is_cold_check_exercise(exercise_id: Optional[str]) -> bool:
+        if not exercise_id:
+            return False
+        found = find_seed_variant(catalog.seeds.get(exercise_id.split("/")[0], []), exercise_id)
+        return found is not None and found[0].cold_check_eligible
+
+    def axis_blocked() -> JSONResponse:
+        return problem(403, "AXIS is off", "AXIS does not help during a Cold Check.")
+
+    def citation_for(name: str) -> Dict[str, str]:
+        concept = concepts.get(name) or next(iter(concepts.search(name)), None)
+        if concept:
+            return {"concept_id": concept.concept_id, "title": concept.name, "doc_url": concept.doc_url}
+        return {"concept_id": name, "title": name, "doc_url": ""}
+
+    @app.post("/api/v1/axis/stream", response_model=None)
+    def stream_axis_reply(request: AxisStreamRequest, learner_id: str = Depends(current_learner_id)):
+        if is_cold_check_exercise(request.exercise_id):
+            return axis_blocked()
+        query = request.model_copy(update={"learner_id": learner_id})
+
+        def sse(event: str, data: Dict[str, Any]) -> str:
+            return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+        def events() -> Iterator[str]:
+            try:
+                for event, data in stream_axis(axis, query, guardrail, classifier):
+                    if event == "citation":
+                        yield sse(event, citation_for(data["name"]))
+                        continue
+                    if event == "done" and query.exercise_id:
+                        repo.log_assistance(
+                            learner_id,
+                            query.exercise_id,
+                            AssistanceLevel(data["assistance_level"]),
+                            clock(),
+                        )
+                    yield sse(event, data)
+            except Exception:
+                # Provider details can hold addresses or tokens, so none reach the browser.
+                logger.exception("AXIS stream failed.")
+                yield sse("error", {"message": "AXIS is unavailable right now."})
+
+        return StreamingResponse(events(), media_type="text/event-stream")
+
     @app.post("/api/v1/axis/consult", response_model=AxisResponse)
     def consult_axis(query: AxisQuery, learner_id: str = Depends(current_learner_id)):
+        if is_cold_check_exercise(query.exercise_id):
+            return axis_blocked()
         response = axis.consult(query.model_copy(update={"learner_id": learner_id}))
         if query.exercise_id:
             repo.log_assistance(
