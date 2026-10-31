@@ -1,9 +1,9 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
 - **Branch:** `main` (tracking `origin/main` on Entire)
-- **Latest Commit:** `ed9b9ec` (this update follows it; 30 commits since `609aca8`)
+- **Latest Commit:** `ddcddc3` (this update follows it)
 - **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). Push is on hold by owner decision; recent commits are local only.
-- **Current Phase:** Learner Experience Backend: steps 1 to 3 done, exercises (step 4) next (`530` Tests Passing)
+- **Current Phase:** Learner Experience Backend: steps 1 to 4 done, attempts (step 5) next (`637` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -14,7 +14,7 @@
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
 | **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 13)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0017) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks (`530` tests passing) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks, Exercise Seeds (`637` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups, syntax failures, malformed input streams |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -121,7 +121,7 @@
       - `llamaindex-docs` (`619d746`): 109 sources (MIT, LlamaIndex data framework documentation)
       - `llama-index-core==0.14.25`: pinned in `pyproject.toml` (`[dependency-groups] variants`) for deterministic boundary evaluation.
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
-  - 530 automated tests passing.
+  - 637 automated tests passing.
 
 ---
 
@@ -135,8 +135,8 @@
 - Push is on hold.
 
 ## 4. Next Action
-- Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before real learners use it.
-- Next is step 4: exercises (seed loader, grader, exercise, regenerate, reset, state and drafts routes, and the `playground` step in `Unit.activities`).
-- Then step 5 attempts and evidence, step 6 live runs and AXIS streaming, step 7 stage builds, then the frontend.
-- Known gap for step 5: `/explain` and `/axis/consult` still accept a `learner_id` in the request body.
+- Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before other learners use it.
+- Step 4 is done: seed loader, exercise, regenerate, reset, state and draft routes.
+- Next is step 5 attempts and evidence, including the grader and starting the Cold Check clock. Then step 6 live runs and AXIS streaming, step 7 stage builds, then the frontend. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
+- Known gaps for step 5: `/explain` and `/axis/consult` still accept a `learner_id` in the request body. `GET /units/{id}` still returns `test_code` and the concept check rubric for the old shell; a server-side playground verify route should replace that.
 - Separate open item: benchmark results (BAAI/bge-m3 vs jina-embeddings-v2-base-en) for the upstream RAG pipeline.
