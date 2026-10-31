@@ -6,47 +6,40 @@
   "skill_id": "VE-4",
   "level": "Understand",
   "prompt_markdown": [
-    "This script stops with an error on its very first line.",
+    "This script stops with an error when a citizen types `north-01`.",
     "",
-    "Read the error and fix the script so it registers the citizen who typed their name."
+    "Run it in your head or read it closely: on which line does it fail, and what kind of error is it?"
   ],
   "cold_check_eligible": true,
   "curator_approved": false,
-  "debug": {
+  "debug_locate": {
     "broken_code": [
+      "print(\"Reception open\")",
+      "ward = input()",
       "print(\"Registering\", citizen)",
-      "citizen = input()"
+      "print(\"Ward:\", ward)"
     ],
-    "stdin": "Lina Haddad",
-    "reference_solution": [
-      "citizen = input()",
-      "print(\"Registering\", citizen)"
+    "stdin": "north-01",
+    "error_types": [
+      {
+        "key": "name",
+        "text": "NameError: a name Python does not know"
+      },
+      {
+        "key": "syntax",
+        "text": "SyntaxError: the code is not written correctly"
+      },
+      {
+        "key": "type",
+        "text": "TypeError: an operation on the wrong kind of value"
+      }
     ],
-    "hidden_checks": [
-      "import io",
-      "import runpy",
-      "import unittest.mock",
-      "",
-      "",
-      "def run_script(typed):",
-      "    out = io.StringIO()",
-      "    with unittest.mock.patch('builtins.input', return_value=typed):",
-      "        with unittest.mock.patch('sys.stdout', out):",
-      "            runpy.run_path('solution.py')",
-      "    return out.getvalue()",
-      "",
-      "",
-      "def test_case_1():",
-      "    assert run_script('Lina Haddad') == 'Registering Lina Haddad\\n'",
-      "",
-      "",
-      "def test_case_2():",
-      "    assert run_script('Kofi Mensah') == 'Registering Kofi Mensah\\n'"
-    ],
-    "wrong_solution": [
-      "citizen = \"citizen\"",
-      "print(\"Registering\", citizen)",
-      "citizen = input()"
+    "answer_key": {
+      "line": 3,
+      "error_type": "name"
+    },
+    "why": [
+      "`citizen` was never given a value, so Python stops at line 3 with a NameError."
     ]
   }
 }

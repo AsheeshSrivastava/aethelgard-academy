@@ -60,7 +60,7 @@ Each seed also has exactly one body block, named by its item type. The activity 
 | Trace | `trace` | `trace` | Expected output |
 | Modify | `modify` | `playground` | Hidden tests |
 | Build | `build` | `playground` | Hidden tests |
-| Debug & Validate | `debug-validate` | `debug` | Hidden tests |
+| Debug & Validate | `debug-validate` | `debug`, `debug_locate` | Hidden tests; answer key |
 | Evaluate | `evaluate` | `choice` | Answer key |
 | Direct | `direct` | `choice` | Answer key |
 | Specify | `specify` | `specify_by_tests`, `specify_contract` | Mutants; answer key |
@@ -117,6 +117,19 @@ Fields marked **hidden** never leave the server before an attempt (SPEC-12 secti
 | `wrong_solution` | [str] | **Hidden.** A plausible wrong fix that must fail the checks |
 
 **Pass:** every hidden check passes.
+
+### `debug_locate` (Debug & Validate)
+The learner reads a failing program, then picks where it fails and what kind of error it is. This grades reading an error, not fixing it.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `broken_code` | [str] | The failing program, shown with line numbers |
+| `stdin` | str | Input it receives; empty string for none |
+| `error_types` | [{key, text}] | 2 to 5 error types to choose from |
+| `answer_key` | {line, error_type} | **Hidden.** The line number, and the `key` of the error type |
+| `why` | [str] | **Hidden.** Shown after the attempt |
+
+**Pass:** both the line and the error type are right. **Feedback:** whether the attempt passed, with no detail on which part was wrong.
 
 ### `choice` (Evaluate, Direct)
 | Field | Type | Meaning |
@@ -278,7 +291,7 @@ The loader, when it is built, reports these. Each one is an error for that seed 
 2. `seed_id` matches its file and is unique in the unit. `unit_id` matches the package.
 3. `activity` is in the unit's Methods. `skill_id` is a target skill, and `level` is its goal level.
 4. Every `answer_key` value matches a real option, and `needed` and `order_constraints` use real step ids with no cycle.
-5. Sandbox checks: Predict's `answer_key` text and Trace's `expected_output` equal the real output. `reference_solution` passes. `wrong_solution` fails. `broken_code` fails.
+5. Sandbox checks: Predict's `answer_key` text and Trace's `expected_output` equal the real output. `reference_solution` passes. `wrong_solution` fails. `broken_code` fails. For `debug_locate`, running `broken_code` raises exactly the keyed error type at the keyed line.
 6. `specify_by_tests`: `sample_tests` pass the static gate, pass on `reference`, and kill every mutant. Mutants number 2 to 8.
 7. `decompose_code`: `reference_solution` passes both checks. `wrong_solution` passes `hidden_checks` and fails the structure check.
 8. Section 5's rules hold for eligible seeds.
@@ -759,6 +772,44 @@ PY-0.1 targets CO-1, CO-2 and CO-6, all at Understand. Its activities are Explai
       "            lines.append(f\"{name.upper()} ({record['age']})\")",
       "    lines.append(f'Total: {len(lines)}')",
       "    return '\\n'.join(lines)"
+    ]
+  }
+}
+```
+
+### `debug_locate`: PY-0.4, VE-4 at Understand
+
+```json
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-debug-validate-1",
+  "unit_id": "PY-0.4",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-4",
+  "level": "Understand",
+  "prompt_markdown": [
+    "This script stops with an error when a citizen types `north-01`.",
+    "",
+    "Run it in your head or read it closely: on which line does it fail, and what kind of error is it?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "debug_locate": {
+    "broken_code": [
+      "print(\"Reception open\")",
+      "ward = input()",
+      "print(\"Registering\", citizen)",
+      "print(\"Ward:\", ward)"
+    ],
+    "stdin": "north-01",
+    "error_types": [
+      {"key": "name", "text": "NameError: a name Python does not know"},
+      {"key": "syntax", "text": "SyntaxError: the code is not written correctly"},
+      {"key": "type", "text": "TypeError: an operation on the wrong kind of value"}
+    ],
+    "answer_key": {"line": 3, "error_type": "name"},
+    "why": [
+      "`citizen` was never given a value, so Python stops at line 3 with a NameError."
     ]
   }
 }

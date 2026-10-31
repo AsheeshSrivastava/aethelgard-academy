@@ -2,8 +2,8 @@
 
 - **Status:** Drafted by Claude. Every seed has `curator_approved: false`, so the Cold Check will not serve any of them until you approve it.
 - **Date:** 2026-10-31
-- **Seeds:** 19 (PY-0.4: 6, PY-0.1: 7, PY-0.3: 6). Files are in each unit's `exercises/` folder.
-- **Checked with real Python:** every answer key, expected output and fix. Every `wrong_solution` fails and every broken script fails.
+- **Seeds:** 20 (PY-0.4: 7, PY-0.1: 7, PY-0.3: 6). Files are in each unit's `exercises/` folder.
+- **Checked with real Python:** every answer key, expected output and fix. Every `wrong_solution` fails and every broken script fails. Each `debug_locate` key was checked by running the broken code.
 - **How to review:** tick Approve or Reject on each seed, or tell me the seed name and what to change.
 
 Cold Check seeds are reserved: learners never see them in normal steps. The free-text Explain check stays in `meta.json`, so Explain has no normal seed.
@@ -12,7 +12,7 @@ Cold Check seeds are reserved: learners never see them in normal steps. The free
 
 Target skills, all at Understand: CO-1, VE-4. Activities: Explain, Predict, Debug & Validate.
 
-**Ungraded playground:** The existing exercise asks for `def`, `.strip()` and `.upper()`, which this unit does not teach yet. It works, but it may feel too hard for a first program. **Keep, or simplify?** It writes no evidence. Checked: a correct solution passes its tests and the blank starter fails.
+**Ungraded playground:** Rewritten with no `def`. It is now a plain script that cleans a name and ward code and builds a ticket, using `.strip()`, `.title()`, `.upper()` and `str()`, which this unit's lesson now introduces. It writes no evidence. Checked: a correct solution passes its tests and the blank starter fails.
 
 ### predict-1
 
@@ -54,12 +54,20 @@ Target skills, all at Understand: CO-1, VE-4. Activities: Explain, Predict, Debu
 - **Why it tests the skill:** New script, same reasoning as predict-1. Tests CO-1 through Predict, its main activity, with no AXIS help.
 - [ ] Approve   - [ ] Reject
 
-### cold-debug-validate-1 (Cold Check)
+### debug-validate-3
 
 - **Activity and skill:** Debug & Validate, VE-4
 - **Prompt:** This script stops with an error on its very first line. Read the error and fix the script so it registers the citizen who typed their name.
 - **Answer:** Fixed script: `citizen = input(); print("Registering", citizen)`
-- **Why it tests the skill:** The same NameError type as debug-validate-1, but the cause is order, not spelling, so copying the earlier fix fails. Tests VE-4 through Debug & Validate, its main activity.
+- **Why it tests the skill:** The same NameError type as debug-validate-1, but the cause is order, not spelling, so copying the earlier fix fails.
+- [ ] Approve   - [ ] Reject
+
+### cold-debug-validate-1 (Cold Check)
+
+- **Activity and skill:** Debug & Validate, VE-4
+- **Prompt:** This script stops with an error when a citizen types `north-01`. Run it in your head or read it closely: on which line does it fail, and what kind of error is it?
+- **Answer:** Line 3, NameError: a name Python does not know
+- **Why it tests the skill:** Exactly the roadmap outcome: names the line and kind of error. Key-graded, and checked by running the broken code. Tests VE-4 through Debug & Validate, its main activity.
 - [ ] Approve   - [ ] Reject
 
 ## PY-0.1: Python as an executing program
@@ -128,7 +136,7 @@ Target skills, all at Understand: CO-1, CO-2, CO-6. Activities: Explain, Predict
 
 Target skills, all at Understand: DE-2, DE-3, DE-4. Activities: Explain, Direct.
 
-**Ungraded playground:** The existing exercise uses `.strip()` and `.upper()`, which come later in the roadmap, but it gives the hint it needs. Its code comment names BU-1 and VE-4, which are not this unit's skills. It writes no evidence. Checked: a correct solution passes its tests and the blank starter fails.
+**Ungraded playground:** The existing exercise has no `def`. It uses `.strip()` and `.upper()`, which learners now meet in PY-0.4. Its code comment names BU-1 and VE-4, which are not this unit's skills. It writes no evidence. Checked: a correct solution passes its tests and the blank starter fails.
 
 ### direct-1
 
