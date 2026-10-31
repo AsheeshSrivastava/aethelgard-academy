@@ -604,6 +604,10 @@ a.build-tile {
   text-decoration: none;
 }
 
+.build-axis .axis-panel {
+  flex: none;
+}
+
 .requirement-list {
   gap: 10px;
 }

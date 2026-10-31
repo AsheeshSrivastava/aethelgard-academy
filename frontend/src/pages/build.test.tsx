@@ -56,7 +56,7 @@ function results(status: Status, details: Record<string, string> = {}) {
   return { requirements: Object.entries(status).map(([id, met]) => ({ id, met, detail: details[id] })) };
 }
 
-const passing = { outcome: "passed", feedback: "Submitted. This build is in your ledger.", evidence_entry_id: "e1", unit_decision: "Progress", checks: [] };
+const passing = { outcome: "passed", feedback: "This build is in your ledger.", evidence_entry_id: "e1", unit_decision: "Progress", checks: [] };
 
 function routes(extra: Record<string, unknown> = {}) {
   return {
@@ -216,6 +216,19 @@ describe("requirements", () => {
     expect(await screen.findByText("Output line 2 should be 'x'.")).toBeInTheDocument();
   });
 
+  it("Verify passes even while the note is unfinished, because it does not check the note", async () => {
+    stubApi(routes({
+      [`POST ${ME}/build:check`]: (_u: URL, init?: RequestInit) =>
+        results({ plan: true, sample: (JSON.parse(String(init?.body)) as { run_checks: boolean }).run_checks ? true : null, note: false }),
+    }));
+    renderAt(PATH);
+
+    await waitFor(async () => expect(within(await requirements()).getByText("1 of 3 met")).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: "Verify" }));
+
+    expect(await screen.findByText("Verify passed.")).toBeInTheDocument();
+  });
+
   it("editing the entry file clears Verify, so an old pass cannot unlock Submit", async () => {
     stubApi(routes());
     renderAt(PATH);
@@ -265,7 +278,7 @@ describe("submitting", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Submit build" }));
 
-    expect(await screen.findByText("Submitted. This build is in your ledger.")).toBeInTheDocument();
+    expect(await screen.findByText("This build is in your ledger.")).toBeInTheDocument();
     const [attempt] = bodies(calls, "/api/v1/learners/me/attempts");
     expect(attempt).toEqual({
       exercise_id: "python/stage-0/build",

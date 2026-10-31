@@ -245,6 +245,12 @@ def test_a_pass_needs_the_token_as_well_as_success():
     assert results["sample"] is False
 
 
+def test_a_pass_needs_success_as_well_as_the_token():
+    results = met(check_requirements(spec(), good_files(), NOTE, FakeRunner(success=False), run_checks=True))
+
+    assert results["sample"] is False
+
+
 def test_a_behaviour_failure_says_why_in_plain_words():
     code = SOLUTION.replace("CHECK-IN SLIP", "SLIP")
     results = check_requirements(spec(), {"checkin.py": code, "README.md": README}, NOTE, SubprocessRunner(), run_checks=True)
@@ -291,6 +297,18 @@ def test_only_input_into_a_name_counts():
 
 def test_only_fstrings_inside_print_count():
     code = 'a = f"x"\nb = f"y"\nprint("plain")\nprint(f"z {a}")\n'
+
+    assert met(check_requirements(spec(), {"checkin.py": code}, "", FakeRunner(), False))["fstrings"] is False
+
+
+def test_input_into_something_other_than_a_name_does_not_count():
+    code = 'desk.name = input("a")\ndesk.service = input("b")\n'
+
+    assert met(check_requirements(spec(), {"checkin.py": code}, "", FakeRunner(), False))["inputs"] is False
+
+
+def test_fstrings_in_other_calls_do_not_count():
+    code = 'str(f"a")\nstr(f"b")\n'
 
     assert met(check_requirements(spec(), {"checkin.py": code}, "", FakeRunner(), False))["fstrings"] is False
 

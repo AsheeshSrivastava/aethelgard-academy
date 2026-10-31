@@ -502,7 +502,7 @@ def create_app(
         config = EstimatorConfig(main_activities=catalog.main_activities)
         return AttemptResult(
             outcome="passed" if passed else "failed",
-            feedback="Submitted. This build is in your ledger." if passed else "Some requirements are not met yet.",
+            feedback="This build is in your ledger." if passed else "Some requirements are not met yet.",
             checks=checks,
             score=Score(passed=met, total=len(checks)),
             evidence_entry_id=entries[0].entry_id if entries else None,

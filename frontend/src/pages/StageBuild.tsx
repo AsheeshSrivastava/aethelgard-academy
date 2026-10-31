@@ -172,7 +172,10 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
   );
   const ready = build.requirements.every((r) => checked[r.id]?.met === true);
   const getCode = useCallback(() => files[build.entry] ?? "", [files, build.entry]);
-  const firstFailure = build.requirements.map((r) => verified[r.id]).find((result) => result?.met === false);
+  // Verify speaks only for the checks it runs; live results cover the rest.
+  const firstFailure = build.requirements
+    .filter((r) => live[r.id]?.met === null)
+    .some((r) => verified[r.id]?.met === false);
   const done = submitted?.outcome === "passed" || build.submitted;
 
   return (
