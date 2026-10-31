@@ -2,10 +2,35 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { api } from "../api/client";
+import { api, type EvidenceEntry } from "../api/client";
 import { BackLink, DecisionChip, ErrorNote, Loading, Panel } from "../components/common";
 import { SkillLadder } from "../components/SkillLadder";
 import { nextActionMessage, stepName } from "../lib/format";
+
+const ledgerActivity = (entry: EvidenceEntry) => {
+  if (entry.review_kind === "stage_review") return "Stage review";
+  if (entry.review_kind === "recheck") return "Recheck";
+  return entry.cold_check ? "Cold Check" : (entry.activity ?? "Concept check");
+};
+
+function DueForReview() {
+  const due = useQuery({ queryKey: ["reviewsDue"], queryFn: () => api.dueReviews() });
+  if (!due.data?.length) return null;
+  return (
+    <Panel title="Due for review" id="due-reviews">
+      <ul className="plain-list">
+        {due.data.map((review) => (
+          <li key={review.skill_id}>
+            <Link to="/reviews/$skillId/$days" params={{ skillId: review.skill_id, days: String(review.days) }}>
+              {review.skill_id} {review.skill_name}
+            </Link>
+            <span className="muted small"> · {review.days}-day recheck</span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
 
 function Ledger({ skills }: { skills: { skill_id: string; skill_name: string }[] }) {
   const [skillId, setSkillId] = useState("");
@@ -54,7 +79,7 @@ function Ledger({ skills }: { skills: { skill_id: string; skill_name: string }[]
                   <td>{new Date(entry.recorded_at ?? "").toLocaleDateString()}</td>
                   <td className="mono">{entry.unit_id}</td>
                   <td className="mono">{entry.skill_id}</td>
-                  <td>{entry.cold_check ? "Cold Check" : (entry.activity ?? "Concept check")}</td>
+                  <td>{ledgerActivity(entry)}</td>
                   <td>{entry.evidence_strength}</td>
                   <td>{entry.assistance_level === "none" ? "None" : entry.assistance_level.replace("_", " ")}</td>
                 </tr>
@@ -158,6 +183,7 @@ export function Progress() {
           <Ledger skills={skills} />
         </div>
         <aside className="unit-aside">
+          <DueForReview />
           <Panel title={`Units · ${shownLabel}`} id="units">
             <ul className="plain-list">
               {units.map((unit) => (

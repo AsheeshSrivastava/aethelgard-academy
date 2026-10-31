@@ -81,7 +81,26 @@ DueReview { skill_id, skill_name, days: 7 | 30, due_at: datetime, items: int }
 
 Entries set `cold_check` true and `review_kind` to `stage_review` or `recheck`, with `seed_id`, `unit_id` and `skill_id` from the item. Strong if passed, Weak if not. `reset_unit` touches none of the review tables or the ledger.
 
-## 7. Not in this spec
+## 7. Frontend
 
-- Frontend tiles and the review page (next step). Until then only the build tile's locked message changes.
+**Course map.** A stage shows a Stage review tile before its Build tile when `BuildSummary.review_planned` is true or the state is `available`, `failed_waiting` or `passed`. `review_planned` is true when a unit of the stage has more approved items than its unit round uses. A stage with no planned review shows no tile, so the map never promises a step that will not run.
+
+| State | Tile |
+| --- | --- |
+| `not_ready` | Plain text: pass every unit's Cold Check first |
+| `available` | Link: ready |
+| `failed_waiting` | Link: not yet, with a retry later |
+| `passed` | Link: passed |
+
+**Stage review page** (`/courses/{course_id}/stages/{stage}/review`). No AXIS panel. One item at a time, one try, no answer shown and no per-item result. The state decides what the page shows: the units left when `not_ready`; the items and "Item n of m" when `available`; the countdown and links to the units to strengthen when `failed_waiting`; a link to the build when `passed`. The page is reachable by address in every state, including `unavailable`, which says the stage has no review.
+
+**My progress.** A "Due for review" panel lists `GET /learners/me/reviews/due`, oldest first, and is hidden when empty. The ledger names Stage review and Recheck entries.
+
+**Recheck page** (`/reviews/{skill_id}/{days}`). No AXIS panel. One item at a time. When the last item is answered it says the recheck is finished. If nothing is due, it says so.
+
+**Build page.** It shows `StageBuild.stage_label` ("DSA 0 build") and links back to the build's own course.
+
+## 8. Not in this spec
+
+- Spare Cold Check seeds, which are curriculum content for the owner to approve.
 - The volume warning in ADR-0019 section 2.6.

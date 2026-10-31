@@ -8,6 +8,7 @@ import { AxisPanel } from "../lesson/AxisPanel";
 import { CodeEditor } from "../lesson/CodeEditor";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
+import { courseName } from "../lib/format";
 
 const NOTE_FILE = "ownership-note.txt";
 const CHECK_WAIT_MS = 400;
@@ -304,14 +305,14 @@ export function StageBuild() {
 
   return (
     <main className="lesson-page">
-      <BackLink to="/courses/$courseId" params={{ courseId }} label="Python course map" />
+      <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName(courseId)} course map`} />
       {build.isPending && <Loading what="the build" />}
       {closed && <p>{(build.error as ApiError).message}</p>}
       {build.isError && !closed && <ErrorNote error={build.error} />}
       {data && (
         <>
           <div className="concept-head">
-            <span className="mono muted">Stage {data.stage} build</span>
+            <span className="mono muted">{data.stage_label} build</span>
             <span className="chip chip-build">{data.kind === "script" ? "Script" : "Mini-project"}</span>
             {data.status === "draft" && <span className="chip">Draft</span>}
           </div>

@@ -8,6 +8,32 @@ import { buildLockMessage, nextActionMessage } from "../lib/format";
 
 type Stage = Schemas["StageView"];
 
+const REVIEW_TILE_TEXT: Record<string, string> = {
+  available: "Ready",
+  failed_waiting: "Not yet. You can try again later.",
+  passed: "Passed",
+};
+
+function ReviewTile({ courseId, stage }: { courseId: string; stage: Stage }) {
+  const state = stage.build?.review_state;
+  if (!state || state === "unavailable" || (state === "not_ready" && !stage.build?.review_planned)) return null;
+  const head = <span className="mono">Stage review</span>;
+  if (state === "not_ready") {
+    return (
+      <div className="build-tile">
+        {head}
+        <span className="small">Opens when every unit passes its Cold Check</span>
+      </div>
+    );
+  }
+  return (
+    <Link to="/courses/$courseId/stages/$stage/review" params={{ courseId, stage: String(stage.stage) }} className="build-tile">
+      {head}
+      <span className="small">{REVIEW_TILE_TEXT[state]}</span>
+    </Link>
+  );
+}
+
 function BuildTile({ courseId, stage }: { courseId: string; stage: Stage }) {
   const build = stage.build;
   if (!build) return null;
@@ -58,6 +84,7 @@ function StageCard({ courseId, stage, current }: { courseId: string; stage: Stag
             </span>
           </Link>
         ))}
+        <ReviewTile courseId={courseId} stage={stage} />
         <BuildTile courseId={courseId} stage={stage} />
       </div>
     </div>

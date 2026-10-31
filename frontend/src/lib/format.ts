@@ -1,4 +1,4 @@
-import type { ColdCheckStatus, Decision, Schemas } from "../api/client";
+import type { ColdCheckStatus, Decision, Schemas, StageReviewStatus } from "../api/client";
 
 export const LEVELS = ["Understand", "Apply", "Adapt", "Own"] as const;
 
@@ -47,6 +47,13 @@ const COURSE_PREFIXES: Record<string, string> = {
   DB: "backend",
 };
 
+const COURSE_NAMES: Record<string, string> = {
+  python: "Python",
+  backend: "Python for Backend/AI",
+  "ai-engineering": "AI Engineering",
+};
+
+export const courseName = (courseId: string) => COURSE_NAMES[courseId] ?? "Course";
 export const stepName = (step: string) => STEP_NAMES[step] ?? step;
 export const stepDescription = (step: string) => STEP_DESCRIPTIONS[step] ?? "";
 export const courseOfUnit = (unitId: string) => COURSE_PREFIXES[unitId.split("-")[0] ?? ""] ?? "python";
@@ -79,6 +86,22 @@ export function countdown(availableAt: string, now: Date): string {
   const rest = minutes % 60;
   if (hours === 0) return `${rest} min`;
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
+export function reviewMessage(status: StageReviewStatus, now: Date): string {
+  const wait = status.available_at ? countdown(status.available_at, now) : "";
+  switch (status.state) {
+    case "not_ready":
+      return "Pass every unit's Cold Check first.";
+    case "unavailable":
+      return "This stage has no review yet. Its build opens when every unit has passed.";
+    case "failed_waiting":
+      return wait ? `Not yet. Try again in ${wait}.` : "Ready to try again.";
+    case "passed":
+      return "Passed.";
+    default:
+      return "Ready now.";
+  }
 }
 
 export function coldCheckMessage(status: ColdCheckStatus, now: Date): string {

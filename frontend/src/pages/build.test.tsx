@@ -28,6 +28,7 @@ const build = {
   exercise_id: "python/stage-0/build",
   course_id: "python",
   stage: 0,
+  stage_label: "Stage 0",
   title: "Relief centre check-in script",
   kind: "script",
   status: "draft",
@@ -95,6 +96,18 @@ describe("locked", () => {
     renderAt(PATH);
 
     expect(await screen.findByText(/not written yet/)).toBeInTheDocument();
+  });
+});
+
+describe("a slotted stage", () => {
+  it("uses its own name and links back to its own course", async () => {
+    const api = "/api/v1/courses/backend/stages/600/build";
+    stubApi({ ...routes(), [`GET ${api}`]: { ...build, course_id: "backend", stage: 600, stage_label: "DB 0" } });
+    renderAt("/courses/backend/stages/600/build");
+
+    expect(await screen.findByText("DB 0 build")).toBeInTheDocument();
+    expect(screen.queryByText(/Stage 600/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to Python for Backend/AI course map" })).toHaveAttribute("href", "/courses/backend");
   });
 });
 

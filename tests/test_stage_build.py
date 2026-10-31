@@ -419,7 +419,7 @@ def test_nothing_hidden_ever_leaves_the_server(client, repo):
 
 def test_public_build_is_built_from_allowed_fields():
     assert set(public_build(spec(), submitted=False).model_dump()) == {
-        "exercise_id", "course_id", "stage", "title", "kind", "status", "brief_markdown",
+        "exercise_id", "course_id", "stage", "stage_label", "title", "kind", "status", "brief_markdown",
         "sample_run", "entry", "files", "requirements", "proves", "submitted",
     }
 

@@ -15,7 +15,7 @@ from typing import AbstractSet, Dict, List, Mapping, Optional, Sequence, Set, Tu
 from pydantic import BaseModel
 
 from lms.core.course_map import course_of
-from lms.core.exercises import COLD_CHECK, ExerciseSeed, cold_round, pool_for
+from lms.core.exercises import ExerciseSeed, spare_cold_items
 from lms.core.models import ActivityType, EvidenceCategory, ProficiencyLevel, Unit, stage_label
 
 # What each activity can show, from the evidence category examples in the
@@ -80,11 +80,9 @@ def _check_stage_review_items(
     """SPEC-16 section 3.4: a stage with no spare items runs no review, so the curator is told."""
     short: Dict[Tuple[Optional[str], int], List[str]] = {}
     for unit in units:
-        unit_seeds = seeds.get(unit.unit_id, ())
-        spare = len(pool_for(unit_seeds, COLD_CHECK)) - len(cold_round(unit, unit_seeds))
         key = (course_of(unit.unit_id), unit.stage)
         short.setdefault(key, [])
-        if spare < 1:
+        if spare_cold_items(unit, seeds.get(unit.unit_id, ())) < 1:
             short[key].append(unit.unit_id)
     return [
         Finding(

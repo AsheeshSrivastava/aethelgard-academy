@@ -1869,3 +1869,14 @@ button:disabled {
     font-size: 18px;
   }
 }
+
+/* Stage review and rechecks */
+.review-page .lesson-card {
+  margin-top: 12px;
+}
+
+.review-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}

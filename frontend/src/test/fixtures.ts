@@ -33,7 +33,7 @@ export const courseMap: Schemas["CourseMap"] = {
           cold_check_state: "not_ready",
         },
       ],
-      build: { title: "Stage 0 build", kind: "script", locked: true, pending_units: ["PY-0.1"], authored: true, status: "draft" },
+      build: { title: "Stage 0 build", kind: "script", locked: true, pending_units: ["PY-0.1"], authored: true, status: "draft", review_planned: false },
     },
     {
       stage: 1,
@@ -50,7 +50,7 @@ export const courseMap: Schemas["CourseMap"] = {
           cold_check_state: "not_ready",
         },
       ],
-      build: { title: "Stage 1 build", kind: "script", locked: false, pending_units: [], authored: false },
+      build: { title: "Stage 1 build", kind: "script", locked: false, pending_units: [], authored: false, review_planned: false },
     },
   ],
 };

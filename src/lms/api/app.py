@@ -78,6 +78,7 @@ from lms.core.exercises import (
     find_variant,
     playground_exercise,
     pool_for,
+    spare_cold_items,
 )
 from lms.core.grading import (
     Attempt,
@@ -407,6 +408,11 @@ def create_app(
             {
                 stage: review_status(course_id, stage, learner_id).state
                 for stage in {u.stage for u in catalog.get_course_units(course_id)}
+            },
+            {
+                u.stage
+                for u in catalog.get_course_units(course_id)
+                if spare_cold_items(u, catalog.seeds.get(u.unit_id, [])) > 0
             },
         )
 

@@ -2122,6 +2122,11 @@
                 "type": "null"
               }
             ]
+          },
+          "review_planned": {
+            "type": "boolean",
+            "title": "Review Planned",
+            "default": false
           }
         },
         "type": "object",
@@ -3754,6 +3759,10 @@
             "type": "integer",
             "title": "Stage"
           },
+          "stage_label": {
+            "type": "string",
+            "title": "Stage Label"
+          },
           "title": {
             "type": "string",
             "title": "Title"
@@ -3812,6 +3821,7 @@
           "exercise_id",
           "course_id",
           "stage",
+          "stage_label",
           "title",
           "kind",
           "status",

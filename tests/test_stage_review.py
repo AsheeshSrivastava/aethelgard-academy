@@ -441,6 +441,23 @@ def test_course_map_reports_the_review_state_and_lock(client, repo, catalog):
     assert build["review_state"] == "available"
 
 
+def test_course_map_plans_a_review_only_where_spare_items_exist(client, repo, catalog):
+    planned = client.get("/api/v1/courses/python").json()["stages"][0]["build"]
+
+    assert planned["review_planned"] is True
+    assert planned["review_state"] == "not_ready"
+
+    catalog.seeds = {}
+    assert client.get("/api/v1/courses/python").json()["stages"][0]["build"]["review_planned"] is False
+
+
+def test_a_build_page_uses_the_stage_label(client, repo, catalog):
+    pass_units(repo, catalog)
+    finish_review(client, catalog)
+
+    assert client.get("/api/v1/courses/python/stages/0/build").json()["stage_label"] == "Stage 0"
+
+
 def test_stage_with_no_items_opens_the_build_as_before(client, repo, catalog):
     catalog.seeds = {u: [s for s in ss if "spare" not in s.seed_id and "extra" not in s.seed_id] for u, ss in catalog.seeds.items()}
     pass_units(repo, catalog)

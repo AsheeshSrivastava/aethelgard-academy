@@ -369,6 +369,11 @@ def cold_round(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[ExerciseSeed]:
     return list(islice(in_turn, size))
 
 
+def spare_cold_items(unit: Unit, seeds: Sequence[ExerciseSeed]) -> int:
+    """Approved items the unit's own round does not use, so a stage review can."""
+    return len(pool_for(seeds, COLD_CHECK)) - len(cold_round(unit, seeds))
+
+
 def choose_next(pool: Sequence[str], seen: Sequence[str], current: Optional[str]) -> str:
     """First unseen item; when none is left, the oldest seen other than the current one."""
     for exercise_id in pool:

@@ -1,27 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
 import { api } from "../api/client";
 import type { ColdCheckStatus, Unit } from "../api/client";
 import { BackLink, ErrorNote, Loading, Panel } from "../components/common";
 import { ResetUnit } from "../components/ResetUnit";
-import { coldCheckMessage, courseOfUnit, stepDescription, stepName } from "../lib/format";
-
-const COURSE_NAMES: Record<string, string> = {
-  python: "Python",
-  backend: "Python for Backend/AI",
-  "ai-engineering": "AI Engineering",
-};
-
-function useNow(intervalMs: number): Date {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(timer);
-  }, [intervalMs]);
-  return now;
-}
+import { coldCheckMessage, courseName as nameOfCourse, courseOfUnit, stepDescription, stepName } from "../lib/format";
+import { useNow } from "../lib/useNow";
 
 function LessonPath({ unit, done, current, cold }: { unit: Unit; done: string[]; current: string | null; cold?: ColdCheckStatus }) {
   const now = useNow(60_000);
@@ -59,7 +44,7 @@ export function UnitMap() {
   const state = useQuery({ queryKey: ["unitState", unitId], queryFn: () => api.unitState(unitId) });
 
   const courseId = courseOfUnit(unitId);
-  const courseName = COURSE_NAMES[courseId] ?? "Course";
+  const courseName = nameOfCourse(courseId);
   const back = <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName} course map`} />;
 
   if (unit.isPending) {

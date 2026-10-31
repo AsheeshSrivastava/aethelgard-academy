@@ -13,15 +13,7 @@ import { Prose } from "../lesson/Prose";
 import { NextLink, Result } from "../lesson/Result";
 import { nextStep, splitLessonForExplain } from "../lesson/steps";
 import { coldCheckMessage, stepName } from "../lib/format";
-
-function useNow(intervalMs: number): Date {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(timer);
-  }, [intervalMs]);
-  return now;
-}
+import { useNow } from "../lib/useNow";
 
 function useLessonState(unitId: string) {
   const client = useQueryClient();

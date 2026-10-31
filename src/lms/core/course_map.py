@@ -7,7 +7,7 @@ Governed by:
 Deterministic and pure: units and Cold Check states come in, views come out.
 """
 
-from typing import Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
+from typing import AbstractSet, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -82,6 +82,7 @@ class BuildSummary(BaseModel):
     authored: bool = False             # False: a placeholder until the curator writes it
     status: Optional[str] = None       # "draft" | "approved"
     review_state: Optional[ReviewState] = None  # None when the caller gives no review (SPEC-16)
+    review_planned: bool = False       # The stage has items for a review; the map shows its tile
 
 
 class AuthoredBuild(NamedTuple):
@@ -148,6 +149,7 @@ def build_course_map(
     decision_of: Callable[[Unit], ProgressionDecision],
     builds: Mapping[int, AuthoredBuild] = {},
     reviews: Mapping[int, ReviewState] = {},
+    planned_reviews: AbstractSet[int] = frozenset(),
 ) -> CourseMap:
     """Group a course's units by stage, in path order; units keep their teaching order."""
     by_stage: Dict[int, List[Unit]] = {}
@@ -165,6 +167,7 @@ def build_course_map(
                 decision_of,
                 builds.get(stage),
                 reviews.get(stage),
+                stage in planned_reviews,
             )
             for stage in stages_in_path_order(units)
         ],
@@ -179,6 +182,7 @@ def _stage_view(
     decision_of: Callable[[Unit], ProgressionDecision],
     authored: Optional[AuthoredBuild] = None,
     review: Optional[ReviewState] = None,
+    review_planned: bool = False,
 ) -> StageView:
     states = {u.unit_id: cold_check_state_of(u.unit_id) for u in units}
     pending = [unit_id for unit_id, state in states.items() if state != ColdCheckState.PASSED]
@@ -197,6 +201,7 @@ def _stage_view(
             authored=authored is not None,
             status=authored.status if authored else None,
             review_state=review,
+            review_planned=review_planned,
         ),
     )
 

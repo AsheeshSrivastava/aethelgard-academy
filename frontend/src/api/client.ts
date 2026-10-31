@@ -15,6 +15,8 @@ export type ExplainResponse = Schemas["ExplainResponse"];
 export type ConceptSummary = Schemas["ConceptSummary"];
 export type ConceptDetail = Schemas["ConceptDetail"];
 export type StageBuild = Schemas["StageBuild"];
+export type StageReviewStatus = Schemas["StageReviewStatus"];
+export type DueReview = Schemas["DueReview"];
 
 interface StageRef {
   courseId: string;
@@ -80,6 +82,13 @@ export const api = {
     request<Schemas["BuildCheckResult"]>(`/learners/me/courses/${courseId}/stages/${stage}/build:check`, json("POST", body)),
   resetBuild: ({ courseId, stage }: StageRef) =>
     request<void>(`/learners/me/courses/${courseId}/stages/${stage}/build:reset`, { method: "POST" }),
+  stageReview: ({ courseId, stage }: StageRef) =>
+    request<StageReviewStatus>(`/learners/me/courses/${courseId}/stages/${stage}/review`),
+  stageReviewExercise: ({ courseId, stage }: StageRef) =>
+    request<Exercise>(`/learners/me/courses/${courseId}/stages/${stage}/review/exercise`),
+  dueReviews: () => request<DueReview[]>("/learners/me/reviews/due"),
+  recheckExercise: (skillId: string, days: number) =>
+    request<Exercise>(`/learners/me/reviews/${encodeURIComponent(skillId)}/${days}/exercise`),
   concepts: (q?: string) => request<ConceptSummary[]>(`/concepts${query({ q })}`),
   concept: (slug: string) => request<ConceptDetail>(`/concepts/${encodeURIComponent(slug)}`),
   recentConcepts: () => request<ConceptSummary[]>("/learners/me/concepts/recent"),

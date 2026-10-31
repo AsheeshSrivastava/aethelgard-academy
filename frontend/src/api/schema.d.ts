@@ -798,6 +798,11 @@ export interface components {
             /** Status */
             status?: string | null;
             review_state?: components["schemas"]["ReviewState"] | null;
+            /**
+             * Review Planned
+             * @default false
+             */
+            review_planned: boolean;
         };
         /** Check */
         Check: {
@@ -1410,6 +1415,8 @@ export interface components {
             course_id: string;
             /** Stage */
             stage: number;
+            /** Stage Label */
+            stage_label: string;
             /** Title */
             title: string;
             /** Kind */

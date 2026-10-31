@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity
 from lms.core.grading import Runner
-from lms.core.models import Unit
+from lms.core.models import Unit, stage_label
 
 _EXERCISE_ID = re.compile(r"^([a-z-]+)/stage-(\d+)/build$")
 _ERROR_LINE = re.compile(r"^[A-Za-z]+(Error|Exception): ")
@@ -120,6 +120,7 @@ class StageBuild(BaseModel):
     exercise_id: str
     course_id: str
     stage: int
+    stage_label: str                   # "Stage 4", "DSA 0"
     title: str
     kind: str
     status: str
@@ -137,6 +138,7 @@ def public_build(build: StageBuildSpec, submitted: bool) -> StageBuild:
         exercise_id=exercise_id_of(build.course_id, build.stage),
         course_id=build.course_id,
         stage=build.stage,
+        stage_label=stage_label(build.stage),
         title=build.title,
         kind=build.kind,
         status=build.status,
