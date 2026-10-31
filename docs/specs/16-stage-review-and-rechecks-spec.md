@@ -84,4 +84,4 @@ Entries set `cold_check` true and `review_kind` to `stage_review` or `recheck`, 
 ## 7. Not in this spec
 
 - Frontend tiles and the review page (next step). Until then only the build tile's locked message changes.
-- The volume warning in ADR-0019 section 2.5.
+- The volume warning in ADR-0019 section 2.6.
