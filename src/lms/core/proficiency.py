@@ -75,6 +75,7 @@ class SkillEstimate(BaseModel):
     level: Optional[ProficiencyLevel] = None
     confidence: Optional[Confidence] = None
     qualifying_entry_ids: List[str] = Field(default_factory=list)  # entries backing `level`
+    supported_levels: List[ProficiencyLevel] = Field(default_factory=list)  # every level with full support
     weak_streak: int = 0                                            # newest consecutive weak entries
     weak_count: int = 0                                             # weak entries in the window
 
@@ -230,17 +231,21 @@ def estimate_skill(
 
     level = LEVEL_ORDER[level_index]
     backing = [e for e in window if qualifies(e, level, config)]
-    supported = (
-        not lowered
-        and weak_streak == 0
-        and len(backing) >= config.supported_min_entries
-        and any(e.cold_check for e in backing)
-    )
+
+    def supported_at(candidate: ProficiencyLevel) -> bool:
+        entries = [e for e in window if qualifies(e, candidate, config)]
+        return (
+            weak_streak == 0
+            and len(entries) >= config.supported_min_entries
+            and any(e.cold_check for e in entries)
+        )
+
     return SkillEstimate(
         skill_id=sid,
         level=level,
-        confidence=Confidence.SUPPORTED if supported else Confidence.PROVISIONAL,
+        confidence=Confidence.SUPPORTED if supported_at(level) else Confidence.PROVISIONAL,
         qualifying_entry_ids=[e.entry_id for e in backing],
+        supported_levels=[l for l in LEVEL_ORDER[: level_index + 1] if supported_at(l)],
         weak_streak=weak_streak,
         weak_count=weak_count,
     )
@@ -297,13 +302,13 @@ def decide_skill(
             ProgressionDecision.STRENGTHEN,
             f"Evidence shows {est.level.value}; the target is {target_level.value}.",
         )
-    if est.confidence == Confidence.PROVISIONAL:
+    if target_level not in est.supported_levels:
         return result(
             ProgressionDecision.STRENGTHEN,
-            f"{est.level.value} is provisional: it needs a second exercise and a passed Cold Check, "
+            f"{target_level.value} is provisional: it needs a second exercise and a passed Cold Check, "
             "with no newer weak attempt.",
         )
-    if current > target:
+    if current > target and est.confidence == Confidence.SUPPORTED:
         return result(
             ProgressionDecision.ACCELERATE,
             f"Supported {est.level.value} is above the {target_level.value} target.",

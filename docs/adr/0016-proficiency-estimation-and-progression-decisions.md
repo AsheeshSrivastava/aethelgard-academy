@@ -118,6 +118,9 @@ The sentence in section 2.6 that a pass records an entry "at the unit's target l
 ### E. Evidence counts per seed (decided 2026-10-31)
 Section 2.2 said repeating the same exercise variant counts once. Name variants of one seed differ only on the surface, so they count as the same exercise. Repeats of a seed count once, and the newest result is the one kept, so a learner who fails and then succeeds is judged on where they are now.
 
+### F. The decision asks about the target level (2026-10-31)
+With amendment A, one Strong entry can reach a level above a unit's target while the target itself is fully supported. The confidence of the highest level must not hide that. Progress needs support **at the target level**. Accelerate still needs support at the higher level.
+
 ### D. Consequences
 - Skills whose main activity is Explain (CO-3, CO-4, CO-5, CO-6) can reach Adapt on Strong Explain evidence. This is what the decision says; tune it if real learner data shows it is too easy.
 - Authoring grows: every target skill needs a Cold Check item, so up to 190 targets need the new item types.

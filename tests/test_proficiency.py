@@ -55,6 +55,40 @@ def weak(days_ago=0.5, **kw):
     return make(strength=EvidenceStrength.WEAK, days_ago=days_ago, **kw)
 
 
+# --- The decision asks about the target level -------------------------------
+
+
+def test_a_provisional_higher_level_does_not_hide_a_supported_target():
+    config = EstimatorConfig(main_activities={"CO-2": ActivityType.TRACE})
+    trace = dict(skill_id="CO-2", activity=ActivityType.TRACE)
+    entries = [
+        make(EvidenceCategory.EXPLAIN_REASON, EvidenceStrength.MODERATE, days_ago=3, **trace),
+        make(EvidenceCategory.EXPLAIN_REASON, days_ago=2, cold_check=True, **trace),
+    ]
+
+    d = decide_skill(ProficiencyLevel.UNDERSTAND, entries, "CO-2", now=NOW, config=config)
+
+    assert d.estimate.level == ProficiencyLevel.ADAPT
+    assert d.estimate.confidence == Confidence.PROVISIONAL
+    assert d.decision == ProgressionDecision.PROGRESS
+
+
+def test_supported_above_the_target_still_accelerates():
+    entries = [make(days_ago=3), make(days_ago=2, cold_check=True)]
+
+    d = decide_skill(ProficiencyLevel.UNDERSTAND, entries, "CO-1", now=NOW)
+
+    assert d.decision == ProgressionDecision.ACCELERATE
+
+
+def test_a_weak_entry_blocks_support_at_every_level():
+    entries = [make(days_ago=4), make(days_ago=3, cold_check=True), weak(days_ago=1)]
+
+    d = decide_skill(ProficiencyLevel.UNDERSTAND, entries, "CO-1", now=NOW)
+
+    assert d.decision == ProgressionDecision.STRENGTHEN
+
+
 # --- Amendment E: evidence counts per seed ----------------------------------
 
 
