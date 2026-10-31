@@ -1,25 +1,14 @@
 # Project Progress: Knowledge Management & Learning Platform (LMS / KMS)
 
-## Resume here (paused 2026-10-31, owner's usage limit)
+## Resume here
 
-- **Last code commit:** `800ba28`. Suite green at 678 tests. Push on hold. Order agreed: step 5, step 6, then the frontend.
-- **Stash:** `git stash pop` restores the unfinished step 5 tests: new `tests/test_attempts_api.py` (42 tests, 41 failing until the code below exists), and edits to `tests/test_web_api.py` and `tests/test_exercise_api.py`. Do this first.
-- **Step 5 done:** SPEC-12 section 5 rules, ADR-0016 amendment E, per-seed evidence (`seed_id`, newest result kept), and the grader for all 12 item types (`src/lms/core/grading.py`).
-- **Step 5 left:**
-  1. Repo: `log_assistance`, `get_assistance_levels(learner, exercise_id, since)`, `record_cold_item`, `get_cold_items`, clear failed items at round end, `clear_current_exercise`. Reset also clears cold items.
-  2. `POST /learners/me/attempts`: must be on the current exercise (409); client evidence fields already refused by `Attempt`; ungraded playground records nothing; explain returns 409; cold locked 423.
-  3. Cold Check round: pool is the first unfinished target skill; one try per item; clear the pointer after an attempt; at round end record pass or fail and keep only failed skills for the retry; assistance always none; no `reveal` on a failed item.
-  4. Start the clock once every method activity has an entry and Explain has a concept check; call this after attempts and after `/explain`.
-  5. `/explain`, `/explain-error` and `/axis/consult` use the resolved learner and ignore any body `learner_id`. Add optional `exercise_id` to `AxisQuery` and log assistance against it.
-  6. `GET /units/{id}` stops sending `test_code` and the rubric (keep `prompt`). Add `POST /learners/me/units/{id}/playground:verify`, and point `src/lms/web/app.js` Verify at it.
-  7. Then run deliberate-break checks and report.
-- **Step 6 left, all of it:** `WS /api/v1/runs` with `input()` pausing and limits (5 s CPU, 120 s wall, 64 KB, no network; SPEC-12 section 7). `POST /api/v1/axis/stream` as SSE with `exercise_id` and `page`, sentence buffering in Socratic mode, guardrail before `done`, assistance logged (section 8). AXIS returns 403 during a Cold Check, on consult and stream. Must work with `MOCK_AI=true` and the local OpenAI-compatible model through existing config. Never print keys.
-- **Open interpretations to report:** a seed's newest result counts, so a failed first try does not stick. A failed activity attempt still counts as completing it, so the clock starts. Attempted activities, not passed ones, start the clock. A Cold Check retry covers only the failed skills. With one Cold Check seed per skill, a retry repeats the same item, so `reveal` stays off on failure.
+- **State:** steps 1 to 5 done. Step 6 is next, then the frontend. Push is on hold.
+- **Step 6:** `WS /api/v1/runs` with `input()` pausing and limits (5 s CPU, 120 s wall, 64 KB, no network; SPEC-12 section 7). `POST /api/v1/axis/stream` as SSE with `exercise_id` and `page`, sentence buffering in Socratic mode, guardrail before `done`, assistance logged (section 8). AXIS returns 403 during a Cold Check, on consult and stream. Must work with `MOCK_AI=true` and the local OpenAI-compatible model through existing config. Never print keys.
 
 - **Branch:** `main` (tracking `origin/main` on Entire)
-- **Latest Commit:** `ddcddc3` (this update follows it)
+- **Latest Commit:** see `git log`
 - **Entire Version Control:** Enabled (`origin` linked to `/et/rag-learning-projects/lms` on `aws-ap-south-1.entire.io`). Push is on hold by owner decision; recent commits are local only.
-- **Current Phase:** Learner Experience Backend: steps 1 to 4 done, attempts (step 5) next (`637` Tests Passing)
+- **Current Phase:** Learner Experience Backend: steps 1 to 5 done, live runs and AXIS streaming (step 6) next (`725` Tests Passing)
 - **Status:** In Progress
 
 ---
@@ -30,7 +19,7 @@
 | :--- | :--- | :--- | :--- |
 | **Step 1** | Real-World Architecture Inquiry | **Done** | [`docs/architecture/01-problem-statement.md`](docs/architecture/01-problem-statement.md) |
 | **Step 2** | Specification (SPEC) & ADR Drafting | **Done** | [`docs/specs/`](docs/specs/) (SPEC-01 through 13)<br>[`docs/adr/`](docs/adr/README.md) (ADR-0001 through 0017) |
-| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks, Exercise Seeds (`637` tests passing) |
+| **Step 3** | SDD + TDD Implementation | **Done** | Core, Ingestion, Lesson Packages, Runner Sandbox, CLI, API Gateway, Socratic Guardrail, LocalLLMCompanion, Hybrid Reranked Retriever, Persistent Upstream Indexer, Unified Web Platform Shell, Proficiency Estimator, Cold Check Timer, Course Catalog, Curriculum Checks, Exercise Seeds, Attempts and Grader (`725` tests passing) |
 | **Step 4** | No-Blind-Code Audit | **Done** | Executive translations (4 plain-English questions per module) |
 | **Step 5** | Chaos Verification | **Done** | Falsification against SQL injection, prompt injection, infinite loops, DAG cycles, tampered passages, dirty markups, syntax failures, malformed input streams |
 | **Step 6** | Architectural Defense | **Done** | Interview defense playbook, trade-off narratives, and ADRs |
@@ -137,7 +126,7 @@
       - `llamaindex-docs` (`619d746`): 109 sources (MIT, LlamaIndex data framework documentation)
       - `llama-index-core==0.14.25`: pinned in `pyproject.toml` (`[dependency-groups] variants`) for deterministic boundary evaluation.
   - **FastAPI HTTP Gateway (`src/lms/api/`):** REST API endpoints for `/units`, `/execute`, `/axis/consult`, `/learners/{id}/ledger`, and `/learners/{id}/progress`.
-  - 637 automated tests passing.
+  - 725 automated tests passing.
 
 ---
 
@@ -152,7 +141,6 @@
 
 ## 4. Next Action
 - Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before other learners use it.
-- Step 4 is done: seed loader, exercise, regenerate, reset, state and draft routes.
-- Next is step 5 attempts and evidence, including the grader and starting the Cold Check clock. Then step 6 live runs and AXIS streaming, step 7 stage builds, then the frontend. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
-- Known gaps for step 5: `/explain` and `/axis/consult` still accept a `learner_id` in the request body. `GET /units/{id}` still returns `test_code` and the concept check rubric for the old shell; a server-side playground verify route should replace that.
+- Steps 4 and 5 are done: exercises, attempts, the grader and the Cold Check round.
+- Next is step 6 live runs and AXIS streaming, then the frontend, then step 7 stage builds. The owner wants to test the real frontend with AXIS on the local model as soon as possible.
 - Separate open item: benchmark results (BAAI/bge-m3 vs jina-embeddings-v2-base-en) for the upstream RAG pipeline.

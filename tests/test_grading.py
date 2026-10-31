@@ -173,6 +173,23 @@ def test_static_gate_refuses_anything_but_tests(source):
     assert specify(source).passed is False
 
 
+def test_refused_tests_never_reach_the_sandbox():
+    calls = []
+
+    class Spy:
+        def execute(self, code, test_code=None, timeout_seconds=5.0, stdin_input=None):
+            calls.append(test_code)
+            return RUNNER.execute(code, test_code=test_code)
+
+    seed = SEEDS["PY-2.1/cold-specify-1"]
+    cheat = "\n".join(HEADER + ["def test_x():", "    assert open('solution.py').read()"])
+
+    result = grade(seed, attempt(seed, tests=cheat), Spy())
+
+    assert result.passed is False
+    assert calls == []
+
+
 def test_static_gate_allows_pytest_raises():
     source = "import pytest\n" + "\n".join(
         HEADER + ["def test_x():", "    with pytest.raises(ValueError):", "        desk_for(1)"]

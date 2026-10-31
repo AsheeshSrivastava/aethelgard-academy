@@ -506,6 +506,29 @@ def test_consult_ignores_a_body_learner_id(client, repo, clock):
     assert repo.get_assistance_levels("someone_else", current["exercise_id"], T0) == []
 
 
+def test_the_companion_sees_the_resolved_learner(repo, catalog, clock):
+    seen = []
+
+    class Spy(MockAxisCompanion):
+        def consult(self, query):
+            seen.append(query.learner_id)
+            return super().consult(query)
+
+    app = create_app(repo=repo, runner=SubprocessRunner(), axis=Spy(), catalog=catalog, clock=clock)
+    TestClient(app).post(
+        "/api/v1/axis/consult",
+        json={
+            "learner_id": "someone_else",
+            "unit_id": "PY-0.1",
+            "mode": "Socratic",
+            "current_activity": "Predict",
+            "user_prompt": "Why?",
+        },
+    )
+
+    assert seen == [LOCAL_LEARNER_ID]
+
+
 def test_unit_route_sends_no_hidden_checks_or_rubric(client):
     body = client.get("/api/v1/units/PY-0.1").json()
 
