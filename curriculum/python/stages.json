@@ -1,0 +1,19 @@
+{
+  "course_id": "python",
+  "stages": {
+    "0": "Running your first program",
+    "1": "Values, text and collections",
+    "2": "Conditions, loops and control flow",
+    "3": "Functions and decomposition",
+    "4": "Errors, validation and failure contracts",
+    "5": "Modules, packages and project structure",
+    "6": "Classes and object design",
+    "7": "Iterators, decorators and type contracts",
+    "8": "Files, data and external services",
+    "9": "Testing, debugging and runtime evidence",
+    "10": "Environments, packaging and quality gates",
+    "11": "Concurrency and async",
+    "12": "Working in existing codebases",
+    "13": "Owning a Python subsystem"
+  }
+}

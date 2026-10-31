@@ -173,10 +173,33 @@ def test_stage_title_comes_from_the_roadmap(client):
     assert body["stages"][11]["title"] == "Backend testing"
 
 
-def test_stage_without_a_roadmap_title_falls_back_to_its_number(client):
+def test_stage_without_a_roadmap_title_falls_back_to_its_number():
+    client, _ = make_client(small_catalog())
+
     body = client.get("/api/v1/courses/python").json()
 
-    assert body["stages"][3]["title"] == "Stage 3"
+    assert body["stages"][0]["title"] == "Stage 1"
+
+
+def test_python_stages_have_the_approved_titles(client):
+    titles = [s["title"] for s in client.get("/api/v1/courses/python").json()["stages"]]
+
+    assert titles == [
+        "Running your first program",
+        "Values, text and collections",
+        "Conditions, loops and control flow",
+        "Functions and decomposition",
+        "Errors, validation and failure contracts",
+        "Modules, packages and project structure",
+        "Classes and object design",
+        "Iterators, decorators and type contracts",
+        "Files, data and external services",
+        "Testing, debugging and runtime evidence",
+        "Environments, packaging and quality gates",
+        "Concurrency and async",
+        "Working in existing codebases",
+        "Owning a Python subsystem",
+    ]
 
 
 def test_authored_marks_units_with_a_lesson_package(client):

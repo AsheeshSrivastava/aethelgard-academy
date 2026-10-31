@@ -135,8 +135,8 @@
 - Push is on hold.
 
 ## 4. Next Action
-- Owner reviews the proposed Python stage titles (`docs/proposals/python-stage-titles.md`) and the Stage 0 seed drafts.
-- Then step 4: exercises (seed loader, grader, exercise, regenerate, reset, state and drafts routes, and the `playground` step in `Unit.activities`).
+- Python stage titles and the 20 Stage 0 seeds are approved (2026-10-31). Each Stage 0 skill still has only one Cold Check seed, so a retry after a fail has no unseen item; add more before real learners use it.
+- Next is step 4: exercises (seed loader, grader, exercise, regenerate, reset, state and drafts routes, and the `playground` step in `Unit.activities`).
 - Then step 5 attempts and evidence, step 6 live runs and AXIS streaming, step 7 stage builds, then the frontend.
 - Known gap for step 5: `/explain` and `/axis/consult` still accept a `learner_id` in the request body.
 - Separate open item: benchmark results (BAAI/bge-m3 vs jina-embeddings-v2-base-en) for the upstream RAG pipeline.

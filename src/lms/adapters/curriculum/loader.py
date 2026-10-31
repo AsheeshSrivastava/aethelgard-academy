@@ -284,6 +284,12 @@ def overlay_curriculum_packages(catalog: CurriculumCatalog, curriculum_dir: Path
     if not curriculum_dir.exists():
         return
 
+    # Curator stage titles live with the packages; roadmap files stay unchanged.
+    for stages_file in curriculum_dir.glob("*/stages.json"):
+        stages = json.loads(stages_file.read_text(encoding="utf-8"))
+        for stage, title in stages["stages"].items():
+            catalog.set_stage_title(stages["course_id"], int(stage), title)
+
     for pkg_dir in curriculum_dir.glob("*/*"):
         if not pkg_dir.is_dir():
             continue

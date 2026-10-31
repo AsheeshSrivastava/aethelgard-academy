@@ -1,6 +1,6 @@
 # Proposal: Python Stage Titles
 
-- **Status:** Proposed. Waiting for the owner's review. Not applied to the roadmap.
+- **Status:** Approved by the owner on 2026-10-31. Applied in `curriculum/python/stages.json`; the roadmap file is unchanged.
 - **Date:** 2026-10-31
 - **Why:** the Python Subject Roadmap v3 stage headings have no titles, so the course map shows "Stage 3". The Backend and AI Engineering roadmaps already have titles.
 - **Sources:** the unit titles in each stage, and `docs/architecture/02-operational-narrative-spine-78-units.md`.
@@ -23,5 +23,3 @@ Titles name the capability, not the story, so the same title still works if the 
 | 11 | Concurrency and async | Mental model, threads, processes, async tracing and async failures. |
 | 12 | Working in existing codebases | Navigating, learning from documentation, changing safely and refactoring. |
 | 13 | Owning a Python subsystem | The capstone: building a subsystem and owning AI-assisted work. |
-
-To apply these, the owner adds each title to its `### Stage N` heading in the roadmap as `### Stage N: Title`. The loader already reads titles written that way.
