@@ -6,10 +6,12 @@ Follows Hexagonal Architecture:
 - IAXISCompanion: AI Tutoring port (Mock / Cloud LLM)
 """
 
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Protocol
 from pydantic import BaseModel, Field
 
+from lms.core.cold_check import ColdCheckTimer
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
@@ -59,6 +61,22 @@ class ILearnerRepository(Protocol):
         ...
 
     def save_unit_progress(self, learner_id: str, unit_id: str, status: str) -> None:
+        ...
+
+    def get_cold_check_timer(self, learner_id: str, unit_id: str) -> Optional[ColdCheckTimer]:
+        ...
+
+    def mark_unit_activities_completed(
+        self, learner_id: str, unit_id: str, completed_at: datetime
+    ) -> None:
+        ...
+
+    def record_cold_check_attempt(
+        self, learner_id: str, unit_id: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        ...
+
+    def reset_unit(self, learner_id: str, unit_id: str) -> None:
         ...
 
     def record_evidence(self, entry: EvidenceEntry) -> None:

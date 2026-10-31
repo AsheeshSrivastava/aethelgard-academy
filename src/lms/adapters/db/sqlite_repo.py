@@ -8,6 +8,7 @@ import json
 import sqlite3
 from typing import Any, Dict, List, Optional
 
+from lms.core.cold_check import ColdCheckTimer
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
@@ -83,6 +84,18 @@ class SQLiteLearnerRepository:
             for column, definition in EVIDENCE_LEDGER_ADDED_COLUMNS.items():
                 if column not in existing:
                     conn.execute(f"ALTER TABLE evidence_ledger ADD COLUMN {column} {definition}")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS unit_cold_check (
+                    learner_id TEXT NOT NULL,
+                    unit_id TEXT NOT NULL,
+                    completed_at TEXT NOT NULL,
+                    last_attempt_at TEXT,
+                    last_attempt_passed INTEGER,
+                    PRIMARY KEY (learner_id, unit_id)
+                );
+                """
+            )
 
     def get_learner(self, learner_id: str) -> Optional[Dict[str, Any]]:
         return {"learner_id": learner_id}
@@ -111,6 +124,66 @@ class SQLiteLearnerRepository:
                 """,
                 (learner_id, unit_id, status),
             )
+
+    def get_cold_check_timer(self, learner_id: str, unit_id: str) -> Optional[ColdCheckTimer]:
+        conn = self._get_conn()
+        row = conn.execute(
+            "SELECT * FROM unit_cold_check WHERE learner_id = ? AND unit_id = ?",
+            (learner_id, unit_id),
+        ).fetchone()
+        if row is None:
+            return None
+        passed = row["last_attempt_passed"]
+        return ColdCheckTimer(
+            learner_id=row["learner_id"],
+            unit_id=row["unit_id"],
+            completed_at=datetime.fromisoformat(row["completed_at"]),
+            last_attempt_at=(
+                datetime.fromisoformat(row["last_attempt_at"]) if row["last_attempt_at"] else None
+            ),
+            last_attempt_passed=None if passed is None else bool(passed),
+        )
+
+    def mark_unit_activities_completed(
+        self, learner_id: str, unit_id: str, completed_at: datetime
+    ) -> None:
+        """Start the clock. The first completion wins, so redoing an activity cannot push it back."""
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO unit_cold_check (learner_id, unit_id, completed_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(learner_id, unit_id) DO NOTHING
+                """,
+                (learner_id, unit_id, completed_at.isoformat()),
+            )
+
+    def record_cold_check_attempt(
+        self, learner_id: str, unit_id: str, passed: bool, attempted_at: datetime
+    ) -> None:
+        conn = self._get_conn()
+        with conn:
+            cursor = conn.execute(
+                """
+                UPDATE unit_cold_check
+                SET last_attempt_at = ?, last_attempt_passed = ?
+                WHERE learner_id = ? AND unit_id = ?
+                """,
+                (attempted_at.isoformat(), int(passed), learner_id, unit_id),
+            )
+        if cursor.rowcount == 0:
+            raise ValueError(f"Unit '{unit_id}' has no completed activities to Cold Check.")
+
+    def reset_unit(self, learner_id: str, unit_id: str) -> None:
+        """Clear a unit's progress and Cold Check timer. Never touches evidence_ledger."""
+        conn = self._get_conn()
+        with conn:
+            for table in ("unit_progress", "unit_cold_check"):
+                conn.execute(
+                    f"DELETE FROM {table} WHERE learner_id = ? AND unit_id = ?",
+                    (learner_id, unit_id),
+                )
 
     def record_evidence(self, entry: EvidenceEntry) -> None:
         conn = self._get_conn()
