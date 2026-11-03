@@ -80,6 +80,10 @@ PROGRESS.md
 docs/sessions/
 docs/proposals/
 
+# Answer material is private and read from LMS_ANSWERS_DIR (ADR-0021)
+curriculum/*/builds/*/checks.py
+curriculum/*/builds/*/solution.py
+
 # Upstream Reference Corpus (1400+ third-party doc files; reproducible via scripts/fetch_upstream.py)
 reference/upstream/
 

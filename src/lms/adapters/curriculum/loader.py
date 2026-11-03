@@ -10,7 +10,7 @@ import logging
 import re
 from typing import Dict, List, Optional, Set, Tuple
 
-from lms.adapters.curriculum.builds import load_builds
+from lms.adapters.curriculum.builds import answers_dir_from_env, load_builds
 from lms.adapters.curriculum.concepts import load_concepts
 from lms.core.builds import StageBuildSpec, check_builds
 from lms.core.concepts import check_concept_links
@@ -319,7 +319,7 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
             skill.skill_name = skill_names.get(skill.skill_id, skill.skill_id)
     catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
     concepts, concept_problems = load_concepts(reference_dir.parent / "curriculum" / "concepts")
-    catalog.builds, build_problems = load_builds(reference_dir.parent / "curriculum")
+    catalog.builds, build_problems = load_builds(reference_dir.parent / "curriculum", answers_dir_from_env())
     catalog.findings = (
         seed_problems
         + check_curriculum(

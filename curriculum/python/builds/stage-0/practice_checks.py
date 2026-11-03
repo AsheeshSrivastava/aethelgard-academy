@@ -1,4 +1,8 @@
-"""Hidden behaviour checks for the Stage 0 build (SPEC-15). Never served to a learner."""
+"""Practice checks for the Stage 0 build (SPEC-15, ADR-0021). Public: read them, run them, learn from them.
+
+The checks that grade your build are hidden and use other inputs, so a script
+written only to pass these will not pass those.
+"""
 
 import io
 from pathlib import Path

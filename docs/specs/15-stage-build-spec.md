@@ -18,11 +18,16 @@ Out of scope for now: generated briefs (the canvas's Regenerate brief button). A
 ## 2. Where a build lives
 
 ```text
-curriculum/python/builds/stage-0/
-  build.json      served to the learner, except `requirements[].check`
-  checks.py       hidden behaviour checks; never served
-  solution.py     reference solution; never served; a test proves it passes
+curriculum/python/builds/stage-0/          public
+  build.json            served to the learner, except `requirements[].check`
+  practice_checks.py    public practice checks; a learner may read and run them
+
+<LMS_ANSWERS_DIR>/python/builds/stage-0/   private (ADR-0021)
+  checks.py             hidden behaviour checks; never served
+  solution.py           reference solution; never served; a test proves it passes
 ```
+
+The loader takes `checks.py` from `LMS_ANSWERS_DIR`. With the variable unset, it grades with `practice_checks.py` and reports `build-practice-checks`. With it set, a missing `checks.py` is `build-invalid`; there is no fallback.
 
 ### 2.1 `build.json`
 
@@ -134,6 +139,8 @@ A request carrying a build's `exercise_id` always runs in Socratic mode, on `/ax
 | `build-invalid` | error | The build could not be loaded; the message says why |
 | `build-unit-unknown` | error | A requirement or `proves` item names a unit that is not in the stage |
 | `build-skill-unknown` | error | A `proves` skill is not a target skill of its unit |
+| `build-practice-checks` | warning | `LMS_ANSWERS_DIR` is not set, so the build grades with its public practice checks |
+| `build-answers-public` | error | A `checks.py` or `solution.py` is in the public build folder (ADR-0021) |
 
 An authored build also satisfies `own-needs-stage-build` for its stage.
 
@@ -175,7 +182,7 @@ Route `/courses/:courseId/stages/:stage/build`, loaded only when opened. The cou
 2. No response holds `check`, `checks.py` or `solution.py` content.
 3. Each check kind is met and not met as specified; a syntax error is reported, not raised.
 4. `sys.exit(0)` and `os._exit(0)` scripts do not pass a behaviour check.
-5. The reference solution meets every requirement. The starter meets none of the code requirements.
+5. The reference solution meets every requirement, with the hidden and the practice checks. The starter meets none of the code requirements. A script fitted to the practice checks fails the hidden ones.
 6. A passing submit writes one Strong `Build` entry per `proves` item. With no help, it qualifies for Own.
 7. A failed submit writes nothing. `SUPPLIED_REASONING` gives Weak.
 8. A client cannot send a strength or category, or get AXIS out of Socratic mode on a build.

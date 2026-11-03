@@ -150,7 +150,8 @@ def test_load_records_findings_and_does_not_fail(caplog):
     with caplog.at_level(logging.WARNING, logger="lms.adapters.curriculum.loader"):
         catalog = load_all_roadmaps(Path("reference"))
 
-    assert catalog.findings == check_curriculum(
+    # Without LMS_ANSWERS_DIR the build also warns that it grades with practice checks (ADR-0021).
+    assert [f for f in catalog.findings if f.code != "build-practice-checks"] == check_curriculum(
         catalog.list_all_units(), main_activities=catalog.main_activities, seeds=catalog.seeds
     )
     assert "Curriculum checks" in caplog.text

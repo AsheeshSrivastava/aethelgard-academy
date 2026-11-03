@@ -28,6 +28,8 @@ export default defineConfig({
     env: {
       MOCK_AI: "true",
       LMS_DB_PATH: process.env.LMS_E2E_DB,
+      // Hidden build checks (ADR-0021); unset, builds grade with their practice checks.
+      ...(process.env.LMS_ANSWERS_DIR ? { LMS_ANSWERS_DIR: process.env.LMS_ANSWERS_DIR } : {}),
     },
   },
 });

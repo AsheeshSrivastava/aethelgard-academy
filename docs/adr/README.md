@@ -22,3 +22,4 @@
 | [ADR-0018](0018-project-and-build-maturity.md) | Project and Build Maturity in the Learning Path | **Proposed** | 2026-10-31 |
 | [ADR-0019](0019-spaced-review-and-practice-volume.md) | Unit Cold Check, Stage Review, Spaced Rechecks and Practice Volume | **Proposed** | 2026-10-31 |
 | [ADR-0020](0020-slotted-units-and-path-order.md) | Slotted Units, Stage Ids and Path Order | **Proposed** | 2026-10-31 |
+| [ADR-0021](0021-private-answer-material.md) | Private Answer Material | **Proposed** | 2026-11-03 |

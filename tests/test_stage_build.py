@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 import json
+import os
 from functools import cache
 from pathlib import Path
 
@@ -40,21 +41,48 @@ ME = "/api/v1/learners/me/courses/python/stages/0"
 ATTEMPTS = "/api/v1/learners/me/attempts"
 EXERCISE = "python/stage-0/build"
 STAGE_0 = ("PY-0.4", "PY-0.1", "PY-0.3")
-SOLUTION = (FOLDER / "solution.py").read_text(encoding="utf-8")
 NOTE = "I planned it, wrote it, and checked it with messy input myself."
 README = "# Build\n\nRun it with python checkin.py\n"
+PRACTICE = (FOLDER / "practice_checks.py").read_text(encoding="utf-8")
+
+# Hidden checks and the reference solution are private (ADR-0021). Tests that need them are skipped without them.
+ANSWERS = Path(os.environ["LMS_ANSWERS_DIR"]) if os.environ.get("LMS_ANSWERS_DIR") else None
+HIDDEN = ANSWERS / "python" / "builds" / "stage-0" if ANSWERS else None
+needs_answers = pytest.mark.skipif(ANSWERS is None, reason="LMS_ANSWERS_DIR is not set (ADR-0021)")
+
+# Has the shape of an answer (plan, two inputs, two f-strings) but cleans nothing, so it is not one.
+SHAPED = (
+    "# Ask for both answers.\n"
+    'name = input("Name: ")\n'
+    'service = input("Service needed: ")\n'
+    "# Print them back as typed.\n"
+    "# Cleaning is left out on purpose.\n"
+    'print(f"Name: {name}")\n'
+    'print(f"Service: {service}")\n'
+)
 
 
 def raw_build():
     return json.loads((FOLDER / "build.json").read_text(encoding="utf-8"))
 
 
-def spec():
-    return StageBuildSpec.model_validate({**raw_build(), "checks_source": (FOLDER / "checks.py").read_text(encoding="utf-8")})
+def spec(checks_source=None):
+    """The build as the server grades it: hidden checks when they are here, else the practice checks."""
+    if checks_source is None:
+        checks_source = (HIDDEN / "checks.py").read_text(encoding="utf-8") if HIDDEN else PRACTICE
+    return StageBuildSpec.model_validate({**raw_build(), "checks_source": checks_source})
+
+
+def solution():
+    return (HIDDEN / "solution.py").read_text(encoding="utf-8")
 
 
 def good_files():
-    return {"checkin.py": SOLUTION, "README.md": README}
+    return {"checkin.py": SHAPED, "README.md": README}
+
+
+def solved_files():
+    return {"checkin.py": solution(), "README.md": README}
 
 
 def met(results):
@@ -85,16 +113,20 @@ class FakeRunner:
 
 
 def test_the_stage_0_build_loads_clean_and_approved():
-    builds, problems = load_builds(Path("curriculum"))
+    builds, problems = load_builds(Path("curriculum"), ANSWERS)
 
-    assert problems == []
+    assert [p.code for p in problems] == ([] if ANSWERS else ["build-practice-checks"])
     build = builds[("python", 0)]
     assert build.status == "approved"
     assert build.entry == "checkin.py"
     assert "check_sample_run" in build.checks_source
 
 
-def copy_build(tmp_path, change=None, checks="def check_sample_run():\n    pass\n\ndef check_messy_input():\n    pass\n"):
+CHECKS = "def check_sample_run():\n    pass\n\ndef check_messy_input():\n    pass\n"
+
+
+def copy_build(tmp_path, change=None, checks=CHECKS):
+    """A public build folder, with `checks` as its practice checks."""
     folder = tmp_path / "python" / "builds" / "stage-0"
     folder.mkdir(parents=True)
     data = raw_build()
@@ -102,8 +134,112 @@ def copy_build(tmp_path, change=None, checks="def check_sample_run():\n    pass\
         change(data)
     (folder / "build.json").write_text(json.dumps(data), encoding="utf-8")
     if checks is not None:
-        (folder / "checks.py").write_text(checks, encoding="utf-8")
+        (folder / "practice_checks.py").write_text(checks, encoding="utf-8")
     return tmp_path
+
+
+def answers_folder(tmp_path, checks=CHECKS + "# hidden\n"):
+    folder = tmp_path / "answers" / "python" / "builds" / "stage-0"
+    folder.mkdir(parents=True)
+    if checks is not None:
+        (folder / "checks.py").write_text(checks, encoding="utf-8")
+    return tmp_path / "answers"
+
+
+# --- Private answer material (ADR-0021) ---
+
+
+def test_hidden_checks_come_from_the_answers_folder(tmp_path):
+    builds, problems = load_builds(copy_build(tmp_path / "public"), answers_folder(tmp_path))
+
+    assert problems == []
+    assert builds[("python", 0)].checks_source.endswith("# hidden\n")
+
+
+def test_without_an_answers_folder_the_practice_checks_grade_with_a_warning(tmp_path):
+    builds, problems = load_builds(copy_build(tmp_path), None)
+
+    assert builds[("python", 0)].checks_source == CHECKS
+    assert [(p.code, p.severity.value) for p in problems] == [("build-practice-checks", "warning")]
+    assert "LMS_ANSWERS_DIR" in problems[0].message
+
+
+def test_a_set_answers_folder_never_falls_back_to_practice(tmp_path):
+    builds, problems = load_builds(copy_build(tmp_path / "public"), answers_folder(tmp_path, checks=None))
+
+    assert builds == {}
+    assert [p.code for p in problems] == ["build-invalid"]
+    assert "checks.py" in problems[0].message
+
+
+@pytest.mark.parametrize("name", ["checks.py", "solution.py"])
+def test_answer_files_in_the_public_folder_are_reported(tmp_path, name):
+    public = copy_build(tmp_path / "public")
+    (public / "python" / "builds" / "stage-0" / name).write_text("x = 1\n", encoding="utf-8")
+
+    builds, problems = load_builds(public, answers_folder(tmp_path))
+
+    assert [p.code for p in problems] == ["build-answers-public"]
+    assert name in problems[0].message
+    assert builds[("python", 0)].checks_source.endswith("# hidden\n")
+
+
+def test_the_public_tree_holds_no_answers():
+    curriculum = Path("curriculum")
+
+    assert sorted(curriculum.glob("*/builds/*/checks.py")) + sorted(curriculum.glob("*/builds/*/solution.py")) == []
+
+
+@needs_answers
+def test_the_hidden_checks_are_not_the_practice_checks():
+    hidden = (HIDDEN / "checks.py").read_text(encoding="utf-8")
+
+    assert hidden != PRACTICE
+    for practice_input in ("farah KHAN", "medical aid"):
+        assert practice_input not in hidden
+
+
+@needs_answers
+def test_the_reference_solution_passes_the_practice_checks_too():
+    results = check_requirements(spec(PRACTICE), solved_files(), NOTE, SubprocessRunner(), run_checks=True)
+
+    assert all(r.met for r in results), [r for r in results if not r.met]
+
+
+# Written to pass the practice checks and nothing else.
+FITTED = """# Ask for both answers.
+name = input("Name: ")
+service = input("Service needed: ")
+# Look up the answers the practice checks use.
+known = {"   farah KHAN ": "Farah Khan", "  medical aid ": "Medical Aid", "Meera": "Meera", "housing": "Housing"}
+name = known.get(name, name)
+service = known.get(service, service)
+# Print the slip.
+print()
+print("--- CHECK-IN SLIP ---")
+print(f"Name: {name}")
+print(f"Service: {service}")
+print(f"Please wait for the {service} desk.")
+"""
+
+
+@needs_answers
+def test_a_script_fitted_to_the_practice_checks_fails_the_hidden_ones():
+    files = {"checkin.py": FITTED, "README.md": README}
+    practice = met(check_requirements(spec(PRACTICE), files, NOTE, SubprocessRunner(), run_checks=True))
+    hidden = met(check_requirements(spec(), files, NOTE, SubprocessRunner(), run_checks=True))
+
+    assert practice["sample"] is True and practice["messy"] is True
+    assert hidden["sample"] is False and hidden["messy"] is False
+
+
+@needs_answers
+def test_a_messy_failure_does_not_reveal_the_hidden_input():
+    strip_only = solution().replace(".strip().title()", ".strip()")
+    results = check_requirements(spec(), {"checkin.py": strip_only, "README.md": README}, NOTE, SubprocessRunner(), run_checks=True)
+
+    detail = next(r.detail for r in results if r.id == "messy")
+    assert detail == "With messy input, output line 3 is not right. Check how both answers are cleaned."
 
 
 def set_field(name, value):
@@ -136,11 +272,11 @@ def test_a_bad_build_is_reported_and_skipped(tmp_path, change, words):
     assert words in problems[0].message
 
 
-def test_a_build_without_hidden_checks_is_reported(tmp_path):
+def test_a_build_without_any_checks_is_reported(tmp_path):
     builds, problems = load_builds(copy_build(tmp_path, checks=None))
 
     assert builds == {}
-    assert "checks.py" in problems[0].message
+    assert "practice_checks.py" in problems[0].message
 
 
 def test_a_build_that_is_not_json_is_reported(tmp_path):
@@ -154,7 +290,8 @@ def test_a_build_that_is_not_json_is_reported(tmp_path):
 def test_the_real_build_has_no_curriculum_findings():
     catalog = load_all_roadmaps(Path("reference"))
 
-    assert [f for f in catalog.findings if f.code.startswith("build-")] == []
+    found = [f.code for f in catalog.findings if f.code.startswith("build-")]
+    assert found == ([] if ANSWERS else ["build-practice-checks"])
     assert ("python", 0) in catalog.builds
 
 
@@ -199,8 +336,9 @@ def test_other_exercise_ids_are_not_builds(value):
 # --- Requirement checks ---
 
 
+@needs_answers
 def test_the_reference_solution_meets_everything_in_the_real_sandbox():
-    results = check_requirements(spec(), good_files(), NOTE, SubprocessRunner(), run_checks=True)
+    results = check_requirements(spec(), solved_files(), NOTE, SubprocessRunner(), run_checks=True)
 
     assert all(r.met for r in results), [r for r in results if not r.met]
 
@@ -254,7 +392,7 @@ def test_a_pass_needs_success_as_well_as_the_token():
 
 
 def test_a_behaviour_failure_says_why_in_plain_words():
-    code = SOLUTION.replace("CHECK-IN SLIP", "SLIP")
+    code = 'input()\ninput()\nprint()\nprint("--- SLIP ---")\n'
     results = check_requirements(spec(), {"checkin.py": code, "README.md": README}, NOTE, SubprocessRunner(), run_checks=True)
 
     detail = next(r.detail for r in results if r.id == "sample")
@@ -449,19 +587,30 @@ def test_check_returns_live_results_and_writes_nothing(client, repo):
     assert repo.get_evidence_ledger(LOCAL_LEARNER_ID) == []
 
 
+@needs_answers
 def test_verify_runs_the_hidden_checks(client, repo):
     pass_cold_checks(repo)
 
-    data = {r["id"]: r["met"] for r in check(client, run_checks=True).json()["requirements"]}
+    data = {r["id"]: r["met"] for r in check(client, files=solved_files(), run_checks=True).json()["requirements"]}
 
     assert data["sample"] is True and data["messy"] is True
 
 
+@needs_answers
+def test_verify_grades_with_the_hidden_checks_not_the_practice_ones(client, repo):
+    pass_cold_checks(repo)
+
+    data = {r["id"]: r["met"] for r in check(client, files={"checkin.py": FITTED, "README.md": README}, run_checks=True).json()["requirements"]}
+
+    assert data["sample"] is False and data["messy"] is False
+
+
+@needs_answers
 def test_a_passing_submit_writes_one_strong_build_entry_per_skill(client, repo):
     pass_cold_checks(repo)
     client.get(BUILD)
 
-    res = submit(client)
+    res = submit(client, files=solved_files())
 
     assert res.status_code == 200, res.text
     body = res.json()
@@ -482,9 +631,10 @@ def test_a_passing_submit_writes_one_strong_build_entry_per_skill(client, repo):
         assert qualifies(entry, ProficiencyLevel.OWN)
 
 
+@needs_answers
 def test_the_build_shows_as_submitted_afterwards(client, repo):
     pass_cold_checks(repo)
-    submit(client)
+    submit(client, files=solved_files())
 
     assert client.get(BUILD).json()["submitted"] is True
 
@@ -508,22 +658,24 @@ def test_the_server_checks_again_whatever_the_page_showed(client, repo):
     assert res.json()["outcome"] == "failed"
 
 
+@needs_answers
 def test_supplied_reasoning_forces_weak(client, repo):
     pass_cold_checks(repo)
     client.get(BUILD)
     repo.log_assistance(LOCAL_LEARNER_ID, EXERCISE, AssistanceLevel.SUPPLIED_REASONING, T0 + timedelta(minutes=1))
 
-    submit(client)
+    submit(client, files=solved_files())
 
     assert {e.evidence_strength for e in repo.get_evidence_ledger(LOCAL_LEARNER_ID)} == {EvidenceStrength.WEAK}
 
 
+@needs_answers
 def test_a_hint_stays_strong_but_does_not_count_for_own(client, repo):
     pass_cold_checks(repo)
     client.get(BUILD)
     repo.log_assistance(LOCAL_LEARNER_ID, EXERCISE, AssistanceLevel.SMALL_HINT, T0 + timedelta(minutes=1))
 
-    submit(client)
+    submit(client, files=solved_files())
 
     entry = repo.get_evidence_ledger(LOCAL_LEARNER_ID)[0]
     assert entry.evidence_strength == EvidenceStrength.STRONG

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
@@ -7,21 +8,9 @@ const SHOTS = process.env.SCREENSHOT_DIR;
 const BUILD = "/courses/python/stages/0/build";
 const STAGE_0 = ["PY-0.4", "PY-0.1", "PY-0.3"];
 
-const SOLUTION = [
-  "# Ask for the name and the service.",
-  'raw_name = input("Name: ")',
-  'raw_service = input("Service needed: ")',
-  "# Clean both answers.",
-  "name = raw_name.strip().title()",
-  "service = raw_service.strip().title()",
-  "# Print the slip.",
-  "print()",
-  'print("--- CHECK-IN SLIP ---")',
-  'print(f"Name: {name}")',
-  'print(f"Service: {service}")',
-  'print(f"Please wait for the {service} desk.")',
-  "",
-].join("\n");
+// The reference solution is private (ADR-0021), so this walk needs LMS_ANSWERS_DIR.
+const ANSWERS = process.env.LMS_ANSWERS_DIR;
+const SOLUTION = ANSWERS ? readFileSync(join(ANSWERS, "python", "builds", "stage-0", "solution.py"), "utf-8") : "";
 
 async function shot(page: Page, name: string) {
   if (SHOTS) await page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true });
@@ -64,6 +53,7 @@ const requirements = (page: Page) => page.getByRole("region", { name: "Requireme
 const submit = (page: Page) => page.getByRole("button", { name: "Submit build" });
 
 test("a learner finishes the Stage 0 build", async ({ page, request }) => {
+  test.skip(!ANSWERS, "LMS_ANSWERS_DIR is not set (ADR-0021)");
   test.setTimeout(90_000);
   await page.setViewportSize({ width: 1440, height: 1000 });
   for (const unit of STAGE_0) await request.post(`/api/v1/learners/me/units/${unit}/reset`);
