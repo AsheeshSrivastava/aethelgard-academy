@@ -5,6 +5,7 @@
   "activity": "Debug & Validate",
   "skill_id": "VE-4",
   "level": "Understand",
+  "topic": "reading a first error: type, message, line number",
   "prompt_markdown": [
     "This script stops with an error when a visitor types `3`.",
     "",

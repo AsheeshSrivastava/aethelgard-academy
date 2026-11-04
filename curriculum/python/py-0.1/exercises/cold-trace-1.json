@@ -5,6 +5,7 @@
   "activity": "Trace",
   "skill_id": "CO-2",
   "level": "Understand",
+  "topic": "names/bindings",
   "prompt_markdown": [
     "Two names point at a desk label.",
     "",

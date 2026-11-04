@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "`print()`",
   "prompt_markdown": [
     "The pantry counter runs this script, and a visitor types `Asha Rao`.",
     "",

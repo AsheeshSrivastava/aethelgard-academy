@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-2",
   "level": "Understand",
+  "topic": "code comprehension",
   "prompt_markdown": [
     "An AI tool fixed your script, and now it runs. You could not explain the fix to a colleague.",
     "",

@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "execution order",
   "prompt_markdown": [
     "The intake desk runs this program, and the applicant types `{{person}}`.",
     "",

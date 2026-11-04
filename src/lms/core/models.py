@@ -174,6 +174,11 @@ class MakeStep(BaseModel):
     task: str                          # The approved wording from the unit's outcome line
 
 
+class UnitTopic(BaseModel):
+    name: str                          # A roadmap topic, without its "(new)" or "(awareness)" mark
+    awareness: bool = False            # Explained, never tested in Cold Check (Amendment A1.4)
+
+
 class Unit(BaseModel):
     unit_id: str                       # e.g., "PY-1.2", "AI-0.2"
     title: str                         # e.g., "Numbers, booleans and None"
@@ -190,6 +195,7 @@ class Unit(BaseModel):
     lesson_markdown: Optional[str] = None
     concept_check_config: Optional[Dict[str, Any]] = None
     make: Optional[MakeStep] = None
+    topics: List[UnitTopic] = Field(default_factory=list)  # From the roadmap's Topics line
 
     @computed_field
     @property

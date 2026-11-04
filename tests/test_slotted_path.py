@@ -313,6 +313,7 @@ class SimpleSeed:
         self.template = None
         self.item_type = "playground"
         self.body = {}
+        self.topic = "a topic"
 
 
 # --- Old roadmaps ---

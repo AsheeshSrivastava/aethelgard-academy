@@ -5,6 +5,7 @@
   "activity": "Trace",
   "skill_id": "CO-5",
   "level": "Apply",
+  "topic": "configuration",
   "prompt_markdown": [
     "The setting decides whether the counter can still serve.",
     "",

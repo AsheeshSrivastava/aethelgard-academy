@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-2",
   "level": "Understand",
+  "topic": "code comprehension",
   "prompt_markdown": [
     "An AI tool gave you `name.strip().upper()` and it works, but you do not know why `.strip()` comes first.",
     "",

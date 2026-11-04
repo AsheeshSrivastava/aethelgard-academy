@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "comments",
   "prompt_markdown": [
     "The counter terminal runs this script, and a visitor types `{{person}}`.",
     "",

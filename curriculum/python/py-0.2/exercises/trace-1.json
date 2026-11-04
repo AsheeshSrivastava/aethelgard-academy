@@ -5,6 +5,7 @@
   "activity": "Trace",
   "skill_id": "CO-5",
   "level": "Apply",
+  "topic": "data transformation",
   "prompt_markdown": [
     "The parts of the intake app run in one file.",
     "",

@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "`input()` always returns text",
   "prompt_markdown": [
     "The terminal asks for a zone number, and a visitor types `12`.",
     "",

@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-2",
   "level": "Understand",
+  "topic": "documentation lookup",
   "prompt_markdown": [
     "An AI tool wrote the pantry's ticket script. It runs, but one line uses a function you have never seen.",
     "",

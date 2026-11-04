@@ -5,6 +5,7 @@
   "activity": "Explain",
   "skill_id": "CO-4",
   "level": "Apply",
+  "topic": "validation",
   "prompt_markdown": [
     "A new rule says a household size must be a whole number above zero.",
     "",

@@ -5,6 +5,7 @@
   "activity": "Explain",
   "skill_id": "CO-6",
   "level": "Understand",
+  "topic": "execution order",
   "prompt_markdown": [
     "A new colleague explains how the intake script runs.",
     "",

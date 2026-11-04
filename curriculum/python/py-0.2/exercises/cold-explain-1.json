@@ -5,6 +5,7 @@
   "activity": "Explain",
   "skill_id": "CO-4",
   "level": "Apply",
+  "topic": "application responsibility map",
   "prompt_markdown": [
     "A colleague describes the files of the pantry intake app.",
     "",

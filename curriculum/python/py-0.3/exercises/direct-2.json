@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-3",
   "level": "Understand",
+  "topic": "technical responsibility",
   "prompt_markdown": [
     "The intake desk needs a new ticket script, and you are working with an AI tool.",
     "",

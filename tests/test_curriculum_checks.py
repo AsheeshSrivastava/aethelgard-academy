@@ -31,8 +31,16 @@ def unit(
     )
 
 
+PATH_RULES = {"skill-enters-above-apply", "skill-skips-a-rung"}  # Tested in test_curriculum_guards.py
+
+
 def errors(units, **kwargs):
-    return [f.code for f in check_curriculum(units, **kwargs) if f.severity == Severity.ERROR]
+    """Per-unit level errors; a one-unit path above Apply also breaks the entry rule, tested elsewhere."""
+    return [
+        f.code
+        for f in check_curriculum(units, **kwargs)
+        if f.severity == Severity.ERROR and f.code not in PATH_RULES
+    ]
 
 
 def warnings(units):

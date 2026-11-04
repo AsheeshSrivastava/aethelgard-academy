@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-4",
   "level": "Understand",
+  "topic": "validation",
   "prompt_markdown": [
     "An AI tool says the code below prints `amaraokafor`, because `.strip()` removes every space. Your colleague says it keeps the middle space.",
     "",

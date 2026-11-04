@@ -67,6 +67,7 @@ class Seed:
         self.level = LEVELS.UNDERSTAND
         self.item_type = "predict"
         self.body = {}
+        self.topic = "a topic"
 
 
 def seeds(*pairs):

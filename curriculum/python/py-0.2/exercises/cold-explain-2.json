@@ -5,6 +5,7 @@
   "activity": "Explain",
   "skill_id": "CO-4",
   "level": "Apply",
+  "topic": "interfaces/boundaries",
   "prompt_markdown": [
     "The pantry wants to keep family records in a database instead of a JSON file.",
     "",

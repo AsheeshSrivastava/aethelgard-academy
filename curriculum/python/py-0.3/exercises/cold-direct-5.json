@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-3",
   "level": "Understand",
+  "topic": "developer intent",
   "prompt_markdown": [
     "The pantry is adding a script that decides how many parcels each family gets. You have an AI coding tool.",
     "",

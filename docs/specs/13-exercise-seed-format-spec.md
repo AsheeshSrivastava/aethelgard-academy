@@ -47,6 +47,7 @@ curriculum/python/py-0.1/
 | `activity` | str | An `ActivityType` value, e.g. `Predict`, `Debug & Validate` |
 | `skill_id` | str | The one target skill this seed tests |
 | `level` | str | The unit's goal level for that skill |
+| `topic` | str | One topic from the unit's roadmap **Topics** line, as written without its `(new)` or `(awareness)` mark; case does not matter. Public. Added 2026-11-04 (see "Curriculum guards" in section 4). |
 | `prompt_markdown` | [str] | What the learner reads |
 | `cold_check_eligible` | bool | Reserved for the Cold Check (section 5) |
 | `curator_approved` | bool | The curator has reviewed this seed. Required for a Cold Check. |
@@ -122,6 +123,21 @@ A Make step is a Build item in which the learner writes a small program from a b
 4. A unit with a Make step and no approved Make item gets **Warning** `make-seed-missing`.
 
 The learner sees the unit's Make task (`Unit.make.task`, the approved roadmap wording), the visible task list, a blank editor, **Run** with typed input in the sandbox, and **Submit**. Submit is the check: the hidden checks run and the result shows which ones passed. A learner may submit again; the newest result counts, and a pass after a retry is Moderate (SPEC-12 section 5). There is no separate check that runs the hidden tests without recording, because unlimited free checks would let a learner probe the tests instead of reasoning.
+
+#### Curriculum guards (Amendment A1, added 2026-11-04)
+
+Reported by the curriculum check; none stops the app.
+
+| Code | Severity | Rule |
+| --- | --- | --- |
+| `skill-enters-above-apply` | Error | A1.1: in path order, the first unit that targets a skill sets it to Understand or Apply. |
+| `skill-skips-a-rung` | Error | A1.2: a skill rises at most one level from the last unit that targeted it, in path order. Going down is allowed. |
+| `practice-volume-low` | Warning | A1.6: a unit with at least one seed has fewer approved seeds than 15 (Python Stages 0 to 5) or 8 (elsewhere). Regenerated variants are not counted. |
+| `make-volume-low` | Warning | A1.6: a Make unit in Python Stages 0 to 5 has fewer than 3 approved Make items. |
+| `seed-topic-missing` | Error | A seed names no `topic`. |
+| `seed-topic-unknown` | Error | The `topic` is not on the unit's Topics line. |
+| `cold-check-awareness-topic` | Error | A1.4: a Cold Check seed on an awareness topic. A topic is awareness when marked `(awareness)` or named "... awareness". |
+| `exercise-awareness-topic` | Warning | A1.4: a practice seed on an awareness topic; it must not be needed to pass. |
 
 ### `debug` (Debug & Validate)
 | Field | Type | Meaning |

@@ -2,7 +2,7 @@
 
 One list of what comes next, in order. One step at a time. Agreed with the owner on 2026-11-04.
 
-**Current step:** 1.1 Entry and one-rung check.
+**Current step:** 1.4 The 9 rung breaks in the roadmaps (waiting for the owner), then 2.1.
 **Owner, in parallel:** 1.0 Walk Stage 0 yourself (TEST).
 
 What each step needs from the owner:
@@ -19,9 +19,10 @@ Pushing to GitHub and Entire is always at the owner's word.
 ## Phase 1: Guards before more content
 
 - [ ] 1.0 Walk Stage 0 as a learner, with AXIS on the local model, and say what felt wrong. Runs alongside phase 1. (TEST)
-- [ ] 1.1 Entry and one-rung check: no skill enters above Apply, no jump of more than one level (Learning Method v2 A1.1, A1.2). (NOTHING)
-- [ ] 1.2 Volume warning below 15 practice items per unit in Stages 0 to 5 (A1.6, ADR-0019). (NOTHING)
-- [ ] 1.3 Awareness topics never in a Cold Check: each seed names its `topic`, and the check compares it with the roadmap's "(awareness)" topics (A1.4). Decided: option A, a topic field. (NOTHING)
+- [x] 1.1 Entry and one-rung check: no skill enters above Apply, no jump of more than one level (Learning Method v2 A1.1, A1.2). Done 2026-11-04: no entry breaks, 9 rung breaks found (step 1.4).
+- [x] 1.2 Volume warning below 15 practice items per unit in Stages 0 to 5 (A1.6, ADR-0019). Done 2026-11-04: all 5 units with content warn, as expected.
+- [x] 1.3 Awareness topics never in a Cold Check: each seed names its `topic`, and the check compares it with the roadmap's awareness topics (A1.4). Done 2026-11-04: all 37 seeds have a topic; none tests an awareness topic.
+- [ ] 1.4 Fix the 9 skills that rise two levels at once in the roadmaps (PY-11.4, PY-12.1, PY-12.4 twice, PY-13.3, NET-0.2, BE-15.1, BE-17.2, AI-17.4): lower each target one level, or add the missing rung to an earlier unit. (DECIDE)
 
 ## Phase 2: Build maturity and stage builds
 

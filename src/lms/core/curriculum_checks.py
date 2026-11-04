@@ -70,8 +70,86 @@ def check_curriculum(
             findings.extend(_check_seeds(unit, seeds.get(unit.unit_id, ()), main_activities))
             findings.extend(_check_make_items(unit, seeds.get(unit.unit_id, ())))
     findings.extend(_check_stage_coverage(units))
+    findings.extend(_check_level_steps(units))
     if seeds is not None:
         findings.extend(_check_stage_review_items(units, seeds))
+        for unit in units:
+            findings.extend(_check_practice_volume(unit, seeds.get(unit.unit_id, ())))
+            findings.extend(_check_topics(unit, seeds.get(unit.unit_id, ())))
+    return findings
+
+
+RUNGS = [ProficiencyLevel.UNDERSTAND, ProficiencyLevel.APPLY, ProficiencyLevel.ADAPT, ProficiencyLevel.OWN]
+EARLY_PYTHON_STAGES = range(0, 6)  # Python Stages 0 to 5 (Amendment A1.6)
+
+
+def _finding(severity: Severity, code: str, message: str, unit: Unit, skill_id: Optional[str] = None) -> Finding:
+    return Finding(severity=severity, code=code, message=message, unit_id=unit.unit_id, skill_id=skill_id,
+                   course_id=course_of(unit.unit_id), stage=unit.stage)
+
+
+def _check_level_steps(units: List[Unit]) -> List[Finding]:
+    """Amendment A1.1 and A1.2, over the units in path order: enter at Apply or below, rise one rung at a time."""
+    findings: List[Finding] = []
+    last: Dict[str, Tuple[str, ProficiencyLevel]] = {}
+    for unit in units:
+        for skill in unit.target_skills:
+            level = skill.goal_level
+            if skill.skill_id not in last:
+                if RUNGS.index(level) > RUNGS.index(ProficiencyLevel.APPLY):
+                    findings.append(_finding(Severity.ERROR, "skill-enters-above-apply",
+                                             f"{unit.unit_id}: {skill.skill_id} enters the path at {level.value}; "
+                                             "the first unit must set it to Understand or Apply.", unit, skill.skill_id))
+            else:
+                before_unit, before = last[skill.skill_id]
+                if RUNGS.index(level) - RUNGS.index(before) > 1:
+                    findings.append(_finding(Severity.ERROR, "skill-skips-a-rung",
+                                             f"{unit.unit_id}: {skill.skill_id} rises from {before.value} in {before_unit} "
+                                             f"to {level.value}, more than one level.", unit, skill.skill_id))
+            last[skill.skill_id] = (unit.unit_id, level)
+    return findings
+
+
+def _check_practice_volume(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[Finding]:
+    """Amendment A1.6, as a warning: only for a unit whose content has started."""
+    approved = [s for s in seeds if s.curator_approved]
+    if not seeds:
+        return []
+    early = course_of(unit.unit_id) == "python" and unit.stage in EARLY_PYTHON_STAGES
+    target = 15 if early else 8
+    findings: List[Finding] = []
+    if len(approved) < target:
+        findings.append(_finding(Severity.WARNING, "practice-volume-low",
+                                 f"{unit.unit_id} has {len(approved)} approved items; it needs at least {target}.", unit))
+    makes = [s for s in approved if s.item_type == "playground" and s.body.get("make")]
+    if early and unit.make is not None and len(makes) < 3:
+        findings.append(_finding(Severity.WARNING, "make-volume-low",
+                                 f"{unit.unit_id} has {len(makes)} approved Make items; it needs at least 3.",
+                                 unit, unit.make.skill_id))
+    return findings
+
+
+def _check_topics(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[Finding]:
+    """Amendment A1.4: each seed names a topic of its unit, and no Cold Check item tests an awareness topic."""
+    known = {t.name.casefold(): t for t in unit.topics}
+    findings: List[Finding] = []
+    for seed in seeds:
+        if not seed.topic:
+            findings.append(_finding(Severity.ERROR, "seed-topic-missing", f"{seed.seed_id} names no topic.", unit, seed.skill_id))
+            continue
+        topic = known.get(seed.topic.casefold())
+        if topic is None:
+            if known:
+                findings.append(_finding(Severity.ERROR, "seed-topic-unknown",
+                                         f"{seed.seed_id}: '{seed.topic}' is not a topic of {unit.unit_id}.", unit, seed.skill_id))
+            continue
+        if topic.awareness and seed.cold_check_eligible:
+            findings.append(_finding(Severity.ERROR, "cold-check-awareness-topic",
+                                     f"{seed.seed_id} is a Cold Check item on '{topic.name}', an awareness topic.", unit, seed.skill_id))
+        elif topic.awareness:
+            findings.append(_finding(Severity.WARNING, "exercise-awareness-topic",
+                                     f"{seed.seed_id} tests '{topic.name}', an awareness topic; it must not be needed to pass.",
+                                     unit, seed.skill_id))
     return findings
 
 

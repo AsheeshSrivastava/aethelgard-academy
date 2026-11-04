@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "state changes",
   "prompt_markdown": [
     "An applicant types `{{person}}`.",
     "",

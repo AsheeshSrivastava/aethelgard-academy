@@ -5,6 +5,7 @@
   "activity": "Explain",
   "skill_id": "CO-5",
   "level": "Apply",
+  "topic": "interfaces/boundaries",
   "prompt_markdown": [
     "A colleague describes how the files depend on each other.",
     "",

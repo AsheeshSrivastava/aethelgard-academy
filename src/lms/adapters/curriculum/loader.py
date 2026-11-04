@@ -24,6 +24,7 @@ from lms.core.models import (
     ProficiencyLevel,
     TargetSkill,
     Unit,
+    UnitTopic,
     slotted_stage,
 )
 
@@ -133,6 +134,23 @@ def parse_make_step(outcome: str) -> Optional[MakeStep]:
     return MakeStep(skill_id=match.group(1), task=match.group(2)) if match else None
 
 
+_TOPIC_MARK = re.compile(r"\s*\(((?:awareness|new)(?:\s*,\s*(?:awareness|new))*)\)\s*$")
+
+
+def parse_topics(text: str) -> List[UnitTopic]:
+    """Read a roadmap Topics line; a "(awareness)" mark is kept as a flag (Amendment A1.4)."""
+    topics: List[UnitTopic] = []
+    for part in text.split(";"):
+        name = part.strip()
+        if not name:
+            continue
+        mark = _TOPIC_MARK.search(name)
+        # v4 also writes some as "persistence awareness"; those are awareness topics too.
+        awareness = bool(mark and "awareness" in mark.group(1)) or name.lower().endswith(" awareness")
+        topics.append(UnitTopic(name=_TOPIC_MARK.sub("", name).strip(), awareness=awareness))
+    return topics
+
+
 def parse_unit_block(block: str, stage: int = 0) -> Unit:
     """Parse a single markdown unit block starting with '#### PY-...', '#### BE-...' or '#### AI-...'"""
     lines = [line.strip() for line in block.strip().split("\n") if line.strip()]
@@ -155,6 +173,7 @@ def parse_unit_block(block: str, stage: int = 0) -> Unit:
     methods: List[ActivityType] = [ActivityType.EXPLAIN]
     prerequisites: List[str] = []
     make: Optional[MakeStep] = None
+    topics: List[UnitTopic] = []
 
     for line in lines[1:]:
         if line.startswith("- **The concept (Explain):**"):
@@ -170,6 +189,8 @@ def parse_unit_block(block: str, stage: int = 0) -> Unit:
             prerequisites = parse_prerequisites_string(prereqs_part)
         elif line.startswith("- **Outcome"):
             make = parse_make_step(line)
+        elif line.startswith("- **Topics:**"):
+            topics = parse_topics(line.split("**Topics:**", 1)[1])
 
     if not concept_line:
         concept_line = f"Core concepts of {title}"
@@ -183,6 +204,7 @@ def parse_unit_block(block: str, stage: int = 0) -> Unit:
         methods=methods,
         prerequisites=prerequisites,
         make=make,
+        topics=topics,
     )
 
 

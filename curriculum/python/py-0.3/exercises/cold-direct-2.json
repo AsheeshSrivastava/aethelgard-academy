@@ -5,6 +5,7 @@
   "activity": "Direct",
   "skill_id": "DE-3",
   "level": "Understand",
+  "topic": "technical responsibility",
   "prompt_markdown": [
     "Your team is shipping a family registration script with AI help.",
     "",

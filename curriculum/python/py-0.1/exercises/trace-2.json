@@ -5,6 +5,7 @@
   "activity": "Trace",
   "skill_id": "CO-2",
   "level": "Understand",
+  "topic": "state changes",
   "prompt_markdown": [
     "The desk counts families as they are registered.",
     "",

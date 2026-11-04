@@ -228,6 +228,7 @@ class ExerciseSeed(BaseModel):
     template: Optional[Dict[str, Any]] = None
     hint: Optional[str] = None         # Shown after a failed Cold Check item, once approved (ADR-0022)
     hint_approved: bool = False
+    topic: Optional[str] = None        # One topic of the unit's roadmap Topics line (Amendment A1.4)
 
 
 def _options_of(item_type: str, body: Dict[str, Any]) -> Optional[List[Dict[str, str]]]:
@@ -308,6 +309,7 @@ def parse_seed(raw: Dict[str, Any], file_stem: str, unit_id: str) -> ExerciseSee
             template=raw.get("template"),
             hint=hint,
             hint_approved=bool(raw.get("hint_approved", False)),
+            topic=raw.get("topic"),
         )
     except ValidationError as error:
         first = error.errors()[0]

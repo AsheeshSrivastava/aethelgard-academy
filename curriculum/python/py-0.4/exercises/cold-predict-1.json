@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "comments",
   "prompt_markdown": [
     "A visitor types `north-01` at the terminal.",
     "",

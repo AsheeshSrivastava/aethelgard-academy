@@ -5,6 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
+  "topic": "execution order",
   "prompt_markdown": [
     "The intake counter runs this program, and a visitor types `Meera Das`.",
     "",
