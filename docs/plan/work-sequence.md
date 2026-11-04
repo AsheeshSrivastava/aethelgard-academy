@@ -2,7 +2,7 @@
 
 One list of what comes next, in order. One step at a time. Agreed with the owner on 2026-11-04.
 
-**Current step:** Phase 2 is done and committed. Next is phase 2b (README feedback), which was waiting on it.
+**Current step:** 4.1 Finish PY-1.2 (phases 1 to 3 are done). Waiting for the owner's go.
 **Owner, in parallel:** 1.0 Walk Stage 0 yourself (TEST).
 
 What each step needs from the owner:
@@ -43,9 +43,9 @@ Runs after phase 2's build-page work is committed, because it changes the same f
 
 Decided 2026-11-04: keys stay in `.env` for now; Gemini gets its own adapter (Google's SDK), not the OpenAI-compatible address; check which Gemini model answers on the free API when this is built.
 
-- [ ] 2c.1 Provider profiles behind `IAXISCompanion`: local (OpenAI-compatible), OpenAI, Gemini. (DECIDE which first)
-- [ ] 2c.2 Settings page: active profile, "key set: yes/no", test connection showing the model that answered. (NOTHING)
-- [ ] 2c.3 Cost estimate and a monthly cap for paid providers. (DECIDE the cap)
+- [x] 2c.1 Provider profiles behind `IAXISCompanion`: local (OpenAI-compatible), OpenAI, Gemini. (DECIDE which first) Done 2026-11-04 (commit f63bb03).
+- [x] 2c.2 Settings page: active profile, "key set: yes/no", test connection showing the model that answered. (NOTHING) Done 2026-11-04 (commit f63bb03).
+- [x] 2c.3 Cost estimate and a monthly cap for paid providers. (DECIDE the cap) Done 2026-11-04 (commit f63bb03).
 
 ## Phase 3: Two decisions before more testing
 
