@@ -16,7 +16,7 @@
 The **FastAPI LMS Platform Gateway** exposes the core platform capabilities to web browsers, mobile clients, and local CLI tools over a clean, versioned REST API (`/api/v1/`).
 
 It orchestrates:
-1. Serving the canonical curriculum catalog (78 units).
+1. Serving the canonical curriculum catalog (290 units across the three courses; ADR-0020).
 2. Routing untrusted code execution to the hardened sandbox (`ICodeRunner`).
 3. Interacting with the AXIS AI Companion in tri-modal operation (`Coach`, `Hybrid`, `Socratic`).
 4. Querying and updating the append-only **Evidence Ledger** and learner progression state.

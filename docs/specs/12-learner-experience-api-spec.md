@@ -268,7 +268,7 @@ The Socratic guardrail (ADR-0009) runs on the full reply before `done`; in Socra
 
 ## 10. Acceptance Criteria
 
-1. `GET /courses` returns the three courses with stage and unit counts matching the roadmaps (Python 14 stages, 78 units).
+1. `GET /courses` returns the three courses with stage and unit counts matching the roadmaps (Python 22 stages and 111 units, Backend 21 and 98, AI Engineering 18 and 81; ADR-0020).
 2. `Unit.activities` always starts with `video`, `explain`.
 3. Regenerating `explain` returns `409`; regenerating `predict` returns a different `variant_no`; hidden answers never appear in any response before an attempt.
 4. Reset leaves the ledger row count unchanged.
