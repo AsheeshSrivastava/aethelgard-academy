@@ -107,6 +107,25 @@ def test_the_rung_is_measured_from_the_last_unit_that_targets_the_skill():
     assert codes(check_curriculum(path), "skill-skips-a-rung") == []
 
 
+KNOWN_JUMPS = {
+    ("PY-11.4", "DE-6"), ("PY-12.1", "CO-5"), ("PY-12.4", "BU-1"), ("PY-12.4", "VE-1"), ("PY-13.3", "VE-4"),
+    ("NET-0.2", "CO-6"), ("BE-15.1", "DE-6"), ("BE-17.2", "BU-3"), ("AI-17.4", "DE-5"),
+}
+
+
+def test_the_nine_known_jumps_in_the_roadmaps_stay_flagged():
+    """Owner, 2026-11-04 (work sequence 1.4, option C): left as they are, but always reported."""
+    from pathlib import Path
+
+    from lms.adapters.curriculum.loader import load_all_roadmaps
+
+    findings = load_all_roadmaps(Path("reference")).findings
+    jumps = {(f.unit_id, f.skill_id) for f in findings if f.code == "skill-skips-a-rung"}
+
+    assert jumps == KNOWN_JUMPS
+    assert all(f.severity == Severity.ERROR for f in findings if f.code == "skill-skips-a-rung")
+
+
 # --- A1.6 practice volume ---
 
 

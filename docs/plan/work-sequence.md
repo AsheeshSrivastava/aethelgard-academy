@@ -2,7 +2,7 @@
 
 One list of what comes next, in order. One step at a time. Agreed with the owner on 2026-11-04.
 
-**Current step:** 1.4 The 9 rung breaks in the roadmaps (waiting for the owner), then 2.1.
+**Current step:** Phase 1 is done except your own test (1.0). Phase 2 waits for the owner's go.
 **Owner, in parallel:** 1.0 Walk Stage 0 yourself (TEST).
 
 What each step needs from the owner:
@@ -22,7 +22,8 @@ Pushing to GitHub and Entire is always at the owner's word.
 - [x] 1.1 Entry and one-rung check: no skill enters above Apply, no jump of more than one level (Learning Method v2 A1.1, A1.2). Done 2026-11-04: no entry breaks, 9 rung breaks found (step 1.4).
 - [x] 1.2 Volume warning below 15 practice items per unit in Stages 0 to 5 (A1.6, ADR-0019). Done 2026-11-04: all 5 units with content warn, as expected.
 - [x] 1.3 Awareness topics never in a Cold Check: each seed names its `topic`, and the check compares it with the roadmap's awareness topics (A1.4). Done 2026-11-04: all 37 seeds have a topic; none tests an awareness topic.
-- [ ] 1.4 Fix the 9 skills that rise two levels at once in the roadmaps (PY-11.4, PY-12.1, PY-12.4 twice, PY-13.3, NET-0.2, BE-15.1, BE-17.2, AI-17.4): lower each target one level, or add the missing rung to an earlier unit. (DECIDE)
+- [x] 1.4 The 9 skills that rise two levels at once in the roadmaps (PY-11.4, PY-12.1, PY-12.4 twice, PY-13.3, NET-0.2, BE-15.1, BE-17.2, AI-17.4). Decided 2026-11-04: option C, left as they are for now and always flagged as errors; `test_the_nine_known_jumps_in_the_roadmaps_stay_flagged` fails if the check stops reporting them. Revisit when content reaches Stage 11.
+- [x] 1.5 Flaky frontend tests. Done 2026-11-04: the one fixed 600 ms sleep now waits for the page's re-check; condition waits may take up to 5 s on a busy machine.
 
 ## Phase 2: Build maturity and stage builds
 
@@ -32,7 +33,7 @@ Pushing to GitHub and Entire is always at the owner's word.
 
 ## Phase 3: Two decisions before more testing
 
-- [ ] 3.1 Does work done in test mode count toward your own progress? Today it does. (DECIDE)
+- [x] 3.1 Does work done in test mode count toward your own progress? Decided 2026-11-04: yes, as today.
 - [ ] 3.2 The 4 playground practice-check files (`test_solution.py`): keep them public, or move them to the private answers? (DECIDE)
 
 ## Phase 4: Content, one unit at a time

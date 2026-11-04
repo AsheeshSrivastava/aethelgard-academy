@@ -169,7 +169,7 @@ describe("the page", () => {
 
     fireEvent.change(await screen.findByLabelText("Ownership note"), { target: { value: "My note" } });
 
-    await waitFor(() => expect(calls.some((c) => c.method === "PUT")).toBe(true), { timeout: 2000 });
+    await waitFor(() => expect(calls.some((c) => c.method === "PUT")).toBe(true));
     const saved = JSON.parse(calls.find((c) => c.method === "PUT")!.body!) as { files: Record<string, string> };
     expect(saved.files).toEqual({ "checkin.py": "# Starter", "README.md": "# Readme", "ownership-note.txt": "My note" });
   });
@@ -255,16 +255,18 @@ describe("requirements", () => {
   });
 
   it("editing the README keeps Verify", async () => {
-    stubApi(routes());
+    const calls = stubApi(routes());
     renderAt(PATH);
 
     await userEvent.click(await screen.findByRole("button", { name: "Verify" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Submit build" })).toBeEnabled());
     await userEvent.click(screen.getByRole("button", { name: "README.md" }));
+    const checksBefore = bodies(calls, checkUrl).length;
 
     fireEvent.change(screen.getByLabelText("README.md code"), { target: { value: "# edited" } });
 
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    // Wait for the page to re-check the edited work, not for a fixed time.
+    await waitFor(() => expect(bodies(calls, checkUrl).length).toBeGreaterThan(checksBefore));
     expect(screen.getByRole("button", { name: "Submit build" })).toBeEnabled();
   });
 });
