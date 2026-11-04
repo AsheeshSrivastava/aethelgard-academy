@@ -32,10 +32,6 @@
         "key": "D",
         "text": "`store.py` saves and loads the family records."
       }
-    ],
-    "answer_key": "C",
-    "why": [
-      "Deciding parcels is `allocation.py`'s job. `settings.py` only holds values that change between pantries, such as the stock reserve."
     ]
   }
 }

@@ -39,10 +39,6 @@
         "key": "D",
         "text": "Counter open\nParcels left: 12\nParcel for Asha Rao"
       }
-    ],
-    "answer_key": "A",
-    "why": [
-      "Lines run from top to bottom, and `name` holds the typed text, so its value is printed."
     ]
   }
 }

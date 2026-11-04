@@ -50,3 +50,17 @@ Exercise seeds hold hidden fields too (`hidden_checks`, `reference_solution`, ch
 ## 4. Not covered yet
 
 Exercise seeds under `curriculum/python/*/exercises/` keep their hidden fields in the public tree. Moving them follows the same pattern and is a separate step.
+
+---
+
+## Amendment 2026-11-04: exercise seeds (section 4 closed)
+
+Decided by the owner on 2026-11-04 ("remove them from public eye").
+
+1. **Every seed is split in two.** The public file under `curriculum/<course>/<unit>/exercises/<stem>.json` keeps the prompt, the visible block fields (options, code, starter, tasks, `make`), the hint and the seed id. The hidden fields of its block (SPEC-13 section 4, plus `line_states`) live in `<LMS_ANSWERS_DIR>/<course>/<unit>/exercises/<stem>.json` as `{"seed_id": ..., "<item_type>": {hidden fields}}`. Seed ids do not change, so the ledger still links.
+2. **Where the answers are.** `LMS_ANSWERS_DIR` if it is set; otherwise the sibling folder `../lms-answers` next to the repository, if it exists. The same rule now applies to builds.
+3. **Missing answers fail loudly, per item.** A seed whose private half is missing is skipped with a `seed-answers-missing` error naming it, and is never served ungraded. The app still starts.
+4. **The public tree is guarded.** A public seed file that holds a hidden field is skipped with a `seed-answers-public` error, and a test scans every public seed file for hidden fields.
+5. **Unchanged:** approved hints stay public (they never give the answer). Worked answers are read from the private half and shown only after a pass (ADR-0022). Playground `test_solution.py` files stay public: they are ungraded practice and the local CLI (`lms pull`) copies them.
+6. **History is not rewritten.** Answers pushed before 2026-11-04 stay in public Git history; the owner accepted this (it is a learning platform, not an exam).
+7. **Standing rule: answers stay private.** Every new content step writes its hidden part (answer keys, hidden checks, Make tests, reference and wrong solutions, worked answers, build checks) to the private answers repo from the start, never to this repository. Review docs that hold answers stay git-ignored. The guard test must stay.

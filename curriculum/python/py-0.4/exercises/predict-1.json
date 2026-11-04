@@ -50,12 +50,6 @@
         "key": "D",
         "text": "Counter open\nDone\nRegistering {{person}}"
       }
-    ],
-    "answer_key": "A",
-    "why": [
-      "Python runs the lines from top to bottom.",
-      "A line starting with `#` is a comment, so Python skips it.",
-      "`visitor` holds what was typed, so its value is printed, not its name."
     ]
   }
 }

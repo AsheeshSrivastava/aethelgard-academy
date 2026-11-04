@@ -21,25 +21,6 @@
       "desk = \"B\"",
       "print(desk, next_desk)"
     ],
-    "input": "",
-    "expected_output": [
-      "B A"
-    ],
-    "line_states": [
-      {
-        "line": 2,
-        "state": {
-          "desk": "A",
-          "next_desk": "A"
-        }
-      },
-      {
-        "line": 3,
-        "state": {
-          "desk": "B",
-          "next_desk": "A"
-        }
-      }
-    ]
+    "input": ""
   }
 }

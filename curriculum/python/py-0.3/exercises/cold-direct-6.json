@@ -32,10 +32,6 @@
         "key": "D",
         "text": "Search for any forum post that agrees."
       }
-    ],
-    "answer_key": "C",
-    "why": [
-      "The official documentation and a small experiment are the authority; `input()` always returns text."
     ]
   }
 }

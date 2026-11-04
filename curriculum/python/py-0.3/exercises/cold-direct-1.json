@@ -32,10 +32,6 @@
         "key": "D",
         "text": "Paste the same code into a different AI tool."
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "Asking for an explanation you can repeat keeps the reasoning with you."
     ]
   }
 }

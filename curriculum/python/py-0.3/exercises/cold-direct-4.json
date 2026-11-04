@@ -32,10 +32,6 @@
         "key": "D",
         "text": "Ask the tool to rewrite the whole script without explaining."
       }
-    ],
-    "answer_key": "C",
-    "why": [
-      "You ask for the reasoning and check it against an authoritative source, so the understanding stays with you."
     ]
   }
 }

@@ -7,6 +7,7 @@ import re
 import pytest
 
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
+from lms.adapters.curriculum.loader import load_seeds
 from lms.core.exercises import parse_seed
 from lms.core.grading import Attempt, grade, spec_test_gate, structure_failures
 from lms.core.models import EvidenceStrength
@@ -253,11 +254,8 @@ def test_structure_check_never_runs_the_code(tmp_path):
 def test_hidden_checks_grade_a_debug_fix():
     fixed = ["visitor = input()", "print('Registering', visitor)"]
     broken = ["visitor = input()", "print('Registering', citizn)"]
-    seed = parse_seed(
-        json.loads(Path("curriculum/python/py-0.4/exercises/debug-validate-1.json").read_text(encoding="utf-8")),
-        "debug-validate-1",
-        "PY-0.4",
-    )
+    seeds, _ = load_seeds(Path("curriculum"))  # joins the private answers (ADR-0021 amendment)
+    seed = next(s for s in seeds["PY-0.4"] if s.seed_id == "PY-0.4/debug-validate-1")
 
     assert grade(seed, attempt(seed, files=code(fixed)), RUNNER).passed is True
     assert grade(seed, attempt(seed, files=code(broken)), RUNNER).passed is False

@@ -178,6 +178,19 @@ HIDDEN_REQUIRED: Dict[str, Tuple[str, ...]] = {
     "explain_model_choice": ("answer_key", "why"),
 }
 
+# Hidden fields live in the private answers folder, never in the public seed file (ADR-0021 amendment).
+PRIVATE_FIELDS = {field for fields in HIDDEN_REQUIRED.values() for field in fields} | {"line_states", "why"}
+
+
+def public_and_private(raw: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Split one full seed into its public file and its private half (SPEC-13)."""
+    item_type = next(name for name in BLOCKS if isinstance(raw.get(name), dict))
+    block = raw[item_type]
+    public = {**raw, item_type: {k: v for k, v in block.items() if k not in PRIVATE_FIELDS}}
+    private = {"seed_id": raw["seed_id"], item_type: {k: v for k, v in block.items() if k in PRIVATE_FIELDS}}
+    return public, private
+
+
 ALLOWED_ITEM_TYPES: Dict[ActivityType, Tuple[str, ...]] = {
     ActivityType.PREDICT: ("predict",),
     ActivityType.TRACE: ("trace",),

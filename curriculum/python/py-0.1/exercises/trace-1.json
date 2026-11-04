@@ -19,24 +19,6 @@
       "status = \"checked in\"",
       "print(status)"
     ],
-    "input": "",
-    "expected_output": [
-      "waiting",
-      "checked in"
-    ],
-    "line_states": [
-      {
-        "line": 1,
-        "state": {
-          "status": "waiting"
-        }
-      },
-      {
-        "line": 3,
-        "state": {
-          "status": "checked in"
-        }
-      }
-    ]
+    "input": ""
   }
 }

@@ -30,10 +30,6 @@
         "key": "D",
         "text": "Rewrite it so it looks more professional."
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "You asked the tool to explain, so the understanding stays with you."
     ]
   }
 }

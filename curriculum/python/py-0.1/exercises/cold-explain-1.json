@@ -32,10 +32,6 @@
         "key": "D",
         "text": "`print()` with no arguments writes a blank line."
       }
-    ],
-    "answer_key": "C",
-    "why": [
-      "A variable holds the value that was produced. Using it does not run `input()` again."
     ]
   }
 }

@@ -52,11 +52,6 @@
         "key": "D",
         "text": "{{person}} waiting\n{{person}} registered\nTicket for {{person}}"
       }
-    ],
-    "answer_key": "C",
-    "why": [
-      "A variable holds its current value when the line runs.",
-      "The first `print` runs before `status` changes, so it shows `waiting`."
     ]
   }
 }

@@ -16,7 +16,7 @@ from lms.core.builds import StageBuildSpec, check_builds
 from lms.core.concepts import check_concept_links
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity, check_curriculum
-from lms.core.exercises import ExerciseSeed, SeedError, parse_seed
+from lms.core.exercises import PRIVATE_FIELDS, ExerciseSeed, SeedError, parse_seed
 from lms.core.models import (
     ActivityType,
     MakeStep,
@@ -280,25 +280,51 @@ def load_skill_names(file_path: Path) -> Dict[str, str]:
     return dict(re.findall(pattern, file_path.read_text(encoding="utf-8"), re.M))
 
 
-def load_seeds(curriculum_dir: Path) -> Tuple[Dict[str, List[ExerciseSeed]], List[Finding]]:
-    """Load every SPEC-13 seed. A bad file is reported and skipped; it never stops the app."""
+_FROM_ENV: Any = object()
+
+
+def load_seeds(
+    curriculum_dir: Path, answers_dir: Optional[Path] = _FROM_ENV
+) -> Tuple[Dict[str, List[ExerciseSeed]], List[Finding]]:
+    """Load every SPEC-13 seed, joining each public file to its private half (ADR-0021 amendment).
+
+    A bad file, an answer left in the public file, or a missing private half is reported
+    and the seed is skipped: it is never served ungraded, and the app still starts.
+    """
+    if answers_dir is _FROM_ENV:
+        answers_dir = answers_dir_from_env()
     seeds: Dict[str, List[ExerciseSeed]] = {}
     problems: List[Finding] = []
+
+    def report(code: str, unit_id: str, message: str) -> None:
+        problems.append(
+            Finding(severity=Severity.ERROR, code=code, message=message, unit_id=unit_id, course_id=course_of(unit_id))
+        )
+
     for seed_file in sorted(curriculum_dir.glob("*/*/exercises/*.json")):
         unit_id = seed_file.parent.parent.name.upper()
+        seed_id = f"{unit_id}/{seed_file.stem}"
         try:
             raw = json.loads(seed_file.read_text(encoding="utf-8"))
+            blocks = [name for name, value in raw.items() if isinstance(value, dict) and name != "template"]
+            leaked = sorted(PRIVATE_FIELDS & {field for name in blocks for field in raw[name]})
+            if leaked:
+                report("seed-answers-public", unit_id, f"{seed_id} holds {', '.join(leaked)} in the public tree.")
+                continue
+            private_file = (
+                answers_dir / seed_file.parent.parent.parent.name / seed_file.parent.parent.name / "exercises" / seed_file.name
+                if answers_dir is not None
+                else None
+            )
+            private = json.loads(private_file.read_text(encoding="utf-8")) if private_file and private_file.exists() else None
+            if private is None or private.get("seed_id") != raw.get("seed_id"):
+                report("seed-answers-missing", unit_id, f"{seed_id} has no private answers, so it is not served.")
+                continue
+            for name in blocks:
+                raw[name] = {**raw[name], **private.get(name, {})}
             seeds.setdefault(unit_id, []).append(parse_seed(raw, seed_file.stem, unit_id))
         except (SeedError, ValueError) as error:
-            problems.append(
-                Finding(
-                    severity=Severity.ERROR,
-                    code="seed-invalid",
-                    message=f"{unit_id}/{seed_file.name}: {error}",
-                    unit_id=unit_id,
-                    course_id=course_of(unit_id),
-                )
-            )
+            report("seed-invalid", unit_id, f"{unit_id}/{seed_file.name}: {error}")
     return seeds, problems
 
 

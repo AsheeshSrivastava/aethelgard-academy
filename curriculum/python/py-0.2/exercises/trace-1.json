@@ -24,24 +24,6 @@
       "parcels = parcels_for(4)",
       "print(name, parcels)"
     ],
-    "input": "",
-    "expected_output": [
-      "Asha Rao 2"
-    ],
-    "line_states": [
-      {
-        "line": 7,
-        "state": {
-          "name": "Asha Rao"
-        }
-      },
-      {
-        "line": 8,
-        "state": {
-          "name": "Asha Rao",
-          "parcels": 2
-        }
-      }
-    ]
+    "input": ""
   }
 }

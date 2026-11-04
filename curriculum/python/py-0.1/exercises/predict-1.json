@@ -50,12 +50,6 @@
         "key": "D",
         "text": "{{person}}\nDesk open\nApplicant: {{person}}\n\nRecord: {{person}}"
       }
-    ],
-    "answer_key": "A",
-    "why": [
-      "Statements run from top to bottom, so `Desk open` comes first.",
-      "`input()` returns the text and `applicant` stores it, so both later lines show the value.",
-      "`print()` with no arguments writes one blank line."
     ]
   }
 }

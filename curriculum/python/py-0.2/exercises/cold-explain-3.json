@@ -39,10 +39,6 @@
         "key": "D",
         "text": "`main.py`, in a long `if` at the end"
       }
-    ],
-    "answer_key": "A",
-    "why": [
-      "Checking typed input is `intake.py`'s job, so bad data stops before anything else uses it."
     ]
   }
 }

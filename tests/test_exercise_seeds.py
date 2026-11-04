@@ -12,6 +12,7 @@ from lms.adapters.curriculum.loader import load_all_roadmaps, load_seeds
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.curriculum_checks import Severity, check_curriculum
 from lms.core.exercises import (
+    public_and_private,
     SeedError,
     choose_next,
     fill_slots,
@@ -154,16 +155,23 @@ def test_unused_slot_is_an_error():
 # --- Loading files ---
 
 
+def answers(root: Path) -> Path:
+    return root.parent / f"{root.name}-answers"
+
+
 def write_seed(root: Path, unit_folder: str, name: str, raw: dict) -> None:
-    folder = root / "python" / unit_folder / "exercises"
-    folder.mkdir(parents=True, exist_ok=True)
-    (folder / f"{name}.json").write_text(json.dumps(raw), encoding="utf-8")
+    """Write the public file and, beside it, the private half (ADR-0021 amendment)."""
+    public, private = public_and_private(raw)
+    for base, data in ((root, public), (answers(root), private)):
+        folder = base / "python" / unit_folder / "exercises"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"{name}.json").write_text(json.dumps(data), encoding="utf-8")
 
 
 def test_load_seeds_groups_them_by_unit(tmp_path):
     write_seed(tmp_path, "py-1.1", "predict-1", raw_seed())
 
-    seeds, problems = load_seeds(tmp_path)
+    seeds, problems = load_seeds(tmp_path, answers(tmp_path))
 
     assert [s.seed_id for s in seeds["PY-1.1"]] == ["PY-1.1/predict-1"]
     assert problems == []
@@ -175,7 +183,7 @@ def test_bad_seed_is_reported_and_skipped(tmp_path):
     folder = tmp_path / "python" / "py-1.1" / "exercises"
     (folder / "predict-3.json").write_text("{not json", encoding="utf-8")
 
-    seeds, problems = load_seeds(tmp_path)
+    seeds, problems = load_seeds(tmp_path, answers(tmp_path))
 
     assert [s.seed_id for s in seeds["PY-1.1"]] == ["PY-1.1/predict-1"]
     assert [p.code for p in problems] == ["seed-invalid", "seed-invalid"]

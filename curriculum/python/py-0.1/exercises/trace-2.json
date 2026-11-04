@@ -20,30 +20,6 @@
       "count = count + 2",
       "print(count)"
     ],
-    "input": "",
-    "expected_output": [
-      "1",
-      "3"
-    ],
-    "line_states": [
-      {
-        "line": 1,
-        "state": {
-          "count": 0
-        }
-      },
-      {
-        "line": 2,
-        "state": {
-          "count": 1
-        }
-      },
-      {
-        "line": 4,
-        "state": {
-          "count": 3
-        }
-      }
-    ]
+    "input": ""
   }
 }

@@ -39,10 +39,6 @@
         "key": "D",
         "text": "`settings.py`, because it is loaded first"
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "The name passed through correctly, so the fault sits where the parcel number is made: `allocation.py`."
     ]
   }
 }

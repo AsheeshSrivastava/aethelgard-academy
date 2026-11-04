@@ -39,10 +39,6 @@
         "key": "D",
         "text": "All four files run at the same time"
       }
-    ],
-    "answer_key": "A",
-    "why": [
-      "The entry point takes the typed text, it is cleaned and checked, the parcels are decided, and then the record is saved."
     ]
   }
 }

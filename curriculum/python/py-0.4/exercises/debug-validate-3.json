@@ -17,36 +17,6 @@
       "print(\"Registering\", visitor)",
       "visitor = input()"
     ],
-    "stdin": "Lina Haddad",
-    "reference_solution": [
-      "visitor = input()",
-      "print(\"Registering\", visitor)"
-    ],
-    "hidden_checks": [
-      "import io",
-      "import runpy",
-      "import unittest.mock",
-      "",
-      "",
-      "def run_script(typed):",
-      "    out = io.StringIO()",
-      "    with unittest.mock.patch('builtins.input', return_value=typed):",
-      "        with unittest.mock.patch('sys.stdout', out):",
-      "            runpy.run_path('solution.py')",
-      "    return out.getvalue()",
-      "",
-      "",
-      "def test_case_1():",
-      "    assert run_script('Lina Haddad') == 'Registering Lina Haddad\\n'",
-      "",
-      "",
-      "def test_case_2():",
-      "    assert run_script('Kofi Mensah') == 'Registering Kofi Mensah\\n'"
-    ],
-    "wrong_solution": [
-      "visitor = \"visitor\"",
-      "print(\"Registering\", visitor)",
-      "visitor = input()"
-    ]
+    "stdin": "Lina Haddad"
   }
 }

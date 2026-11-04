@@ -39,10 +39,6 @@
         "key": "D",
         "text": "Meera Das\nIntake open\n\nParcel for Meera Das"
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "`print()` with nothing inside prints an empty line, and the f-string puts the typed name into the text."
     ]
   }
 }

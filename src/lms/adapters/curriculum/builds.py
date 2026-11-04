@@ -25,9 +25,16 @@ class BuildError(ValueError):
     """Says what is wrong with a build."""
 
 
+REPO_ROOT = Path(__file__).resolve().parents[4]
+SIBLING_ANSWERS = REPO_ROOT.parent / "lms-answers"
+
+
 def answers_dir_from_env() -> Optional[Path]:
+    """LMS_ANSWERS_DIR if set; otherwise the sibling lms-answers folder, if it exists (ADR-0021 amendment)."""
     value = os.environ.get(ANSWERS_ENV, "").strip()
-    return Path(value) if value else None
+    if value:
+        return Path(value)
+    return SIBLING_ANSWERS if SIBLING_ANSWERS.is_dir() else None
 
 
 def _checks_file(folder: Path, answers_dir: Optional[Path]) -> Path:

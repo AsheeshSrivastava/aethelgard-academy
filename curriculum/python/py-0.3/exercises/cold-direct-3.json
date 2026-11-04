@@ -35,10 +35,6 @@
         "key": "D",
         "text": "Vote among the team."
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "Running it shows `amara okafor`, and the documentation says `strip` only removes characters at the two ends."
     ]
   }
 }

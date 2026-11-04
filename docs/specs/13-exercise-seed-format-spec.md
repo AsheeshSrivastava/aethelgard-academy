@@ -75,6 +75,8 @@ SPEC-12's `playground` is the screen, not an activity: Modify and Build both use
 
 ## 4. Body blocks and grading
 
+**Where hidden fields are stored (2026-11-04, ADR-0021 amendment).** Fields marked hidden, plus a trace item's `line_states`, are not in the public seed file. They live in the private answers folder at the same relative path, as `{"seed_id": ..., "<item_type>": {hidden fields}}`, and the loader joins the two. A seed with no private half is skipped (`seed-answers-missing`); a public file holding a hidden field is skipped (`seed-answers-public`).
+
 Fields marked **hidden** never leave the server before an attempt (SPEC-12 section 4). `why` and `answer_key` may be shown in `reveal` after the learner commits. Strength follows SPEC-12 section 5: Strong if the item passes first try, Moderate after retries, Weak if not. A Cold Check has one try.
 
 ### `predict`

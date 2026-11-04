@@ -35,13 +35,6 @@
         "key": "type",
         "text": "TypeError: an operation on the wrong kind of value"
       }
-    ],
-    "answer_key": {
-      "line": 4,
-      "error_type": "type"
-    },
-    "why": [
-      "`input()` returns text, so `family_size + 1` adds a number to text and Python stops at line 4 with a TypeError."
     ]
   }
 }

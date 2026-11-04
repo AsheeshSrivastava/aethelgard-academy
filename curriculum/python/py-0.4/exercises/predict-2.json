@@ -35,11 +35,6 @@
         "key": "D",
         "text": "An error, because text cannot be added"
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "`input()` always returns text, even when the person types digits.",
-      "`+` on two pieces of text joins them."
     ]
   }
 }

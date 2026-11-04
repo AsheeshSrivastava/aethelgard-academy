@@ -32,10 +32,6 @@
         "key": "D",
         "text": "Values are passed into each function and returned out of it."
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "Data flows from the entry point outwards. `main.py` passes the details to `store.py`; the other files never import `main.py`."
     ]
   }
 }

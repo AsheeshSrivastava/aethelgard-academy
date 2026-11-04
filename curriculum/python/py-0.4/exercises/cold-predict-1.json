@@ -40,10 +40,6 @@
         "key": "D",
         "text": "Terminal ready\nNext visitor\nZone: north-01"
       }
-    ],
-    "answer_key": "C",
-    "why": [
-      "The lines run in order, the comment is skipped, and `zone` holds the typed text."
     ]
   }
 }

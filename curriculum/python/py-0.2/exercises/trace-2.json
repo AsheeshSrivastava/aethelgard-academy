@@ -22,18 +22,6 @@
       "stock = 12",
       "print(can_serve(stock, 4), can_serve(stock, 8))"
     ],
-    "input": "",
-    "expected_output": [
-      "True False"
-    ],
-    "line_states": [
-      {
-        "line": 6,
-        "state": {
-          "STOCK_RESERVE": 5,
-          "stock": 12
-        }
-      }
-    ]
+    "input": ""
   }
 }

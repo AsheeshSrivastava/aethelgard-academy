@@ -22,24 +22,6 @@
       "parcels = parcels - given",
       "print(parcels, given)"
     ],
-    "input": "",
-    "expected_output": [
-      "4 3"
-    ],
-    "line_states": [
-      {
-        "line": 2,
-        "state": {
-          "parcels": 7
-        }
-      },
-      {
-        "line": 4,
-        "state": {
-          "parcels": 4,
-          "given": 3
-        }
-      }
-    ]
+    "input": ""
   }
 }

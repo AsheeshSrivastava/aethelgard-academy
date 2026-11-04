@@ -39,10 +39,6 @@
         "key": "D",
         "text": "`store.py`"
       }
-    ],
-    "answer_key": "D",
-    "why": [
-      "Saving and loading records is `store.py`'s one job, so only it needs to change."
     ]
   }
 }

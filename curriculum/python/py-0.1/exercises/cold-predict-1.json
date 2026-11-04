@@ -39,11 +39,6 @@
         "key": "D",
         "text": "Next: Kofi Mensah\n\nQueue open"
       }
-    ],
-    "answer_key": "B",
-    "why": [
-      "The lines run in order, so the blank line from `print()` comes before `Next:`.",
-      "`visitor` holds the text `input()` returned."
     ]
   }
 }

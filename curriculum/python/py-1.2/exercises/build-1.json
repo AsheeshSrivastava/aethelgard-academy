@@ -41,35 +41,6 @@
         "label": "Print Total value: <total>"
       }
     ],
-    "reference_solution": [
-      "price = float(input(\"Price per kg: \"))",
-      "kilograms = float(input(\"Kilograms: \"))",
-      "total = round(price * kilograms, 2)",
-      "print(\"Total value:\", total)"
-    ],
-    "hidden_checks": [
-      "import subprocess, sys",
-      "",
-      "def _run(*answers):",
-      "    return subprocess.run([sys.executable, 'solution.py'], input=chr(10).join(answers) + chr(10),",
-      "                          capture_output=True, text=True, timeout=5)",
-      "",
-      "def _total(out):",
-      "    # Input prompts share the line when answers are piped in, so find the label anywhere.",
-      "    line = next(l for l in out.splitlines() if 'Total value:' in l)",
-      "    return float(line.split('Total value:', 1)[1])",
-      "",
-      "def test_multiplies_price_by_kilograms():",
-      "    assert _total(_run('40', '3').stdout) == 120",
-      "",
-      "def test_rounds_to_two_decimal_places():",
-      "    assert _total(_run('33.333', '3').stdout) == 100.0"
-    ],
-    "wrong_solution": [
-      "price = float(input(\"Price per kg: \"))",
-      "kilograms = float(input(\"Kilograms: \"))",
-      "print(\"Total value:\", price * kilograms)"
-    ],
     "make": true
   }
 }

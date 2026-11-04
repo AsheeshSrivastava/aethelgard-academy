@@ -35,13 +35,6 @@
         "key": "type",
         "text": "TypeError: an operation on the wrong kind of value"
       }
-    ],
-    "answer_key": {
-      "line": 4,
-      "error_type": "name"
-    },
-    "why": [
-      "`visitor_name` was never given a value, so Python stops at line 4 with a NameError."
     ]
   }
 }
