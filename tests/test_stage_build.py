@@ -441,6 +441,19 @@ def test_only_fstrings_inside_print_count():
     assert met(check_requirements(spec(), {"checkin.py": code}, "", FakeRunner(), False))["fstrings"] is False
 
 
+def test_input_cleaned_on_the_same_line_counts():
+    """Owner, 2026-11-04: `name = input().strip().title()` is as right as cleaning on the next line."""
+    code = 'name = input("a").strip().title()\nservice = input("b").strip().title()\n'
+
+    assert met(check_requirements(spec(), {"checkin.py": code}, "", FakeRunner(), False))["inputs"] is True
+
+
+def test_input_wrapped_in_a_call_counts():
+    code = 'name = str.title(input("a"))\nsize = int(input("b"))\n'
+
+    assert met(check_requirements(spec(), {"checkin.py": code}, "", FakeRunner(), False))["inputs"] is True
+
+
 def test_input_into_something_other_than_a_name_does_not_count():
     code = 'desk.name = input("a")\ndesk.service = input("b")\n'
 

@@ -174,10 +174,13 @@ def _input_assignments(tree: ast.AST) -> int:
     def is_input(node: ast.AST) -> bool:
         return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "input"
 
+    # The answer may be cleaned or converted on the same line: input().strip(), int(input()).
     return sum(
         1
         for node in ast.walk(tree)
-        if isinstance(node, ast.Assign) and is_input(node.value) and isinstance(node.targets[0], ast.Name)
+        if isinstance(node, ast.Assign)
+        and isinstance(node.targets[0], ast.Name)
+        and any(is_input(part) for part in ast.walk(node.value))
     )
 
 
