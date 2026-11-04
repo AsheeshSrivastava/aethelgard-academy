@@ -18,12 +18,19 @@ Pushing to GitHub and Entire is always at the owner's word.
 
 ## Phase 1: Guards before more content
 
-- [ ] 1.0 Walk Stage 0 as a learner, with AXIS on the local model, and say what felt wrong. Runs alongside phase 1. (TEST)
+- [x] 1.0 Walk Stage 0 as a learner, with AXIS on the local model, and say what felt wrong. Runs alongside phase 1. (TEST) Done 2026-11-04; the owner plans a second pass after resetting units. Findings are steps 1b.1 to 1b.4.
 - [x] 1.1 Entry and one-rung check: no skill enters above Apply, no jump of more than one level (Learning Method v2 A1.1, A1.2). Done 2026-11-04: no entry breaks, 9 rung breaks found (step 1.4).
 - [x] 1.2 Volume warning below 15 practice items per unit in Stages 0 to 5 (A1.6, ADR-0019). Done 2026-11-04: all 5 units with content warn, as expected.
 - [x] 1.3 Awareness topics never in a Cold Check: each seed names its `topic`, and the check compares it with the roadmap's awareness topics (A1.4). Done 2026-11-04: all 37 seeds have a topic; none tests an awareness topic.
 - [x] 1.4 The 9 skills that rise two levels at once in the roadmaps (PY-11.4, PY-12.1, PY-12.4 twice, PY-13.3, NET-0.2, BE-15.1, BE-17.2, AI-17.4). Decided 2026-11-04: option C, left as they are for now and always flagged as errors; `test_the_nine_known_jumps_in_the_roadmaps_stay_flagged` fails if the check stops reporting them. Revisit when content reaches Stage 11.
 - [x] 1.5 Flaky frontend tests. Done 2026-11-04: the one fixed 600 ms sleep now waits for the page's re-check; condition waits may take up to 5 s on a busy machine.
+
+## Phase 1b: From the owner's Stage 0 walk-through (2026-11-04)
+
+- [ ] 1b.1 Reset clears a unit's progress, not only its timers: the ledger is never deleted; a reset marker makes the unit's decision count only evidence after it. Amends ADR-0016. (DECIDE, then NOTHING)
+- [ ] 1b.2 A reset for the stage review too, the same way. (DECIDE, then NOTHING)
+- [ ] 1b.3 A Skills tab next to My progress: every target skill, its level on the Understand to Own ladder, and plain meanings of the levels and of Progress, Accelerate, Strengthen, Rebuild and Undecided. (APPROVE the wording and layout)
+- [x] 1b.4 Which units have a Make step: 15 units, all in Python Stages 1 to 5 (PY-1.2 to PY-5.4), because Amendment A1.3 puts Make only in units that teach a code construct there. Stage 0 has none; its stage build plays that role. Answered 2026-11-04.
 
 ## Phase 2: Build maturity and stage builds
 
