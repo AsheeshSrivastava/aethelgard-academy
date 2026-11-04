@@ -6,9 +6,10 @@ Follows Hexagonal Architecture:
 - IAXISCompanion: AI Tutoring port (Mock / Cloud LLM)
 """
 
+import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Optional, Protocol, Set, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Protocol, Set, Tuple
 from pydantic import BaseModel, Field
 
 from lms.core.cold_check import ColdCheckTimer
@@ -206,8 +207,26 @@ class ILearnerRepository(Protocol):
         ...
 
 
+# Extra files sit beside the code as importable modules, so each name must be one (SPEC-15 section 2.4).
+# The code itself is written as solution.py and the check harness as run_tests.py.
+_MODULE_FILE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\.py$")
+RESERVED_RUN_FILES = frozenset({"solution.py", "run_tests.py"})
+
+
+def extra_file_problem(name: str) -> Optional[str]:
+    """Why `name` cannot be placed beside the code, or None when it can."""
+    if not _MODULE_FILE.match(name):
+        return f"{name} is not an importable Python file name (letters, digits and _ only, ending in .py)"
+    if name in RESERVED_RUN_FILES:
+        return f"{name} is a name the runner uses itself"
+    return None
+
+
 class ICodeRunner(Protocol):
-    """Port for isolated, deterministic code execution and test verification."""
+    """Port for isolated, deterministic code execution and test verification.
+
+    `files` are extra Python modules the code may import, by plain file name (extra_file_problem).
+    """
 
     def execute(
         self,
@@ -215,6 +234,7 @@ class ICodeRunner(Protocol):
         test_code: Optional[str] = None,
         timeout_seconds: float = 5.0,
         stdin_input: Optional[str] = None,
+        files: Optional[Mapping[str, str]] = None,
     ) -> ExecutionResult:
         ...
 

@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import time
-from typing import List, Optional
+from typing import List, Mapping, Optional
 
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.interfaces import ExecutionResult, ICodeRunner
@@ -72,17 +72,18 @@ class DockerRunner:
         test_code: Optional[str] = None,
         timeout_seconds: float = 5.0,
         stdin_input: Optional[str] = None,
+        files: Optional[Mapping[str, str]] = None,
     ) -> ExecutionResult:
         # If Docker daemon is unavailable, fallback gracefully to SubprocessRunner
         if not self.is_available():
             fallback = SubprocessRunner()
-            return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input)
+            return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input, files=files)
 
         # Full container execution path
         start_time = time.perf_counter()
         # Fallback runner performs execution when Docker is unavailable
         fallback = SubprocessRunner()
-        return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input)
+        return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input, files=files)
 
 
 def get_code_runner(prefer_docker: bool = True) -> ICodeRunner:

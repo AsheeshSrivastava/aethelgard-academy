@@ -77,3 +77,39 @@ def test_get_code_runner_factory():
     runner = get_code_runner()
     # Must implement ICodeRunner protocol
     assert hasattr(runner, "execute")
+
+
+# --- Multi-file runs (SPEC-15 section 2.4, phase 2 step 2.2) ---
+
+HELPER = 'def slip_line(name):\n    return f"Name: {name}"\n'
+
+
+def test_subprocess_runner_lets_the_entry_import_another_file():
+    code = "from slip import slip_line\nprint(slip_line('Amara'))\n"
+
+    result = SubprocessRunner().execute(code=code, files={"slip.py": HELPER})
+
+    assert result.success is True
+    assert result.stdout.strip() == "Name: Amara"
+
+
+def test_subprocess_runner_checks_can_reach_another_file():
+    code = "from slip import slip_line\n"
+    test_code = "def test_line():\n    assert slip_line('Kofi') == 'Name: Kofi'\n"
+
+    result = SubprocessRunner().execute(code=code, test_code=test_code, files={"slip.py": HELPER})
+
+    assert result.success is True
+
+
+def test_without_extra_files_an_import_of_one_fails():
+    result = SubprocessRunner().execute(code="from slip import slip_line\n")
+
+    assert result.success is False
+    assert "ModuleNotFoundError" in result.stderr
+
+
+@pytest.mark.parametrize("name", ["../evil.py", "sub/mod.py", "solution.py", "run_tests.py", "notes.txt", "my-mod.py", ".py"])
+def test_subprocess_runner_refuses_a_file_name_it_cannot_place_safely(name):
+    with pytest.raises(ValueError):
+        SubprocessRunner().execute(code="print(1)", files={name: "x = 1"})

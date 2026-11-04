@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from lms.core.course_map import STAGE_BUILD_MATURITY, Maturity, course_of
 from lms.core.curriculum_checks import Finding, Severity
 from lms.core.grading import Runner
+from lms.core.interfaces import extra_file_problem
 from lms.core.models import Unit, stage_label
 
 _EXERCISE_ID = re.compile(r"^([a-z-]+)/stage-(\d+)/build$")
@@ -93,6 +94,12 @@ class StageBuildSpec(_Strict):
         if self.maturity != STAGE_BUILD_MATURITY:
             raise ValueError(f"a stage build is {STAGE_BUILD_MATURITY} (ADR-0018), not {self.maturity}")
         paths = {f.path for f in self.files}
+        if len(paths) != len(self.files):
+            raise ValueError("file paths must be unique")
+        for path in sorted(paths - {self.entry}):
+            problem = extra_file_problem(path) if path.endswith(".py") else None
+            if problem:
+                raise ValueError(problem)
         if self.entry not in paths:
             raise ValueError(f"entry '{self.entry}' must be one of the files")
         ids = [r.id for r in self.requirements]
@@ -221,7 +228,21 @@ def _failure_detail(result, token_seen: bool) -> str:
     return "The script stopped before the check could finish."
 
 
-def _run_behaviour(build: StageBuildSpec, code: str, function: str, runner: Runner) -> Tuple[bool, Optional[str]]:
+def other_python_files(build: StageBuildSpec, files: Mapping[str, str]) -> Dict[str, str]:
+    """The build's own .py files besides the entry, as the learner has them (else the starter).
+
+    Only files the build declares are taken, so a request cannot place a file of its own choosing.
+    """
+    return {
+        f.path: files.get(f.path, "\n".join(f.starter))
+        for f in build.files
+        if f.path.endswith(".py") and f.path != build.entry
+    }
+
+
+def _run_behaviour(
+    build: StageBuildSpec, code: str, files: Mapping[str, str], function: str, runner: Runner
+) -> Tuple[bool, Optional[str]]:
     """Exit code 0 alone proves nothing, so the check must also print a token it could not guess."""
     token = f"build-check-{secrets.token_hex(16)}"
     test_code = (
@@ -230,7 +251,7 @@ def _run_behaviour(build: StageBuildSpec, code: str, function: str, runner: Runn
         f"    {function}()\n"
         f'    print("{token}")\n'
     )
-    result = runner.execute(code=code, test_code=test_code)
+    result = runner.execute(code=code, test_code=test_code, files=other_python_files(build, files))
     token_seen = token in result.stdout
     if result.success and token_seen:
         return True, None
@@ -263,7 +284,7 @@ def _check_one(
     if check.kind == "behaviour":
         if not run_checks:
             return result(None)
-        return result(*_run_behaviour(build, code, check.function or "", runner))
+        return result(*_run_behaviour(build, code, files, check.function or "", runner))
 
     tree, problem = _parse(code)
     if tree is None:

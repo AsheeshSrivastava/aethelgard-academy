@@ -96,7 +96,7 @@ class FakeRunner:
         self.success, self.print_token, self.stderr = success, print_token, stderr
         self.calls = []
 
-    def execute(self, code, test_code=None, timeout_seconds=5.0, stdin_input=None):
+    def execute(self, code, test_code=None, timeout_seconds=5.0, stdin_input=None, files=None):
         self.calls.append((code, test_code))
         token = test_code.split('print("')[-1].split('"')[0] if self.print_token else ""
 
@@ -259,6 +259,9 @@ def set_field(name, value):
         (set_field("stage", 3), "folder"),
         (set_field("course_id", "backend"), "folder"),
         (lambda d: d["files"].append({"path": "../evil.py", "starter": []}), "path"),
+        (lambda d: d["files"].append(d["files"][0]), "file paths must be unique"),
+        (lambda d: d["files"].append({"path": "my-slip.py", "starter": []}), "my-slip.py"),
+        (lambda d: d["files"].append({"path": "solution.py", "starter": []}), "solution.py"),
         (lambda d: d["requirements"].append(d["requirements"][0]), "unique"),
         (lambda d: d["requirements"][3]["check"].update(function="check_gone"), "check_gone"),
         (lambda d: d["requirements"][5]["check"].update(path="GONE.md"), "GONE.md"),
@@ -893,3 +896,44 @@ def test_the_bus_ignores_events_nobody_wants():
     EventBus().publish("nothing", EvidenceRecorded(
         entry_id="e", learner_id="l", unit_id="u", skill_id="s", category="c", strength="s", assistance_level="a",
     ))
+
+
+# --- Multi-file builds (phase 2 step 2.2) ---
+
+SLIP = 'def slip_line(name):\n    return f"Name: {name}"\n'
+SLIP_CHECKS = (
+    "def check_slip():\n"
+    "    import slip\n"
+    "    assert slip.slip_line('Amara') == 'Name: Amara', 'slip_line should return the name line.'\n"
+)
+
+
+def multi_file_spec():
+    data = raw_build()
+    data["files"].append({"path": "slip.py", "starter": ["# The lines of the slip."]})
+    data["requirements"] = [
+        {"id": "slip", "label": "The slip module builds the name line", "unit_id": "PY-0.4",
+         "check": {"kind": "behaviour", "function": "check_slip"}},
+    ]
+    return StageBuildSpec.model_validate({**data, "checks_source": SLIP_CHECKS})
+
+
+def run_slip(files):
+    return check_requirements(multi_file_spec(), files, NOTE, SubprocessRunner(), run_checks=True)[0]
+
+
+def test_a_behaviour_check_reaches_the_builds_other_python_files():
+    assert run_slip({"checkin.py": "import slip\n", "slip.py": SLIP, "README.md": README}).met is True
+
+
+def test_a_wrong_helper_file_fails_its_check_with_the_checks_message():
+    result = run_slip({"checkin.py": "import slip\n", "slip.py": SLIP.replace("Name: ", ""), "README.md": README})
+
+    assert result.met is False
+    assert result.detail == "slip_line should return the name line."
+
+
+def test_files_the_build_does_not_declare_are_never_written():
+    files = {"checkin.py": "from extra import slip_line\n", "extra.py": SLIP, "slip.py": "", "README.md": README}
+
+    assert run_slip(files).met is False

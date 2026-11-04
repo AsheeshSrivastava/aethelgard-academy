@@ -10,7 +10,7 @@ the ICodeRunner port, so it gets the same limits as any run.
 """
 
 import ast
-from typing import Dict, List, Optional, Protocol, Tuple
+from typing import Dict, List, Mapping, Optional, Protocol, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -67,7 +67,14 @@ class GradeResult(BaseModel):
 
 
 class Runner(Protocol):
-    def execute(self, code: str, test_code: Optional[str] = None, timeout_seconds: float = 5.0, stdin_input: Optional[str] = None):
+    def execute(
+        self,
+        code: str,
+        test_code: Optional[str] = None,
+        timeout_seconds: float = 5.0,
+        stdin_input: Optional[str] = None,
+        files: Optional[Mapping[str, str]] = None,
+    ):
         ...
 
 

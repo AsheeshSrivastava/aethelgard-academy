@@ -66,7 +66,16 @@ Every check is deterministic. All of them live on the server, so the browser nev
 
 The runner reports success on exit code 0, so `sys.exit(0)` in a script could look like a pass. For each check, the server adds a one-time token that is printed only after the function returns. A behaviour check passes only if the run succeeded and the token is in the output.
 
-Only the entry file is run. This fits a one-file script. A multi-file mini-project needs the runner port to take several files.
+### 2.4 Multi-file builds (work sequence step 2.2)
+
+A build may have several `.py` files, needed from Python Stage 5 (modules and packages).
+
+- **Names.** Paths are unique. Every `.py` file other than the entry must be an importable module name (`[A-Za-z_][A-Za-z0-9_]*.py`) and must not be `solution.py` or `run_tests.py`, which the runner uses itself. A build that breaks this is `build-invalid`.
+- **Behaviour checks.** The entry runs as before, and the build's other `.py` files are written beside it, so the entry and `checks.py` can import them. Only files the build declares are written, whatever else a request sends; a declared file the request leaves out runs as its starter.
+- **Reading checks.** `comment_lines`, `input_assignments` and `fstring_prints` still read the entry file only.
+- **Run.** The build page's terminal runs every `.py` file, starting from the entry.
+- **Verify.** Editing any `.py` file clears an earlier Verify result, since the checks run all of them. Editing a non-Python file, such as the README, does not.
+- **Port.** `ICodeRunner.execute` takes `files`, a map of extra module names to their text. The runner refuses a name it cannot place safely.
 
 ---
 

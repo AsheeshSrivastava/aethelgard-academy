@@ -13,7 +13,18 @@ type RunEvent =
 const socketUrl = () => `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/v1/runs`;
 
 /** Runs the learner's code on the server and connects the program to a real terminal. */
-export function RunTerminal({ getCode, exerciseId, entry = "solution.py" }: { getCode: () => string; exerciseId: string; entry?: string }) {
+/** A lesson passes getCode (one file); a build passes getFiles (every .py file, run from `entry`). */
+export function RunTerminal({
+  getCode,
+  getFiles,
+  exerciseId,
+  entry = "solution.py",
+}: {
+  getCode?: () => string;
+  getFiles?: () => Record<string, string>;
+  exerciseId: string;
+  entry?: string;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal | null>(null);
   const socket = useRef<WebSocket | null>(null);
@@ -97,7 +108,7 @@ export function RunTerminal({ getCode, exerciseId, entry = "solution.py" }: { ge
       ws.send(
         JSON.stringify({
           type: "start",
-          files: { [entry]: getCode() },
+          files: getFiles ? getFiles() : { [entry]: getCode?.() ?? "" },
           entry,
           exercise_id: exerciseId,
         }),

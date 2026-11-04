@@ -12,8 +12,8 @@ vi.mock("../lesson/CodeEditor", () => ({
   ),
 }));
 vi.mock("../lesson/RunTerminal", () => ({
-  RunTerminal: ({ entry, getCode }: { entry?: string; getCode: () => string }) => (
-    <button type="button" onClick={() => document.body.setAttribute("data-ran", `${entry}:${getCode()}`)}>
+  RunTerminal: ({ entry, getFiles }: { entry?: string; getFiles: () => Record<string, string> }) => (
+    <button type="button" onClick={() => document.body.setAttribute("data-ran", `${entry}:${JSON.stringify(getFiles())}`)}>
       Terminal
     </button>
   ),
@@ -154,7 +154,21 @@ describe("the page", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "Terminal" }));
 
-    expect(document.body.getAttribute("data-ran")).toBe("checkin.py:# Starter");
+    expect(document.body.getAttribute("data-ran")).toBe(`checkin.py:${JSON.stringify({ "checkin.py": "# Starter" })}`);
+  });
+
+  it("runs every Python file of a multi-file build, from its entry", async () => {
+    const files = [...build.files, { path: "slip.py", starter: ["# Slip"] }];
+    stubApi(routes({ [`GET ${API}`]: { ...build, files } }));
+    renderAt(PATH);
+
+    await userEvent.click(await screen.findByRole("button", { name: "slip.py" }));
+    fireEvent.change(screen.getByLabelText("slip.py code"), { target: { value: "# edited slip" } });
+    await userEvent.click(screen.getByRole("button", { name: "Terminal" }));
+
+    expect(document.body.getAttribute("data-ran")).toBe(
+      `checkin.py:${JSON.stringify({ "checkin.py": "# Starter", "slip.py": "# edited slip" })}`,
+    );
   });
 
   it("restores saved work and the saved note", async () => {
@@ -252,6 +266,20 @@ describe("requirements", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Submit build" })).toBeEnabled());
 
     fireEvent.change(screen.getByLabelText("checkin.py code"), { target: { value: "# edited" } });
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Submit build" })).toBeDisabled());
+  });
+
+  it("editing another Python file clears Verify too, since the checks run it", async () => {
+    const files = [...build.files, { path: "slip.py", starter: ["# Slip"] }];
+    stubApi(routes({ [`GET ${API}`]: { ...build, files } }));
+    renderAt(PATH);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Verify" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Submit build" })).toBeEnabled());
+    await userEvent.click(screen.getByRole("button", { name: "slip.py" }));
+
+    fireEvent.change(screen.getByLabelText("slip.py code"), { target: { value: "# edited" } });
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Submit build" })).toBeDisabled());
   });

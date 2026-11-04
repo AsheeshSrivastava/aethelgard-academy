@@ -12,6 +12,7 @@ import { courseName, maturityLabel } from "../lib/format";
 import { useInteractionId } from "../lib/interaction";
 
 const NOTE_FILE = "ownership-note.txt";
+const isPython = (path: string) => path.endsWith(".py");
 const CHECK_WAIT_MS = 400;
 const SAVE_WAIT_MS = 800;
 
@@ -91,7 +92,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
   const [submitted, setSubmitted] = useState<AttemptResult | null>(null);
   const started = useRef(false);
   const liveRound = useRef(0);
-  const entryEdits = useRef(0);
+  const codeEdits = useRef(0);
 
   const stageArgs = { courseId, stage };
 
@@ -125,19 +126,20 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
 
   function edit(value: string) {
     setFiles((current) => ({ ...current, [open]: value }));
-    if (open === build.entry) {
-      entryEdits.current += 1;
+    // Verify runs every Python file, so editing any of them makes an old result stale.
+    if (isPython(open)) {
+      codeEdits.current += 1;
       setVerified({});
     }
   }
 
   const verify = useMutation({
     mutationFn: () => {
-      const editsAtStart = entryEdits.current;
+      const editsAtStart = codeEdits.current;
       return api.checkBuild(stageArgs, { files, ownership_note: note, run_checks: true }).then((result) => ({ result, editsAtStart }));
     },
     onSuccess: ({ result, editsAtStart }) => {
-      if (editsAtStart === entryEdits.current) setVerified(byId(result.requirements));
+      if (editsAtStart === codeEdits.current) setVerified(byId(result.requirements));
     },
   });
 
@@ -159,7 +161,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
     onSuccess: () => {
       client.setQueryData(["draft", build.exercise_id], { files: {} });
       started.current = false;
-      entryEdits.current += 1;
+      codeEdits.current += 1;
       setFiles(starters(build));
       setNote("");
       setVerified({});
@@ -177,6 +179,10 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
   );
   const ready = build.requirements.every((r) => checked[r.id]?.met === true);
   const getCode = useCallback(() => files[build.entry] ?? "", [files, build.entry]);
+  const getFiles = useCallback(
+    () => Object.fromEntries(Object.entries(files).filter(([path]) => isPython(path))),
+    [files],
+  );
   // Verify speaks only for the checks it runs; live results cover the rest.
   const firstFailure = build.requirements
     .filter((r) => live[r.id]?.met === null)
@@ -237,7 +243,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
               </button>
             </div>
             <CodeEditor key={`${open}-${version}`} value={files[open] ?? ""} onChange={edit} label={`${open} code`} />
-            <RunTerminal getCode={getCode} exerciseId={build.exercise_id} entry={build.entry} />
+            <RunTerminal getFiles={getFiles} exerciseId={build.exercise_id} entry={build.entry} />
           </div>
           {verify.isError && <ErrorNote error={verify.error} />}
           {verify.isSuccess && !verify.isPending && Object.keys(verified).length > 0 && (

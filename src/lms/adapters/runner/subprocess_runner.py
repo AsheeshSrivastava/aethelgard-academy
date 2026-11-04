@@ -10,10 +10,10 @@ import subprocess
 import sys
 import tempfile
 import time
-from typing import List, Optional
+from typing import List, Mapping, Optional
 
 from lms.adapters.runner.interactive import safe_env
-from lms.core.interfaces import ExecutionResult
+from lms.core.interfaces import ExecutionResult, extra_file_problem
 
 
 class SubprocessRunner:
@@ -25,13 +25,21 @@ class SubprocessRunner:
         test_code: Optional[str] = None,
         timeout_seconds: float = 5.0,
         stdin_input: Optional[str] = None,
+        files: Optional[Mapping[str, str]] = None,
     ) -> ExecutionResult:
+        extra = dict(files or {})
+        for name in extra:
+            problem = extra_file_problem(name)
+            if problem:
+                raise ValueError(problem)
         start_time = time.perf_counter()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
             script_path = tmppath / "solution.py"
             script_path.write_text(code, encoding="utf-8")
+            for name, source in extra.items():
+                (tmppath / name).write_text(source, encoding="utf-8")
 
             if test_code:
                 # Write separate test harness file that safely imports solution
