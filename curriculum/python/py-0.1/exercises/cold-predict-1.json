@@ -13,7 +13,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Go line by line, and count what an empty print() puts on the screen.",
-  "hint_approved": false,
+  "hint_approved": true,
   "predict": {
     "code": [
       "print(\"Queue open\")",

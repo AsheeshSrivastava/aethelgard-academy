@@ -13,7 +13,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Python stops at the first line it cannot run; look for a name used before it gets a value.",
-  "hint_approved": false,
+  "hint_approved": true,
   "debug_locate": {
     "broken_code": [
       "print(\"Counter open\")",

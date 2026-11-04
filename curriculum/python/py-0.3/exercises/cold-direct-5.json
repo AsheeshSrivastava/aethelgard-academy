@@ -13,7 +13,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "A rule that decides what people receive is a decision you must be able to explain.",
-  "hint_approved": false,
+  "hint_approved": true,
   "choice": {
     "options": [
       {

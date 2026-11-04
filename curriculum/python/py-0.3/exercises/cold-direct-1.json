@@ -13,7 +13,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Code you cannot explain is not yet yours; ask for the reasoning, not more code.",
-  "hint_approved": false,
+  "hint_approved": true,
   "choice": {
     "options": [
       {

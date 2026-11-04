@@ -13,7 +13,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Remember what type input() always returns, then look at the line that does arithmetic.",
-  "hint_approved": false,
+  "hint_approved": true,
   "debug_locate": {
     "broken_code": [
       "print(\"Counter open\")",

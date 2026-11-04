@@ -13,7 +13,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "An unfamiliar line needs an explanation you can check, not a guess or a delete.",
-  "hint_approved": false,
+  "hint_approved": true,
   "choice": {
     "options": [
       {
