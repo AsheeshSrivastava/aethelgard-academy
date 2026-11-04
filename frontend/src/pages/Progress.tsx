@@ -6,6 +6,7 @@ import { api, type EvidenceEntry } from "../api/client";
 import { BackLink, DecisionChip, ErrorNote, Loading, Panel } from "../components/common";
 import { SkillLadder } from "../components/SkillLadder";
 import { formatDate, formatDateTime, nextActionMessage, stepName } from "../lib/format";
+import { DECISION_MEANINGS } from "../lib/meanings";
 
 const ledgerActivity = (entry: EvidenceEntry) => {
   if (entry.review_kind === "stage_review") return "Stage review";
@@ -190,6 +191,16 @@ export function Progress() {
         </div>
         <aside className="unit-aside">
           <DueForReview />
+          <Panel title="What the labels mean" id="label-meanings">
+            <dl className="meanings">
+              {DECISION_MEANINGS.map(([label, meaning]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd className="small">{meaning}</dd>
+                </div>
+              ))}
+            </dl>
+          </Panel>
           <Panel title={`Units · ${shownLabel}`} id="units">
             <ul className="plain-list">
               {units.map((unit) => (

@@ -225,6 +225,26 @@ Decision = "Progress" | "Accelerate" | "Strengthen" | "Rebuild" | "Undecided"
 - **Reason text names only what is missing (2026-11-04).** When the target level is provisional, `reason` lists the missing pieces only: more exercises at that level (with how many), a passed Cold Check, or a strong attempt after the last weak one.
 - **While a Cold Check retry is locked (2026-11-04).** If a unit's Cold Check is `failed_waiting`, `next_action.retry_at` is when it opens, and `activity` is a practice activity of that unit that still has an unseen item, the weakest skill's main activity first. With no unseen item left, `activity` is `cold_check`, whose step shows the countdown. It never points to an item the learner has already done.
 - **Dates (2026-11-04).** The frontend shows dates as `4 Nov 2026` and times as `3:30 pm`, in the learner's own time zone.
+- **Label meanings (2026-11-04).** My progress explains the five decisions in plain words beside them: Progress, Accelerate, Strengthen, Rebuild, Undecided.
+
+### 6.1 My skills (owner, 2026-11-04)
+
+| Method | Path | Response |
+| --- | --- | --- |
+| GET | `/learners/me/skills` | `SkillsOverview` |
+
+```text
+SkillsOverview { areas: [ { area_id: "CO" | "SP" | "BU" | "VE" | "DE", name, owns,
+                            skills: [ SkillSummary ] } ] }
+SkillSummary { skill_id, skill_name, level: Level | null, confidence: "provisional" | "supported" | null,
+               evidence: int, last_seen: datetime | null,
+               practised_in: [unit_id], targeted_in: { course_id: int } }
+```
+
+- Skills are the framework's, not a course's: one row per skill, all 27, grouped by the five areas in the framework's order. They are never grouped by stage or course.
+- `level` and `confidence` come from the estimator over the **whole ledger**, every course, ignoring unit reset markers (ADR-0016 amendment, point 3). `null` means not started.
+- `practised_in` lists the units where the learner has evidence on the skill, in the order first seen. `targeted_in` counts the units of each course that target it, so the learner sees where it comes up.
+- The page "My skills" sits next to My progress. It explains the four levels at the top, greys out skills not started, and shows each skill's level on the Understand → Own ladder.
 
 ---
 

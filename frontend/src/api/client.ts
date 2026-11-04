@@ -77,6 +77,7 @@ export const api = {
       `/learners/me/proficiency${query({ course_id: params.courseId, stage: params.stage })}`,
     ),
   ledger: (skillId?: string) => request<EvidenceEntry[]>(`/learners/me/ledger${query({ skill_id: skillId })}`),
+  mySkills: () => request<Schemas["SkillsOverview"]>("/learners/me/skills"),
   saveUnitState: (unitId: string, state: UnitState) =>
     request<UnitState>(`/learners/me/units/${unitId}/state`, json("PUT", state)),
   exercise: (unitId: string, activity: string) =>

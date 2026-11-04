@@ -218,6 +218,7 @@ class CurriculumCatalog:
         self.main_activities: Dict[str, ActivityType] = {}  # Set by load_all_roadmaps
         self.seeds: Dict[str, List[ExerciseSeed]] = {}      # unit_id -> seeds, set by load_all_roadmaps
         self.builds: Dict[Tuple[str, int], StageBuildSpec] = {}  # (course, stage), set by load_all_roadmaps
+        self.skill_names: Dict[str, str] = {}               # The framework's 27 skills, set by load_all_roadmaps
 
     def add_unit(self, unit: Unit) -> None:
         self._units[unit.unit_id] = unit
@@ -362,6 +363,7 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
     # Findings are reported, never fatal: the curriculum belongs to the curator.
     catalog.main_activities = load_main_activities(reference_dir / LEARNING_METHOD_FILE)
     skill_names = load_skill_names(reference_dir / LEARNING_METHOD_FILE)
+    catalog.skill_names = skill_names
     for unit in catalog.list_all_units():
         for skill in unit.target_skills:
             skill.skill_name = skill_names.get(skill.skill_id, skill.skill_id)

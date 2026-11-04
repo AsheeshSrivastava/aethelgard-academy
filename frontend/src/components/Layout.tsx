@@ -84,8 +84,13 @@ export function Layout() {
             <span className="on-wide">Concept library</span>
             <span className="on-narrow">Concepts</span>
           </Link>
-          <Link to="/progress" activeProps={{ className: "active", "aria-current": "page" }}>
-            My progress
+          <Link to="/progress" aria-label="My progress" activeProps={{ className: "active", "aria-current": "page" }}>
+            <span className="on-wide">My progress</span>
+            <span className="on-narrow">Progress</span>
+          </Link>
+          <Link to="/skills" aria-label="My skills" activeProps={{ className: "active", "aria-current": "page" }}>
+            <span className="on-wide">My skills</span>
+            <span className="on-narrow">Skills</span>
           </Link>
         </nav>
         <div className="top-bar-end">

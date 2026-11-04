@@ -1934,3 +1934,59 @@ button:disabled {
 .model-test-fail {
   color: var(--danger, var(--text-muted));
 }
+
+/* My skills (SPEC-12 section 6.1) and the meanings lists */
+.skill-entries {
+  gap: 18px;
+}
+
+.skill-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skill-entry-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.skill-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.skill-level {
+  font-weight: 600;
+}
+
+.skill-not-started {
+  opacity: 0.55;
+}
+
+.skill-not-started .skill-level {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.meanings {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.meanings dt {
+  font-weight: 600;
+}
+
+.meanings dd {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.review-restart {
+  margin-top: 20px;
+}

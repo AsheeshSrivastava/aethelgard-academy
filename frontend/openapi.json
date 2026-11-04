@@ -1094,6 +1094,25 @@
         }
       }
     },
+    "/api/v1/learners/me/skills": {
+      "get": {
+        "summary": "Get My Skills",
+        "description": "Every framework skill once, by area, from the whole ledger (SPEC-12 section 6.1).",
+        "operationId": "get_my_skills_api_v1_learners_me_skills_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillsOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/learners/me/units/{unit_id}/cold-check/feedback": {
       "get": {
         "summary": "Get My Cold Check Feedback",
@@ -4214,6 +4233,108 @@
         ],
         "title": "Score"
       },
+      "SkillArea": {
+        "properties": {
+          "area_id": {
+            "type": "string",
+            "title": "Area Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "owns": {
+            "type": "string",
+            "title": "Owns"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillSummary"
+            },
+            "type": "array",
+            "title": "Skills"
+          }
+        },
+        "type": "object",
+        "required": [
+          "area_id",
+          "name",
+          "owns",
+          "skills"
+        ],
+        "title": "SkillArea"
+      },
+      "SkillSummary": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "skill_name": {
+            "type": "string",
+            "title": "Skill Name"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProficiencyLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Confidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "type": "integer",
+            "title": "Evidence",
+            "default": 0
+          },
+          "last_seen": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen"
+          },
+          "practised_in": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Practised In"
+          },
+          "targeted_in": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Targeted In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "skill_name",
+          "practised_in",
+          "targeted_in"
+        ],
+        "title": "SkillSummary"
+      },
       "SkillView": {
         "properties": {
           "skill_id": {
@@ -4276,6 +4397,22 @@
           "entry_ids"
         ],
         "title": "SkillView"
+      },
+      "SkillsOverview": {
+        "properties": {
+          "areas": {
+            "items": {
+              "$ref": "#/components/schemas/SkillArea"
+            },
+            "type": "array",
+            "title": "Areas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "areas"
+        ],
+        "title": "SkillsOverview"
       },
       "SpecifyByTestsBlock": {
         "properties": {

@@ -12,6 +12,7 @@ import { Concepts } from "./pages/Concepts";
 import { CourseMap } from "./pages/CourseMap";
 import { Courses } from "./pages/Courses";
 import { Home } from "./pages/Home";
+import { MySkills } from "./pages/MySkills";
 import { Progress } from "./pages/Progress";
 import { UnitMap } from "./pages/UnitMap";
 
@@ -69,6 +70,7 @@ const routeTree = rootRoute.addChildren([
       stage: typeof search.stage === "number" ? search.stage : undefined,
     }),
   }),
+  createRoute({ getParentRoute: () => rootRoute, path: "/skills", component: MySkills }),
 ]);
 
 export function makeRouter(history: RouterHistory = createBrowserHistory()) {

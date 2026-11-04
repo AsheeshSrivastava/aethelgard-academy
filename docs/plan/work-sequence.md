@@ -2,7 +2,7 @@
 
 One list of what comes next, in order. One step at a time. Agreed with the owner on 2026-11-04.
 
-**Current step:** 4.1 Finish PY-1.2 (phases 1 to 3 are done). Waiting for the owner's go.
+**Current step:** Phase 1b is done. Next: the owner's second Stage 0 pass with fresh resets, then 4.1 Finish PY-1.2.
 **Owner, in parallel:** 1.0 Walk Stage 0 yourself (TEST).
 
 What each step needs from the owner:
@@ -29,7 +29,7 @@ Pushing to GitHub and Entire is always at the owner's word.
 
 - [x] 1b.1 Reset clears a unit's progress, not only its timers: the ledger is never deleted; a reset marker makes the unit's decision count only evidence after it. Amends ADR-0016. (DECIDE, then NOTHING) Decided A (per unit). Done 2026-11-04.
 - [x] 1b.2 A reset for the stage review too, the same way. (DECIDE, then NOTHING) Decided A ("Restart stage review" button). Done 2026-11-04.
-- [ ] 1b.3 A Skills tab next to My progress: every target skill, its level on the Understand to Own ladder, and plain meanings of the levels and of Progress, Accelerate, Strengthen, Rebuild and Undecided. (APPROVE the wording and layout) Redrafted and approved 2026-11-04 as "My skills": grouped by the 5 skill areas, lifetime evidence across all courses, "Practised in" list, not-started skills greyed out; level meanings on the page, label meanings on My progress.
+- [x] 1b.3 A Skills tab next to My progress: every target skill, its level on the Understand to Own ladder, and plain meanings of the levels and of Progress, Accelerate, Strengthen, Rebuild and Undecided. (APPROVE the wording and layout) Redrafted and approved 2026-11-04 as "My skills": grouped by the 5 skill areas, lifetime evidence across all courses, "Practised in" list, not-started skills greyed out; level meanings on the page, label meanings on My progress. Built 2026-11-04 (SPEC-12 section 6.1).
 - [x] 1b.4 Which units have a Make step: 15 units, all in Python Stages 1 to 5 (PY-1.2 to PY-5.4), because Amendment A1.3 puts Make only in units that teach a code construct there. Stage 0 has none; its stage build plays that role. Answered 2026-11-04.
 
 ## Phase 2: Build maturity and stage builds

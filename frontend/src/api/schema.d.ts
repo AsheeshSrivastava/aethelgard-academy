@@ -450,6 +450,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Skills
+         * @description Every framework skill once, by area, from the whole ledger (SPEC-12 section 6.1).
+         */
+        get: operations["get_my_skills_api_v1_learners_me_skills_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learners/me/units/{unit_id}/cold-check/feedback": {
         parameters: {
             query?: never;
@@ -1542,6 +1562,39 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** SkillArea */
+        SkillArea: {
+            /** Area Id */
+            area_id: string;
+            /** Name */
+            name: string;
+            /** Owns */
+            owns: string;
+            /** Skills */
+            skills: components["schemas"]["SkillSummary"][];
+        };
+        /** SkillSummary */
+        SkillSummary: {
+            /** Skill Id */
+            skill_id: string;
+            /** Skill Name */
+            skill_name: string;
+            level?: components["schemas"]["ProficiencyLevel"] | null;
+            confidence?: components["schemas"]["Confidence"] | null;
+            /**
+             * Evidence
+             * @default 0
+             */
+            evidence: number;
+            /** Last Seen */
+            last_seen?: string | null;
+            /** Practised In */
+            practised_in: string[];
+            /** Targeted In */
+            targeted_in: {
+                [key: string]: number;
+            };
+        };
         /** SkillView */
         SkillView: {
             /** Skill Id */
@@ -1557,6 +1610,11 @@ export interface components {
             reason: string;
             /** Entry Ids */
             entry_ids: string[];
+        };
+        /** SkillsOverview */
+        SkillsOverview: {
+            /** Areas */
+            areas: components["schemas"]["SkillArea"][];
         };
         /** SpecifyByTestsBlock */
         SpecifyByTestsBlock: {
@@ -2591,6 +2649,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_skills_api_v1_learners_me_skills_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillsOverview"];
                 };
             };
         };

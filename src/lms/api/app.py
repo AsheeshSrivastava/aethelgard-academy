@@ -123,6 +123,7 @@ from lms.core.models import (
     Unit,
 )
 from lms.core.proficiency import EstimatorConfig
+from lms.core.skills_view import SkillsOverview, build_skills_overview
 from lms.core.proficiency_view import (
     ProficiencyView,
     activities_attempted,
@@ -1100,6 +1101,17 @@ def create_app(
             config=config,
             unseen_activities=lambda unit: unseen_activities(unit, learner_id),
             resets=resets,
+        )
+
+    @app.get("/api/v1/learners/me/skills", response_model=SkillsOverview)
+    def get_my_skills(learner_id: str = Depends(current_learner_id)):
+        """Every framework skill once, by area, from the whole ledger (SPEC-12 section 6.1)."""
+        return build_skills_overview(
+            catalog.skill_names,
+            catalog.list_all_units(),
+            repo.get_evidence_ledger(learner_id),
+            clock(),
+            EstimatorConfig(main_activities=catalog.main_activities),
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check/feedback", response_model=ColdCheckFeedback)
