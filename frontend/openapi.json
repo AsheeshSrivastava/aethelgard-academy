@@ -3926,6 +3926,11 @@
             "type": "array",
             "title": "Tasks",
             "default": []
+          },
+          "make": {
+            "type": "boolean",
+            "title": "Make",
+            "default": false
           }
         },
         "type": "object",

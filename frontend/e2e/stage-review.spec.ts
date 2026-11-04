@@ -52,7 +52,9 @@ with db:
   execFileSync("uv", ["run", "--no-sync", "python", "-c", script, process.env.LMS_E2E_DB!, action, ...args], { cwd: ".." });
 }
 
-const reviewTile = (page: Page) => page.locator(".build-tile", { hasText: /^Stage review/ });
+// Stage 0 only: other stages (Stage 5 with PY-0.2) can have a review tile too.
+const reviewTile = (page: Page) =>
+  page.locator(".stage", { hasText: "Running your first program" }).locator(".build-tile", { hasText: /^Stage review/ });
 
 async function answer(page: Page, option: number) {
   await page.getByRole("radio").nth(option).check();

@@ -68,6 +68,7 @@ def check_curriculum(
         findings.extend(_check_make_step(unit))
         if seeds is not None:
             findings.extend(_check_seeds(unit, seeds.get(unit.unit_id, ()), main_activities))
+            findings.extend(_check_make_items(unit, seeds.get(unit.unit_id, ())))
     findings.extend(_check_stage_coverage(units))
     if seeds is not None:
         findings.extend(_check_stage_review_items(units, seeds))
@@ -118,6 +119,29 @@ def _check_make_step(unit: Unit) -> List[Finding]:
             stage=unit.stage,
         )
     ]
+
+
+def _check_make_items(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[Finding]:
+    """SPEC-13 playground, Make items: on a Make unit only, from a blank file, and present."""
+    findings: List[Finding] = []
+
+    def report(severity: Severity, code: str, message: str) -> None:
+        findings.append(
+            Finding(severity=severity, code=code, message=message, unit_id=unit.unit_id,
+                    skill_id=unit.make.skill_id if unit.make else None,
+                    course_id=course_of(unit.unit_id), stage=unit.stage)
+        )
+
+    make_items = [s for s in seeds if s.item_type == "playground" and s.body.get("make")]
+    for seed in make_items:
+        if unit.make is None:
+            report(Severity.ERROR, "make-seed-unexpected", f"{seed.seed_id} is a Make item, but {unit.unit_id} has no Make step.")
+        code = [line for line in seed.body.get("starter", []) if line.strip() and not line.strip().startswith("#")]
+        if code:
+            report(Severity.ERROR, "make-starter-not-blank", f"{seed.seed_id} must start from a blank file; its starter has code.")
+    if unit.make is not None and not any(s.curator_approved for s in make_items):
+        report(Severity.WARNING, "make-seed-missing", f"{unit.unit_id} has a Make step but no approved Make item.")
+    return findings
 
 
 def _check_seeds(

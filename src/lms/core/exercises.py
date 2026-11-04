@@ -75,6 +75,7 @@ class TraceBlock(BaseModel):
 class PlaygroundBlock(BaseModel):
     starter: List[str]
     tasks: List[Task] = []
+    make: bool = False                 # The unit's Make step (Amendment A1.3, SPEC-13)
 
 
 class DebugBlock(BaseModel):

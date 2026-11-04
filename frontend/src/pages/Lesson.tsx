@@ -206,17 +206,26 @@ function ExerciseStep({ unit, step, next, onDone, onExercise }: { unit: Unit; st
   }
 
   const data = exercise.data;
+  // A Make step (Amendment A1.3): one program written from a blank file, so there is nothing to regenerate.
+  const make = data.item_type === "playground" && !!data.playground?.make;
   return (
     <div className="card lesson-card">
       <div className="exercise-head">
         <span className="eyebrow">
-          {stepName(step)} · {data.origin === "authored" ? "Authored" : "Generated"} variant {data.variant_no}
+          {make ? "Make · from a blank file" : `${stepName(step)} · ${data.origin === "authored" ? "Authored" : "Generated"} variant ${data.variant_no}`}
         </span>
-        <button type="button" className="button button-small" disabled={regenerate.isPending} onClick={() => regenerate.mutate()}>
-          Regenerate
-        </button>
+        {!make && (
+          <button type="button" className="button button-small" disabled={regenerate.isPending} onClick={() => regenerate.mutate()}>
+            Regenerate
+          </button>
+        )}
       </div>
       <Prose>{data.prompt_markdown}</Prose>
+      {make && (
+        <p className="cold-notice" role="note">
+          Write the whole program yourself. Run it as often as you like; when you submit, hidden tests check it. You can submit again, and your newest result counts.
+        </p>
+      )}
       <ItemForm key={data.exercise_id} exercise={data} busy={attempt.isPending} submitLabel="Submit answer" onSubmit={(answer) => attempt.mutate(answer)} />
       {regenerate.isError && <ErrorNote error={regenerate.error} />}
       {attempt.isError && <ErrorNote error={attempt.error} />}

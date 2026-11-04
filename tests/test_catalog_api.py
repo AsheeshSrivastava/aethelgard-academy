@@ -246,7 +246,9 @@ def test_authored_marks_units_with_a_lesson_package(client):
     stage_1 = body["stages"][1]["units"]
 
     assert stage_0 == {"PY-0.4": True, "PY-0.1": True, "PY-0.3": True}
-    assert stage_1[0]["authored"] is False
+    authored = {u["unit_id"]: u["authored"] for u in stage_1}
+    assert authored["PY-1.2"] is True  # Its Make step draft (2026-11-04)
+    assert authored["PY-1.7"] is False
 
 
 def test_unknown_course_is_a_problem_response(client):

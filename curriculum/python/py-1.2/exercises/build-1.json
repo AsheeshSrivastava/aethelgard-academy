@@ -1,0 +1,84 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-1.2/build-1",
+  "unit_id": "PY-1.2",
+  "activity": "Build",
+  "skill_id": "VE-6",
+  "level": "Apply",
+  "prompt_markdown": [
+    "A supplier drops off rice at the pantry. Write the donation calculator **from a blank file**.",
+    "",
+    "It asks for the price per kilogram, then the number of kilograms, and prints the donation's value rounded to 2 decimal places, as `Total value: <total>`.",
+    "",
+    "If the clerk types text that is not a number, the program must stop with an error instead of printing a total."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "playground": {
+    "starter": [
+      "# Donation calculator: write it from a blank file.",
+      "# 1. Ask for the price per kilogram, then the kilograms.",
+      "# 2. Turn both answers into numbers.",
+      "# 3. Multiply them, and round the total to 2 decimal places.",
+      "# 4. Print it as: Total value: <total>",
+      ""
+    ],
+    "tasks": [
+      {
+        "id": "ask",
+        "label": "Ask for the price per kilogram, then the kilograms"
+      },
+      {
+        "id": "convert",
+        "label": "Turn both answers into numbers"
+      },
+      {
+        "id": "round",
+        "label": "Round the total to 2 decimal places"
+      },
+      {
+        "id": "print",
+        "label": "Print Total value: <total>"
+      },
+      {
+        "id": "refuse",
+        "label": "Text that is not a number stops the program"
+      }
+    ],
+    "reference_solution": [
+      "price = float(input(\"Price per kg: \"))",
+      "kilograms = float(input(\"Kilograms: \"))",
+      "total = round(price * kilograms, 2)",
+      "print(\"Total value:\", total)"
+    ],
+    "hidden_checks": [
+      "import subprocess, sys",
+      "",
+      "def _run(*answers):",
+      "    return subprocess.run([sys.executable, 'solution.py'], input=chr(10).join(answers) + chr(10),",
+      "                          capture_output=True, text=True, timeout=5)",
+      "",
+      "def _total(out):",
+      "    # Input prompts share the line when answers are piped in, so find the label anywhere.",
+      "    line = next(l for l in out.splitlines() if 'Total value:' in l)",
+      "    return float(line.split('Total value:', 1)[1])",
+      "",
+      "def test_multiplies_price_by_kilograms():",
+      "    assert _total(_run('40', '3').stdout) == 120",
+      "",
+      "def test_rounds_to_two_decimal_places():",
+      "    assert _total(_run('33.333', '3').stdout) == 100.0",
+      "",
+      "def test_refuses_text_that_is_not_a_number():",
+      "    result = _run('forty', '3')",
+      "    assert result.returncode != 0",
+      "    assert 'Total value' not in result.stdout"
+    ],
+    "wrong_solution": [
+      "price = float(input(\"Price per kg: \"))",
+      "kilograms = float(input(\"Kilograms: \"))",
+      "print(\"Total value:\", price * kilograms)"
+    ],
+    "make": true
+  }
+}

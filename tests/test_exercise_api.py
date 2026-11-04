@@ -176,6 +176,11 @@ def walk_everything(client, repo, clock, catalog):
         for activity in unit.activities:
             if activity == "video" or (activity == "cold_check" and not has_cold_check):
                 continue
+            # A draft unit may have only some activities written; those answer "not written yet".
+            if activity not in ("explain", "playground", "cold_check") and not any(
+                s.activity.slug == activity for s in catalog.seeds[unit_id]
+            ):
+                continue
             res = client.get(exercise_url(unit_id, activity))
             assert res.status_code == 200, (unit_id, activity, res.text)
             served.append(res)

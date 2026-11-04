@@ -65,6 +65,8 @@ class Seed:
         self.activity = ActivityType.PREDICT
         self.template = None
         self.level = LEVELS.UNDERSTAND
+        self.item_type = "predict"
+        self.body = {}
 
 
 def seeds(*pairs):

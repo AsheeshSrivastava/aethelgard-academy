@@ -282,6 +282,35 @@ async function answerAndSubmit(activity: string, ex: object, act: (user: ReturnT
   return postedAttempt(calls);
 }
 
+describe("Make step (Amendment A1.3)", () => {
+  const block = (make: boolean) => ({
+    starter: ["# Donation calculator: write it from a blank file."],
+    tasks: [{ id: "ask", label: "Ask for the price per kilogram" }],
+    make,
+  });
+
+  it("names the Make step, says it starts from a blank file, and offers Run and Submit", async () => {
+    stubApi(routes("build", exercise("build", "playground", block(true))));
+    renderAt("/units/PY-0.1/build");
+
+    expect(await screen.findByText(/Make · from a blank file/)).toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent(/hidden tests/i);
+    expect(screen.getByText("Ask for the price per kilogram")).toBeInTheDocument();
+    expect(screen.getByText("Terminal")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Submit/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
+  });
+
+  it("leaves an ordinary Build item as it was", async () => {
+    stubApi(routes("build", exercise("build", "playground", block(false))));
+    renderAt("/units/PY-0.1/build");
+
+    await screen.findByText("What happens?");
+    expect(screen.queryByText(/Make · from a blank file/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Terminal")).not.toBeInTheDocument();
+  });
+});
+
 describe("interaction log (ADR-0022)", () => {
   it("records opening a step, and closing it when the learner moves on", async () => {
     const ex = exercise("predict", "predict", { code: ["print(1)"], stdin: "", options });

@@ -106,8 +106,20 @@ Fields marked **hidden** never leave the server before an attempt (SPEC-12 secti
 | `reference_solution` | [str] | **Hidden.** Must pass `hidden_checks` |
 | `hidden_checks` | [str] | **Hidden.** pytest code, in the style of a package's `test_solution.py` |
 | `wrong_solution` | [str] | **Hidden.** A plausible wrong answer that must fail the checks (ADR-0017) |
+| `make` | bool, optional | This item is the unit's **Make step** (Learning Method v2 Amendment A1.3). Default false. Visible. |
 
 **Pass:** every hidden check passes.
+
+#### Make items (Amendment A1.3, added 2026-11-04)
+
+A Make step is a Build item in which the learner writes a small program from a blank file. It is a `playground` item with `make: true`, graded like any Build: every hidden check passes.
+
+1. `make: true` only on a Build seed of a unit whose roadmap outcome names a Make step (`Unit.make`). Otherwise **Error** `make-seed-unexpected`.
+2. The `starter` of a Make item holds no code: only blank lines and `#` comments. Otherwise **Error** `make-starter-not-blank`.
+3. A Make item's `skill_id` is the skill the Make step credits (`Unit.make.skill_id`). Otherwise **Error** `make-seed-wrong-skill` (this rule already covers every Build seed of a Make unit).
+4. A unit with a Make step and no approved Make item gets **Warning** `make-seed-missing`.
+
+The learner sees the unit's Make task (`Unit.make.task`, the approved roadmap wording), the visible task list, a blank editor, **Run** with typed input in the sandbox, and **Submit**. Submit is the check: the hidden checks run and the result shows which ones passed. A learner may submit again; the newest result counts, and a pass after a retry is Moderate (SPEC-12 section 5). There is no separate check that runs the hidden tests without recording, because unlimited free checks would let a learner probe the tests instead of reasoning.
 
 ### `debug` (Debug & Validate)
 | Field | Type | Meaning |

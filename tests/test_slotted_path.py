@@ -311,6 +311,8 @@ class SimpleSeed:
         self.cold_check_eligible = False
         self.curator_approved = True
         self.template = None
+        self.item_type = "playground"
+        self.body = {}
 
 
 # --- Old roadmaps ---

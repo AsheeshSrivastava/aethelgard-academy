@@ -1,0 +1,9 @@
+{
+  "unit_id": "PY-1.2",
+  "title": "Numbers, booleans and None",
+  "concept_check": {
+    "prompt": "Explain in your own words why the donation calculator must turn what the clerk types into a number before multiplying, and what happens when the clerk types text that is not a number.",
+    "solid_keywords": ["type", "text", "str", "float", "int", "convert", "number", "input", "error", "valueerror"],
+    "rubric": "Learner says input() returns text, that text must be converted with int() or float() before arithmetic because the type decides what the operation means, and that converting text that is not a number stops the program with an error."
+  }
+}

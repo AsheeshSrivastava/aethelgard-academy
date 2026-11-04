@@ -1434,6 +1434,11 @@ export interface components {
              * @default []
              */
             tasks: components["schemas"]["Task"][];
+            /**
+             * Make
+             * @default false
+             */
+            make: boolean;
         };
         /** PredictBlock */
         PredictBlock: {

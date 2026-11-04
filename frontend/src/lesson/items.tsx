@@ -423,7 +423,7 @@ export function ItemForm(props: ItemProps) {
           ))}
         </ul>
       ) : null;
-      return <CodeItem starter={block.starter} label="Your code" field="files" before={before} props={props} />;
+      return <CodeItem starter={block.starter} label="Your code" field="files" run={!!block.make} before={before} props={props} />;
     }
     default:
       return <p className="error-note">This kind of exercise cannot be shown yet.</p>;
