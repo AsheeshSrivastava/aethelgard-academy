@@ -964,6 +964,7 @@ def create_app(
             now=now,
             stage=stage,
             config=config,
+            unseen_activities=lambda unit: unseen_activities(unit, learner_id),
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check", response_model=ColdCheckStatus)
@@ -1031,9 +1032,27 @@ def create_app(
             return None
         current = repo.get_current_exercise(learner_id, unit.unit_id, activity)
         if current and current.exercise_id in pool:
-            return find_variant(seeds, current.exercise_id)
+            # An attempted item is not served again by default (SPEC-12 section 4).
+            if activity == COLD_CHECK or not attempted_since_served(current, learner_id):
+                return find_variant(seeds, current.exercise_id)
         seen = repo.get_seen_exercises(learner_id, unit.unit_id, activity)
-        return serve(unit, activity, choose_next(pool, seen, None), learner_id)
+        return serve(unit, activity, choose_next(pool, seen, current.exercise_id if current else None), learner_id)
+
+    def attempted_since_served(current, learner_id: str) -> bool:
+        return any(
+            e.exercise_id == current.exercise_id and e.recorded_at >= current.served_at
+            for e in repo.get_evidence_ledger(learner_id)
+        )
+
+    def unseen_activities(unit: Unit, learner_id: str) -> List[str]:
+        """Practice activities of the unit that still have an item this learner has not seen."""
+        seeds = catalog.seeds.get(unit.unit_id, [])
+        return [
+            m.slug
+            for m in unit.methods
+            if m != ActivityType.EXPLAIN
+            and set(pool_for(seeds, m.slug)) - set(repo.get_seen_exercises(learner_id, unit.unit_id, m.slug))
+        ]
 
     def known_exercise(exercise_id: str) -> Optional[str]:
         """The unit an exercise id belongs to, if it is a real exercise."""
@@ -1128,6 +1147,27 @@ def create_app(
         response_model_exclude_none=True,
     )
     def post_my_attempt(attempt: Attempt, learner_id: str = Depends(current_learner_id)):
+        """Idempotent per interaction_id: a repeated submit is recorded once (SPEC-12 section 5)."""
+        key = attempt.interaction_id
+        if key is None:
+            return handle_attempt(attempt, learner_id)
+        if not repo.claim_interaction(learner_id, key, clock()):
+            stored = repo.get_interaction_response(learner_id, key)
+            if stored is None:
+                return problem(409, "Already submitted", "This answer is still being checked.")
+            return JSONResponse(json.loads(stored))
+        try:
+            result = handle_attempt(attempt, learner_id)
+        except Exception:
+            repo.release_interaction(learner_id, key)
+            raise
+        if isinstance(result, JSONResponse):
+            repo.release_interaction(learner_id, key)  # A refused attempt can be sent again.
+            return result
+        repo.finish_interaction(learner_id, key, result.model_dump_json(exclude_none=True))
+        return result
+
+    def handle_attempt(attempt: Attempt, learner_id: str):
         if attempt.activity in (STAGE_REVIEW, RECHECK):
             return attempt_review(attempt, learner_id)
         build_target = parse_exercise_id(attempt.exercise_id)

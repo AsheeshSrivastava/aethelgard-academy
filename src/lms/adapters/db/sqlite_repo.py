@@ -184,6 +184,17 @@ class SQLiteLearnerRepository:
             )
             conn.execute(
                 """
+                CREATE TABLE IF NOT EXISTS attempt_receipt (
+                    learner_id TEXT NOT NULL,
+                    interaction_id TEXT NOT NULL,
+                    claimed_at TEXT NOT NULL,
+                    response TEXT,
+                    PRIMARY KEY (learner_id, interaction_id)
+                );
+                """
+            )
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS review_result (
                     learner_id TEXT NOT NULL,
                     kind TEXT NOT NULL,
@@ -504,6 +515,39 @@ class SQLiteLearnerRepository:
             (learner_id, kind),
         ).fetchall()
         return {r["scope"] for r in rows}
+
+    def claim_interaction(self, learner_id: str, interaction_id: str, claimed_at: datetime) -> bool:
+        """Claim an idempotency key before grading; False if it was already claimed."""
+        conn = self._get_conn()
+        with conn:
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO attempt_receipt (learner_id, interaction_id, claimed_at) VALUES (?, ?, ?)",
+                (learner_id, interaction_id, claimed_at.isoformat()),
+            )
+        return cursor.rowcount == 1
+
+    def get_interaction_response(self, learner_id: str, interaction_id: str) -> Optional[str]:
+        row = self._get_conn().execute(
+            "SELECT response FROM attempt_receipt WHERE learner_id = ? AND interaction_id = ?",
+            (learner_id, interaction_id),
+        ).fetchone()
+        return row["response"] if row else None
+
+    def finish_interaction(self, learner_id: str, interaction_id: str, response: str) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                "UPDATE attempt_receipt SET response = ? WHERE learner_id = ? AND interaction_id = ?",
+                (response, learner_id, interaction_id),
+            )
+
+    def release_interaction(self, learner_id: str, interaction_id: str) -> None:
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                "DELETE FROM attempt_receipt WHERE learner_id = ? AND interaction_id = ? AND response IS NULL",
+                (learner_id, interaction_id),
+            )
 
     def get_all_seen_exercises(self, learner_id: str) -> Set[str]:
         rows = self._get_conn().execute(

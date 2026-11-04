@@ -298,6 +298,7 @@ describe("submitting", () => {
       activity: "build",
       files: { "checkin.py": "# Starter", "README.md": "# Readme" },
       ownership_note: "I wrote it myself.",
+      interaction_id: expect.stringMatching(/^[0-9A-HJKMNP-TV-Z]{26}$/),
     });
   });
 

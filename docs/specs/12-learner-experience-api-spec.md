@@ -121,6 +121,7 @@ Rules:
 - A seed with template slots gives one variant per slot value (SPEC-13 section 6); each is its own `exercise_id`.
 - Hidden checks (correct option, expected output, test code) never leave the server.
 - Regenerate serves the next unseen variant from the unit's verified pool (curator seeds first, then batch-generated variants; ADR-0017). No LLM is called at learner time. When the pool is exhausted, the oldest-seen variant is reused.
+- **An attempted item is not served again by default (2026-11-04).** `GET .../exercise` keeps the current item until it has an attempt; after that, the next fetch serves the next item as Regenerate would. So "practise again" never repeats the same item while an unseen one exists. This does not apply to `cold_check`, which follows its round.
 - Cold Check variants come only from curator-approved pool entries.
 - Reset clears `unit_progress`, unit state, drafts and current-exercise pointers. It never touches `evidence_ledger`.
 
@@ -159,7 +160,8 @@ Attempt       { exercise_id, activity,
                 tests?: str,                        // specify_by_tests
                 fields?: {id: key | [key]},         // specify_contract
                 plan?: [str],                       // decompose_plan: ordered step ids
-                ownership_note?: str }              // build only
+                ownership_note?: str,               // build only
+                interaction_id?: str }              // idempotency key, 8 to 64 of [A-Za-z0-9_-]
 AttemptResult { outcome: "passed" | "failed" | "recorded",
                 feedback, checks?: [{label, passed, detail}],
                 score?: {passed, total},            // partial feedback, SPEC-13 section 4
@@ -170,6 +172,7 @@ AttemptResult { outcome: "passed" | "failed" | "recorded",
 Rules:
 - Unknown fields are refused with `422`, so a client cannot send strength, category or assistance.
 - The attempt must be on the learner's current exercise: `409` otherwise.
+- **Idempotent submit (2026-11-04).** The client sends a new `interaction_id` for each answer it submits, and the same one if it sends that answer again (a double click, a retry after a network error). The server claims the id before grading. A repeat of a finished id returns the stored `AttemptResult` and records nothing new; a repeat while the first is still being graded returns `409`. A request that ends in an error releases its id. Ids are per learner.
 - **Ungraded playground:** runs the checks, returns `outcome`, and writes no evidence. `evidence_entry_id` is null.
 - **Explain:** the free-text concept check stays on `POST /explain`.
 - **Evidence is per seed:** an entry stores `seed_id`, and repeats of a seed, including its name variants, count once. The newest result is the one that counts.
@@ -213,9 +216,13 @@ ProficiencyView {
   skills: [ { skill_id, skill_name, target_level, current_level | null, confidence: "provisional" | "supported" | null,
               evidence_counts: {explain, perform, diagnose}, decision: Decision, reason, entry_ids: [str] } ],
   units:  [ { unit_id, decision: Decision } ],
-  next_action: { unit_id, skill_id, activity, decision: Decision, message } }
+  next_action: { unit_id, skill_id, activity, decision: Decision, message, retry_at: datetime | null } }
 Decision = "Progress" | "Accelerate" | "Strengthen" | "Rebuild" | "Undecided"
 ```
+
+- **Reason text names only what is missing (2026-11-04).** When the target level is provisional, `reason` lists the missing pieces only: more exercises at that level (with how many), a passed Cold Check, or a strong attempt after the last weak one.
+- **While a Cold Check retry is locked (2026-11-04).** If a unit's Cold Check is `failed_waiting`, `next_action.retry_at` is when it opens, and `activity` is a practice activity of that unit that still has an unseen item, the weakest skill's main activity first. With no unseen item left, `activity` is `cold_check`, whose step shows the countdown. It never points to an item the learner has already done.
+- **Dates (2026-11-04).** The frontend shows dates as `4 Nov 2026` and times as `3:30 pm`, in the learner's own time zone.
 
 ---
 

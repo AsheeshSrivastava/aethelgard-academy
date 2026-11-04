@@ -73,7 +73,7 @@ describe("stage review page", () => {
     expect(await screen.findByText("Item 2 of 2")).toBeInTheDocument();
     expect(screen.queryByText("Secret reason")).not.toBeInTheDocument();
     const posted = calls.find((c) => c.method === "POST");
-    expect(JSON.parse(posted?.body ?? "{}")).toEqual({ exercise_id: "PY-0.1/cold-predict-1/v1", activity: "stage_review", choice: "A" });
+    expect(JSON.parse(posted?.body ?? "{}")).toEqual({ exercise_id: "PY-0.1/cold-predict-1/v1", activity: "stage_review", choice: "A", interaction_id: expect.stringMatching(/^[0-9A-HJKMNP-TV-Z]{26}$/) });
   });
 
   it("names the units on a fail, with the wait and no item", async () => {

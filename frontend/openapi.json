@@ -1194,6 +1194,7 @@
     "/api/v1/learners/me/attempts": {
       "post": {
         "summary": "Post My Attempt",
+        "description": "Idempotent per interaction_id: a repeated submit is recorded once (SPEC-12 section 5).",
         "operationId": "post_my_attempt_api_v1_learners_me_attempts_post",
         "requestBody": {
           "content": {
@@ -1722,6 +1723,18 @@
               }
             ],
             "title": "Ownership Note"
+          },
+          "interaction_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{8,64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction Id"
           }
         },
         "additionalProperties": false,
@@ -3367,6 +3380,18 @@
           "message": {
             "type": "string",
             "title": "Message"
+          },
+          "retry_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry At"
           }
         },
         "type": "object",

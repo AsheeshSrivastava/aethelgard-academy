@@ -1892,3 +1892,9 @@ button:disabled {
   font-weight: 600;
   text-align: center;
 }
+
+.next-retry {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.9;
+}

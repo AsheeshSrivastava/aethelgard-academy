@@ -126,7 +126,7 @@ def test_proficiency_matches_the_spec_shape(client):
     }
     assert set(body["skills"][0]["evidence_counts"]) == {"explain", "perform", "diagnose"}
     assert set(body["units"][0]) == {"unit_id", "decision"}
-    assert set(body["next_action"]) == {"unit_id", "skill_id", "activity", "decision", "message"}
+    assert set(body["next_action"]) == {"unit_id", "skill_id", "activity", "decision", "message", "retry_at"}
 
 
 def supported(skill_id: str, unit_id: str):

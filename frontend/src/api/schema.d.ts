@@ -506,7 +506,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post My Attempt */
+        /**
+         * Post My Attempt
+         * @description Idempotent per interaction_id: a repeated submit is recorded once (SPEC-12 section 5).
+         */
         post: operations["post_my_attempt_api_v1_learners_me_attempts_post"];
         delete?: never;
         options?: never;
@@ -674,6 +677,8 @@ export interface components {
             plan?: string[] | null;
             /** Ownership Note */
             ownership_note?: string | null;
+            /** Interaction Id */
+            interaction_id?: string | null;
         };
         /** AttemptResult */
         AttemptResult: {
@@ -1285,6 +1290,8 @@ export interface components {
             decision: components["schemas"]["ProgressionDecision"];
             /** Message */
             message: string;
+            /** Retry At */
+            retry_at?: string | null;
         };
         /** PlanStep */
         PlanStep: {

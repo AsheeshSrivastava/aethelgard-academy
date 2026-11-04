@@ -69,6 +69,7 @@ class NextAction(BaseModel):
     activity: str                      # A slug: "explain", "debug-validate", "cold_check"
     decision: ProgressionDecision
     message: str
+    retry_at: Optional[datetime] = None  # When a locked Cold Check retry opens (SPEC-12 section 6)
 
 
 class ProficiencyView(BaseModel):
@@ -136,6 +137,7 @@ def build_proficiency_view(
     now: datetime,
     stage: Optional[int] = None,
     config: EstimatorConfig = DEFAULT_CONFIG,
+    unseen_activities: Callable[[Unit], List[str]] = lambda unit: [],
 ) -> ProficiencyView:
     """Decide every unit and skill in scope; `units` must be in curriculum order."""
     ledger = list(entries)
@@ -165,7 +167,7 @@ def build_proficiency_view(
             UnitView(unit_id=unit.unit_id, decision=decide_unit(decisions))
             for unit, decisions in unit_rows
         ],
-        next_action=_next_action(unit_rows, ledger, cold_check_status_of),
+        next_action=_next_action(unit_rows, ledger, cold_check_status_of, unseen_activities, config),
     )
 
 
@@ -201,23 +203,44 @@ def _next_action(
     unit_rows: List[Tuple[Unit, List[SkillDecision]]],
     ledger: List[EvidenceEntry],
     cold_check_status_of: Callable[[str], ColdCheckStatus],
+    unseen_activities: Callable[[Unit], List[str]] = lambda unit: [],
+    config: EstimatorConfig = DEFAULT_CONFIG,
 ) -> Optional[NextAction]:
     """First unit in curriculum order with something to do now."""
     for unit, decisions in unit_rows:
         if not decisions or decide_unit(decisions) in _DONE:
             continue
-        state = cold_check_status_of(unit.unit_id).state
-        if state == ColdCheckState.WAITING:
+        status = cold_check_status_of(unit.unit_id)
+        if status.state == ColdCheckState.WAITING:
             continue  # A Cold Check wait never blocks learning (ADR-0016 2.6).
         weakest = min(decisions, key=lambda d: DECISION_ORDER.index(d.decision))
+        locked = status.state == ColdCheckState.FAILED_WAITING
+        activity = (
+            _fresh_activity(unit, weakest.skill_id, unseen_activities(unit), config)
+            if locked
+            else _next_activity(unit, weakest.decision, status.state, ledger)
+        )
         return NextAction(
             unit_id=unit.unit_id,
             skill_id=weakest.skill_id,
-            activity=_next_activity(unit, weakest.decision, state, ledger),
+            activity=activity,
             decision=weakest.decision,
             message=weakest.reason,
+            retry_at=status.available_at if locked else None,
         )
     return None
+
+
+def _fresh_activity(unit: Unit, skill_id: str, unseen: List[str], config: EstimatorConfig) -> str:
+    """While the retry is locked: never a done item (SPEC-12 section 6).
+
+    The weakest skill's main activity if it has an unseen item, else any activity that does,
+    else the Cold Check step, which shows the countdown.
+    """
+    main = config.main_activities.get(skill_id)
+    if main is not None and main.slug in unseen:
+        return main.slug
+    return unseen[0] if unseen else "cold_check"
 
 
 def _next_activity(

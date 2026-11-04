@@ -76,6 +76,7 @@ class SkillEstimate(BaseModel):
     confidence: Optional[Confidence] = None
     qualifying_entry_ids: List[str] = Field(default_factory=list)  # entries backing `level`
     supported_levels: List[ProficiencyLevel] = Field(default_factory=list)  # every level with full support
+    support_gaps: Dict[ProficiencyLevel, List[str]] = Field(default_factory=dict)  # what each reached level still lacks
     weak_streak: int = 0                                            # newest consecutive weak entries
     weak_count: int = 0                                             # weak entries in the window
 
@@ -232,13 +233,21 @@ def estimate_skill(
     level = LEVEL_ORDER[level_index]
     backing = [e for e in window if qualifies(e, level, config)]
 
-    def supported_at(candidate: ProficiencyLevel) -> bool:
+    def gaps_at(candidate: ProficiencyLevel) -> List[str]:
+        """The missing pieces of support at a level, in plain words; empty when it is supported."""
         entries = [e for e in window if qualifies(e, candidate, config)]
-        return (
-            weak_streak == 0
-            and len(entries) >= config.supported_min_entries
-            and any(e.cold_check for e in entries)
-        )
+        gaps = []
+        short = config.supported_min_entries - len(entries)
+        if short > 0:
+            gaps.append(f"{short} more exercise{'s' if short > 1 else ''} at {candidate.value}")
+        if not any(e.cold_check for e in entries):
+            gaps.append("a passed Cold Check")
+        if weak_streak:
+            gaps.append("a strong attempt after your last weak one")
+        return gaps
+
+    def supported_at(candidate: ProficiencyLevel) -> bool:
+        return not gaps_at(candidate)
 
     return SkillEstimate(
         skill_id=sid,
@@ -246,6 +255,7 @@ def estimate_skill(
         confidence=Confidence.SUPPORTED if supported_at(level) else Confidence.PROVISIONAL,
         qualifying_entry_ids=[e.entry_id for e in backing],
         supported_levels=[l for l in LEVEL_ORDER[: level_index + 1] if supported_at(l)],
+        support_gaps={l: gaps_at(l) for l in LEVEL_ORDER[: level_index + 1] if not supported_at(l)},
         weak_streak=weak_streak,
         weak_count=weak_count,
     )
@@ -305,8 +315,8 @@ def decide_skill(
     if target_level not in est.supported_levels:
         return result(
             ProgressionDecision.STRENGTHEN,
-            f"{target_level.value} is provisional: it needs a second exercise and a passed Cold Check, "
-            "with no newer weak attempt.",
+            f"{target_level.value} is provisional: it needs "
+            f"{' and '.join(est.support_gaps.get(target_level, []))}.",
         )
     if current > target and est.confidence == Confidence.SUPPORTED:
         return result(

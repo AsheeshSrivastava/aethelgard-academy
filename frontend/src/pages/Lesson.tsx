@@ -13,6 +13,7 @@ import { Prose } from "../lesson/Prose";
 import { NextLink, Result } from "../lesson/Result";
 import { nextStep, splitLessonForExplain } from "../lesson/steps";
 import { coldCheckMessage, stepName } from "../lib/format";
+import { useInteractionId } from "../lib/interaction";
 import { useNow } from "../lib/useNow";
 
 function useLessonState(unitId: string) {
@@ -153,9 +154,12 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
 
 function useAttempt(exercise: Exercise | undefined, activity: string, onDone: () => void) {
   const client = useQueryClient();
+  const interaction = useInteractionId();
   return useMutation({
-    mutationFn: (answer: Answer) => api.attempt({ exercise_id: exercise?.exercise_id ?? "", activity, ...answer }),
+    mutationFn: (answer: Answer) =>
+      api.attempt({ exercise_id: exercise?.exercise_id ?? "", activity, ...answer, interaction_id: interaction.current() }),
     onSuccess: () => {
+      interaction.next();
       onDone();
       void client.invalidateQueries({ queryKey: ["ledger"] });
       void client.invalidateQueries({ queryKey: ["proficiency"] });

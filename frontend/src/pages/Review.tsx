@@ -7,14 +7,18 @@ import { BackLink, ErrorNote, Loading } from "../components/common";
 import { ItemForm } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
 import { courseName, reviewMessage } from "../lib/format";
+import { useInteractionId } from "../lib/interaction";
 import { useNow } from "../lib/useNow";
 
 /** One item, one try, no answer shown. A failed item can come back (SPEC-16 section 3.3). */
 function RoundItem({ exercise, activity, onAnswered }: { exercise: Exercise; activity: string; onAnswered: () => void }) {
   const client = useQueryClient();
+  const interaction = useInteractionId();
   const attempt = useMutation({
-    mutationFn: (answer: object) => api.attempt({ exercise_id: exercise.exercise_id, activity, ...answer }),
+    mutationFn: (answer: object) =>
+      api.attempt({ exercise_id: exercise.exercise_id, activity, ...answer, interaction_id: interaction.current() }),
     onSuccess: () => {
+      interaction.next();
       onAnswered();
       void client.invalidateQueries({ queryKey: ["ledger"] });
       void client.invalidateQueries({ queryKey: ["proficiency"] });

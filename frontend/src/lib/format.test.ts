@@ -6,10 +6,14 @@ import {
   countdown,
   courseOfUnit,
   decisionLabel,
+  formatDate,
+  formatDateTime,
+  formatTime,
   nextActionMessage,
   skillReason,
   stepName,
 } from "./format";
+import { newInteractionId } from "./interaction";
 
 const NOW = new Date("2026-06-01T09:00:00Z");
 
@@ -113,5 +117,33 @@ describe("labels", () => {
   it("names steps for people", () => {
     expect(stepName("debug-validate")).toBe("Debug & Validate");
     expect(stepName("cold_check")).toBe("Cold Check");
+  });
+});
+
+describe("dates (SPEC-12 section 6)", () => {
+  it("shows a day, a short month and a year", () => {
+    expect(formatDate("2026-11-04T12:00:00Z")).toBe("4 Nov 2026");
+  });
+
+  it("shows a time with am or pm", () => {
+    expect(formatTime("2026-11-04T12:00:00Z")).toMatch(/^\d{1,2}:\d{2} (am|pm)$/);
+  });
+
+  it("joins them for a retry time", () => {
+    expect(formatDateTime("2026-11-04T12:00:00Z")).toMatch(/^\d{1,2} Nov 2026, \d{1,2}:\d{2} (am|pm)$/);
+  });
+});
+
+describe("newInteractionId", () => {
+  it("makes a ULID the server accepts", () => {
+    const id = newInteractionId();
+    expect(id).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+    expect(id).toMatch(/^[A-Za-z0-9_-]{8,64}$/);
+  });
+
+  it("never repeats and sorts by time", () => {
+    const ids = Array.from({ length: 50 }, () => newInteractionId());
+    expect(new Set(ids).size).toBe(50);
+    expect(newInteractionId(Date.UTC(2026, 0, 1)) < newInteractionId(Date.UTC(2027, 0, 1))).toBe(true);
   });
 });

@@ -21,7 +21,7 @@ export function stubApi(routes: Record<string, Reply>) {
       });
     }
     const reply = routes[key];
-    const body = typeof reply === "function" ? (reply as (u: URL, i?: RequestInit) => unknown)(url, init) : reply;
+    const body = await (typeof reply === "function" ? (reply as (u: URL, i?: RequestInit) => unknown)(url, init) : reply);
     if (body instanceof Response) return body;
     if (body === null) return new Response(null, { status: 204 });
     return new Response(JSON.stringify(body), {

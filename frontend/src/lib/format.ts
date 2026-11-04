@@ -119,3 +119,11 @@ export function coldCheckMessage(status: ColdCheckStatus, now: Date): string {
       return "Finish the activities to start the 24-hour wait.";
   }
 }
+
+// Dates read the same everywhere: 4 Nov 2026 and 3:30 pm, in the learner's own time zone.
+const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const TIME = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", hour12: true });
+
+export const formatDate = (iso: string) => DATE.format(new Date(iso));
+export const formatTime = (iso: string) => TIME.format(new Date(iso)).replace(/\s/g, " ");
+export const formatDateTime = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;

@@ -9,6 +9,7 @@ import { CodeEditor } from "../lesson/CodeEditor";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
 import { courseName } from "../lib/format";
+import { useInteractionId } from "../lib/interaction";
 
 const NOTE_FILE = "ownership-note.txt";
 const CHECK_WAIT_MS = 400;
@@ -140,9 +141,12 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
     },
   });
 
+  const interaction = useInteractionId();
   const submit = useMutation({
-    mutationFn: () => api.attempt({ exercise_id: build.exercise_id, activity: "build", files, ownership_note: note }),
+    mutationFn: () =>
+      api.attempt({ exercise_id: build.exercise_id, activity: "build", files, ownership_note: note, interaction_id: interaction.current() }),
     onSuccess: (result) => {
+      interaction.next();
       setSubmitted(result);
       void client.invalidateQueries({ queryKey: ["ledger"] });
       void client.invalidateQueries({ queryKey: ["proficiency"] });

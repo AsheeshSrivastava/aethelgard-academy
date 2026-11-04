@@ -87,10 +87,15 @@ function routes(activity: string, ex: object, attempt: unknown = passed, cold: o
   };
 }
 
+/** The answer a submit sent, without its interaction id (tested on its own below). */
 function postedAttempt(fetchCalls: { method: string; url: string; body?: string }[]) {
   const call = fetchCalls.find((c) => c.method === "POST" && c.url.endsWith("/attempts"));
-  return JSON.parse(call?.body ?? "{}");
+  const { interaction_id: _id, ...answer } = JSON.parse(call?.body ?? "{}");
+  return answer;
 }
+
+const postedIds = (fetchCalls: { method: string; url: string; body?: string }[]) =>
+  fetchCalls.filter((c) => c.method === "POST" && c.url.endsWith("/attempts")).map((c) => JSON.parse(c.body ?? "{}").interaction_id);
 
 // --- Pure helpers ---
 
@@ -276,6 +281,43 @@ async function answerAndSubmit(activity: string, ex: object, act: (user: ReturnT
   await screen.findByRole("status", { name: "Result" });
   return postedAttempt(calls);
 }
+
+describe("one record per answer (SPEC-12 section 5)", () => {
+  const ex = exercise("predict", "predict", { code: ["print(1)"], stdin: "", options });
+
+  it("sends the same interaction id when one answer is submitted twice", async () => {
+    let release: (value: unknown) => void = () => undefined;
+    const slow = new Promise((resolve) => (release = resolve));
+    const calls = stubApi({ ...routes("predict", ex), [`POST ${BASE}/attempts`]: () => slow.then(() => passed) });
+    renderAt("/units/PY-0.1/predict");
+    await userEvent.click(await screen.findByRole("radio", { name: /First/ }));
+    const form = screen.getByRole("button", { name: /^Submit/ }).closest("form")!;
+
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    release(undefined);
+    await screen.findByRole("status", { name: "Result" });
+
+    const ids = postedIds(calls);
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+    expect(ids[1]).toBe(ids[0]);
+  });
+
+  it("uses a new id for the next answer", async () => {
+    const calls = stubApi(routes("predict", ex));
+    renderAt("/units/PY-0.1/predict");
+    await userEvent.click(await screen.findByRole("radio", { name: /First/ }));
+    await userEvent.click(screen.getByRole("button", { name: /^Submit/ }));
+    await screen.findByRole("status", { name: "Result" });
+    await userEvent.click(screen.getByRole("radio", { name: /Second/ }));
+    await userEvent.click(screen.getByRole("button", { name: /^Submit/ }));
+
+    await waitFor(() => expect(postedIds(calls)).toHaveLength(2));
+    const [first, second] = postedIds(calls);
+    expect(second).not.toBe(first);
+  });
+});
 
 describe("item types", () => {
   it("predict sends the chosen option", async () => {

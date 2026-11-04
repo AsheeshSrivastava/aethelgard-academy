@@ -12,7 +12,7 @@ the ICodeRunner port, so it gets the same limits as any run.
 import ast
 from typing import Dict, List, Optional, Protocol, Tuple
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from lms.core.exercises import ExerciseSeed
 from lms.core.models import AssistanceLevel, EvidenceStrength
@@ -39,6 +39,7 @@ class Attempt(BaseModel):
     fields: Optional[Dict[str, object]] = None
     plan: Optional[List[str]] = None
     ownership_note: Optional[str] = None
+    interaction_id: Optional[str] = Field(None, pattern=r"^[A-Za-z0-9_-]{8,64}$")  # Idempotency key (SPEC-12 section 5)
 
 
 class Check(BaseModel):

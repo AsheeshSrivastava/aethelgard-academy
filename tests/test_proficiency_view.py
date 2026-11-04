@@ -98,8 +98,9 @@ def supported_apply(skill_id: str = "CO-1", unit_id: str = "PY-1.1") -> List[Evi
     return [make(skill_id, unit_id, days_ago=3), make(skill_id, unit_id, days_ago=2, cold_check=True)]
 
 
-def view(units, entries, cold=None):
-    return build_proficiency_view(units, entries, cold or statuses(), now=NOW)
+def view(units, entries, cold=None, unseen=None):
+    kwargs = {"unseen_activities": lambda u: unseen} if unseen is not None else {}
+    return build_proficiency_view(units, entries, cold or statuses(), now=NOW, **kwargs)
 
 
 # --- consecutive_shaky_checks ---
@@ -326,10 +327,18 @@ def test_after_a_failed_cold_check_the_learner_practises_the_unit():
         make(activity=ActivityType.DEBUG_VALIDATE, days_ago=3),
         make(strength=EvidenceStrength.WEAK, cold_check=True, days_ago=1),
     ]
-    action = view([unit()], tried, statuses(PY_1_1=ColdCheckState.FAILED_WAITING)).next_action
+    action = view([unit()], tried, statuses(PY_1_1=ColdCheckState.FAILED_WAITING), unseen=["debug-validate"]).next_action
 
     assert action.decision == ProgressionDecision.STRENGTHEN
     assert action.activity == "debug-validate"
+
+
+def test_a_locked_retry_with_nothing_unseen_points_to_the_cold_check_countdown():
+    tried = [make(activity=ActivityType.DEBUG_VALIDATE, days_ago=3), make(strength=EvidenceStrength.WEAK, cold_check=True, days_ago=1)]
+
+    action = view([unit()], tried, statuses(PY_1_1=ColdCheckState.FAILED_WAITING), unseen=[]).next_action
+
+    assert action.activity == "cold_check"
 
 
 def test_a_unit_without_target_skills_is_listed_but_gives_no_next_action():

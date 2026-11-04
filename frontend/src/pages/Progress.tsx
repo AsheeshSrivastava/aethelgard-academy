@@ -5,7 +5,7 @@ import { useState } from "react";
 import { api, type EvidenceEntry } from "../api/client";
 import { BackLink, DecisionChip, ErrorNote, Loading, Panel } from "../components/common";
 import { SkillLadder } from "../components/SkillLadder";
-import { nextActionMessage, stepName } from "../lib/format";
+import { formatDate, formatDateTime, nextActionMessage, stepName } from "../lib/format";
 
 const ledgerActivity = (entry: EvidenceEntry) => {
   if (entry.review_kind === "stage_review") return "Stage review";
@@ -76,7 +76,7 @@ function Ledger({ skills }: { skills: { skill_id: string; skill_name: string }[]
             <tbody>
               {ledger.data.map((entry) => (
                 <tr key={entry.entry_id}>
-                  <td>{new Date(entry.recorded_at ?? "").toLocaleDateString()}</td>
+                  <td>{entry.recorded_at ? formatDate(entry.recorded_at) : ""}</td>
                   <td className="mono">{entry.unit_id}</td>
                   <td className="mono">{entry.skill_id}</td>
                   <td>{ledgerActivity(entry)}</td>
@@ -149,6 +149,12 @@ export function Progress() {
             Next learning action
           </h2>
           <p className="next-message">{nextActionMessage(next)}</p>
+          {next.retry_at && (
+            <p className="next-retry">
+              Cold Check retry opens at {formatDateTime(next.retry_at)}.
+              {next.activity !== "cold_check" && ` Meanwhile, try a new ${stepName(next.activity)} item.`}
+            </p>
+          )}
           <Link to="/units/$unitId/$step" params={{ unitId: next.unit_id, step: next.activity }} className="button button-primary">
             {stepName(next.activity)} in {next.unit_id}
           </Link>
