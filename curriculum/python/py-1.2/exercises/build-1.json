@@ -13,7 +13,7 @@
     "If the clerk types text that is not a number, the program must stop with an error instead of printing a total."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "playground": {
     "starter": [
       "# Donation calculator: write it from a blank file.",
