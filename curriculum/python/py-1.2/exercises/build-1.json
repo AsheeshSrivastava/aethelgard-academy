@@ -13,7 +13,7 @@
     "The clerk always types numbers here. Turning away bad input comes later, once you can make decisions in code."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "playground": {
     "starter": [
       "# Donation calculator: write it from a blank file.",
