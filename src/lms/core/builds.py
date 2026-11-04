@@ -13,7 +13,7 @@ from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, S
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from lms.core.course_map import course_of
+from lms.core.course_map import STAGE_BUILD_MATURITY, Maturity, course_of
 from lms.core.curriculum_checks import Finding, Severity
 from lms.core.grading import Runner
 from lms.core.models import Unit, stage_label
@@ -78,6 +78,7 @@ class StageBuildSpec(_Strict):
     stage: int
     title: str
     kind: Literal["script", "mini_project"]
+    maturity: Maturity = STAGE_BUILD_MATURITY
     status: Literal["draft", "approved"]
     brief_markdown: str
     sample_run: List[str]
@@ -89,6 +90,8 @@ class StageBuildSpec(_Strict):
 
     @model_validator(mode="after")
     def _consistent(self) -> "StageBuildSpec":
+        if self.maturity != STAGE_BUILD_MATURITY:
+            raise ValueError(f"a stage build is {STAGE_BUILD_MATURITY} (ADR-0018), not {self.maturity}")
         paths = {f.path for f in self.files}
         if self.entry not in paths:
             raise ValueError(f"entry '{self.entry}' must be one of the files")
@@ -123,6 +126,7 @@ class StageBuild(BaseModel):
     stage_label: str                   # "Stage 4", "DSA 0"
     title: str
     kind: str
+    maturity: Maturity
     status: str
     brief_markdown: str
     sample_run: List[str]
@@ -141,6 +145,7 @@ def public_build(build: StageBuildSpec, submitted: bool) -> StageBuild:
         stage_label=stage_label(build.stage),
         title=build.title,
         kind=build.kind,
+        maturity=build.maturity,
         status=build.status,
         brief_markdown=build.brief_markdown,
         sample_run=build.sample_run,

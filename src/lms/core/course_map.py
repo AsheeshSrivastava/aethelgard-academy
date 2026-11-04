@@ -7,7 +7,7 @@ Governed by:
 Deterministic and pure: units and Cold Check states come in, views come out.
 """
 
-from typing import AbstractSet, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
+from typing import AbstractSet, Callable, Dict, List, Literal, Mapping, NamedTuple, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -74,9 +74,16 @@ class UnitSummary(BaseModel):
     cold_check_state: ColdCheckState
 
 
+# The P0 to P4 ladder (ADR-0018). The type of work follows from it: P0 Make step, P1 stage build,
+# P2 and P3 course project, P4 capstone. A stage build is always P1.
+Maturity = Literal["P0", "P1", "P2", "P3", "P4"]
+STAGE_BUILD_MATURITY: Maturity = "P1"
+
+
 class BuildSummary(BaseModel):
     title: str
     kind: str                          # "script" | "mini_project"
+    maturity: Maturity = STAGE_BUILD_MATURITY
     locked: bool
     pending_units: List[str]
     authored: bool = False             # False: a placeholder until the curator writes it
@@ -91,6 +98,7 @@ class AuthoredBuild(NamedTuple):
     title: str
     kind: str
     status: str
+    maturity: Maturity = STAGE_BUILD_MATURITY
 
 
 class StageView(BaseModel):
@@ -196,6 +204,7 @@ def _stage_view(
         build=BuildSummary(
             title=authored.title if authored else f"{label} build",
             kind=authored.kind if authored else "script",
+            maturity=authored.maturity if authored else STAGE_BUILD_MATURITY,
             locked=not build_is_open(review) if review else bool(pending),
             pending_units=pending,
             authored=authored is not None,

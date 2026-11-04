@@ -2268,6 +2268,18 @@
             "type": "string",
             "title": "Kind"
           },
+          "maturity": {
+            "type": "string",
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ],
+            "title": "Maturity",
+            "default": "P1"
+          },
           "locked": {
             "type": "boolean",
             "title": "Locked"
@@ -4299,6 +4311,17 @@
             "type": "string",
             "title": "Kind"
           },
+          "maturity": {
+            "type": "string",
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ],
+            "title": "Maturity"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -4352,6 +4375,7 @@
           "stage_label",
           "title",
           "kind",
+          "maturity",
           "status",
           "brief_markdown",
           "sample_run",
@@ -4664,6 +4688,13 @@
               }
             ]
           },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/UnitTopic"
+            },
+            "type": "array",
+            "title": "Topics"
+          },
           "stage_label": {
             "type": "string",
             "title": "Stage Label",
@@ -4782,6 +4813,24 @@
           "cold_check_state"
         ],
         "title": "UnitSummary"
+      },
+      "UnitTopic": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "awareness": {
+            "type": "boolean",
+            "title": "Awareness",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "UnitTopic"
       },
       "UnitView": {
         "properties": {

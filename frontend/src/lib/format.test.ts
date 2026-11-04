@@ -9,6 +9,7 @@ import {
   formatDate,
   formatDateTime,
   formatTime,
+  maturityLabel,
   nextActionMessage,
   skillReason,
   stepName,
@@ -20,6 +21,22 @@ const NOW = new Date("2026-06-01T09:00:00Z");
 describe("buildLockMessage with a stage review", () => {
   it("names the review when every unit has passed", () => {
     expect(buildLockMessage([])).toBe("Locked until you pass the stage review");
+  });
+});
+
+describe("maturityLabel on the P0 to P4 ladder (ADR-0018)", () => {
+  it.each([
+    ["P0", "P0 · Make step"],
+    ["P1", "P1 · Stage build"],
+    ["P2", "P2 · Course project"],
+    ["P3", "P3 · Course project"],
+    ["P4", "P4 · Capstone"],
+  ])("labels %s as %s", (maturity, label) => {
+    expect(maturityLabel(maturity)).toBe(label);
+  });
+
+  it("shows an unknown level as it is", () => {
+    expect(maturityLabel("P9")).toBe("P9");
   });
 });
 

@@ -31,6 +31,7 @@ const build = {
   stage_label: "Stage 0",
   title: "Pantry intake check-in script",
   kind: "script",
+  maturity: "P1",
   status: "draft",
   brief_markdown: "Write one script for **the desk**.",
   sample_run: ["Name: meera", "", "--- CHECK-IN SLIP ---"],
@@ -119,6 +120,7 @@ describe("the page", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Pantry intake check-in script" })).toBeInTheDocument();
     expect(screen.getByText("Draft")).toBeInTheDocument();
     expect(screen.getByText("Script")).toBeInTheDocument();
+    expect(screen.getByText("P1 · Stage build")).toBeInTheDocument();
     expect((await screen.findByText("the desk")).tagName).toBe("STRONG");
     expect(screen.getByText(/--- CHECK-IN SLIP ---/)).toBeInTheDocument();
     expect(within(await requirements()).getAllByRole("listitem")).toHaveLength(3);
@@ -376,10 +378,18 @@ describe("course map", () => {
   }
 
   it("links an unlocked, written build", async () => {
-    stubApi(mapWith({ title: "Check-in", kind: "script", locked: false, pending_units: [], authored: true, status: "draft" }));
+    stubApi(mapWith({ title: "Check-in", kind: "script", maturity: "P1", locked: false, pending_units: [], authored: true, status: "draft" }));
     renderAt("/courses/python");
 
     expect(await screen.findByRole("link", { name: /Check-in/ })).toHaveAttribute("href", "/courses/python/stages/0/build");
+  });
+
+  it("shows the build's maturity beside its kind", async () => {
+    stubApi(mapWith({ title: "Check-in", kind: "script", maturity: "P1", locked: true, pending_units: ["PY-0.1"], authored: true, status: "draft" }));
+    renderAt("/courses/python");
+
+    expect(await screen.findByText("P1 · Stage build")).toBeInTheDocument();
+    expect(screen.getByText("Script")).toBeInTheDocument();
   });
 
   it("does not link a locked build", async () => {

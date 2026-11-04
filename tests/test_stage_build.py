@@ -250,6 +250,8 @@ def set_field(name, value):
     "change, words",
     [
         (set_field("kind", "essay"), "kind"),
+        (set_field("maturity", "P9"), "maturity"),
+        (set_field("maturity", "P2"), "stage build is P1"),
         (set_field("status", "finished"), "status"),
         (set_field("surprise", 1), "surprise"),
         (set_field("schema_version", 2), "schema_version"),
@@ -270,6 +272,18 @@ def test_a_bad_build_is_reported_and_skipped(tmp_path, change, words):
     assert builds == {}
     assert [p.code for p in problems] == ["build-invalid"]
     assert words in problems[0].message
+
+
+def test_the_stage_0_build_is_a_p1_stage_build():
+    assert raw_build()["maturity"] == "P1"
+    assert spec().maturity == "P1"
+
+
+def test_a_stage_build_with_no_maturity_reads_as_p1(tmp_path):
+    builds, problems = load_builds(copy_build(tmp_path, lambda d: d.pop("maturity", None)))
+
+    assert builds[("python", 0)].maturity == "P1"
+    assert [p.code for p in problems] == ["build-practice-checks"]
 
 
 def test_a_build_without_any_checks_is_reported(tmp_path):
@@ -570,7 +584,7 @@ def test_nothing_hidden_ever_leaves_the_server(client, repo):
 
 def test_public_build_is_built_from_allowed_fields():
     assert set(public_build(spec(), submitted=False).model_dump()) == {
-        "exercise_id", "course_id", "stage", "stage_label", "title", "kind", "status", "brief_markdown",
+        "exercise_id", "course_id", "stage", "stage_label", "title", "kind", "maturity", "status", "brief_markdown",
         "sample_run", "entry", "files", "requirements", "proves", "submitted",
     }
 

@@ -4,6 +4,7 @@
   "stage": 0,
   "title": "Pantry intake check-in script",
   "kind": "script",
+  "maturity": "P1",
   "status": "approved",
   "brief_markdown": "The community food pantry has one intake desk and a long queue. People arrive tired, and they type in messy ways.\n\nWrite one script for the desk. It asks for a person's name, then the service they need, then prints a slip the desk officer can read aloud. Clean both answers first, so the slip looks right however they were typed. The last line sends them to the desk for the service they asked for.",
   "sample_run": [

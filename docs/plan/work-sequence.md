@@ -2,7 +2,7 @@
 
 One list of what comes next, in order. One step at a time. Agreed with the owner on 2026-11-04.
 
-**Current step:** Phase 1 is done except your own test (1.0). Phase 2 waits for the owner's go.
+**Current step:** 2.2 Multi-file builds.
 **Owner, in parallel:** 1.0 Walk Stage 0 yourself (TEST).
 
 What each step needs from the owner:
@@ -27,7 +27,7 @@ Pushing to GitHub and Entire is always at the owner's word.
 
 ## Phase 2: Build maturity and stage builds
 
-- [ ] 2.1 Builds carry `maturity` (P0 to P4) and `kind`, and the map shows them (ADR-0018). Stage builds are P1. (APPROVE the Stage 0 build's label)
+- [x] 2.1 Builds carry `maturity` (P0 to P4) and `kind`, and the map shows them (ADR-0018). Stage builds are P1. (APPROVE the Stage 0 build's label) Done 2026-11-04 with option A; label approved by the owner: `maturity` only, the type of work follows from the level (ADR-0018 amendment). The map shows "P1 · Stage build".
 - [ ] 2.2 Multi-file builds, needed from Python Stage 5. (NOTHING)
 - [x] 2.3 When to write the other stage builds. Decided: with each stage's content (ADR-0018 amendment).
 

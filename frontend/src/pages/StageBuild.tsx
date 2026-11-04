@@ -8,7 +8,7 @@ import { AxisPanel } from "../lesson/AxisPanel";
 import { CodeEditor } from "../lesson/CodeEditor";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
-import { courseName } from "../lib/format";
+import { courseName, maturityLabel } from "../lib/format";
 import { useInteractionId } from "../lib/interaction";
 
 const NOTE_FILE = "ownership-note.txt";
@@ -318,6 +318,7 @@ export function StageBuild() {
           <div className="concept-head">
             <span className="mono muted">{data.stage_label} build</span>
             <span className="chip chip-build">{data.kind === "script" ? "Script" : "Mini-project"}</span>
+            <span className="chip chip-maturity">{maturityLabel(data.maturity)}</span>
             {data.status === "draft" && <span className="chip">Draft</span>}
           </div>
           <h1 className="page-title build-title">{data.title}</h1>

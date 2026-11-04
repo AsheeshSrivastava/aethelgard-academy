@@ -43,7 +43,7 @@ CourseMap  { course: Course, stages: [ { stage, title, units: [UnitSummary], bui
 UnitSummary{ unit_id, title, concept_line, target_skills: [{skill_id, skill_name, goal_level}], authored: bool,
              decision: Decision, cold_check_state }   // for the signed-in learner
 Unit.activities: ["video", "explain", ...unit.methods without "Explain", "playground" (section 3.2), "cold_check"]   // video and explain always first, cold_check always last
-BuildSummary { title, kind: "script" | "mini_project", locked: bool, pending_units: [unit_id], review_state }  // SPEC-16 section 3.4
+BuildSummary { title, kind: "script" | "mini_project", maturity: "P0".."P4", locked: bool, pending_units: [unit_id], review_state }  // SPEC-16 section 3.4
 StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
              files: [{path, starter}], requirements: [{id, label, unit_id}] }   // full shape in SPEC-15
 ```

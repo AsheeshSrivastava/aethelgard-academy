@@ -501,7 +501,7 @@ def create_app(
             ).state,
             lambda unit: unit_decision(unit, ledger, now, config),
             {
-                stage: AuthoredBuild(build.title, build.kind, build.status)
+                stage: AuthoredBuild(build.title, build.kind, build.status, build.maturity)
                 for (course, stage), build in catalog.builds.items()
                 if course == course_id
             },

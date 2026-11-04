@@ -188,7 +188,7 @@ def test_course_map_shape(client):
         "goal_level",
     }
     assert set(body["stages"][0]["build"]) == {
-        "title", "kind", "locked", "pending_units", "authored", "status", "review_state", "review_planned",
+        "title", "kind", "maturity", "locked", "pending_units", "authored", "status", "review_state", "review_planned",
     }
 
 
@@ -276,6 +276,7 @@ def test_build_is_locked_until_every_unit_passed_its_cold_check():
     assert stage_1_build() == {
         "title": "Stage 1 build",
         "kind": "script",
+        "maturity": "P1",
         "locked": False,
         "pending_units": [],
         "review_state": "unavailable",

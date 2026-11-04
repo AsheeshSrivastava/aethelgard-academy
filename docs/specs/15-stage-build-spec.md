@@ -37,6 +37,7 @@ The loader takes `checks.py` from `LMS_ANSWERS_DIR`. With the variable unset, it
 | `course_id`, `stage` | Must match the folder and a real stage |
 | `title`, `brief_markdown` | Shown to the learner |
 | `kind` | `script` or `mini_project` |
+| `maturity` | `P1` (ADR-0018 amendment). A stage build is always P1; a missing value reads as P1 |
 | `status` | `draft` or `approved`. A draft shows a Draft label |
 | `sample_run` | Lines of what a correct run looks like |
 | `entry` | The `.py` file that runs. Must be in `files` |
@@ -78,7 +79,7 @@ Only the entry file is run. This fits a one-file script. A multi-file mini-proje
 Returns `StageBuild`, built from a list of allowed fields, so hidden checks cannot leak:
 
 ```text
-StageBuild { exercise_id, course_id, stage, title, kind, status, brief_markdown, sample_run: [str],
+StageBuild { exercise_id, course_id, stage, title, kind, maturity, status, brief_markdown, sample_run: [str],
              entry, files: [{path, starter: [str]}],
              requirements: [{id, label, unit_id}],
              proves: [{skill_id, unit_id, label}],

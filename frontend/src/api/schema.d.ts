@@ -829,6 +829,12 @@ export interface components {
             title: string;
             /** Kind */
             kind: string;
+            /**
+             * Maturity
+             * @default P1
+             * @enum {string}
+             */
+            maturity: "P0" | "P1" | "P2" | "P3" | "P4";
             /** Locked */
             locked: boolean;
             /** Pending Units */
@@ -1568,6 +1574,11 @@ export interface components {
             title: string;
             /** Kind */
             kind: string;
+            /**
+             * Maturity
+             * @enum {string}
+             */
+            maturity: "P0" | "P1" | "P2" | "P3" | "P4";
             /** Status */
             status: string;
             /** Brief Markdown */
@@ -1686,6 +1697,8 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             make?: components["schemas"]["MakeStep"] | null;
+            /** Topics */
+            topics?: components["schemas"]["UnitTopic"][];
             /** Stage Label */
             readonly stage_label: string;
             /**
@@ -1726,6 +1739,16 @@ export interface components {
             authored: boolean;
             decision: components["schemas"]["ProgressionDecision"];
             cold_check_state: components["schemas"]["ColdCheckState"];
+        };
+        /** UnitTopic */
+        UnitTopic: {
+            /** Name */
+            name: string;
+            /**
+             * Awareness
+             * @default false
+             */
+            awareness: boolean;
         };
         /** UnitView */
         UnitView: {

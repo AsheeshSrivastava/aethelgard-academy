@@ -55,3 +55,12 @@ The roadmaps now name three kinds of build work: Make steps inside units, one bu
 3. The curriculum checks report a Make seed in a unit with no Make step, a non-blank starter, a seed crediting another skill, and a Make unit with no Make seed (`make-seed-unexpected`, `make-starter-not-blank`, `make-seed-wrong-skill`, `make-seed-missing`).
 4. Its maturity is P0, as in section 2. First example: PY-1.2 `build-1` (approved 2026-11-04).
 5. Other stage builds are written with each stage's content, not all up front (owner, 2026-11-04).
+
+---
+
+## Amendment 2026-11-04: one field, `maturity` (owner chose option A)
+
+1. Section 2.6 changes: the build spec gains `maturity` only. Build specs already have a `kind` field (`script` or `mini_project`, SPEC-15), so a second `kind` would clash.
+2. The type of work follows from the level, so it is not stored: P0 Make step, P1 stage build, P2 and P3 course project, P4 capstone.
+3. A stage build (`curriculum/<course>/builds/stage-<n>/build.json`) must be P1. A missing `maturity` reads as P1; any other value is a `build-invalid` finding.
+4. The public build and the course map's build tile carry `maturity`. The map shows it beside Script or Mini-project, for example "P1 · Stage build".

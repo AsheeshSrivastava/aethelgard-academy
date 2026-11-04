@@ -61,6 +61,20 @@ export const courseOfUnit = (unitId: string) => COURSE_PREFIXES[unitId.split("-"
 /** A fresh start is not a verdict, so "Undecided" is shown as not started. */
 export const decisionLabel = (decision: Decision) => (decision === "Undecided" ? "Not started" : decision);
 
+/** The P0 to P4 ladder (ADR-0018): the type of work follows from the level. */
+const MATURITY_WORK: Record<string, string> = {
+  P0: "Make step",
+  P1: "Stage build",
+  P2: "Course project",
+  P3: "Course project",
+  P4: "Capstone",
+};
+
+export function maturityLabel(maturity: string): string {
+  const work = MATURITY_WORK[maturity];
+  return work ? `${maturity} · ${work}` : maturity;
+}
+
 export function buildLockMessage(pending: string[]): string {
   if (pending.length === 0) return "Locked until you pass the stage review";
   if (pending.length === 1) return `Locked until ${pending[0]} passes its Cold Check`;

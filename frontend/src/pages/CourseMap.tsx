@@ -4,7 +4,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { api } from "../api/client";
 import type { Schemas } from "../api/client";
 import { BackLink, DecisionChip, ErrorNote, Loading } from "../components/common";
-import { buildLockMessage, nextActionMessage } from "../lib/format";
+import { buildLockMessage, maturityLabel, nextActionMessage } from "../lib/format";
 
 type Stage = Schemas["StageView"];
 
@@ -41,6 +41,7 @@ function BuildTile({ courseId, stage }: { courseId: string; stage: Stage }) {
     <span className="build-head">
       <span className="mono">{build.title}</span>
       <span className="chip chip-build">{build.kind === "script" ? "Script" : "Mini-project"}</span>
+      <span className="chip chip-maturity">{maturityLabel(build.maturity)}</span>
     </span>
   );
   if (!build.locked && build.authored) {
