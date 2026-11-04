@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "Check every name on each line: was it given a value earlier?",
+  "hint_approved": false,
   "debug_locate": {
     "broken_code": [
       "print(\"Counter open\")",

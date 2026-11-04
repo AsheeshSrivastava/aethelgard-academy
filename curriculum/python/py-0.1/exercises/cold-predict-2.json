@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "Run each line in order, and remember what print() with nothing inside does.",
+  "hint_approved": false,
   "predict": {
     "code": [
       "print(\"Intake open\")",

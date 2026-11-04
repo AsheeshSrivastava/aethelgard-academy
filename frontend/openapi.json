@@ -1052,6 +1052,46 @@
         }
       }
     },
+    "/api/v1/learners/me/units/{unit_id}/cold-check/feedback": {
+      "get": {
+        "summary": "Get My Cold Check Feedback",
+        "description": "Each item of the round, the learner's own answer, and what to revisit (ADR-0022 section 2.5).",
+        "operationId": "get_my_cold_check_feedback_api_v1_learners_me_units__unit_id__cold_check_feedback_get",
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Unit Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ColdCheckFeedback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/learners/me/units/{unit_id}/cold-check": {
       "get": {
         "summary": "Get My Cold Check",
@@ -2455,6 +2495,27 @@
         "title": "ClientPayload",
         "description": "The only fields a client event may carry; anything else is refused."
       },
+      "ColdCheckFeedback": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "items"
+        ],
+        "title": "ColdCheckFeedback"
+      },
       "ColdCheckState": {
         "type": "string",
         "enum": [
@@ -3481,6 +3542,72 @@
         "type": "object",
         "title": "Features",
         "description": "Modules that are switched on (SPEC-12 section 9). The frontend hides routes for the rest."
+      },
+      "FeedbackItem": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "skill_name": {
+            "type": "string",
+            "title": "Skill Name"
+          },
+          "passed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passed"
+          },
+          "your_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Your Answer"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "practice_activity": {
+            "type": "string",
+            "title": "Practice Activity"
+          },
+          "worked": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Reveal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "skill_name",
+          "practice_activity"
+        ],
+        "title": "FeedbackItem"
       },
       "HTTPValidationError": {
         "properties": {

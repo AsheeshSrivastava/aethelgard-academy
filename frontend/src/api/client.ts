@@ -68,6 +68,8 @@ export const api = {
   courseMap: (courseId: string) => request<CourseMap>(`/courses/${courseId}`),
   unit: (unitId: string) => request<Unit>(`/units/${unitId}`),
   coldCheck: (unitId: string) => request<ColdCheckStatus>(`/learners/me/units/${unitId}/cold-check`),
+  coldCheckFeedback: (unitId: string) =>
+    request<Schemas["ColdCheckFeedback"]>(`/learners/me/units/${unitId}/cold-check/feedback`),
   unitState: (unitId: string) => request<UnitState>(`/learners/me/units/${unitId}/state`),
   resetUnit: (unitId: string) => request<void>(`/learners/me/units/${unitId}/reset`, { method: "POST" }),
   proficiency: (params: { courseId?: string; stage?: number }) =>

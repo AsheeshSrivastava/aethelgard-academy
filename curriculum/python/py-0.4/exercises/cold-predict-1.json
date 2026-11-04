@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "Lines starting with # never run; trace only the lines Python executes.",
+  "hint_approved": false,
   "predict": {
     "code": [
       "print(\"Terminal ready\")",

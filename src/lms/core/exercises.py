@@ -23,6 +23,7 @@ SCHEMA_VERSION = 2
 COLD_CHECK = "cold_check"
 COLD_ITEMS_MIN = 3
 COLD_ITEMS_MAX = 5
+MAX_HINT_CHARS = 300
 _SLOT = re.compile(r"\{\{(\w+)\}\}")
 
 
@@ -211,6 +212,8 @@ class ExerciseSeed(BaseModel):
     item_type: str
     body: Dict[str, Any]
     template: Optional[Dict[str, Any]] = None
+    hint: Optional[str] = None         # Shown after a failed Cold Check item, once approved (ADR-0022)
+    hint_approved: bool = False
 
 
 def _options_of(item_type: str, body: Dict[str, Any]) -> Optional[List[Dict[str, str]]]:
@@ -272,6 +275,10 @@ def parse_seed(raw: Dict[str, Any], file_stem: str, unit_id: str) -> ExerciseSee
     if item_type not in ALLOWED_ITEM_TYPES[activity]:
         raise SeedError(f"{item_type} is not allowed for {activity.value}.")
 
+    hint = raw.get("hint")
+    if hint is not None and not (isinstance(hint, str) and 1 <= len(hint.strip()) and len(hint) <= MAX_HINT_CHARS):
+        raise SeedError(f"hint must be text of 1 to {MAX_HINT_CHARS} characters.")
+
     missing = [f for f in HIDDEN_REQUIRED[item_type] if f not in body]
     if missing:
         raise SeedError(f"{item_type} is missing: {', '.join(missing)}.")
@@ -285,6 +292,8 @@ def parse_seed(raw: Dict[str, Any], file_stem: str, unit_id: str) -> ExerciseSee
             item_type=item_type,
             body=body,
             template=raw.get("template"),
+            hint=hint,
+            hint_approved=bool(raw.get("hint_approved", False)),
         )
     except ValidationError as error:
         first = error.errors()[0]

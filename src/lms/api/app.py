@@ -54,6 +54,7 @@ from lms.core.course_map import (
 from lms.core.curriculum_checks import ACTIVITY_EVIDENCE
 from lms.core.models import stage_label
 from lms.core.timing import timing_for
+from lms.core.feedback import ColdCheckFeedback, cold_check_feedback
 from lms.core.interaction_log import (
     ClientEvent,
     InteractionEvent,
@@ -1079,6 +1080,21 @@ def create_app(
             stage=stage,
             config=config,
             unseen_activities=lambda unit: unseen_activities(unit, learner_id),
+        )
+
+    @app.get("/api/v1/learners/me/units/{unit_id}/cold-check/feedback", response_model=ColdCheckFeedback)
+    def get_my_cold_check_feedback(unit_id: str, learner_id: str = Depends(current_learner_id)):
+        """Each item of the round, the learner's own answer, and what to revisit (ADR-0022 section 2.5)."""
+        unit = catalog.get_unit(unit_id)
+        if not unit:
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        answers: Dict[str, Dict[str, Any]] = {}
+        for event in repo.get_interactions(learner_id, 10000):  # Newest first, so the first one wins.
+            if event.event_type == "answer_submitted" and event.activity == COLD_CHECK and event.unit_id == unit_id:
+                if event.item_id and "outcome" in event.payload:
+                    answers.setdefault(event.item_id, event.payload.get("answer") or {})
+        return cold_check_feedback(
+            unit, catalog.seeds.get(unit_id, []), repo.get_evidence_ledger(learner_id), answers, catalog.main_activities
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check", response_model=ColdCheckStatus)

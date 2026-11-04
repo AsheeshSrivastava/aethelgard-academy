@@ -50,6 +50,8 @@ curriculum/python/py-0.1/
 | `prompt_markdown` | [str] | What the learner reads |
 | `cold_check_eligible` | bool | Reserved for the Cold Check (section 5) |
 | `curator_approved` | bool | The curator has reviewed this seed. Required for a Cold Check. |
+| `hint` | str, optional | One sentence, 1 to 300 characters, naming the idea to revisit after a failed Cold Check item. Never the answer. Not sent with the item (ADR-0022 section 2.5). |
+| `hint_approved` | bool, optional | The curator has approved the hint. An unapproved hint is never shown. Default false. |
 | `template` | object | Optional variant slots (section 6) |
 
 Each seed also has exactly one body block, named by its item type. The activity decides which item types are allowed:

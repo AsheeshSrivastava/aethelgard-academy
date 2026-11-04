@@ -675,30 +675,52 @@ describe("cold check", () => {
     expect(await screen.findByText("Second item?")).toBeInTheDocument();
   });
 
-  it("summarises a passed Cold Check by skill", async () => {
-    const entry = { entry_id: "e", unit_id: "PY-0.1", skill_id: "CO-1", cold_check: true, evidence_strength: "Strong", recorded_at: "2026-06-01T09:00:00Z" };
-    stubApi({
-      ...routes("cold_check", item, passed, { state: "passed", available_at: null, last_attempt_at: "2026-06-01T09:00:00Z" }),
-      [`GET ${BASE}/ledger`]: [entry],
-    });
-    renderAt("/units/PY-0.1/cold_check");
+  const feedback = {
+    unit_id: "PY-0.1",
+    items: [
+      { skill_id: "CO-1", skill_name: "Predict before running", passed: true, your_answer: "C. Queue open", hint: null, practice_activity: "predict", worked: { correct: "C", why: ["The comment is skipped."] } },
+      { skill_id: "CO-2", skill_name: "Trace state", passed: false, your_answer: "B A / A", hint: "Follow each name after every line.", practice_activity: "trace", worked: null },
+      { skill_id: "CO-6", skill_name: "Explain the concept", passed: null, your_answer: null, hint: null, practice_activity: "predict", worked: null },
+    ],
+  };
 
-    const summary = await screen.findByRole("region", { name: "Your result" });
-    expect(await within(summary).findByText("CO-1")).toBeInTheDocument();
-    expect(within(summary).getByText("Passed", { selector: "td" })).toBeInTheDocument();
-  });
+  function coldRoutes(state: object) {
+    return {
+      ...routes("cold_check", item, passed, state),
+      [`GET ${BASE}/units/PY-0.1/cold-check/feedback`]: feedback,
+      [`POST ${BASE}/interactions`]: null,
+    };
+  }
 
-  it("after a fail, shows the wait and the skills to retry but no answers", async () => {
+  it("after a fail, shows each item, your answer, a hint and where to practise, never the answer of a failed item", async () => {
     const soon = new Date(Date.now() + 3600_000).toISOString();
-    const entry = { entry_id: "e", unit_id: "PY-0.1", skill_id: "CO-1", cold_check: true, evidence_strength: "Weak", recorded_at: "2026-06-01T09:00:00Z" };
-    stubApi({
-      ...routes("cold_check", item, passed, { state: "failed_waiting", available_at: soon, last_attempt_at: "2026-06-01T09:00:00Z" }),
-      [`GET ${BASE}/ledger`]: [entry],
-    });
+    const calls = stubApi(coldRoutes({ state: "failed_waiting", available_at: soon, last_attempt_at: "2026-06-01T09:00:00Z" }));
     renderAt("/units/PY-0.1/cold_check");
 
     expect(await screen.findByText(/Try again in/)).toBeInTheDocument();
-    expect(await screen.findByText("Not yet")).toBeInTheDocument();
+    const summary = await screen.findByRole("region", { name: "Your result" });
+    const rows = within(summary).getAllByRole("row").slice(1);
+    expect(rows).toHaveLength(3);
+    expect(rows[1]).toHaveTextContent("Not yet");
+    expect(rows[1]).toHaveTextContent("B A / A");
+    expect(rows[1]).toHaveTextContent("Follow each name after every line.");
+    expect(within(rows[1]!).getByRole("link", { name: /Practise Trace/ })).toHaveAttribute("href", "/units/PY-0.1/trace");
+    expect(rows[2]).toHaveTextContent("Not answered yet");
+    expect(within(rows[1]!).queryByText(/Worked answer/)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(calls.some((c) => c.url.endsWith("/interactions") && JSON.parse(c.body ?? "{}").event_type === "feedback_viewed")).toBe(true),
+    );
+  });
+
+  it("shows the worked answer of a passed item, which will not come back", async () => {
+    stubApi(coldRoutes({ state: "passed", available_at: null, last_attempt_at: "2026-06-01T09:00:00Z" }));
+    renderAt("/units/PY-0.1/cold_check");
+
+    const summary = await screen.findByRole("region", { name: "Your result" });
+    const [passedRow] = within(summary).getAllByRole("row").slice(1);
+    expect(passedRow).toHaveTextContent("Passed");
+    expect(within(passedRow!).getByText("Worked answer")).toBeInTheDocument();
+    expect(passedRow).toHaveTextContent("The comment is skipped.");
   });
 
   it("says when the Cold Check is not written yet", async () => {

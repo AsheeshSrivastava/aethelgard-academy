@@ -164,6 +164,7 @@ function useAttempt(exercise: Exercise | undefined, activity: string, onDone: ()
       void client.invalidateQueries({ queryKey: ["ledger"] });
       void client.invalidateQueries({ queryKey: ["proficiency"] });
       void client.invalidateQueries({ queryKey: ["coldCheck"] });
+      void client.invalidateQueries({ queryKey: ["coldFeedback"] });
     },
   });
 }
@@ -264,15 +265,16 @@ function PlaygroundStep({ unit, next, onDone, onCode }: { unit: Unit; next: stri
   );
 }
 
+/** Option A feedback (ADR-0022 section 2.5): your answer, a hint, where to practise; worked answers only once passed. */
 function ColdSummary({ unitId }: { unitId: string }) {
-  const ledger = useQuery({ queryKey: ["ledger", "cold", unitId], queryFn: () => api.ledger() });
-  const latest = new Map<string, boolean>();
-  [...(ledger.data ?? [])]
-    .filter((entry) => entry.cold_check && entry.unit_id === unitId)
-    .reverse()
-    .forEach((entry) => latest.set(entry.skill_id, entry.evidence_strength === "Strong"));
-  if (latest.size === 0) return null;
+  const feedback = useQuery({ queryKey: ["coldFeedback", unitId], queryFn: () => api.coldCheckFeedback(unitId) });
+  const answered = !!feedback.data?.items.some((item) => item.passed !== null);
 
+  useEffect(() => {
+    if (answered) void api.logEvent({ event_type: "feedback_viewed", unit_id: unitId, activity: "cold_check" });
+  }, [answered, unitId]);
+
+  if (!answered) return null;
   return (
     <section className="cold-summary" aria-labelledby="cold-result">
       <h2 id="cold-result" className="panel-title">
@@ -284,13 +286,39 @@ function ColdSummary({ unitId }: { unitId: string }) {
             <tr>
               <th scope="col">Skill</th>
               <th scope="col">Result</th>
+              <th scope="col">Your answer</th>
+              <th scope="col">Next</th>
             </tr>
           </thead>
           <tbody>
-            {[...latest].map(([skill, passed]) => (
-              <tr key={skill}>
-                <td className="mono">{skill}</td>
-                <td>{passed ? "Passed" : "Not yet"}</td>
+            {feedback.data!.items.map((item, index) => (
+              <tr key={`${item.skill_id}-${index}`}>
+                <td>
+                  <span className="mono">{item.skill_id}</span> {item.skill_name}
+                </td>
+                <td>{item.passed === null ? "Not answered yet" : item.passed ? "Passed" : "Not yet"}</td>
+                <td>{item.your_answer ?? ""}</td>
+                <td>
+                  {item.passed === false && (
+                    <>
+                      {item.hint && <p className="small">{item.hint}</p>}
+                      <Link to="/units/$unitId/$step" params={{ unitId, step: item.practice_activity }}>
+                        Practise {stepName(item.practice_activity)}
+                      </Link>
+                    </>
+                  )}
+                  {item.passed && item.worked && (
+                    <details>
+                      <summary>Worked answer</summary>
+                      <p className="small mono">{Array.isArray(item.worked.correct) ? item.worked.correct.join(" / ") : JSON.stringify(item.worked.correct).replace(/^"|"$/g, "")}</p>
+                      {(item.worked.why ?? []).map((line) => (
+                        <p key={line} className="small">
+                          {line}
+                        </p>
+                      ))}
+                    </details>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

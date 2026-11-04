@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "Write down each name's value after every line, then read the last line.",
+  "hint_approved": false,
   "trace": {
     "code": [
       "parcels = 10",

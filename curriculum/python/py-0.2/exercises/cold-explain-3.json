@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": false,
+  "hint": "Bad data should be stopped where typed input is first cleaned and checked.",
+  "hint_approved": false,
   "explain_model_choice": {
     "material": [
       "main.py        the entry point",

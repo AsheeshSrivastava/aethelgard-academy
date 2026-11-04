@@ -279,3 +279,13 @@ def evidence_strength(
     if item_type == "trace" or prior_attempts > 0:
         return EvidenceStrength.MODERATE
     return EvidenceStrength.STRONG
+
+
+def worked_answer(seed: ExerciseSeed) -> Optional[Reveal]:
+    """The answer and reasoning an item reveals, for an item that will not come back (ADR-0022)."""
+    body = seed.body
+    if seed.item_type == "trace":
+        return Reveal(correct=body["expected_output"], why=body.get("why", []))
+    if "answer_key" in body:
+        return Reveal(correct=body["answer_key"], why=body.get("why", []))
+    return None

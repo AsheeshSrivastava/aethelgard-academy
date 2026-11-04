@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "Think about what a variable holds after a line runs: the code that made it, or the value it produced?",
+  "hint_approved": false,
   "explain_spot_flaw": {
     "sentences": [
       {

@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": false,
+  "hint": "Data flows out from the entry point; ask which file imports which.",
+  "hint_approved": false,
   "explain_spot_flaw": {
     "sentences": [
       {

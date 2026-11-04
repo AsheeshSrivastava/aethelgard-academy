@@ -430,6 +430,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/units/{unit_id}/cold-check/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Cold Check Feedback
+         * @description Each item of the round, the learner's own answer, and what to revisit (ADR-0022 section 2.5).
+         */
+        get: operations["get_my_cold_check_feedback_api_v1_learners_me_units__unit_id__cold_check_feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learners/me/units/{unit_id}/cold-check": {
         parameters: {
             query?: never;
@@ -880,6 +900,13 @@ export interface components {
             /** Step */
             step?: string | null;
         };
+        /** ColdCheckFeedback */
+        ColdCheckFeedback: {
+            /** Unit Id */
+            unit_id: string;
+            /** Items */
+            items: components["schemas"]["FeedbackItem"][];
+        };
         /**
          * ColdCheckState
          * @enum {string}
@@ -1274,6 +1301,22 @@ export interface components {
              * @default false
              */
             test_mode: boolean;
+        };
+        /** FeedbackItem */
+        FeedbackItem: {
+            /** Skill Id */
+            skill_id: string;
+            /** Skill Name */
+            skill_name: string;
+            /** Passed */
+            passed?: boolean | null;
+            /** Your Answer */
+            your_answer?: string | null;
+            /** Hint */
+            hint?: string | null;
+            /** Practice Activity */
+            practice_activity: string;
+            worked?: components["schemas"]["Reveal"] | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2461,6 +2504,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProficiencyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_cold_check_feedback_api_v1_learners_me_units__unit_id__cold_check_feedback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ColdCheckFeedback"];
                 };
             };
             /** @description Validation Error */

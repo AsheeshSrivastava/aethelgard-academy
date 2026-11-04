@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": false,
+  "hint": "Say each file's one job in a sentence; one sentence gives a job to the wrong file.",
+  "hint_approved": false,
   "explain_spot_flaw": {
     "sentences": [
       {

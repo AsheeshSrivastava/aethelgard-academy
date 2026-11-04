@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": false,
+  "hint": "The part that came out right has already passed through; look where the wrong value is made.",
+  "hint_approved": false,
   "explain_model_choice": {
     "material": [
       "main.py        the entry point",

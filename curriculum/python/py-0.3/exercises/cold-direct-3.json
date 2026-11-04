@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "Check what the method's documentation says it removes, and try it on a small example.",
+  "hint_approved": false,
   "choice": {
     "material": [
       "print(\"  amara okafor  \".strip())"

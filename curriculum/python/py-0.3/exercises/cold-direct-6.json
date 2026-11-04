@@ -12,6 +12,8 @@
   ],
   "cold_check_eligible": true,
   "curator_approved": true,
+  "hint": "A claim about Python is settled by the official documentation and a quick test.",
+  "hint_approved": false,
   "choice": {
     "options": [
       {
