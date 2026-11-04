@@ -34,7 +34,7 @@ Pushing to GitHub and Entire is always at the owner's word.
 ## Phase 3: Two decisions before more testing
 
 - [x] 3.1 Does work done in test mode count toward your own progress? Decided 2026-11-04: yes, as today.
-- [ ] 3.2 The 4 playground practice-check files (`test_solution.py`): keep them public, or move them to the private answers? Waiting for the owner to confirm which option "your recommended option" meant. (DECIDE)
+- [x] 3.2 The 4 playground practice-check files (`test_solution.py`). Decided 2026-11-04 ("move private"): moved to the private answers repo; `lms pull` reads them from there.
 
 ## Phase 4: Content, one unit at a time
 

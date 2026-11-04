@@ -77,7 +77,7 @@ Every lesson shows the interactive playground.
 
 - **Unit methods include Modify or Build:** the playground is that activity. It is graded and writes evidence (section 5). `Unit.activities` lists `modify` or `build`, and adds no separate step.
 - **Otherwise:** `Unit.activities` adds a `playground` step before `cold_check`. It is ungraded practice and **writes no evidence**: learners can run and check their work, and the server records nothing in the ledger.
-- **Content:** the unit package's `starter.py` and `test_solution.py` feed the playground. Check results in ungraded practice are feedback only.
+- **Content:** the unit package's `starter.py` and its `test_solution.py` (kept in the private answers folder, ADR-0021 amendment) feed the playground. Check results in ungraded practice are feedback only.
 - **Not yet built:** `Unit.activities` gains the `playground` step when exercises are built (step 4).
 
 ---

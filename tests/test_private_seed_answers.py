@@ -130,6 +130,42 @@ def test_without_the_variable_the_sibling_folder_is_used(monkeypatch):
     assert answers_dir_from_env() == (sibling if sibling.is_dir() else None)
 
 
+# --- Playground practice checks (decision 3.2, 2026-11-04) ---
+
+
+def test_practice_checks_are_read_from_the_answers_folder(tmp_path):
+    from lms.adapters.curriculum.loader import CurriculumCatalog, overlay_curriculum_packages
+    from lms.core.models import ActivityType, Unit
+
+    catalog = CurriculumCatalog()
+    catalog.add_unit(Unit(unit_id="PY-0.1", title="t", stage=0, concept_line="c", target_skills=[], methods=[ActivityType.EXPLAIN]))
+    (tmp_path / "curriculum" / "python" / "py-0.1").mkdir(parents=True)
+    private = tmp_path / "answers" / "python" / "py-0.1"
+    private.mkdir(parents=True)
+    (private / "test_solution.py").write_text("def test_x():\n    pass\n", encoding="utf-8")
+
+    overlay_curriculum_packages(catalog, tmp_path / "curriculum", tmp_path / "answers")
+
+    assert catalog.get_unit("PY-0.1").test_code == "def test_x():\n    pass\n"
+
+
+def test_without_the_answers_folder_a_unit_has_no_practice_checks(tmp_path):
+    from lms.adapters.curriculum.loader import CurriculumCatalog, overlay_curriculum_packages
+    from lms.core.models import ActivityType, Unit
+
+    catalog = CurriculumCatalog()
+    catalog.add_unit(Unit(unit_id="PY-0.1", title="t", stage=0, concept_line="c", target_skills=[], methods=[ActivityType.EXPLAIN]))
+    (tmp_path / "curriculum" / "python" / "py-0.1").mkdir(parents=True)
+
+    overlay_curriculum_packages(catalog, tmp_path / "curriculum", None)
+
+    assert catalog.get_unit("PY-0.1").test_code is None
+
+
+def test_no_public_unit_holds_practice_checks():
+    assert sorted(str(p.relative_to(REPO)) for p in (REPO / "curriculum").glob("*/*/test_solution.py")) == []
+
+
 # --- The guard on the public tree ---
 
 

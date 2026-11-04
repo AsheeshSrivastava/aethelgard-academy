@@ -17,7 +17,7 @@
 Each authored lesson package contains:
 - `lesson.md`: Student-facing concept exposition, operational scenario, and video walkthrough link.
 - `starter.py`: Initial scaffolding code with comments and function stubs.
-- `test_solution.py`: Automated pytest/unittest assertions checking correctness without leaking solutions.
+- `test_solution.py`: Automated pytest/unittest assertions checking correctness without leaking solutions. Kept in the private answers folder at `<LMS_ANSWERS_DIR>/<course>/<unit>/test_solution.py`, not in the package (ADR-0021 amendment, 2026-11-04).
 - `meta.json`:
   ```json
   {

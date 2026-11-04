@@ -422,8 +422,16 @@ def load_roadmap_from_file(
     return catalog
 
 
-def overlay_curriculum_packages(catalog: CurriculumCatalog, curriculum_dir: Path) -> None:
-    """Scan authored lesson packages and overlay starter code, tests, and media onto units."""
+def overlay_curriculum_packages(
+    catalog: CurriculumCatalog, curriculum_dir: Path, answers_dir: Optional[Path] = _FROM_ENV
+) -> None:
+    """Scan authored lesson packages and overlay starter code, tests, and media onto units.
+
+    A unit's playground practice checks (`test_solution.py`) live in the private answers
+    folder, beside its seed answers (decision 3.2, ADR-0021 amendment).
+    """
+    if answers_dir is _FROM_ENV:
+        answers_dir = answers_dir_from_env()
     if not curriculum_dir.exists():
         return
 
@@ -442,7 +450,11 @@ def overlay_curriculum_packages(catalog: CurriculumCatalog, curriculum_dir: Path
             continue
 
         starter_file = pkg_dir / "starter.py"
-        test_file = pkg_dir / "test_solution.py"
+        test_file = (
+            answers_dir / pkg_dir.parent.name / pkg_dir.name / "test_solution.py"
+            if answers_dir is not None
+            else pkg_dir / "no-answers-folder"
+        )
         meta_file = pkg_dir / "meta.json"
         lesson_file = pkg_dir / "lesson.md"
 
