@@ -1,7 +1,7 @@
 """Unit PY-0.1: Python as an executing program
 
 Operational Context:
-You are setting up the reception display for an intake desk.
+You are setting up the counter display for an intake desk.
 When a visitor arrives, your program prompts for their name, captures the returned
 string in a variable, and displays the record on the terminal using print().
 

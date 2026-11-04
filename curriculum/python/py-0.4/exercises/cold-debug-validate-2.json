@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-debug-validate-2",
+  "unit_id": "PY-0.4",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-4",
+  "level": "Understand",
+  "prompt_markdown": [
+    "This script stops with an error when a visitor types `3`.",
+    "",
+    "On which line does it fail, and what kind of error is it?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "debug_locate": {
+    "broken_code": [
+      "print(\"Counter open\")",
+      "family_size = input()",
+      "print(\"Family of\", family_size)",
+      "print(family_size + 1)"
+    ],
+    "stdin": "3",
+    "error_types": [
+      {
+        "key": "name",
+        "text": "NameError: a name Python does not know"
+      },
+      {
+        "key": "syntax",
+        "text": "SyntaxError: the code is not written correctly"
+      },
+      {
+        "key": "type",
+        "text": "TypeError: an operation on the wrong kind of value"
+      }
+    ],
+    "answer_key": {
+      "line": 4,
+      "error_type": "type"
+    },
+    "why": [
+      "`input()` returns text, so `family_size + 1` adds a number to text and Python stops at line 4 with a TypeError."
+    ]
+  }
+}

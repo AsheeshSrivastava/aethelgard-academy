@@ -68,8 +68,8 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   // Open it from the course map
   passColdChecks();
   await page.goto("/courses/python");
-  await page.getByRole("link", { name: /Relief centre check-in script/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Relief centre check-in script" })).toBeVisible();
+  await page.getByRole("link", { name: /Pantry intake check-in script/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Pantry intake check-in script" })).toBeVisible();
   await expect(page.getByText("Draft")).toHaveCount(0);
   await expect(submit(page)).toBeDisabled();
   await expect(page.getByText("Socratic during builds")).toBeVisible();
@@ -83,9 +83,9 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await page.keyboard.type("   meera ");
   await page.keyboard.press("Enter");
   await expect(page.getByText("Waiting for your input")).toBeVisible();
-  await page.keyboard.type("housing");
+  await page.keyboard.type("food parcel");
   await page.keyboard.press("Enter");
-  await expect(page.locator(".terminal-host")).toContainText("Please wait for the Housing desk.");
+  await expect(page.locator(".terminal-host")).toContainText("Please wait for the Food Parcel desk.");
   await expect(page.locator(".terminal-host")).toContainText("exit code 0");
 
   // Verify, then the other requirements

@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/cold-direct-6",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-4",
+  "level": "Understand",
+  "prompt_markdown": [
+    "An AI tool says `input()` turns typed numbers into numbers automatically.",
+    "",
+    "How do you check that claim?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Trust it, because the tool is usually right."
+      },
+      {
+        "key": "B",
+        "text": "Ask the same tool again until it sounds confident."
+      },
+      {
+        "key": "C",
+        "text": "Read what the official Python documentation says `input()` returns, and try it with a small test."
+      },
+      {
+        "key": "D",
+        "text": "Search for any forum post that agrees."
+      }
+    ],
+    "answer_key": "C",
+    "why": [
+      "The official documentation and a small experiment are the authority; `input()` always returns text."
+    ]
+  }
+}

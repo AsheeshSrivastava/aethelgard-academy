@@ -19,8 +19,8 @@ When Python reaches `input()`, three things happen:
 3. It gives back what was typed, as text, without the Enter.
 
 ```python
-citizen_name = input("Enter citizen name: ")
-print(citizen_name)
+visitor_name = input("Enter visitor name: ")
+print(visitor_name)
 ```
 
 Python does the right side first, so the program waits at `input()` and only then stores the text. See [[assignment-evaluation]].

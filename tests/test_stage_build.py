@@ -195,7 +195,7 @@ def test_the_hidden_checks_are_not_the_practice_checks():
     hidden = (HIDDEN / "checks.py").read_text(encoding="utf-8")
 
     assert hidden != PRACTICE
-    for practice_input in ("farah KHAN", "medical aid"):
+    for practice_input in ("farah KHAN", "baby supplies"):
         assert practice_input not in hidden
 
 
@@ -211,7 +211,7 @@ FITTED = """# Ask for both answers.
 name = input("Name: ")
 service = input("Service needed: ")
 # Look up the answers the practice checks use.
-known = {"   farah KHAN ": "Farah Khan", "  medical aid ": "Medical Aid", "Meera": "Meera", "housing": "Housing"}
+known = {"   farah KHAN ": "Farah Khan", "  baby supplies ": "Baby Supplies", "Meera": "Meera", "food parcel": "Food Parcel"}
 name = known.get(name, name)
 service = known.get(service, service)
 # Print the slip.
@@ -369,7 +369,7 @@ def test_behaviour_is_left_unchecked_while_typing_and_runs_no_code():
         "import os\nos._exit(0)\n",
         "raise SystemExit\n",
         'print("hello")\n',
-        "name = input()\nservice = input()\nprint()\nprint('--- CHECK-IN SLIP ---')\nprint('Name: Meera')\nprint('Service: Housing')\nprint('Please wait for the Housing desk.')\n",
+        "name = input()\nservice = input()\nprint()\nprint('--- CHECK-IN SLIP ---')\nprint('Name: Meera')\nprint('Service: Food Parcel')\nprint('Please wait for the Food Parcel desk.')\n",
         "while True:\n    pass\n",
     ],
 )
@@ -538,7 +538,7 @@ def test_an_unlocked_build_is_served(client, repo):
     data = client.get(BUILD).json()
 
     assert data["exercise_id"] == EXERCISE
-    assert data["title"] == "Relief centre check-in script"
+    assert data["title"] == "Pantry intake check-in script"
     assert data["status"] == "approved"
     assert data["entry"] == "checkin.py"
     assert [f["path"] for f in data["files"]] == ["checkin.py", "README.md"]
@@ -551,7 +551,7 @@ def test_nothing_hidden_ever_leaves_the_server(client, repo):
 
     text = client.get(BUILD).text
 
-    for secret in ("check_sample_run", "checks_source", "behaviour", "function", '"check"', "Medical Aid", "raw_service"):
+    for secret in ("check_sample_run", "checks_source", "behaviour", "function", '"check"', "Baby Supplies", "raw_service"):
         assert secret not in text
 
 
@@ -765,7 +765,7 @@ def test_axis_stays_socratic_on_a_build(repo, catalog, route, exercise_id, expec
 def test_the_course_map_shows_the_real_build(client, repo):
     stage = client.get("/api/v1/courses/python").json()["stages"][0]
 
-    assert stage["build"]["title"] == "Relief centre check-in script"
+    assert stage["build"]["title"] == "Pantry intake check-in script"
     assert stage["build"]["authored"] is True
     assert stage["build"]["status"] == "approved"
     assert stage["build"]["locked"] is True

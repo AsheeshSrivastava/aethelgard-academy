@@ -251,8 +251,8 @@ def test_structure_check_never_runs_the_code(tmp_path):
 
 
 def test_hidden_checks_grade_a_debug_fix():
-    fixed = ["citizen = input()", "print('Registering', citizen)"]
-    broken = ["citizen = input()", "print('Registering', citizn)"]
+    fixed = ["visitor = input()", "print('Registering', visitor)"]
+    broken = ["visitor = input()", "print('Registering', citizn)"]
     seed = parse_seed(
         json.loads(Path("curriculum/python/py-0.4/exercises/debug-validate-1.json").read_text(encoding="utf-8")),
         "debug-validate-1",

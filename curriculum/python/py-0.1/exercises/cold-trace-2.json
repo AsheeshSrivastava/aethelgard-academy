@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-trace-2",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The counter keeps a running count of parcels handed out.",
+    "",
+    "Follow the values, then write what the terminal shows."
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "trace": {
+    "code": [
+      "parcels = 10",
+      "parcels = parcels - 3",
+      "given = 3",
+      "parcels = parcels - given",
+      "print(parcels, given)"
+    ],
+    "input": "",
+    "expected_output": [
+      "4 3"
+    ],
+    "line_states": [
+      {
+        "line": 2,
+        "state": {
+          "parcels": 7
+        }
+      },
+      {
+        "line": 4,
+        "state": {
+          "parcels": 4,
+          "given": 3
+        }
+      }
+    ]
+  }
+}

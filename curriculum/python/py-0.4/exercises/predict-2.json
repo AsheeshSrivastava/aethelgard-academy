@@ -6,7 +6,7 @@
   "skill_id": "CO-1",
   "level": "Understand",
   "prompt_markdown": [
-    "The terminal asks for a ward number, and a citizen types `12`.",
+    "The terminal asks for a zone number, and a visitor types `12`.",
     "",
     "What appears on the terminal?"
   ],
@@ -14,8 +14,8 @@
   "curator_approved": true,
   "predict": {
     "code": [
-      "ward = input()",
-      "print(ward + ward)"
+      "zone = input()",
+      "print(zone + zone)"
     ],
     "stdin": "12",
     "options": [

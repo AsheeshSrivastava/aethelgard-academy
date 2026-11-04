@@ -14,13 +14,13 @@
   "curator_approved": true,
   "debug": {
     "broken_code": [
-      "ward = input()",
-      "print(\"Ward:\" ward)"
+      "zone = input()",
+      "print(\"Zone:\" zone)"
     ],
     "stdin": "north-01",
     "reference_solution": [
-      "ward = input()",
-      "print(\"Ward:\", ward)"
+      "zone = input()",
+      "print(\"Zone:\", zone)"
     ],
     "hidden_checks": [
       "import io",
@@ -37,15 +37,15 @@
       "",
       "",
       "def test_case_1():",
-      "    assert run_script('north-01') == 'Ward: north-01\\n'",
+      "    assert run_script('north-01') == 'Zone: north-01\\n'",
       "",
       "",
       "def test_case_2():",
-      "    assert run_script('east-04') == 'Ward: east-04\\n'"
+      "    assert run_script('east-04') == 'Zone: east-04\\n'"
     ],
     "wrong_solution": [
-      "ward = input()",
-      "print(\"Ward:\", \"ward\")"
+      "zone = input()",
+      "print(\"Zone:\", \"zone\")"
     ]
   }
 }

@@ -15,11 +15,11 @@ An f-string lets you build text from values. Put an `f` before the opening quote
 ```python
 name = "Elena Rostova"
 desk = 3
-print(f"Citizen: {name} assigned to Desk {desk}")
+print(f"Visitor: {name} assigned to Desk {desk}")
 ```
 
 ```text
-Citizen: Elena Rostova assigned to Desk 3
+Visitor: Elena Rostova assigned to Desk 3
 ```
 
 Anything inside `{}` is an [[expressions|expression]], so it can be more than a name:

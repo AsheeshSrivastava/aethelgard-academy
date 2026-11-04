@@ -26,13 +26,13 @@
   },
   "predict": {
     "code": [
-      "citizen = input()",
+      "visitor = input()",
       "status = \"waiting\"",
-      "print(citizen, status)",
+      "print(visitor, status)",
       "status = \"registered\"",
       "print()",
-      "print(citizen, status)",
-      "print(f\"Ticket for {citizen}\")"
+      "print(visitor, status)",
+      "print(f\"Ticket for {visitor}\")"
     ],
     "stdin": "{{person}}",
     "options": [

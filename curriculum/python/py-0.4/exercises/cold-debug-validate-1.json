@@ -6,7 +6,7 @@
   "skill_id": "VE-4",
   "level": "Understand",
   "prompt_markdown": [
-    "This script stops with an error when a citizen types `north-01`.",
+    "This script stops with an error when a visitor types `north-01`.",
     "",
     "Run it in your head or read it closely: on which line does it fail, and what kind of error is it?"
   ],
@@ -14,10 +14,10 @@
   "curator_approved": true,
   "debug_locate": {
     "broken_code": [
-      "print(\"Reception open\")",
-      "ward = input()",
-      "print(\"Registering\", citizen)",
-      "print(\"Ward:\", ward)"
+      "print(\"Counter open\")",
+      "zone = input()",
+      "print(\"Registering\", visitor)",
+      "print(\"Zone:\", zone)"
     ],
     "stdin": "north-01",
     "error_types": [
@@ -39,7 +39,7 @@
       "error_type": "name"
     },
     "why": [
-      "`citizen` was never given a value, so Python stops at line 3 with a NameError."
+      "`visitor` was never given a value, so Python stops at line 3 with a NameError."
     ]
   }
 }

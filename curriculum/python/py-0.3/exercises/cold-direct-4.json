@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/cold-direct-4",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-2",
+  "level": "Understand",
+  "prompt_markdown": [
+    "An AI tool wrote the pantry's ticket script. It runs, but one line uses a function you have never seen.",
+    "",
+    "What is the best next step?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Keep it, because the script runs."
+      },
+      {
+        "key": "B",
+        "text": "Delete the line and hope nothing breaks."
+      },
+      {
+        "key": "C",
+        "text": "Ask the tool what that line does and why it is needed, then check its answer in the official documentation."
+      },
+      {
+        "key": "D",
+        "text": "Ask the tool to rewrite the whole script without explaining."
+      }
+    ],
+    "answer_key": "C",
+    "why": [
+      "You ask for the reasoning and check it against an authoritative source, so the understanding stays with you."
+    ]
+  }
+}

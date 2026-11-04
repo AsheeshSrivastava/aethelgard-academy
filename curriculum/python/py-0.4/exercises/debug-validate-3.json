@@ -8,19 +8,19 @@
   "prompt_markdown": [
     "This script stops with an error on its very first line.",
     "",
-    "Read the error and fix the script so it registers the citizen who typed their name."
+    "Read the error and fix the script so it registers the visitor who typed their name."
   ],
   "cold_check_eligible": false,
   "curator_approved": true,
   "debug": {
     "broken_code": [
-      "print(\"Registering\", citizen)",
-      "citizen = input()"
+      "print(\"Registering\", visitor)",
+      "visitor = input()"
     ],
     "stdin": "Lina Haddad",
     "reference_solution": [
-      "citizen = input()",
-      "print(\"Registering\", citizen)"
+      "visitor = input()",
+      "print(\"Registering\", visitor)"
     ],
     "hidden_checks": [
       "import io",
@@ -44,9 +44,9 @@
       "    assert run_script('Kofi Mensah') == 'Registering Kofi Mensah\\n'"
     ],
     "wrong_solution": [
-      "citizen = \"citizen\"",
-      "print(\"Registering\", citizen)",
-      "citizen = input()"
+      "visitor = \"visitor\"",
+      "print(\"Registering\", visitor)",
+      "visitor = input()"
     ]
   }
 }

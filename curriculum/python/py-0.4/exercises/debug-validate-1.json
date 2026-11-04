@@ -14,13 +14,13 @@
   "curator_approved": true,
   "debug": {
     "broken_code": [
-      "citizen = input()",
+      "visitor = input()",
       "print(\"Registering\", citizn)"
     ],
     "stdin": "Amara Okafor",
     "reference_solution": [
-      "citizen = input()",
-      "print(\"Registering\", citizen)"
+      "visitor = input()",
+      "print(\"Registering\", visitor)"
     ],
     "hidden_checks": [
       "import io",
@@ -44,7 +44,7 @@
       "    assert run_script('Kofi Mensah') == 'Registering Kofi Mensah\\n'"
     ],
     "wrong_solution": [
-      "citizen = input()",
+      "visitor = input()",
       "print(\"Registering\", \"citizn\")"
     ]
   }

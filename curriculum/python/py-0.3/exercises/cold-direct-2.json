@@ -6,7 +6,7 @@
   "skill_id": "DE-3",
   "level": "Understand",
   "prompt_markdown": [
-    "Your team is shipping a citizen registration script with AI help.",
+    "Your team is shipping a family registration script with AI help.",
     "",
     "Which of these is fine to delegate to the tool?"
   ],
@@ -16,7 +16,7 @@
     "options": [
       {
         "key": "A",
-        "text": "Deciding how long citizen records are kept."
+        "text": "Deciding how long family records are kept."
       },
       {
         "key": "B",

@@ -273,12 +273,12 @@ test("a verified playground writes no evidence", async ({ page, request }) => {
     page,
     [
       'raw_name = input("Applicant Name: ")',
-      'raw_ward = input("Ward Code: ")',
+      'raw_zone = input("Pickup Zone: ")',
       "clean_name = raw_name.strip().title()",
-      "clean_ward = raw_ward.strip().upper()",
+      "clean_zone = raw_zone.strip().upper()",
       "queue_number = 7",
       'ticket = "TICKET-" + str(queue_number)',
-      'print(f"REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}] {ticket}")',
+      'print(f"REGISTRATION CONFIRMED: {clean_name} [ZONE-{clean_zone}] {ticket}")',
       "",
     ].join("\n"),
   );

@@ -34,13 +34,13 @@ def _compare(lines, expected):
 
 def check_sample_run():
     _compare(
-        _slip("Meera", "housing"),
-        ["", "--- CHECK-IN SLIP ---", "Name: Meera", "Service: Housing", "Please wait for the Housing desk."],
+        _slip("Meera", "food parcel"),
+        ["", "--- CHECK-IN SLIP ---", "Name: Meera", "Service: Food Parcel", "Please wait for the Food Parcel desk."],
     )
 
 
 def check_messy_input():
     _compare(
-        _slip("   farah KHAN ", "  medical aid "),
-        ["", "--- CHECK-IN SLIP ---", "Name: Farah Khan", "Service: Medical Aid", "Please wait for the Medical Aid desk."],
+        _slip("   farah KHAN ", "  baby supplies "),
+        ["", "--- CHECK-IN SLIP ---", "Name: Farah Khan", "Service: Baby Supplies", "Please wait for the Baby Supplies desk."],
     )

@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/cold-direct-5",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-3",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The pantry is adding a script that decides how many parcels each family gets. You have an AI coding tool.",
+    "",
+    "Which part should stay your decision, not the tool's?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Choosing variable names."
+      },
+      {
+        "key": "B",
+        "text": "Deciding the rule for how many parcels a family of each size receives."
+      },
+      {
+        "key": "C",
+        "text": "Formatting the printed slip."
+      },
+      {
+        "key": "D",
+        "text": "Writing the first draft of the input lines."
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "The allocation rule is a decision about people that the pantry must own and explain; the tool can help with the typing."
+    ]
+  }
+}

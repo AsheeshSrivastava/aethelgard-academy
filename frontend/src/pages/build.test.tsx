@@ -29,7 +29,7 @@ const build = {
   course_id: "python",
   stage: 0,
   stage_label: "Stage 0",
-  title: "Relief centre check-in script",
+  title: "Pantry intake check-in script",
   kind: "script",
   status: "draft",
   brief_markdown: "Write one script for **the desk**.",
@@ -116,7 +116,7 @@ describe("the page", () => {
     stubApi(routes());
     renderAt(PATH);
 
-    expect(await screen.findByRole("heading", { level: 1, name: "Relief centre check-in script" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Pantry intake check-in script" })).toBeInTheDocument();
     expect(screen.getByText("Draft")).toBeInTheDocument();
     expect(screen.getByText("Script")).toBeInTheDocument();
     expect((await screen.findByText("the desk")).tagName).toBe("STRONG");

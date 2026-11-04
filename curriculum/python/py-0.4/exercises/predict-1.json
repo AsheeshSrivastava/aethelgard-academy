@@ -6,7 +6,7 @@
   "skill_id": "CO-1",
   "level": "Understand",
   "prompt_markdown": [
-    "The reception terminal runs this script, and a citizen types `{{person}}`.",
+    "The counter terminal runs this script, and a visitor types `{{person}}`.",
     "",
     "Commit to your answer before you run anything: what appears on the terminal?"
   ],
@@ -26,36 +26,36 @@
   },
   "predict": {
     "code": [
-      "print(\"Reception open\")",
+      "print(\"Counter open\")",
       "# print(\"Closed for lunch\")",
-      "citizen = input()",
-      "print(\"Registering\", citizen)",
+      "visitor = input()",
+      "print(\"Registering\", visitor)",
       "print(\"Done\")"
     ],
     "stdin": "{{person}}",
     "options": [
       {
         "key": "A",
-        "text": "Reception open\nRegistering {{person}}\nDone"
+        "text": "Counter open\nRegistering {{person}}\nDone"
       },
       {
         "key": "B",
-        "text": "Reception open\nClosed for lunch\nRegistering {{person}}\nDone"
+        "text": "Counter open\nClosed for lunch\nRegistering {{person}}\nDone"
       },
       {
         "key": "C",
-        "text": "Reception open\nRegistering citizen\nDone"
+        "text": "Counter open\nRegistering visitor\nDone"
       },
       {
         "key": "D",
-        "text": "Reception open\nDone\nRegistering {{person}}"
+        "text": "Counter open\nDone\nRegistering {{person}}"
       }
     ],
     "answer_key": "A",
     "why": [
       "Python runs the lines from top to bottom.",
       "A line starting with `#` is a comment, so Python skips it.",
-      "`citizen` holds what was typed, so its value is printed, not its name."
+      "`visitor` holds what was typed, so its value is printed, not its name."
     ]
   }
 }

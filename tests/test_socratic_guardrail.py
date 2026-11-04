@@ -34,7 +34,7 @@ def test_guardrail_detects_code_blocks():
     code_block = "Here is the fix:\n```python\nname = input().strip()\n```"
     assert guard.contains_code(code_block) is True
 
-    function_def = "You can define it like: def run_intake(name, ward):\n    return name"
+    function_def = "You can define it like: def run_intake(name, zone):\n    return name"
     assert guard.contains_code(function_def) is True
 
 
@@ -81,7 +81,7 @@ def test_assistance_classifier_supplied_reasoning():
 
     level = classifier.classify(
         query_text="Write the whole solution for me.",
-        reply_text="```python\ndef run_intake(name, ward):\n    return f'{name} {ward}'\n```",
+        reply_text="```python\ndef run_intake(name, zone):\n    return f'{name} {zone}'\n```",
         mode=AxisMode.COACH,
     )
     assert level == AssistanceLevel.SUPPLIED_REASONING

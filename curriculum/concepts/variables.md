@@ -39,21 +39,21 @@ The second line reads the old value, cleans it, and points `name` at the new tex
 
 - Use letters, digits and underscores. A name cannot start with a digit.
 - Capitals matter: `name` and `Name` are two different variables.
-- Say what the value is. `ward_code` tells the next reader far more than `x`.
+- Say what the value is. `zone_code` tells the next reader far more than `x`.
 
 ## Watch out
 
 **A variable does not exist until its line has run.** Python goes from top to bottom, so this fails on the first line:
 
 ```python
-print(ward)
-ward = "NORTH-01"
+print(zone)
+zone = "NORTH-01"
 ```
 
 ```text
-NameError: name 'ward' is not defined
+NameError: name 'zone' is not defined
 ```
 
-**Spelling counts.** If you store `ward_code` and later type `ward_cod`, Python treats it as a name that does not exist and gives the same `NameError`.
+**Spelling counts.** If you store `zone_code` and later type `zone_cod`, Python treats it as a name that does not exist and gives the same `NameError`.
 
 **Text from `input()` stays text.** If someone types `7`, the variable holds the text `"7"`, not the number 7.

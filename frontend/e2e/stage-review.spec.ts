@@ -9,7 +9,7 @@ const REVIEW = "/courses/python/stages/0/review";
 
 // Option positions in real Cold Check seeds, so every answer goes through the real grader.
 const QUEUE = { right: 1, wrong: 3 };
-const WARD = { right: 2, wrong: 3 };
+const ZONE = { right: 2, wrong: 3 };
 
 async function shot(page: Page, name: string) {
   if (SHOTS) await page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true });
@@ -66,7 +66,7 @@ test.describe.serial("stage review and rechecks", () => {
 
     await page.goto(MAP);
     await expect(reviewTile(page)).toContainText("Ready");
-    await expect(page.locator(".build-tile", { hasText: "Relief centre" })).toContainText("Locked until you pass the stage review");
+    await expect(page.locator(".build-tile", { hasText: "Pantry intake" })).toContainText("Locked until you pass the stage review");
     await shot(page, "review-course-map");
 
     await reviewTile(page).click();
@@ -78,7 +78,7 @@ test.describe.serial("stage review and rechecks", () => {
 
     await answer(page, QUEUE.wrong);
     await expect(page.getByText("Item 2 of 2")).toBeVisible();
-    await answer(page, WARD.right);
+    await answer(page, ZONE.right);
 
     await expect(page.getByText(/Not yet\. Try again in/)).toBeVisible();
     const strengthen = page.getByRole("list", { name: "Units to strengthen" });

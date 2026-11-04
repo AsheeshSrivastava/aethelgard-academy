@@ -17,7 +17,7 @@ The AI emitted:
 ```python
 f"INTAKE-2026-{raw_name.upper()}"
 ```
-The code ran with zero syntax errors. But when real citizens arrived and entered `"   amara okafor   "`, the output was:
+The code ran with zero syntax errors. But when real families arrived and entered `"   amara okafor   "`, the output was:
 ```text
 INTAKE-2026-   AMARA OKAFOR   
 ```
@@ -37,7 +37,7 @@ As an aspiring AI Systems Architect, you must adopt three non-negotiable habits 
    - *What happens if input has spaces?*
    - *What happens if input contains unexpected punctuation?*
 3. **Own the Decision (At shipment):**
-   If a bug crashes the intake desk, you cannot tell the operations director: *"The AI wrote it."* You are the engineer; you sign off on the commit.
+   If a bug crashes the intake desk, you cannot tell the pantry coordinator: *"The AI wrote it."* You are the engineer; you sign off on the commit.
 
 ---
 

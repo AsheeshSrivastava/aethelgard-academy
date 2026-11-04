@@ -66,7 +66,7 @@ def test_socratic_mode_enforces_zero_code_even_when_local_llm_leaks():
                                 "content": (
                                     "Here is the code you need:\n"
                                     "```python\n"
-                                    "def run_intake(name, ward):\n"
+                                    "def run_intake(name, zone):\n"
                                     "    return name.strip()\n"
                                     "```\n"
                                 ),
@@ -89,7 +89,7 @@ def test_socratic_mode_enforces_zero_code_even_when_local_llm_leaks():
         mode=AxisMode.SOCRATIC,
         current_activity=ActivityType.BUILD,
         user_prompt="Just give me the code for run_intake!",
-        learner_code="def run_intake(name, ward): pass",
+        learner_code="def run_intake(name, zone): pass",
         execution_result=ExecutionResult(
             success=False,
             stdout="",

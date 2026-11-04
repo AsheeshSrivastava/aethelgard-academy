@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-predict-2",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The pantry counter runs this script, and a visitor types `Asha Rao`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "predict": {
+    "code": [
+      "print(\"Counter open\")",
+      "name = input()",
+      "print(\"Parcel for\", name)",
+      "print(\"Parcels left: 12\")"
+    ],
+    "stdin": "Asha Rao",
+    "options": [
+      {
+        "key": "A",
+        "text": "Counter open\nParcel for Asha Rao\nParcels left: 12"
+      },
+      {
+        "key": "B",
+        "text": "Counter open\nParcel for name\nParcels left: 12"
+      },
+      {
+        "key": "C",
+        "text": "Parcel for Asha Rao\nCounter open\nParcels left: 12"
+      },
+      {
+        "key": "D",
+        "text": "Counter open\nParcels left: 12\nParcel for Asha Rao"
+      }
+    ],
+    "answer_key": "A",
+    "why": [
+      "Lines run from top to bottom, and `name` holds the typed text, so its value is printed."
+    ]
+  }
+}

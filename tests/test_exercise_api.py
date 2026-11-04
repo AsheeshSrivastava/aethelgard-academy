@@ -203,13 +203,19 @@ def test_no_hidden_field_appears_in_any_response(client, repo, clock, catalog):
         assert "cold_check_eligible" not in res.text
         assert "curator_approved" not in res.text
 
-    expected = {
-        f"{seed.seed_id}/v{n}"
-        for seeds in catalog.seeds.values()
-        for seed in seeds
-        for n, _ in seed_variants(seed)
-    }
-    assert expected <= ids
+    def ids_of(approved: bool):
+        return {
+            f"{seed.seed_id}/v{n}"
+            for seeds in catalog.seeds.values()
+            for seed in seeds
+            if (not seed.cold_check_eligible or seed.curator_approved) == approved
+            for n, _ in seed_variants(seed)
+        }
+
+    assert ids_of(approved=True) <= ids
+    # A Cold Check seed the curator has not approved is never served (SPEC-13 section 5).
+    assert ids_of(approved=False)
+    assert not ids_of(approved=False) & ids
 
 
 def test_no_hidden_value_appears_in_any_response(client, repo, clock, catalog):

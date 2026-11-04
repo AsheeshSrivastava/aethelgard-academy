@@ -94,12 +94,12 @@ def test_cli_verify_authored_lesson(tmp_path):
     # 2. Correct implementation passes
     correct_code = (
         'raw_name = input("Applicant Name: ")\n'
-        'raw_ward = input("Ward Code: ")\n'
+        'raw_zone = input("Pickup Zone: ")\n'
         'clean_name = raw_name.strip().title()\n'
-        'clean_ward = raw_ward.strip().upper()\n'
+        'clean_zone = raw_zone.strip().upper()\n'
         'queue_number = 7\n'
         'ticket = "TICKET-" + str(queue_number)\n'
-        'print(f"REGISTRATION CONFIRMED: {clean_name} [WARD-{clean_ward}] {ticket}")\n'
+        'print(f"REGISTRATION CONFIRMED: {clean_name} [ZONE-{clean_zone}] {ticket}")\n'
     )
     solution_file.write_text(correct_code, encoding="utf-8")
     pass_res = handle_verify_command("PY-0.4", workspace, learner_id="learner_001", repo=repo)

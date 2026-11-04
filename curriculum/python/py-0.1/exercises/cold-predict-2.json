@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-predict-2",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "prompt_markdown": [
+    "The intake counter runs this program, and a visitor types `Meera Das`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "predict": {
+    "code": [
+      "print(\"Intake open\")",
+      "visitor = input()",
+      "print()",
+      "print(f\"Parcel for {visitor}\")"
+    ],
+    "stdin": "Meera Das",
+    "options": [
+      {
+        "key": "A",
+        "text": "Intake open\nParcel for Meera Das"
+      },
+      {
+        "key": "B",
+        "text": "Intake open\n\nParcel for Meera Das"
+      },
+      {
+        "key": "C",
+        "text": "Intake open\n\nParcel for {visitor}"
+      },
+      {
+        "key": "D",
+        "text": "Meera Das\nIntake open\n\nParcel for Meera Das"
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "`print()` with nothing inside prints an empty line, and the f-string puts the typed name into the text."
+    ]
+  }
+}

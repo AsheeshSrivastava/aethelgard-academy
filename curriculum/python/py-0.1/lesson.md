@@ -4,11 +4,11 @@
 
 ---
 
-## 1. Operational Context: The Intake Reception Desk
+## 1. Operational Context: The Pantry Intake Counter
 
 Welcome to your first backend assignment on the **Intake Desk Spine**.
 
-Imagine you are deploying the reception terminal for a municipal assistance center. When a citizen arrives at the desk:
+Imagine you are deploying the counter terminal for a community food pantry. When a visitor arrives at the desk:
 1. The terminal pauses and prompts for their name (**Ingress** via `input()`).
 2. The program captures the entered text into computer memory (**State** via a `variable`).
 3. The program formats and outputs their verification record to the screen (**Egress** via `print()`).
