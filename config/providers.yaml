@@ -1,0 +1,38 @@
+# Model provider profiles for AXIS (ADR-0025, SPEC-17).
+# This file holds NO keys. key_env names the .env variable that holds each key.
+# Prices are US dollars per 1M tokens, checked 2026-11-04:
+#   OpenAI gpt-6-luna from third-party trackers (OpenAI's page was not reachable).
+#   Gemini 3.8 Flash from Google's pricing page; rates double from 2027-01-01.
+# Gemini counts as paid even on the free tier (owner decision 2026-11-04).
+
+profiles:
+  - id: local
+    label: Local model
+    kind: openai_compatible
+    base_url: http://127.0.0.1:8888/v1
+    model: auto
+    key_env: UNSLOTH_STUDIO_AUTH_TOKEN
+    paid: false
+    # Thinking off for every local model (owner request 2026-11-04).
+    disable_thinking: true
+
+  - id: openai
+    label: OpenAI
+    kind: openai_compatible
+    base_url: https://api.openai.com/v1
+    model: gpt-6-luna
+    key_env: OPENAI_API_KEY
+    paid: true
+    token_limit_field: max_completion_tokens
+    send_temperature: false
+    price_per_million: {input: 0.10, output: 0.50}
+
+  - id: gemini
+    label: Gemini
+    kind: gemini
+    # Real check 2026-11-04: gemini-3.8-flash is listed but returned a server error twice;
+    # gemini-3.6-flash answered (same price).
+    model: gemini-3.6-flash
+    key_env: GEMINI_API_KEY
+    paid: true
+    price_per_million: {input: 0.75, output: 3.75}

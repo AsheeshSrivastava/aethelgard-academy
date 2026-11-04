@@ -26,4 +26,4 @@
 | [ADR-0022](0022-interaction-log.md) | Interaction Log and Cold Check Feedback | **Proposed** | 2026-11-04 |
 | [ADR-0023](0023-pantryflow-case-study.md) | One Case Study for the Whole Path (PantryFlow) | **Proposed** | 2026-11-04 |
 | [ADR-0024](0024-writing-feedback-on-build-documents.md) | Writing Feedback on Build Documents | **Proposed** | 2026-11-04 |
-| [ADR-0025](0025-model-provider-profiles.md) | Model Provider Profiles and a Settings Page | **Proposed** (not built) | 2026-11-04 |
+| [ADR-0025](0025-model-provider-profiles.md) | Model Provider Profiles and a Settings Page | **Accepted**, built (SPEC-17) | 2026-11-04 |

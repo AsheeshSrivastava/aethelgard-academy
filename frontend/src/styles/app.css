@@ -1898,3 +1898,39 @@ button:disabled {
   font-size: 15px;
   opacity: 0.9;
 }
+
+/* Model settings page (SPEC-17 section 7) */
+.model-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.model-card h2 {
+  font-size: 17px;
+  margin: 0;
+}
+
+.model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.model-confirm {
+  margin-top: 16px;
+  border-color: var(--accent);
+}
+
+.model-confirm-tick {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 12px 0;
+}
+
+.model-test-fail {
+  color: var(--danger, var(--text-muted));
+}

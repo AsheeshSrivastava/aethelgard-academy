@@ -48,6 +48,11 @@ const routeTree = rootRoute.addChildren([
     path: "/reviews/$skillId/$days",
     component: lazyRouteComponent(() => import("./pages/Review"), "Recheck"),
   }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/settings/models",
+    component: lazyRouteComponent(() => import("./pages/ModelSettings"), "ModelSettings"),
+  }),
   createRoute({ getParentRoute: () => rootRoute, path: "/units/$unitId", component: UnitMap }),
   createRoute({
     getParentRoute: () => rootRoute,

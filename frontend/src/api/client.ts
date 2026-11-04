@@ -38,7 +38,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set("X-Session-Id", SESSION_ID);
   const response = await fetch(`${BASE}${path}`, { ...init, headers });

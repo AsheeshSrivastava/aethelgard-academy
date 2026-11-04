@@ -22,7 +22,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
-from lms.adapters.ai.local_llm_companion import get_axis_companion
+from lms.adapters.ai.providers.router import ProviderRouter, build_default_router
+from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.adapters.curriculum.concepts import ConceptCatalog
@@ -282,6 +283,7 @@ def create_app(
     run_limits: Optional[RunLimits] = None,
     dist_dir: Optional[Path] = None,
     test_mode: Optional[bool] = None,
+    providers: Optional[ProviderRouter] = None,
 ) -> FastAPI:
     """Application factory for the LMS API Gateway."""
 
@@ -301,8 +303,11 @@ def create_app(
     if runner is None:
         runner = get_code_runner()
 
+    # AXIS goes through the provider switcher unless a test injects a companion (SPEC-17).
     if axis is None:
-        axis = get_axis_companion()
+        if providers is None:
+            providers = build_default_router(os.environ.get("LMS_DB_PATH", "lms_state.db"))
+        axis = providers
 
     if catalog is None:
         catalog = load_all_roadmaps(Path("reference"))
@@ -327,6 +332,9 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    if providers is not None:
+        app.include_router(model_settings_routes(providers, current_learner_id))
 
     # --- Static Files & Frontend Shell ---
     web_dir = Path("src/lms/web")
