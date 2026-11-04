@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/cold-explain-1",
+  "unit_id": "PY-0.2",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Apply",
+  "prompt_markdown": [
+    "A colleague describes the files of the pantry intake app.",
+    "",
+    "One sentence is wrong. Which one?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "`main.py` is the entry point: it is the file you run, and it calls the others in order."
+      },
+      {
+        "key": "B",
+        "text": "`intake.py` cleans and checks what the clerk types."
+      },
+      {
+        "key": "C",
+        "text": "`settings.py` decides how many parcels each family gets."
+      },
+      {
+        "key": "D",
+        "text": "`store.py` saves and loads the family records."
+      }
+    ],
+    "answer_key": "C",
+    "why": [
+      "Deciding parcels is `allocation.py`'s job. `settings.py` only holds values that change between pantries, such as the stock reserve."
+    ]
+  }
+}

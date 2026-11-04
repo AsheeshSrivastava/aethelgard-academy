@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/trace-1",
+  "unit_id": "PY-0.2",
+  "activity": "Trace",
+  "skill_id": "CO-5",
+  "level": "Apply",
+  "prompt_markdown": [
+    "The parts of the intake app run in one file.",
+    "",
+    "Follow the data from part to part, then write what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "trace": {
+    "code": [
+      "def clean(name):",
+      "    return name.strip().title()",
+      "",
+      "def parcels_for(size):",
+      "    return 1 if size <= 2 else 2",
+      "",
+      "name = clean(\"  asha rao \")",
+      "parcels = parcels_for(4)",
+      "print(name, parcels)"
+    ],
+    "input": "",
+    "expected_output": [
+      "Asha Rao 2"
+    ],
+    "line_states": [
+      {
+        "line": 7,
+        "state": {
+          "name": "Asha Rao"
+        }
+      },
+      {
+        "line": 8,
+        "state": {
+          "name": "Asha Rao",
+          "parcels": 2
+        }
+      }
+    ]
+  }
+}

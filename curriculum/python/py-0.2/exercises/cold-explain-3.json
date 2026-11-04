@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/cold-explain-3",
+  "unit_id": "PY-0.2",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Apply",
+  "prompt_markdown": [
+    "A new rule says a household size must be a whole number above zero.",
+    "",
+    "Where should that check live?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "explain_model_choice": {
+    "material": [
+      "main.py        the entry point",
+      "intake.py      cleans and checks typed input",
+      "allocation.py  decides parcels per family",
+      "store.py       saves and loads family records",
+      "settings.py    values that change between pantries"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "`intake.py`, which checks what the clerk types"
+      },
+      {
+        "key": "B",
+        "text": "`store.py`, just before saving"
+      },
+      {
+        "key": "C",
+        "text": "`settings.py`, next to the stock reserve"
+      },
+      {
+        "key": "D",
+        "text": "`main.py`, in a long `if` at the end"
+      }
+    ],
+    "answer_key": "A",
+    "why": [
+      "Checking typed input is `intake.py`'s job, so bad data stops before anything else uses it."
+    ]
+  }
+}

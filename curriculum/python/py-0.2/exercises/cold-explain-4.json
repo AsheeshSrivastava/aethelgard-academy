@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/cold-explain-4",
+  "unit_id": "PY-0.2",
+  "activity": "Explain",
+  "skill_id": "CO-5",
+  "level": "Apply",
+  "prompt_markdown": [
+    "A clerk registers a family.",
+    "",
+    "In what order does the data move through the app?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "explain_model_choice": {
+    "material": [
+      "main.py        the entry point",
+      "intake.py      cleans and checks typed input",
+      "allocation.py  decides parcels per family",
+      "store.py       saves and loads family records",
+      "settings.py    values that change between pantries"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "`main.py` → `intake.py` → `allocation.py` → `store.py`"
+      },
+      {
+        "key": "B",
+        "text": "`store.py` → `allocation.py` → `intake.py` → `main.py`"
+      },
+      {
+        "key": "C",
+        "text": "`intake.py` → `store.py` → `allocation.py` → `main.py`"
+      },
+      {
+        "key": "D",
+        "text": "All four files run at the same time"
+      }
+    ],
+    "answer_key": "A",
+    "why": [
+      "The entry point takes the typed text, it is cleaned and checked, the parcels are decided, and then the record is saved."
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "unit_id": "PY-0.2",
+  "title": "Reading a small Python application",
+  "concept_check": {
+    "prompt": "Explain in your own words what each part of a small Python application is for (entry point, logic, data handling, configuration), and how data moves between the files when a family registers.",
+    "solid_keywords": ["entry", "main", "logic", "data", "configuration", "settings", "file", "job", "flow", "import"],
+    "rubric": "Learner names an entry point that starts the flow, separate files for logic, data handling and configuration, each with one job, and describes data passing from the entry point through the other files in one direction."
+  }
+}

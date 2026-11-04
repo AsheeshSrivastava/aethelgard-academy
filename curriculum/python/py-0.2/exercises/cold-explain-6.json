@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/cold-explain-6",
+  "unit_id": "PY-0.2",
+  "activity": "Explain",
+  "skill_id": "CO-5",
+  "level": "Apply",
+  "prompt_markdown": [
+    "The printed slip shows the wrong number of parcels, but the name is right.",
+    "",
+    "Following the data flow, where do you look first?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "explain_model_choice": {
+    "material": [
+      "main.py        the entry point",
+      "intake.py      cleans and checks typed input",
+      "allocation.py  decides parcels per family",
+      "store.py       saves and loads family records",
+      "settings.py    values that change between pantries"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "`intake.py`, because it handles the name"
+      },
+      {
+        "key": "B",
+        "text": "`allocation.py`, because it decides the parcels"
+      },
+      {
+        "key": "C",
+        "text": "`store.py`, because it saves the record"
+      },
+      {
+        "key": "D",
+        "text": "`settings.py`, because it is loaded first"
+      }
+    ],
+    "answer_key": "B",
+    "why": [
+      "The name passed through correctly, so the fault sits where the parcel number is made: `allocation.py`."
+    ]
+  }
+}

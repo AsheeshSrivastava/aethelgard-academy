@@ -475,6 +475,7 @@ def test_stage_with_no_items_opens_the_build_as_before(client, repo, catalog):
     catalog.seeds = {
         u: [s for s in ss if not s.cold_check_eligible or s in cold_round(catalog.get_unit(u), ss)]
         for u, ss in catalog.seeds.items()
+        if catalog.get_unit(u)
     }
     pass_units(repo, catalog)
 

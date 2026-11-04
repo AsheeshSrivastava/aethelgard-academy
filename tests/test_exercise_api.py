@@ -172,8 +172,9 @@ def walk_everything(client, repo, clock, catalog):
     for unit_id in catalog.seeds:
         unit = catalog.get_unit(unit_id)
         repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, unit_id, clock() - 2 * DAY)
+        has_cold_check = any(s.cold_check_eligible and s.curator_approved for s in catalog.seeds[unit_id])
         for activity in unit.activities:
-            if activity == "video":
+            if activity == "video" or (activity == "cold_check" and not has_cold_check):
                 continue
             res = client.get(exercise_url(unit_id, activity))
             assert res.status_code == 200, (unit_id, activity, res.text)

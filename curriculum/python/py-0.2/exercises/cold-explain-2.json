@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/cold-explain-2",
+  "unit_id": "PY-0.2",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Apply",
+  "prompt_markdown": [
+    "The pantry wants to keep family records in a database instead of a JSON file.",
+    "",
+    "Which file should change?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "explain_model_choice": {
+    "material": [
+      "main.py        the entry point",
+      "intake.py      cleans and checks typed input",
+      "allocation.py  decides parcels per family",
+      "store.py       saves and loads family records",
+      "settings.py    values that change between pantries"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "`main.py`"
+      },
+      {
+        "key": "B",
+        "text": "`intake.py`"
+      },
+      {
+        "key": "C",
+        "text": "`allocation.py`"
+      },
+      {
+        "key": "D",
+        "text": "`store.py`"
+      }
+    ],
+    "answer_key": "D",
+    "why": [
+      "Saving and loading records is `store.py`'s one job, so only it needs to change."
+    ]
+  }
+}

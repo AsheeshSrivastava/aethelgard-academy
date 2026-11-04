@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/trace-2",
+  "unit_id": "PY-0.2",
+  "activity": "Trace",
+  "skill_id": "CO-5",
+  "level": "Apply",
+  "prompt_markdown": [
+    "The setting decides whether the counter can still serve.",
+    "",
+    "Follow the values, then write what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "trace": {
+    "code": [
+      "STOCK_RESERVE = 5",
+      "",
+      "def can_serve(stock, need):",
+      "    return stock - need >= STOCK_RESERVE",
+      "",
+      "stock = 12",
+      "print(can_serve(stock, 4), can_serve(stock, 8))"
+    ],
+    "input": "",
+    "expected_output": [
+      "True False"
+    ],
+    "line_states": [
+      {
+        "line": 6,
+        "state": {
+          "STOCK_RESERVE": 5,
+          "stock": 12
+        }
+      }
+    ]
+  }
+}
