@@ -11,7 +11,7 @@
     "Where should that check live?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Bad data should be stopped where typed input is first cleaned and checked.",
   "hint_approved": false,
   "explain_model_choice": {

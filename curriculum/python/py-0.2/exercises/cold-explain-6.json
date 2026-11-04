@@ -11,7 +11,7 @@
     "Following the data flow, where do you look first?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "The part that came out right has already passed through; look where the wrong value is made.",
   "hint_approved": false,
   "explain_model_choice": {
