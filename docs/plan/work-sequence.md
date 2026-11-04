@@ -31,6 +31,22 @@ Pushing to GitHub and Entire is always at the owner's word.
 - [ ] 2.2 Multi-file builds, needed from Python Stage 5. (NOTHING)
 - [x] 2.3 When to write the other stage builds. Decided: with each stage's content (ADR-0018 amendment).
 
+## Phase 2b: README feedback on the Stage 0 build (ADR-0024, owner option C)
+
+Runs after phase 2's build-page work is committed, because it changes the same files.
+
+- [ ] 2b.1 Plain-Python README checks: headings kept, words in each section, run command under "How to run it", "What I checked myself" names something tried. (NOTHING, then APPROVE the updated Stage 0 build)
+- [ ] 2b.2 AXIS comment on the README: Socratic, ungraded, logged. (NOTHING)
+- [ ] 2b.3 The editor colours only `.py` files; README and other files show as plain text. (NOTHING)
+
+## Phase 2c: Model providers and a Settings page (ADR-0025, separate thread)
+
+Decided 2026-11-04: keys stay in `.env` for now; Gemini gets its own adapter (Google's SDK), not the OpenAI-compatible address; check which Gemini model answers on the free API when this is built.
+
+- [ ] 2c.1 Provider profiles behind `IAXISCompanion`: local (OpenAI-compatible), OpenAI, Gemini. (DECIDE which first)
+- [ ] 2c.2 Settings page: active profile, "key set: yes/no", test connection showing the model that answered. (NOTHING)
+- [ ] 2c.3 Cost estimate and a monthly cap for paid providers. (DECIDE the cap)
+
 ## Phase 3: Two decisions before more testing
 
 - [x] 3.1 Does work done in test mode count toward your own progress? Decided 2026-11-04: yes, as today.

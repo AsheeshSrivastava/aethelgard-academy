@@ -29,8 +29,14 @@ AXIS talks to one OpenAI-compatible server set in `.env` (`LOCAL_LLM_BASE_URL`, 
 - **Cost:** every AXIS question to a cloud provider costs money; the cap and estimate make that visible.
 - **Results differ by model.** The Socratic guardrail and the grounding checks run after every model, so a weaker model gives weaker help, never an answer.
 
-## 4. Owner decisions needed
+## 4. Owner decisions
 
-1. Which providers to build first (suggested: local and OpenAI-compatible first, since OpenAI, Gemini and most local servers accept the same API; real SDKs only where needed).
-2. Keys in `.env` only, or also the OS key store via the Settings page.
-3. The monthly spending cap.
+Decided 2026-11-04:
+- **Keys stay in `.env`** for now. No key store, and the Settings page does not accept keys yet.
+- **Gemini gets its own adapter**, using Google's SDK, not the OpenAI-compatible address.
+- **Which Gemini model answers on the free API** is checked when this is built, by a real test call, never assumed; the Settings page's connection test shows the model that answered.
+- The work runs in its own thread (work sequence, phase 2c).
+
+Still open:
+1. Which providers to build first.
+2. The monthly spending cap.
