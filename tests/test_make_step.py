@@ -55,7 +55,7 @@ def make_unit(make_skill="VE-6", with_make=True):
             TargetSkill(skill_id="VE-6", skill_name="VE-6", goal_level=ProficiencyLevel.APPLY),
         ],
         methods=[ActivityType.EXPLAIN, ActivityType.PREDICT, ActivityType.DEBUG_VALIDATE, ActivityType.BUILD],
-        make=MakeStep(skill_id=make_skill, task="a tip calculator") if with_make else None,
+        make=MakeStep(skill_id=make_skill, task="a rice-donation calculator") if with_make else None,
     )
 
 

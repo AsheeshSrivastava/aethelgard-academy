@@ -290,10 +290,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** Every value has a type, and the type decides what operations mean.
 - **Target skills:** CO-1 to Apply; VE-6 to Apply
 - **Methods:** Explain → Predict → Debug & Validate → Build
-- **Outcome (measured at unit end):** CO-1: predicts results of mixed int/float/bool expressions. VE-6: tries zero, negative and text-that-is-not-a-number on a small calculator. Make (VE-6): a tip calculator that reads two numbers with `input()`, converts them, rounds the total, and refuses text that is not a number.
+- **Outcome (measured at unit end):** CO-1: predicts results of mixed int/float/bool expressions. VE-6: tries zero, negative and text-that-is-not-a-number on a small calculator. Make (VE-6): a rice-donation calculator that reads the price per kilogram and the kilograms with `input()`, converts them, and prints the total rounded to 2 decimal places, checked on an amount that needs rounding.
 - **Topics:** integers; floats; booleans; `None`; arithmetic operators including `//`, `%` and `**` (new); comparison and logical operators; conversions with `int()`, `float()`, `str()` (new); turning `input()` text into numbers (new); `abs`, `round`, `min`, `max`, `sum` (new); `math` module basics (new); `decimal` for exact values such as money (awareness, new); equality; truthiness; numeric precision awareness; writing a small program from a blank file (Make); bitwise operators `&`, `|`, `^`, `<<`, `>>` (awareness, new)
 - **Prerequisites:** PY-0.1 | **Importance:** Foundational | **Integration link:** All data-processing work
-- **Changed in v4:** Make step added as Build, credited to VE-6 (recommendation 1); bitwise operators added as awareness (recommendation 5)
+- **Changed in v4:** Make step added as Build, credited to VE-6 (recommendation 1); bitwise operators added as awareness (recommendation 5); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-1.7 Text
 
@@ -301,10 +301,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A string is an ordered, unchangeable sequence of characters.
 - **Target skills:** BU-1 to Apply; VE-6 to Apply
 - **Methods:** Explain → Modify → Debug & Validate → Build
-- **Outcome (measured at unit end):** BU-1: adapts a string formatter to a new format without breaking old cases. VE-6: tries empty, whitespace-only and very long text. Make (VE-6): a name-badge formatter that cleans and reformats one line of text, including empty and whitespace-only input.
+- **Outcome (measured at unit end):** BU-1: adapts a string formatter to a new format without breaking old cases. VE-6: tries empty, whitespace-only and very long text. Make (VE-6): a pickup-slip name formatter that cleans and reformats one typed family name, including empty and whitespace-only input.
 - **Topics:** strings and immutability; indexing and slicing; common methods: `split`, `join`, `strip`, `replace`, `find`, `startswith`, `lower`, `upper`; f-strings and formatting; escape characters and multi-line strings; text from `input()`; basic Unicode awareness (encodings are covered in Stage 8); writing a small program from a blank file (Make)
 - **Prerequisites:** PY-1.2 | **Importance:** Foundational | **Integration link:** All text and data-processing work
-- **Changed in v4:** Make step added as Build, credited to VE-6 (recommendation 1)
+- **Changed in v4:** Make step added as Build, credited to VE-6 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-1.1 Names, objects and expressions
 
@@ -322,10 +322,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A check is a prediction written as code that passes or fails.
 - **Target skills:** VE-1 to Apply
 - **Methods:** Explain → Debug & Validate → Build
-- **Outcome (measured at unit end):** VE-1: writes checks, including edge cases, that fail on a plausible wrong version of a short function they were shown. Make (VE-1): a small function and its own `assert` checks, which must fail on a planted wrong version.
+- **Outcome (measured at unit end):** VE-1: writes checks, including edge cases, that fail on a plausible wrong version of a short function they were shown. Make (VE-1): a small script that totals a family's parcel weights, with its own `assert` checks that must fail on a planted wrong version. **Fix:** v4 asks for a function here, but functions are taught in PY-3.1, so the new wording uses a script.
 - **Topics:** `assert`; expected value versus actual value; edge cases: empty, zero, one, many; reading an assertion failure; small check functions run by hand (pytest comes in Stage 9); a check that fails on a wrong version; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-1.1 | **Importance:** Foundational | **Integration link:** Stage 4 failure checks; Stage 9 behavioral testing
-- **Changed in v4:** Make step added as Build, credited to VE-1 (recommendation 1)
+- **Changed in v4:** Make step added as Build, credited to VE-1 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-1.3 Lists and tuples
 
@@ -355,10 +355,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A dictionary finds a value by its key instead of its position.
 - **Target skills:** CO-3 to Apply; BU-1 to Adapt; VE-6 to Adapt
 - **Methods:** Explain → Modify → Debug & Validate → Build
-- **Outcome (measured at unit end):** CO-3: explains AI code that reads nested config. BU-1: adapts it to safe retrieval. VE-6: tests a missing key. Make (BU-1): extends their own household-lookup script to a second field without breaking the first, handling a missing ID.
+- **Outcome (measured at unit end):** CO-3: explains AI code that reads nested config. BU-1: adapts it to safe retrieval. VE-6: tests a missing key. Make (BU-1): extends their own household-lookup script (family ID to household size) to a second field, dietary needs, without breaking the first, handling a missing family ID with a safe lookup.
 - **Topics:** dictionaries; keys/values/items; membership; safe retrieval; insertion/update/removal; iteration; nested mappings; dictionary unpacking; missing-key behavior; structured external/config-style data; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-1.3, PY-1.8 | **Importance:** Foundational | **Integration link:** JSON/configuration; Cross-Link → Backend Engineering and AI Engineering data boundaries
-- **Changed in v4:** CO-3 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to BU-1 (recommendation 1)
+- **Changed in v4:** CO-3 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to BU-1 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-1.5 Choosing data structures
 
@@ -389,10 +389,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A condition decides which path the program takes, and boundaries are where paths are most likely wrong.
 - **Target skills:** VE-1 to Adapt; VE-6 to Adapt; SP-1 to Apply
 - **Methods:** Explain → Specify → Debug & Validate → Build
-- **Outcome (measured at unit end):** SP-1: lists the boundary questions before coding a rule. VE-1 and VE-6: write checks at the boundaries that catch a planted wrong version. Make (VE-6): an eligibility checker that sorts an applicant into one of four outcomes, including the boundary values.
+- **Outcome (measured at unit end):** SP-1: lists the boundary questions before coding a rule. VE-1 and VE-6: write checks at the boundaries that catch a planted wrong version. Make (VE-6): a parcel-size checker that sorts a family into one of four parcel sizes by household size, including the boundary values, and refuses an empty or out-of-range answer with a clear message.
 - **Topics:** boolean expressions; comparison operators; logical operators; truthiness/falsiness; chained comparisons; `if / elif / else`; membership; identity where appropriate; nested conditions; guard clauses; edge-condition reasoning; `match` statement (supporting); conditional expressions (new); writing a small program from a blank file (Make)
 - **Prerequisites:** Stage 1 | **Importance:** Foundational | **Integration link:** Validation, filtering, control flow
-- **Changed in v4:** SP-1 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-6 (recommendation 1)
+- **Changed in v4:** SP-1 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-6 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-2.2 Iteration
 
@@ -400,10 +400,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A loop repeats steps while a condition holds or while items remain, and carries state from one pass to the next.
 - **Target skills:** VE-1 to Adapt; VE-2 to Adapt; VE-5 to Apply; CO-1 to Adapt
 - **Methods:** Explain → Predict → Trace → Debug & Validate → Build
-- **Outcome (measured at unit end):** Milestone 1 unit. Given an AI-written loop function with a planted bug, the learner writes checks (VE-1), finds the bug (VE-2) and proves the fix (VE-5). Make (VE-1): a batch summary that counts, totals and flags entries in a list, with checks for empty and one-item lists. CO-1: predicts the output of a loop with `break` and `continue` before running it.
+- **Outcome (measured at unit end):** Milestone 1 unit. Given an AI-written loop function with a planted bug, the learner writes checks (VE-1), finds the bug (VE-2) and proves the fix (VE-5). Make (VE-1): a morning-queue summary that counts families, totals parcels and flags any family over the parcel limit, with checks for an empty and a one-family queue. CO-1: predicts the output of a loop with `break` and `continue` before running it.
 - **Topics:** `for`; `while`; `range`; iteration over lists/dicts/sets; `enumerate`; `zip`; accumulation; nested iteration; `break`; `continue`; loop `else` awareness; mutation-while-iterating pitfalls; `sorted`, `reversed`, `any`, `all` (new); writing a small program from a blank file (Make)
 - **Prerequisites:** Stage 1 | **Importance:** Foundational | **Integration link:** Data processing; Cross-Link → Practical DSA
-- **Changed in v4:** VE-5 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-1 (recommendation 1); CO-1 (Adapt) added: loop-output prediction (recommendation 7); Predict added (recommendation 7)
+- **Changed in v4:** VE-5 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-1 (recommendation 1); CO-1 (Adapt) added: loop-output prediction (recommendation 7); Predict added (recommendation 7); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-2.5 Debugging basics
 
@@ -421,10 +421,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A comprehension builds a new collection from an old one in a single expression.
 - **Target skills:** BU-2 to Apply; BU-4 to Apply
 - **Methods:** Explain → Modify → Evaluate → Build
-- **Outcome (measured at unit end):** BU-2: refines an AI comprehension to meet a spec line by line. BU-4: replaces a nested one with a clear loop where that is simpler. Make (BU-2): writes a comprehension from a one-line spec, then brings it up to every line of the spec.
+- **Outcome (measured at unit end):** BU-2: refines an AI comprehension to meet a spec line by line. BU-4: replaces a nested one with a clear loop where that is simpler. Make (BU-2): writes a comprehension from a one-line spec (today's urgent requests from the queue), then brings it up to every line of the spec.
 - **Topics:** list comprehensions; dictionary comprehensions; set comprehensions; filtering; expression transformation; nested-comprehension readability limits; generator-expression preview; assignment expressions `:=` (awareness only); writing a small program from a blank file (Make)
 - **Prerequisites:** PY-2.1, PY-2.2 | **Importance:** Core | **Integration link:** Data transformation; Stage 7 lazy processing
-- **Changed in v4:** Make step added as Build, credited to BU-2 (recommendation 1)
+- **Changed in v4:** Make step added as Build, credited to BU-2 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-2.4 Choosing control flow
 
@@ -432,10 +432,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** Several control-flow forms can do the same job; the clearest one wins.
 - **Target skills:** DE-6 to Apply; BU-4 to Apply
 - **Methods:** Explain → Evaluate → Modify → Build
-- **Outcome (measured at unit end):** DE-6: compares two forms by readability and risk and chooses with a reason. BU-4: rewrites an over-clever AI solution in the simpler form, keeping behaviour. Make (BU-4): writes the simplest correct form (expression, branch, loop or comprehension) for three small specs.
+- **Outcome (measured at unit end):** DE-6: compares two forms by readability and risk and chooses with a reason. BU-4: rewrites an over-clever AI solution in the simpler form, keeping behaviour. Make (BU-4): writes the simplest correct form (expression, branch, loop or comprehension) for three small pantry specs: a stock-reserve check, a queue count and a list of family names.
 - **Topics:** expression versus branch; branch versus loop; comprehension versus loop; early return awareness; readability; simple versus clever implementation; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-2.1 to PY-2.3 | **Importance:** Core | **Integration link:** All subsequent coding
-- **Changed in v4:** Make step added as Build, credited to BU-4 (recommendation 1)
+- **Changed in v4:** Make step added as Build, credited to BU-4 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 
 ### Stage 3
@@ -446,10 +446,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A call creates its own space for local names, and where a name is looked up decides which value it finds.
 - **Target skills:** CO-2 to Adapt; CO-3 to Adapt; CO-6 to Adapt; BU-2 to Apply
 - **Methods:** Explain → Trace → Build
-- **Outcome (measured at unit end):** CO-2: traces multi-function code through argument binding, scope and implicit `None`. CO-3: explains AI code accurately, including the empty case. Make (BU-2): three small functions with parameters and return values, written from a short spec and refined until every spec line holds.
+- **Outcome (measured at unit end):** CO-2: traces multi-function code through argument binding, scope and implicit `None`. CO-3: explains AI code accurately, including the empty case. Make (BU-2): three small functions with parameters and return values (parcels for a household size, a family's label, a day's total), written from a short spec and refined until every spec line holds.
 - **Topics:** `def`; parameters versus arguments; call frames conceptual model; local variables; return; implicit `None`; local/global/enclosing/builtin scope; LEGB mental model; `global`/`nonlocal` awareness; recursion awareness; docstrings; writing a small program from a blank file (Make)
 - **Prerequisites:** Stages 1–2 | **Importance:** Foundational | **Integration link:** All structured programs
-- **Changed in v4:** BU-2 (Apply) added: credits the Make step; Make step added as Build, credited to BU-2 (recommendation 1)
+- **Changed in v4:** BU-2 (Apply) added: credits the Make step; Make step added as Build, credited to BU-2 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-3.6 Recursion
 
@@ -467,10 +467,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A function's parameters are its promise to callers; changing them can break the callers.
 - **Target skills:** BU-1 to Adapt; DE-1 to Adapt; VE-2 to Adapt
 - **Methods:** Explain → Modify → Evaluate → Debug & Validate → Build
-- **Outcome (measured at unit end):** DE-1: judges an AI function's parameter design. BU-1: adapts its interface without breaking callers. VE-2: finds the mutable-default bug. Make (BU-1): adds keyword-only options with safe defaults to a function they wrote, keeping old calls working.
+- **Outcome (measured at unit end):** DE-1: judges an AI function's parameter design. BU-1: adapts its interface without breaking callers. VE-2: finds the mutable-default bug. Make (BU-1): adds keyword-only options with safe defaults (dietary needs, pickup window) to their own allocation function, keeping old calls working.
 - **Topics:** positional arguments; keyword arguments; defaults; mutable-default pitfall; keyword-only parameters; positional-only awareness; `*args`; `**kwargs`; argument unpacking; interface clarity; backwards-compatibility awareness; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-3.1 | **Importance:** Foundational | **Integration link:** Cross-Link → Software Design / OOD / LLD; Backend Engineering
-- **Changed in v4:** Make step added as Build, credited to BU-1 (recommendation 1)
+- **Changed in v4:** Make step added as Build, credited to BU-1 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-3.3 Functions as values
 
@@ -489,10 +489,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A function should do one clear job with explicit inputs and outputs.
 - **Target skills:** SP-1 to Adapt; SP-2 to Apply; SP-4 to Apply; VE-1 to Adapt
 - **Methods:** Explain → Specify → Debug & Validate → Build
-- **Outcome (measured at unit end):** SP-1: lists the open questions and assumptions before specifying. SP-2: writes a spec (inputs, outputs, 3–5 examples) before code. SP-4: names the missing detail in a prompt that produced wrong code. VE-1: turns the spec's examples into checks. Make (VE-1): a pure function written from a written contract, with checks that fail on a wrong version they have not seen.
+- **Outcome (measured at unit end):** SP-1: lists the open questions and assumptions before specifying. SP-2: writes a spec (inputs, outputs, 3–5 examples) before code. SP-4: names the missing detail in a prompt that produced wrong code. VE-1: turns the spec's examples into checks. Make (VE-1): a pure function written from a written contract (a household's parcel allowance), with checks that fail on a wrong version they have not seen.
 - **Topics:** coherent function responsibility; input/output boundaries; pure-ish versus stateful functions; avoiding hidden state; side effects; naming; return contracts; small interfaces; distinction from formal SOLID responsibility principles; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-3.1, PY-3.2 | **Importance:** Foundational | **Integration link:** Cross-Link → Software Design / OOD / LLD
-- **Changed in v4:** SP-2 goal lowered Adapt to Apply (first appearance); SP-4 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-1 (recommendation 1)
+- **Changed in v4:** SP-2 goal lowered Adapt to Apply (first appearance); SP-4 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-1 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-3.5 Decomposing a requirement
 
@@ -525,10 +525,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A function promises both what it returns and which failures it raises.
 - **Target skills:** SP-1 to Adapt; SP-2 to Adapt; SP-4 to Adapt; VE-1 to Adapt
 - **Methods:** Explain → Specify → Decompose → Debug & Validate → Build
-- **Outcome (measured at unit end):** SP-1: lists the failures a function could meet. SP-2: specifies which it raises and why. SP-4: spots a failure case the spec leaves out. VE-1: writes checks that the right exception is raised. Make (VE-1): a function that raises a custom exception for each documented failure, with `assert`-based checks for each.
+- **Outcome (measured at unit end):** SP-1: lists the failures a function could meet. SP-2: specifies which it raises and why. SP-4: spots a failure case the spec leaves out. VE-1: writes checks that the right exception is raised. Make (VE-1): an allocation function that raises a custom exception for each documented failure (out of stock, duplicate claim), with `assert`-based checks for each.
 - **Topics:** expected domain/application failure; programmer error versus runtime condition; custom exception classes; exception messages; preserving context; translation across Python boundaries; recoverable versus unrecoverable conditions; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-4.1 | **Importance:** Core | **Integration link:** Cross-Link → Backend Engineering failure boundaries; AI Engineering provider/tool boundaries
-- **Changed in v4:** Make step added as Build, credited to VE-1 (recommendation 1); Decompose added as a helper for SP-1 and SP-2 (recommendation 7)
+- **Changed in v4:** Make step added as Build, credited to VE-1 (recommendation 1); Decompose added as a helper for SP-1 and SP-2 (recommendation 7); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-4.3 Validation
 
@@ -536,10 +536,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** Bad data should be stopped at the boundary, before it travels further.
 - **Target skills:** BU-1 to Adapt; VE-6 to Adapt; DE-5 to Apply
 - **Methods:** Explain → Modify → Debug & Validate → Direct → Build
-- **Outcome (measured at unit end):** BU-1: adds boundary validation to AI code. VE-6: writes hostile and malformed inputs that must be rejected. DE-5: treats all input as untrusted until checked. Make (VE-6): a validator for one intake record that returns clear error messages for missing, malformed and out-of-range fields.
+- **Outcome (measured at unit end):** BU-1: adds boundary validation to AI code. VE-6: writes hostile and malformed inputs that must be rejected. DE-5: treats all input as untrusted until checked. Make (VE-6): a validator for one family's intake record that returns clear error messages for missing, malformed (including text that is not a number) and out-of-range fields.
 - **Topics:** preconditions; missing input; malformed data; range/value constraints; state invariants; validation versus exception handling; boundary validation; checking and converting user input (new); writing a small program from a blank file (Make)
 - **Prerequisites:** Stages 2–3 | **Importance:** Core | **Integration link:** Configuration; Cross-Link → Backend Engineering input validation; AI Engineering input/tool boundaries
-- **Changed in v4:** DE-5 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-6 (recommendation 1)
+- **Changed in v4:** DE-5 goal lowered Adapt to Apply (first appearance); Make step added as Build, credited to VE-6 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-4.4 Making failures explicit
 
@@ -571,10 +571,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** Modules group code by responsibility so each file has one reason to change.
 - **Target skills:** SP-3 to Adapt; BU-4 to Adapt; CO-4 to Adapt; BU-5 to Adapt
 - **Methods:** Explain → Decompose → Modify → Evaluate → Build
-- **Outcome (measured at unit end):** SP-3: splits an AI's kitchen-sink module by responsibility. CO-4: gives each new module a one-sentence purpose. BU-4: keeps module interfaces clear. BU-5: moves one responsibility at a time, with behaviour checked after each move. Make (BU-4): splits their own single-file script into two modules with one clear public function, behaviour unchanged.
+- **Outcome (measured at unit end):** SP-3: splits an AI's kitchen-sink module by responsibility. CO-4: gives each new module a one-sentence purpose. BU-4: keeps module interfaces clear. BU-5: moves one responsibility at a time, with behaviour checked after each move. Make (BU-4): splits their own single-file pantry script into two modules (intake and allocation) with one clear public function, behaviour unchanged.
 - **Topics:** Python module responsibility; public/internal functions; avoiding kitchen-sink modules; dependency direction at module/import level; import boundaries; cohesion; boundary between Python organization and general software design; writing a small program from a blank file (Make)
 - **Prerequisites:** PY-3.5, PY-5.1 | **Importance:** Foundational | **Integration link:** Cross-Link → Software Design / OOD / LLD; Backend Engineering project structure
-- **Changed in v4:** Make step added as Build, credited to BU-4 (recommendation 1)
+- **Changed in v4:** Make step added as Build, credited to BU-4 (recommendation 1); Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-5.3 Packages
 
@@ -593,10 +593,10 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **The concept (Explain):** A file can be imported or run, and `__main__` tells it which.
 - **Target skills:** CO-1 to Apply; BU-1 to Apply; DE-4 to Apply
 - **Methods:** Explain → Predict → Modify → Direct → Build
-- **Outcome (measured at unit end):** CO-1: predicts what runs on import versus on execution. BU-1: moves an AI script's import-time side effects behind `__main__`. DE-4: checks `argparse` behaviour in the official documentation. Make (BU-1): turns their own script into a runnable module with a `main()` guard and a non-zero exit code on failure.
+- **Outcome (measured at unit end):** CO-1: predicts what runs on import versus on execution. BU-1: moves an AI script's import-time side effects behind `__main__`. DE-4: checks `argparse` behaviour in the official documentation. Make (BU-1): turns their own pantry script into a runnable module with a `main()` guard and a non-zero exit code on failure.
 - **Topics:** module import versus execution; `__name__`; `__main__`; `if __name__ == "__main__"`; `python file.py`; `python -m package.module`; `__main__.py` awareness; keeping side effects out of imports; `sys.argv` and a first look at `argparse` (new); exit codes (new); writing a small program from a blank file (Make); program versus process; exit status as the process's result (from OS / Process)
 - **Prerequisites:** PY-5.1 | **Importance:** Core | **Integration link:** Applications/CLI/service startup; Stage 10 packaging
-- **Changed in v4:** Make step added as Build, credited to BU-1 (recommendation 1); OS / Process topic added
+- **Changed in v4:** Make step added as Build, credited to BU-1 (recommendation 1); OS / Process topic added; Make wording moved into the PantryFlow story (2026-11-04)
 
 #### PY-0.2 Reading a small Python application
 

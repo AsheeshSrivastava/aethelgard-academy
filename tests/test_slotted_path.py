@@ -224,7 +224,7 @@ def test_unit_route_gives_the_stage_label_and_make_step(client):
 
     assert body["stage_label"] == "Stage 1"
     assert body["make"]["skill_id"] == "VE-6"
-    assert body["make"]["task"].startswith("a tip calculator")
+    assert body["make"]["task"].startswith("a rice-donation calculator")
     assert client.get("/api/v1/units/DSA-0.1").json()["stage_label"] == "DSA 0"
 
 
