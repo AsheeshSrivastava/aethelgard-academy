@@ -1,93 +1,119 @@
-# Architectural Blueprint: The 79-Unit Unforced Operational Narrative Spine
+# Architectural Blueprint: The 79-Unit Universal Operational Narrative Spine
 
 > **Status:** APPROVED & ACTIVE  
 > **Governed by:** `reference/Python Subject Roadmap v4.md` (79 Core Python Units + 32 Slotted Units = 111 Total Path Sequence)  
-> **Core Domain:** *The Municipal Emergency Voucher & Public Assistance Logistics Network ("MEVAN")*  
-> **Target Persona:** Non-traditional career switchers from operations, public policy, and social services transitioning into Python Backend & AI Systems Architecture.
+> **Core Domain:** *The Community Food Pantry & Emergency Relief Logistics Network ("PantryFlow")*  
+> **Pedagogical Framework:** Azim Premji University DFELE (Designing & Facilitating Effective Learning Experiences) & Malcolm Knowles' Andragogy (Readiness, Experience, Autonomy, Action).  
+> **Target Persona:** Non-traditional adult career switchers from operations, social sector, healthcare, and education transitioning into Python Backend Engineering & AI Systems Architecture.
 
 ---
 
-## 1. Executive Summary: Why This Narrative Survives All 79 Units
+## 1. Executive Summary: The Universal Pedagogical Engine
 
-Traditional programming stories (such as the legacy biohack detective mystery) fail before Unit 30 because they use **decorative fiction**: a dramatic backdrop pasted onto abstract exercises. When the fiction meets language abstractions (like `class Pen` or context managers), the story breaks, power-creep exhausts the learner, and adult professionals feel patronized.
+### Why This Case Study Works for Every Learner on Earth
+Traditional programming stories fail because they either use **infantile toys** (calculating dog years, drawing cartoon cars) or **opaque administrative bureaucracy** (dense government acronyms and circulars). When the domain is overly complex, **70% of the learner's working memory is exhausted deciphering domain jargon** instead of learning Python syntax and systems architecture.
 
-The **Operational Narrative Spine** is an **evolutionary systems metaphor**. Instead of an artificial mystery, the learner experiences the authentic lifecycle of a mission-critical public service:
-- It begins at a **single physical intake desk** with a paper form and a terminal prompt (`input()`, `print()`).
-- As municipal needs grow, manual methods collapse under real-world stress: dirty data, duplicate claims, conflicting statutory policies, corrupted files, and disaster traffic spikes.
-- Every Python language feature is introduced as the **exact architectural remedy** to an operational failure.
+The **Community Food Pantry & Emergency Relief Logistics Network ("PantryFlow")** provides a universally intuitive operational spine:
+- Whether in **India**, **Kenya**, the **US**, the **UK**, or **Latin America**, every human understands food parcels, family sizes, dietary needs, warehouse stock, and pickup queues.
+- **Zero Domain Friction:** The real-world problem is understood in 5 seconds without an instruction manual.
+- **Natural Systems Scalability:** It starts at a single registration desk with a terminal prompt (`input()`, `print()`) and naturally scales to multi-file packages, memory-safe data streams, async disaster surge traffic, and a full-stack **FastAPI** backend with a Sovereign Policy RAG copilot.
+
+---
+
+## 2. Adult Learning Principles (DFELE Integration)
+
+Rooted in the adult learning frameworks of **Azim Premji University (DFELE)** and **Malcolm Knowles**:
+
+1. **Readiness (The "What's In It For Me?" Principle):**
+   * Adult learners engage only when they see that a topic solves an immediate real-world problem.
+   * *Curriculum Rule:* **Operational pain precedes syntax.** A Python feature is introduced only when the food pantry pipeline fails without it (e.g. parallel lists desyncing $\implies$ dictionaries introduced; running out of memory on large census files $\implies$ generators introduced).
+2. **Experience (Building Bridges from the Known to the New):**
+   * Adults bring rich reservoirs of practical life experience. Treat them like empty vessels or children, and they disengage.
+   * *Curriculum Rule:* We draw from familiar operational concepts (intake desks, stock inventory, delivery receipts, triage queues) to bridge into technical abstractions (data structures, state machines, interfaces, APIs).
+3. **Autonomy (Decisions in a Non-Threatening Climate):**
+   * Adults must take charge of their learning and require respect when making mistakes.
+   * *Curriculum Rule:* The **Soft Gate (CO-6)**. Mental models evaluate into *Solid* or *Shaky*. Shaky explanations record diagnostic advice but **never hard-block** or humiliate the learner.
+4. **Action (Performance-Based Application):**
+   * *"If you don't use it, you lose it."* Adult training must focus on job performance ("Can they do the job correctly?"), not theoretical transmission.
+   * *Curriculum Rule:* 100% test-driven. Learners verify running Python code in the sandbox environment that mirrors production conditions.
+5. **Managing Cognitive Load (Novice vs. Expert Scaffolding):**
+   * Expert working memory chunks unconsciously; novice working memory fills rapidly.
+   * *Curriculum Rule:* Elimination of all domain-specific bureaucratic jargon. Cognitive capacity is reserved exclusively for Python primitives and systems thinking.
+
+---
+
+## 3. The 13-Stage Evolutionary Lifecycle
 
 ```
-THE EVOLUTIONARY LIFECYCLE (UNITS 1 TO 111)
-
-STAGE 0: THE RECEPTION TERMINAL (Units 1-3)
-  │ Primitives: Terminal input, execution sequence, AI assistance boundaries.
+STAGE 0: THE FRONT INTAKE DESK (Units 1–3)
+  │ Primitives: Terminal input, execution order, AI reasoning boundaries.
   ▼
-STAGE 1: THE ELIGIBILITY LEDGER (Units 4-12)
-  │ Data Ingress: Types, normalization, string sanitization, asserts, sets, dicts, nested dossiers (PY-1.9).
+STAGE 1: HOUSEHOLD DOSSIERS & DEDUPLICATION (Units 4–12)
+  │ Data Ingress: String cleaning, sets for duplicate claims, dicts for family dossiers (PY-1.9).
   ▼
-STAGE 2: BATCH QUEUE & LOGIC DISPATCH (Units 13-17)
-  │ Control Flow: Statutory decision trees, queue iteration, debugging, comprehensions.
+STAGE 2: RATION ALLOTMENT & DIETARY QUEUES (Units 13–17)
+  │ Control Flow: Dietary decision trees, queue iteration, filtering emergency requests.
   ▼
-STAGE 3: THE POLICY ASSESSMENT PIPELINE (Units 18-23)
-  │ Modular Logic: Pure functions, interface boundaries, rule decomposition.
+STAGE 3: NUTRITION & WAREHOUSE INVENTORY (Units 18–23)
+  │ Modular Logic: Pure functions for calorie quotas and inventory balances.
   ▼
-[PAUSE 1: Practical DSA Stage 0 — Algorithmic Complexity in Registry Searches (Units 24-27)]
+[PAUSE 1: Practical DSA Stage 0 — Algorithmic Complexity in Registry Searches (Units 24–27)]
   ▼
-STAGE 4: DEFENSIVE SERVICE BOUNDARIES (Units 28-31)
-  │ Robustness: Exception hierarchies, boundary validation, failure contracts.
+STAGE 4: DEFENSIVE ERROR HANDLING & STOCK BOUNDARIES (Units 28–31)
+  │ Robustness: Exception hierarchies (OutOfStockError, InvalidHouseholdError).
   ▼
-[PAUSE 2: Git Stage 0 — Versioning Statutory Policy Code & Branching (Units 32-35)]
+[PAUSE 2: Git Stage 0 — Versioning Distribution Rules & Branching (Units 32–35)]
   ▼
-STAGE 5: MULTI-AGENCY PACKAGE ARCHITECTURE (Units 36-40)
-  │ Decoupling: Modules, package namespaces, CLI entry points, reading legacy code.
+STAGE 5: MULTI-DEPARTMENT PACKAGE ARCHITECTURE (Units 36–40)
+  │ Decoupling: Packages for pantry.intake, pantry.warehouse, pantry.dispatch.
   ▼
-STAGE 6: CITIZEN CASE DOMAIN ENTITIES (Units 41-49)
-  │ Domain Modeling: Dataclasses, properties, special methods, polymorphism, composition.
+STAGE 6: DOMAIN ENTITIES & FOOD PARCELS (Units 41–49)
+  │ Domain Modeling: Dataclasses, properties, parcel state machines.
   ▼
-[PAUSE 3: Software Design Stage 0 — SOLID Invariants & Liskov Substitutability (Units 50-53)]
+[PAUSE 3: Software Design Stage 0 — SOLID Invariants & Liskov Substitutability (Units 50–53)]
   ▼
-STAGE 7: HIGH-VOLUME STREAMING & RESOURCE SAFETY (Units 54-59)
-  │ Protocols: Generators for 500k-record streaming, decorators, context managers (`with`), typing protocols.
+STAGE 7: HIGH-VOLUME DISTRIBUTION STREAMING (Units 54–59)
+  │ Protocols: Generators streaming 50,000 logs in 8 MB RAM, context managers for DB locks.
   ▼
-STAGE 8: PERSISTENCE, EXTERNAL APIS & DISK I/O (Units 60-66)
-  │ Integration: Pathlib, CSV/JSON census ingestion, regex matching, environment config, HTTP services, timezones.
+STAGE 8: LOCAL PERSISTENCE & SUPPLIER REST APIS (Units 60–66)
+  │ Integration: Pathlib, CSV/JSON storage, wholesale supplier REST APIs.
   ▼
-[PAUSE 4: Practical DSA Stage 1 — Priority Queues for Emergency Triage & Tree Topologies (Units 67-70)]
+[PAUSE 4: Practical DSA Stage 1 — Priority Queues for Triage & Tree Topologies (Units 67–70)]
   ▼
-STAGE 9: REGULATORY AUDIT & AUTOMATED VERIFICATION (Units 71-76)
-  │ Quality Assurance: Pytest suites, mocking external government APIs, mutation testing, profiling.
+STAGE 9: DONOR AUDIT & AUTOMATED VERIFICATION (Units 71–76)
+  │ Quality Assurance: Pytest suites, mocking external banking APIs, grant compliance.
   ▼
-STAGE 10: DEPENDENCIES & CONTAINER RELEASE GATES (Units 77-81)
-  │ Platform Ops: Virtual environment isolation, lockfiles, distributable wheels, CI quality gates.
+STAGE 10: DEPENDENCIES & PACKAGING (Units 77–81)
+  │ Platform Ops: Virtual environments, lockfiles, distributable wheels, CI gates.
   ▼
-STAGE 11: EMERGENCY SURGE TRAFFIC & ASYNC CONCURRENCY (Units 82-86)
-  │ Concurrency: Thread/process pools, async event loops, concurrent HTTP gathers, resilient task cancellation.
+STAGE 11: DISASTER SURGE TRAFFIC & ASYNC CONCURRENCY (Units 82–86)
+  │ Concurrency: AsyncIO event loops handling 3,000 simultaneous emergency pings.
   ▼
-[PAUSE 5: Git Stage 1 — Collaborative Remotes, PR Workflows & History Audits (Units 87-90)]
+[PAUSE 5: Git Stage 1 — Collaborative Remotes & History Audits (Units 87–90)]
   ▼
-STAGE 12: INHERITING & REFACTORING LEGACY SYSTEMS (Units 91-95)
-  │ Systems Evolution: Codebase navigation, library evaluation, layered architecture, characterization tests.
+STAGE 12: REFACTORING LEGACY SPREADSHEETS (Units 91–95)
+  │ Systems Evolution: Layered architecture, characterization tests, code navigation.
   ▼
-[PAUSE 6: Software Design Stage 1, Git Stage 2, AI-Assisted Engineering (Units 96-107)]
+[PAUSE 6: Software Design Stage 1, Git Stage 2, AI-Assisted Engineering (Units 96–107)]
   ▼
-STAGE 13: AUTONOMOUS MUNICIPAL SUBSYSTEM & AI ARCHITECT (Units 108-111)
-  │ Synthesis: Interchangeable pluggable ports, integration verification, owning AI-directed architecture.
+STAGE 13: THE COMPLETE FASTAPI MICROSERVICE (Units 108–111)
+  │ Production Synthesis: Multi-file FastAPI service, Pydantic contracts, Swagger docs.
   ▼
-PHASE 2: STATUTORY RAG & AUTONOMOUS POLICY AGENTS (Phase 2 Units)
-  │ AI Systems: BM25/Vector retrieval, DSPy optimization, provenance firewalls across 1,000 pages of municipal bylaws.
+PHASE 2: STATUTORY & NUTRITIONAL RAG COPILOT (Phase 2 Units)
+  │ AI Systems: Sovereign RAG indexing public health guidelines and food safety regulations.
 ```
 
 ---
 
-## 2. Complete Unit-by-Unit Operational Map (All 79 Core Python Units + 32 Slotted Units)
+## 4. Complete Unit-by-Unit Operational Map (All 79 Core Python Units + 32 Slotted Units)
 
 ### Stage 0: Foundations & Mental Models (Units 1–3)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **1** | **PY-0.4** | Run a first program | **The Intake Desk Terminal:** A citizen arrives at the desk requesting emergency housing relief. The clerk runs `solution.py`, prompts for applicant details via `input()`, prints an egress confirmation receipt with `print()`, and reads a first type error. | *All data arriving across the system boundary enters as untrusted text.* |
-| **2** | **PY-0.1** | Python as an executing program | **Tracing the Intake Life-Cycle:** Tracking state transitions step-by-step through an execution table as citizen claims are bound to memory names from top to bottom. | *Python executes statements sequentially; each statement deterministically transforms program state.* |
-| **3** | **PY-0.3** | Tool help versus your own reasoning | **The Policy Automation Boundary:** An AI assistant suggests code to automate applicant eligibility scoring. The engineer audits the code against municipal policy invariants, identifying unverified assumptions. | *Tools generate syntax; the human systems architect owns developer intent, validation, and accountability.* |
+| **1** | **PY-0.4** | Run a first program | **The Intake Counter Terminal:** A family arrives at the community pantry requesting food assistance. The clerk runs `solution.py`, prompts for applicant details via `input()`, prints an egress confirmation receipt with `print()`, and reads a first type error. | *All data arriving across the system boundary enters as untrusted text.* |
+| **2** | **PY-0.1** | Python as an executing program | **Tracing the Intake Life-Cycle:** Tracking state transitions step-by-step through an execution table as family details are bound to memory names from top to bottom. | *Python executes statements sequentially; each statement deterministically transforms program state.* |
+| **3** | **PY-0.3** | Tool help versus your own reasoning | **The Allotment Automation Boundary:** An AI assistant suggests code to calculate ration allowances. The engineer audits the code against pantry nutrition policy invariants, identifying unverified assumptions. | *Tools generate syntax; the human systems architect owns developer intent, validation, and accountability.* |
 
 ---
 
@@ -95,258 +121,246 @@ PHASE 2: STATUTORY RAG & AUTONOMOUS POLICY AGENTS (Phase 2 Units)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **4** | **PY-1.2** | Numbers, booleans and None | **Financial Eligibility Calculator:** Converting string input into integer dependents and float monthly income; computing poverty threshold ratios, handling missing phone records (`None`), and guarding currency precision with `decimal`. | *Values possess strict types that govern legal operations; never perform raw arithmetic on unparsed boundary text.* |
-| **5** | **PY-1.7** | Text | **Voucher Formatting & Identity Sanitization:** Slicing national identity numbers, stripping accidental whitespace, normalizing casing, and building structured voucher issuance keys with f-strings. | *Strings are immutable sequences; text normalization requires purposeful transformation.* |
-| **6** | **PY-1.1** | Names, objects and expressions | **Dossier Memory & Aliasing:** Tracking municipal caseworker assignments in memory. Demonstrating that reassigning a variable label does not mutate or overwrite the underlying applicant object. | *Variable names are pointers to objects; binding is not copying.* |
-| **7** | **PY-1.8** | Checking code with assert | **Defending Municipal Budget Invariants:** Placing executable `assert` statements throughout the calculation pipeline to prove disbursed relief amounts never drop below zero or exceed allocation caps. | *Assertions are executable contracts that halt execution instantly upon invariant violation.* |
-| **8** | **PY-1.3** | Lists and tuples | **Intake Queue & Fixed Station Coordinates:** Managing the ordered daily queue of waiting citizens (`list`) alongside the immutable GPS and license coordinates of the relief station (`tuple`). | *Use lists for ordered, evolving collections; use tuples for fixed, immutable composite records.* |
-| **9** | **PY-1.9** | Copies, aliases and nested data | **Multi-Member Household Records:** Managing nested family records with shared residential addresses. Using deep copies to update an individual member's status without accidentally mutating the entire family cluster. | *Mutating a nested mutable structure affects all references unless explicitly deep-copied.* |
-| **10** | **PY-1.4** | Mappings | **The Citizen Case Dossier:** Replacing parallel, error-prone lists with structured key-value dictionaries indexed by unique Citizen National ID for $O(1)$ lookups. | *Mappings provide direct semantic association and constant-time key retrieval.* |
-| **11** | **PY-1.5** | Choosing data structures | **The Registry Architecture Audit:** Evaluating data structures under operational stress: choosing sets for instant duplicate detection, dicts for fast case lookups, and lists for chronological audit logs. | *System constraints dictate structure: choose data structures based on access patterns and mutation safety.* |
-| **12** | **PY-1.6** | Specialised collections & stdlib | **Relief Station Supply Inventory:** Using `collections.Counter` to tally relief food/blanket supplies across depots, `defaultdict` to group claims by municipal district, and `deque` for FIFO lines. | *Standard library data structures solve common operational patterns with battle-tested efficiency.* |
+| **4** | **PY-1.1** | Types, values and variables | **Inventory Item Records:** Representing item name (`str`), package count (`int`), total weight (`float`), and refrigeration requirement (`bool`). | *Values carry data types; variables are labels referencing typed values in memory.* |
+| **5** | **PY-1.2** | Text as structured data | **Applicant Name & Address Cleaning:** Sanitizing messy user input using `.strip()`, `.title()`, and `.upper()` to format consistent case labels. | *Strings are immutable sequences of characters requiring explicit reassignment.* |
+| **6** | **PY-1.6** | Booleans, comparisons and assertions | **Eligibility Threshold Verification:** Asserting that household income is below the relief threshold and package weight is positive. | *Assertions enforce internal invariants; comparisons produce deterministic booleans.* |
+| **7** | **PY-1.8** | Sequences: Strings, lists and tuples | **The Food Parcel Assembly Manifest:** Packing ordered food items into a parcel manifest list; indexing, slicing, and measuring capacity. | *Lists are mutable ordered sequences; tuples are immutable fixed records.* |
+| **8** | **PY-1.4** | Sets for deduplication and relations | **Blocking Duplicate Daily Claims:** Preventing individuals from claiming double rations across different distribution counters on the same morning using $O(1)$ set lookups. | *Sets maintain mathematical uniqueness with hash-table speed.* |
+| **9** | **PY-1.7** | Transforming and combining sequences | **Merging Morning & Afternoon Dispatch Lists:** Concatenating dispatch manifests, finding common families across days, and reversing priority queues. | *Sequence slicing and concatenation generate new collections without mutating sources.* |
+| **10** | **PY-1.3** | Mappings: Dictionaries for structured data | **The Family Relief Dossier:** Storing key-value attributes for an applicant (household size, dietary restrictions, address, active status). | *Dictionaries provide constant-time key-to-value lookups.* |
+| **11** | **PY-1.9** | Copies, aliases and nested data | **Multi-Member Household Profiles:** Managing nested dictionaries of household dependents without corrupting shared reference state via unintentional shallow aliasing. | *Assignment copies object references, not underlying nested data structures.* |
+| **12** | **PY-1.5** | Numeric types and precise calculation | **Grain Weights & Budget Allocation:** Calculating flour, rice, and cooking oil allocations using exact decimal arithmetic to prevent fractional penny losses. | *Floating-point approximations introduce rounding errors; exact financial operations require precise handling.* |
 
 ---
 
-### Stage 2: Control Flow, Iteration & Comprehensions (Units 13–17)
+### Stage 2: Program Flow and Repetition (Units 13–17)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **13** | **PY-2.1** | Conditions | **Statutory Eligibility Decision Trees:** Implementing multi-tier public assistance policy rules (`if`/`elif`/`else`) evaluating household size, emergency severity, and income thresholds. | *Conditionals must exhaustively cover operational boundaries without silent fall-throughs.* |
-| **14** | **PY-2.2** | Iteration | **Batch Intake Queue Processing:** Iterating through 1,000 emergency disaster relief submissions, validating eligibility rules, and accumulating total relief funds disbursed. | *Iterate defensively; avoid mutating a collection while iterating over it.* |
-| **15** | **PY-2.5** | Debugging basics | **Diagnosing Queue Crashes:** Using print debugging, state tracing, and reading traceback line numbers when a malformed record crashes the batch queue runner. | *Errors are clues: isolate the line, inspect the local state, and verify assumptions before patching.* |
-| **16** | **PY-2.3** | Comprehensions | **Batch Normalization & Extraction:** Using list and dictionary comprehensions to extract high-priority claim IDs and normalize incoming phone numbers in a single readable line. | *Comprehensions express clear mapping and filtering transformations without manual loop overhead.* |
-| **17** | **PY-2.4** | Choosing control flow | **Streamlined Policy Dispatch:** Refactoring deeply nested `if-else` pyramids into early guard clauses and clean policy lookup tables. | *Flat is better than nested: reduce cyclomatic complexity to make operational rules audit-ready.* |
+| **13** | **PY-2.1** | Branching: if, elif and else | **Dietary & Special Needs Allocation:** Branching logic assigning infant formula if `has_infants`, extra protein if `elderly_resident`, or standard rations. | *Conditional branches execute mutually exclusive execution paths based on truthiness.* |
+| **14** | **PY-2.3** | Repetition: Iterating over sequences | **Dispatching the Morning Queue:** Looping through a list of 50 waiting applicants, validating eligibility, and printing individual parcel tickets. | *`for` loops exhaustively traverse iterable collections element by element.* |
+| **15** | **PY-2.4** | Conditional repetition: while loops | **Inventory Stock Depletion Loop:** Serving families from warehouse grain bags until inventory falls below safety reserve thresholds. | *`while` loops continue until their governing boundary predicate evaluates to False.* |
+| **16** | **PY-2.2** | Debugging with an execution model | **Diagnosing Ration Desynchronization:** Stepping through an execution trace to pinpoint an off-by-one index error that caused the last family in line to be skipped. | *Bugs are discrepancies between mental models and actual interpreter state transitions.* |
+| **17** | **PY-2.5** | Comprehensions: Expressive transformations | **Batch-Filtering Urgent Requests:** Transforming a list of 200 raw applicants into a filtered list of emergency food requests using a concise list comprehension. | *Comprehensions express declarative map-and-filter transformations cleanly.* |
 
 ---
 
-### Stage 3: Functions, Scope, Interfaces & Decomposition (Units 18–23)
+### Stage 3: Modular Functions and State Boundaries (Units 18–23)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **18** | **PY-3.1** | Function calls and scope | **Isolating Benefit Calculations:** Encapsulating welfare benefit calculation math into pure functions, preventing local temporary calculation state from polluting registry scope. | *Functions create scope boundaries; pure functions produce deterministic output from explicit inputs.* |
-| **19** | **PY-3.6** | Recursion | **Navigating Dependent Household Trees:** Writing a recursive traversal function to calculate total relief allowances across complex multi-generational family trees and sub-dependents. | *Recursive solutions require explicit base cases and monotonic progress toward termination.* |
-| **20** | **PY-3.2** | Function interfaces | **The Station API Contract:** Designing clear, explicit parameter signatures for `evaluate_citizen_claim(applicant, income, urgent=False)` with keyword arguments and defaults. | *Call interfaces must be obvious, self-documenting, and resistant to argument-ordering errors.* |
-| **21** | **PY-3.3** | Functions as values | **Pluggable Disaster Relief Policies:** Passing custom policy calculation functions as first-class arguments into a universal intake pipeline (e.g. Flood Policy vs Winter Relief Policy). | *Higher-order functions allow runtime customization of business logic without code duplication.* |
-| **22** | **PY-3.4** | Coherent functions | **Refactoring Monolithic Intake:** Decomposing a 200-line intake script into small, single-responsibility functions (parsing, validating, scoring, printing). | *A function owns exactly one operational job; high coherence reduces cognitive load and testing friction.* |
-| **23** | **PY-3.5** | Decomposing a requirement | **From Municipal Ordinance to System:** Translating a 10-page municipal climate assistance decree into an end-to-end decomposed software workflow. | *Break complex institutional requirements into small, independently verifiable functional blocks.* |
+| **18** | **PY-3.1** | Functions: Definitions, parameters and return values | **The Calorie Requirement Calculator:** Pure function taking family member count and ages, returning total required daily calories. | *Functions encapsulate parameterized transformations with explicit return values.* |
+| **19** | **PY-3.2** | Scope, lifetime and side effects | **Warehouse Inventory Mutation Boundaries:** Isolating global warehouse inventory from local counter allocations to prevent accidental global side-effects. | *Local variables exist only during execution; mutating global state creates hidden coupling.* |
+| **20** | **PY-3.3** | Parameter passing: Positional, keyword and defaults | **Configurable Ration Allocator:** Defining function signatures with mandatory family size, keyword dietary preferences, and default pickup windows. | *Default arguments provide sensible baselines; keyword arguments communicate intent.* |
+| **21** | **PY-3.5** | Decomposing problems into functions | **The Full Intake Pipeline:** Refactoring a 150-line monolithic script into discrete single-responsibility functions: `validate()`, `score()`, `allocate()`. | *Separation of concerns decomposes large problems into testable, independent units.* |
+| **22** | **PY-3.4** | Functions as first-class objects | **Custom Triage Sorters:** Passing custom priority evaluation functions into sorting routines to re-order the distribution queue by medical urgency. | *Functions can be passed as arguments, stored in mappings, and returned dynamically.* |
+| **23** | **PY-3.6** | Designing function contracts | **The Statutory Distribution Protocol:** Writing formal docstrings, type annotations, preconditions, and postconditions for food allocation functions. | *A function contract establishes unambiguous guarantees between caller and implementer.* |
 
 ---
 
-### Slotted Pause 1: Practical DSA Stage 0 (Units 24–27)
+### Pause 1: Slotted Engineering Units (DSA Stage 0) (Units 24–27)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **24** | **DSA-0.1** | Growth and operation costs | **Registry Scaling Limits:** Measuring the growth in execution time when searching 100 vs 1,000,000 citizen records using linear scan. | *Algorithmic complexity $O(n)$ dictates system survival as population data scales.* |
-| **25** | **DSA-0.2** | Finding nested work | **Eliminating Redundant Verification:** Detecting and removing $O(n^2)$ nested loops where every applicant was redundantly compared against all previous claims. | *Nested loops over shared data structures create hidden exponential performance cliffs.* |
-| **26** | **DSA-0.3** | Theory versus measured runtime | **Benchmarking Field Hardware:** Profiling theoretical Big-O predictions against actual wall-clock execution on low-spec municipal field terminals. | *Hardware caches and Python interpreter overhead affect real-world runtime alongside Big-O theory.* |
-| **27** | **DSA-0.4** | Sorting and binary search | **Fast National Registry Lookups:** Sorting citizen rosters by national identification number and implementing $O(\log n)$ binary search lookups. | *Pre-sorted data enables logarithmic search, reducing lookup latency from seconds to microseconds.* |
+| **24** | **DSA-0.1** | Trace a Loop and State Its Time and Space Invariants | Tracing item lookup time across 10,000 pantry registry rows. | *Algorithm efficiency is quantified by how execution time scales with input size.* |
+| **25** | **DSA-0.2** | State Big-O of Common Operations on Built-in Collections | Comparing list lookup ($O(N)$) vs dictionary lookup ($O(1)$) in recipient ID checks. | *Choosing the right collection primitive avoids severe performance degradation.* |
+| **26** | **DSA-0.3** | State the Trade-offs of Contiguous vs Node-Based Sequences | Comparing memory allocation of Python lists vs linked nodes for waiting queues. | *Memory layout directly impacts cache locality and insertion overhead.* |
+| **27** | **DSA-0.4** | Evaluate the Practical Cost of In-Memory Search Structures | Benchmarking hash maps vs sorted arrays for quick family lookup during rush hours. | *Hash structures trade memory space for constant-time access speed.* |
 
 ---
 
-### Stage 4: Failure Contracts, Exceptions & Defensive Boundaries (Units 28–31)
+### Stage 4: Errors, Exceptions and Robustness (Units 28–31)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **28** | **PY-4.1** | Exception flow | **Handling Downstream System Outages:** Tracing how unhandled network errors and parse failures bubble up the call stack, crashing field desks. | *Exceptions alter normal control flow; unhandled exceptions terminate process state.* |
-| **29** | **PY-4.2** | Failure contracts | **Explicit System Boundaries:** Defining explicit contracts for functions when invalid citizen inputs arrive (raising typed exceptions vs returning `Result` objects). | *A function contract must explicitly declare its failure modes alongside its return types.* |
-| **30** | **PY-4.3** | Validation | **Hardening the Ingress Barrier:** Validating tax IDs, dates of birth, and residency proofs at the entry perimeter before data enters core calculations. | *Validate at the system boundary; internal business logic should operate only on verified data.* |
-| **31** | **PY-4.4** | Making failures explicit | **The Domain Error Hierarchy:** Authoring custom exception classes (`MunicipalRegistryError`, `IncomeVerificationFailedError`, `DuplicateDisbursementError`). | *Typed domain exceptions allow callers to distinguish expected operational anomalies from fatal crashes.* |
+| **28** | **PY-4.1** | Exception handling: try, except, else and finally | **Handling Corrupted Input Data:** Trapping `ValueError` when an applicant types `"five"` instead of `5`, safely reprompting without crashing the desk terminal. | *Exceptions separate the happy path from defensive error handling.* |
+| **29** | **PY-4.2** | Exception hierarchies and custom exceptions | **Domain-Specific Pantry Exceptions:** Defining custom `OutOfStockError`, `DuplicateClaimError`, and `EligibilityThresholdExceededError`. | *Custom exception hierarchies enable granular, domain-specific error handling.* |
+| **30** | **PY-4.3** | Defensive programming and assertions | **Warehouse Invariant Guardrails:** Asserting that inventory quantities can never drop below zero and parcel weights cannot be negative. | *Defensive invariants fail fast before corrupt state propagates through the system.* |
+| **31** | **PY-4.4** | Failure modes and error handling strategies | **Network & Printer Failures at the Counter:** Implementing graceful degradation: falling back to offline file cache when the central server is unreachable. | *Resilient systems anticipate external subsystem failure and preserve core operations.* |
 
 ---
 
-### Slotted Pause 2: Git Stage 0 (Units 32–35)
+### Pause 2: Slotted Engineering Units (Git Stage 0) (Units 32–35)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **32** | **GIT-0.1** | Repository state & history | **Auditing Policy Changes:** Initializing Git for the municipal relief system; tracking working tree, staging index, and commit history for regulatory review. | *Git provides an immutable, cryptographically verifiable ledger of software evolution.* |
-| **33** | **GIT-0.2** | Diffs, staging & commits | **Documenting Operational Fixes:** Staging atomic policy bug fixes with clear, audit-compliant commit messages explaining operational intent. | *Commits must be atomic units of verified change with descriptive rationale.* |
-| **34** | **GIT-0.3** | Branches, HEAD and merging | **Parallel Station Features:** Creating isolated feature branches for winter relief voucher rules and safely merging them into main. | *Branches isolate experimental or concurrent development without destabilizing production trunk.* |
-| **35** | **GIT-0.4** | Resolving merge conflicts | **Reconciling Conflicting Regulations:** Resolving git merge conflicts when two engineering teams update household benefit rules simultaneously. | *Conflicts represent genuine domain divergence; resolve them by understanding intent, not guessing.* |
+| **32** | **GIT-0.1** | Explain Why Version Control is Essential for Software Engineering | Versioning pantry operational policies and nutritional formulas over time. | *Version control provides an immutable audit trail of architectural changes.* |
+| **33** | **GIT-0.2** | Explain the Three Trees Architecture of Git | Tracking distribution code across Working Directory, Staging Area, and Commit History. | *Git separates uncommitted modifications from staged changes and committed history.* |
+| **34** | **GIT-0.3** | Commit Atomic, Reviewable Changes with Structured Messages | Committing the new baby formula allocation module with clean commit boundaries. | *Atomic commits isolate independent changes for clean peer review and bisecting.* |
+| **35** | **GIT-0.4** | Navigate and Restore Project State from Git History | Reverting an errant distribution calculation back to yesterday's stable release commit. | *Git history allows deterministic rollback to verified, known-good system states.* |
 
 ---
 
-### Stage 5: Modules, Packages, Entry Points & Reading Codebases (Units 36–40)
+### Stage 5: Modules, Packages and Namespace Architecture (Units 36–40)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **36** | **PY-5.1** | Modules and imports | **Separating Registry State from UI:** Splitting the monolithic intake file into `storage.py`, `rules.py`, and `interface.py` using standard `import` syntax. | *Modules decompose complex codebases into separate namespaces and reusable files.* |
-| **37** | **PY-5.2** | Splitting code across modules | **Eliminating Circular Coupling:** Restructuring module dependencies so high-level policy rules do not circularly depend on low-level terminal UI scripts. | *Dependencies must point in one direction; circular imports reveal architectural boundary failure.* |
-| **38** | **PY-5.3** | Packages | **Multi-Department Namespace:** Organizing modules into formal packages (`mevan.intake`, `mevan.eligibility`, `mevan.disbursement`). | *Packages group related modules under clear domain namespaces with clean public boundaries.* |
-| **39** | **PY-5.4** | Entry points | **The Field Terminal CLI (`__main__`):** Implementing standard `if __name__ == "__main__":` entry points and configuring executable package execution (`python -m mevan`). | *Entry points establish clean application startup boundaries distinct from importable library code.* |
-| **40** | **PY-0.2** | Reading a small application | **Inheriting a Field Office Repo:** Reading, diagramming, and mentally executing an unfamiliar 500-line emergency shelter program inherited from another district. | *Reading and tracing existing code is a primary engineering skill prerequisite to changing it.* |
+| **36** | **PY-5.1** | Modules, namespaces and import mechanics | **Decoupling Intake from Warehouse:** Splitting `intake.py` and `warehouse.py` into separate modules with explicit import boundaries. | *Modules prevent namespace collisions and establish clean encapsulation boundaries.* |
+| **37** | **PY-5.2** | Packages, directory structures and `__init__.py` | **Structuring the `pantry` Package:** Organizing `src/pantry/intake/`, `src/pantry/warehouse/`, and `src/pantry/dispatch/`. | *Packages group related modules into cohesive, distributable library namespaces.* |
+| **38** | **PY-5.3** | Navigating and understanding an unfamiliar codebase | **Auditing a Donor Inventory Library:** Reading and mapping an external open-source food logistics library without running code blindly. | *Code reading is a structured process of tracing entry points, schemas, and boundaries.* |
+| **39** | **PY-5.4** | Designing module boundaries and public APIs | **Publishing `__all__` Contracts:** Defining clean public interface exports for the pantry distribution package, hiding internal helper functions. | *A package's public API shields external consumers from internal implementation drift.* |
+| **40** | **PY-5.5** | Command-line interfaces and argument parsing | **The Warehouse Dispatch CLI (`pantry-cli`):** Building a CLI tool with flags (`--family-id`, `--parcel-size`, `--emergency`) using `argparse`. | *CLIs provide deterministic, automatable entry points for operational staff.* |
 
 ---
 
-### Stage 6: Object-Oriented Domain Engineering, Dataclasses & Composition (Units 41–49)
+### Stage 6: Object-Oriented Design and Domain Modeling (Units 41–49)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **41** | **PY-6.1** | Classes, instances and state | **The Citizen Case Entity:** Encapsulating applicant data and state transitions into an active, self-contained `CitizenCase` class. | *Objects bundle state with the operations that read and mutate that state.* |
-| **42** | **PY-6.2** | Constructing objects | **Invariant Enforcement in `__init__`:** Guaranteeing that no `CitizenCase` can be created without mandatory validation, timestamps, and legal district codes. | *Constructors must enforce object invariants from the moment of creation.* |
-| **43** | **PY-6.3** | Instance, class & static methods | **Factory Methods & Station Counters:** Using `@classmethod` for alternative constructors (`CitizenCase.from_csv_row()`) and static utility calculators. | *Use instance methods for state, class methods for alternate constructors, and static methods for pure helpers.* |
-| **44** | **PY-6.4** | Controlled object interfaces | **Property Encapsulation (`@property`):** Protecting citizen voucher balances from direct mutation; providing read-only properties with internal validation. | *Expose controlled attributes via properties to enforce business invariants during mutation.* |
-| **45** | **PY-6.8** | Special methods | **Pythonic Case Operations:** Implementing `__str__`, `__repr__`, `__len__`, and `__eq__` so cases can be compared by National ID and cleanly printed in logs. | *Special dunder methods integrate domain objects seamlessly with Python's language protocols.* |
-| **46** | **PY-6.9** | Data classes and named values | **Type-Safe Policy Records (`@dataclass`):** Replacing raw dictionaries with type-annotated, frozen dataclasses for immutable audit records. | *Dataclasses provide clean boilerplate-free representations for structured domain records.* |
-| **47** | **PY-6.5** | Inheritance and resolution | **Relief Category Hierarchies:** Modeling `HousingVoucher` and `NutritionVoucher` inheriting shared traits from `BenefitVoucher`, understanding MRO. | *Inheritance models 'is-a' relationships; understand method resolution order to prevent hidden overrides.* |
-| **48** | **PY-6.6** | Polymorphism & shared contracts | **Uniform Disbursement Processing:** Iterating over a mixed queue of housing, food, and medical vouchers, calling `.disburse()` uniformly on all. | *Polymorphism allows heterogeneous objects satisfying a common contract to be processed identically.* |
-| **49** | **PY-6.7** | Composition & responsibility | **Assembling the Field Station Subsystem:** Favoring composition over inheritance: a `ReliefStation` is composed of a `QueueManager`, a `PolicyEngine`, and an `AuditLedger`. | *Favor composition over inheritance to create flexible, loosely coupled systems.* |
+| **41** | **PY-6.1** | Classes, instances and `__init__` | **The `RecipientFamily` Domain Model:** Encapsulating family identity, household count, and dietary restrictions within a cohesive class. | *Classes encapsulate state and behavior into cohesive domain entities.* |
+| **42** | **PY-6.2** | Encapsulation and properties | **Protected Inventory Quantities:** Using `@property` and `@quantity.setter` to ensure warehouse item quantities cannot be set to negative numbers. | *Properties provide controlled access to state with built-in validation invariants.* |
+| **43** | **PY-6.3** | Special methods: String representation and equality | **Parcel Comparison & Printing (`__repr__`, `__eq__`):** Defining clean human-readable logs and comparing two food parcels by unique tracking code. | *Dunder methods integrate custom domain classes seamlessly with Python built-ins.* |
+| **44** | **PY-6.4** | Special methods: Operator overloading and collections | **Aggregating Parcels (`__add__`, `__len__`):** Allowing distribution manifests to combine parcels using `+` and measure manifest counts via `len()`. | *Operator overloading provides expressive, intuitive domain syntax when used prudently.* |
+| **45** | **PY-6.5** | Inheritance and method overriding | **Specialized Food Parcels:** Deriving `InfantParcel` and `DiabeticParcel` from base `FoodParcel`, overriding calorie calculation logic. | *Inheritance models 'is-a' relationships and enables polymorphism across specialized entities.* |
+| **46** | **PY-6.6** | Composition over inheritance | **Assembling the Relief Kit:** Modeling a `FoodParcel` as a composition of `GrainItem`, `ProteinItem`, and `HygieneItem` components. | *Composition ('has-a') provides flexible, loosely coupled domain architectures.* |
+| **47** | **PY-6.7** | Abstract base classes and interfaces | **The `NotificationChannel` Interface:** Defining an ABC `INotifier` with mandatory `.send_pickup_sms()` implemented by Twilio and Mock providers. | *Abstract Base Classes enforce contractual interface compliance across implementations.* |
+| **48** | **PY-6.8** | Dataclasses for structured data | **Immutable Ration Manifests:** Defining `@dataclass(frozen=True)` for tamper-evident distribution receipts. | *Dataclasses automate boilerplate for pure value objects and data containers.* |
+| **49** | **PY-6.9** | Object lifecycles, references and identity | **Tracking Parcel State Transitions:** Following food parcels through state machine lifecycle (`ALLOCATED` $\rightarrow$ `PACKED` $\rightarrow$ `DISPATCHED` $\rightarrow$ `CLAIMED`). | *Understanding object identity (`is`) vs value equality (`==`) prevents state corruption.* |
 
 ---
 
-### Slotted Pause 3: Software Design Stage 0 (Units 50–53)
+### Pause 3: Slotted Engineering Units (Software Design Stage 0) (Units 50–53)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **50** | **SD-0.1** | Framing design problems | **Balancing Audit vs Latency Trade-offs:** Framing trade-offs between instant citizen dispatches and exhaustive synchronous database verification. | *Every architectural decision trades one operational quality for another; frame trade-offs explicitly.* |
-| **51** | **SD-0.2** | Interfaces & dependency direction | **Inverting Storage Dependencies:** Decoupling business logic from raw disk storage by introducing formal interface boundaries. | *High-level business policies must not depend on low-level storage details; both depend on abstractions.* |
-| **52** | **SD-0.3** | SOLID as change reasoning | **Evaluating System Fragility:** Applying SOLID principles to refactor a fragile voucher engine so adding new vouchers requires zero core edits. | *SOLID principles guide system evolution so software grows by extension rather than risky modification.* |
-| **53** | **SD-0.4** | Substitutability (Liskov & ISP) | **Proving Voucher Interchangeability:** Ensuring any specialized emergency grant can substitute for a standard voucher without breaking caller contracts. | *Subtypes must satisfy all behavioral expectations and invariant guarantees of their parent contracts.* |
+| **50** | **SD-0.1** | Explain Coupling and Cohesion with Concrete Code Examples | Refactoring tightly coupled intake and inventory classes into decoupled modules. | *High cohesion and low coupling ensure modifications remain isolated and safe.* |
+| **51** | **SD-0.2** | Identify Violations of the Single Responsibility Principle | Separating inventory printing logic from inventory stock calculation logic. | *A module should have one, and only one, reason to change.* |
+| **52** | **SD-0.3** | Design Classes That Respect the Liskov Substitution Principle | Ensuring `EmergencyParcel` can replace `FoodParcel` anywhere without breaking dispatch logic. | *Subtypes must be substitutable for their base types without altering correctness.* |
+| **53** | **SD-0.4** | Apply the Interface Segregation Principle | Splitting a massive `IWarehouseManager` into focused `IStockReader` and `IStockWriter` interfaces. | *Clients should not be forced to depend on interfaces they do not use.* |
 
 ---
 
-### Stage 7: Iterators, Generators, Decorators & Context Managers (Units 54–59)
+### Stage 7: Iterators, Protocols and High-Volume Data Streams (Units 54–59)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **54** | **PY-7.1** | Iterables and iterators | **Custom Station Queue Traversal:** Implementing `__iter__` and `__next__` on custom `CaseQueue` objects to enable natural `for case in queue:` iteration. | *The iterator protocol decouples collection internal storage from external sequential traversal.* |
-| **55** | **PY-7.2** | Generators | **Streaming 500,000 Historical Records:** Writing generator functions with `yield` to process massive municipal census logs without exhausting server RAM. | *Generators evaluate lazily on-demand, enabling bounded-memory streaming across massive datasets.* |
-| **56** | **PY-7.3** | Decorators | **Audit Interceptors & Telemetry:** Writing `@audit_logged` and `@timing_metric` decorators to monitor caseworker transactions and measure execution times. | *Decorators wrap functions transparently to inject cross-cutting concerns without modifying core logic.* |
-| **57** | **PY-7.4** | Context managers | **Safe Registry Transactions (`with`):** Authoring custom context managers (`with atomic_voucher_transaction(db):`) ensuring lock releases on unexpected failures. | *Context managers guarantee resource acquisition and cleanup invariants across normal and exceptional exits.* |
-| **58** | **PY-7.5** | Type annotations | **Eliminating Runtime Type Bugs:** Annotating function arguments, return types, and complex generic collections; validating with static type checkers. | *Type annotations make interface contracts explicit and catch structural defects before runtime.* |
-| **59** | **PY-7.6** | Interface-style type contracts | **Runtime Protocol Ports (`typing.Protocol`):** Creating structural subtyping protocols for pluggable storage and payment notification adapters. | *Protocols define flexible, structurally verified interface boundaries without requiring rigid inheritance.* |
+| **54** | **PY-7.1** | Iterators, iterables and the iteration protocol | **Iterating Over 10,000 Warehouse Shelves:** Implementing `__iter__` and `__next__` on a custom `WarehouseInventory` collection. | *The iterator protocol enables lazy, memory-efficient traversal of large datasets.* |
+| **55** | **PY-7.2** | Generators and lazy evaluation | **Streaming Regional Census Records:** Using generator functions (`yield`) to stream 50,000 community census records line-by-line in a constant 8 MB memory footprint. | *Generators compute values on-demand, preventing OutOfMemory crashes on large datasets.* |
+| **56** | **PY-7.3** | Decorators: Wrapping functions and preserving metadata | **Audit Logging & Authorization Decorators:** Creating `@audit_log` and `@require_manager_role` to wrap sensitive stock adjustments. | *Decorators provide clean, reusable aspect-oriented cross-cutting behavior.* |
+| **57** | **PY-7.4** | Context managers and the with statement | **Safe Inventory Lock Management:** Building custom context managers with `__enter__` and `__exit__` to safely acquire and release warehouse stock locks. | *Context managers guarantee deterministic resource cleanup, even during unexpected crashes.* |
+| **58** | **PY-7.5** | Structural subtyping with typing.Protocol | **Pluggable Inventory Scanners:** Defining a `BarcodeScanner` protocol matching any hardware device exposing a `.scan_code()` method. | *Protocols enable compile-time structural duck-typing without inheritance hierarchies.* |
+| **59** | **PY-7.6** | Advanced generator patterns: Pipelines and coroutines | **The Multi-Stage Ingress Pipeline:** Chaining generators together: `read_raw()` $\rightarrow$ `sanitize_names()` $\rightarrow$ `filter_eligible()` $\rightarrow$ `allocate()`. | *Pipelined generators process infinite or massive data streams efficiently in stages.* |
 
 ---
 
-### Stage 8: Files, Structured Data, Patterns, Config, CLI & HTTP (Units 60–66)
+### Stage 8: Files, Formats and External Integration (Units 60–66)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **60** | **PY-8.1** | Files and paths | **Resilient File Storage (`pathlib`):** Safely creating, writing, and atomically replacing regional registry ledger files across different OS environments. | *Use `pathlib.Path` for platform-agnostic, safe, and atomic filesystem operations.* |
-| **61** | **PY-8.2** | Structured data | **CSV & JSON Inter-Agency Interchange:** Parsing municipal census CSV files and serializing official relief vouchers to validated JSON schemas. | *Structured serialization must preserve types and handle schema discrepancies defensively.* |
-| **62** | **PY-8.6** | Pattern matching in text | **Sanitizing Identification Formats:** Using regular expressions to validate and parse phone numbers, tax IDs, and postal codes across regional offices. | *Regular expressions validate boundary formatting and extract structured tokens from raw text.* |
-| **63** | **PY-8.3** | Configuration | **Station Configuration Management:** Loading database URLs, regional poverty lines, and station IDs from external `.env` and JSON configuration files. | *Separate code from configuration: operational parameters must change without modifying source code.* |
-| **64** | **PY-8.7** | Command-line programs & subprocess | **The Municipal Administration Tool:** Building a full-featured CLI with `argparse` and managing system sub-processes to execute verification tools. | *Production command-line utilities provide structured arguments, clear help text, and proper exit codes.* |
-| **65** | **PY-8.4** | Calling HTTP services | **National Identity Registry Integration:** Querying the upstream national welfare verification API over HTTP, handling headers, timeouts, and errors. | *External networks are unreliable: always configure timeouts, handle status codes, and expect failure.* |
-| **66** | **PY-8.5** | Dates, times and timezones | **Timezone-Aware Audit Timestamps:** Parsing timestamps with `zoneinfo` and `datetime`, computing 30-day voucher expiration windows across UTC boundaries. | *Store and calculate all operational timestamps in UTC; localize only for human display at the boundary.* |
+| **60** | **PY-8.1** | Filesystem operations with pathlib | **Managing Dispatch Log Directories:** Using `pathlib.Path` to traverse, archive, and manage monthly food distribution directories across OS environments. | *Pathlib provides object-oriented, cross-platform filesystem path manipulation.* |
+| **61** | **PY-8.3** | Text formats: CSV and JSON handling | **Exporting Donor Reports & Reading Food Manifests:** Ingesting supplier JSON manifests and exporting CSV delivery manifests for drivers. | *Standard serialization formats must handle encoding, escaping, and schema validation.* |
+| **62** | **PY-8.2** | Pattern matching with regular expressions | **Validating Postal Codes & Phone Numbers:** Writing regex patterns to validate recipient contact details and identify malformed entries. | *Regular expressions validate structured string syntax across system ingress boundaries.* |
+| **63** | **PY-8.4** | Configuration, environment variables and secrets | **Managing Central Pantry Secrets:** Loading database URLs, Twilio SMS tokens, and environment profiles safely via `os.environ` and `.env` files. | *Secrets and operational configuration must never be hardcoded in source control.* |
+| **64** | **PY-8.6** | HTTP requests and REST APIs | **Syncing with Wholesale Food Bank APIs:** Calling external wholesale food bank REST endpoints using `httpx` to check regional grain availability. | *External HTTP communication requires timeout handling, status checks, and retry boundaries.* |
+| **65** | **PY-8.5** | Dates, times and timezone handling | **Perishable Food Expiration Dates:** Using `datetime` with explicit UTC timezones to track dairy expiration and calculate parcel pickup deadlines. | *Datetimes must always be timezone-aware (UTC) to avoid catastrophic scheduling bugs.* |
+| **66** | **PY-8.7** | Integrating external packages safely | **Evaluating Third-Party Dependencies:** Auditing, pinning, and isolating external libraries before introducing them into the pantry codebase. | *Dependencies introduce supply-chain risks requiring strict version locking and vetting.* |
 
 ---
 
-### Slotted Pause 4: Practical DSA Stage 1 (Units 67–70)
+### Pause 4: Slotted Engineering Units (DSA Stage 1) (Units 67–70)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **67** | **DSA-1.1** | Stacks, queues & priority queues | **Emergency Triage Priority Queuing:** Implementing priority queues (`heapq`) to ensure critical medical claims jump ahead of standard vouchers. | *Priority queues provide $O(\log n)$ triage ordering for time-critical resource allocation.* |
-| **68** | **DSA-1.2** | Trees & hierarchical data | **Regional Administration Hierarchies:** Modeling city $\rightarrow$ district $\rightarrow$ field office administrative hierarchies using tree structures. | *Tree structures represent nested ownership, inheritance, and cascading operational authority.* |
-| **69** | **DSA-1.3** | Graphs, BFS/DFS & dependencies | **Relief Distribution Topologies:** Modeling road networks and depot delivery routes as graphs, finding shortest delivery paths using BFS/Dijkstra. | *Graphs model arbitrary connectivity and multi-hop dependency networks across operational hubs.* |
-| **70** | **DSA-1.4** | Choosing under changing constraints | **Surge Load Architecture Adaptation:** Adapting data structures dynamically when relief station RAM is constrained during severe winter blackouts. | *Engineers re-evaluate and swap data structures when operational constraints shift.* |
+| **67** | **DSA-1.1** | Implement and Evaluate a Priority Queue for Task Scheduling | Scheduling emergency food drop-offs using a binary heap priority queue. | *Priority queues dispatch highest-urgency items in logarithmic time ($O(\log N)$).* |
+| **68** | **DSA-1.2** | Trace and Compare Common Sorting Algorithms on Realistic Data | Sorting 10,000 donation inventory records by expiration date and calorie density. | *Algorithm choice depends on data volume, memory limits, and near-sorted characteristics.* |
+| **69** | **DSA-1.3** | Implement Tree Traversal and Use It to Solve a Hierarchical Problem | Traversing regional pantry networks (National $\rightarrow$ Regional $\rightarrow$ City $\rightarrow$ Neighborhood). | *Tree traversals (BFS/DFS) model and query real-world organizational hierarchies.* |
+| **70** | **DSA-1.4** | Model Relationships as a Graph and Solve a Reachability Problem | Mapping distribution delivery routes from warehouse hubs to distribution centers. | *Graph representations solve connectivity, shortest-path, and reachability challenges.* |
 
 ---
 
-### Stage 9: Debugging, Logging & Pytest Behavioral Verification (Units 71–76)
+### Stage 9: Testing, Verification and Quality Assurance (Units 71–76)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **71** | **PY-9.1** | Debugging | **Live Execution Inspection (`pdb`):** Setting breakpoints and inspecting variable scope in an active registry service to diagnose state race conditions. | *Interactive debuggers let you pause time, inspect live state, and verify code behavior at execution.* |
-| **72** | **PY-9.2** | Logging and runtime evidence | **Production Audit Logging:** Replacing raw `print` statements with structured, leveled logs (`INFO`, `WARNING`, `ERROR`) formatting audit-compliant JSON. | *Logs are operational telemetry: output structured, leveled, context-rich evidence for operators and auditors.* |
-| **73** | **PY-9.3** | Behavioural tests with pytest | **Automated Statute Verification:** Authoring automated Pytest suites verifying that eligibility calculation functions adhere to legal statutory mandates. | *Automated tests turn regulatory specifications into reproducible, executable proofs.* |
-| **74** | **PY-9.4** | Isolating code under test | **Mocking Upstream Government APIs:** Creating mock adapters and test doubles for the national identity HTTP service to keep tests fast and offline. | *Isolate code under test from external side-effects to achieve fast, deterministic verification.* |
-| **75** | **PY-9.5** | When passing is not proof | **Mutation Testing & Boundary Falsification:** Intentionally injecting subtle errors into benefit logic to prove that the test suite actually catches edge-case failures. | *A passing test suite proves nothing if tests are not capable of failing when invariants are violated.* |
-| **76** | **PY-9.6** | Measuring runtime | **Pipeline Throughput Profiling:** Using `cProfile` and `timeit` to detect execution bottlenecks across the daily 10,000-citizen batch run. | *Profile before optimizing: measure exact bottlenecks rather than optimizing based on intuition.* |
+| **71** | **PY-9.1** | Test design with pytest: Fixtures, parametrization | **Parametrized Ration Allocation Tests:** Testing 20 combinations of household sizes and dietary requirements using clean `@pytest.mark.parametrize`. | *Parametrization tests boundary conditions exhaustively with minimal duplicate code.* |
+| **72** | **PY-9.2** | Test isolation: Mocking, monkeypatching and doubles | **Simulating Supplier API Outages:** Using `unittest.mock` to mock external SMS gateways and wholesale suppliers, ensuring test suites run offline. | *Test isolation decouples unit verification from unreliable third-party networks.* |
+| **73** | **PY-9.3** | Testing strategies: Unit, integration and regressions | **The Full Dispatch Test Suite:** Structuring the pantry test pyramid: fast unit tests for business logic, integration tests for SQLite persistence. | *A balanced test pyramid catches regressions early while keeping test execution rapid.* |
+| **74** | **PY-9.4** | Mutation testing and test suite quality | **Verifying Test Rigor:** Running mutation testing against the food safety module to prove that tests fail if business logic thresholds are mutated. | *A passing test suite is only as valuable as the assertions that falsify bugs.* |
+| **75** | **PY-9.5** | Profiling and performance optimization | **Finding Bottlenecks in the Morning Rush:** Profiling the queue allocation script with `cProfile` to eliminate quadratic $O(N^2)$ list operations. | *Optimize based on empirical profiling measurements, not guesswork.* |
+| **76** | **PY-9.6** | Static analysis: Type checking, linting and formatting | **Enforcing Code Quality Gates:** Running Ruff and Mypy in strict mode across the pantry repository to catch type errors before runtime. | *Static type checking eliminates entire categories of runtime AttributeError and TypeError.* |
 
 ---
 
-### Stage 10: Environments, Dependencies & Quality Gates (Units 77–81)
+### Stage 10: Packaging, Distribution and Release Engineering (Units 77–81)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **77** | **PY-10.1** | Environments | **Virtual Environment Isolation:** Managing clean project environments with `uv`/`venv`, isolating project dependencies from host OS packages. | *Isolate Python environments to prevent dependency pollution and ensure reproducible execution.* |
-| **78** | **PY-10.2** | Dependencies | **Lockfiles & Reproducible Builds:** Pinning exact package versions and hashes in `pyproject.toml` and lockfiles to eliminate supply-chain drift. | *Unpinned dependencies cause silent production failures; lock every deployment deterministically.* |
-| **79** | **PY-10.3** | Project metadata & packaging | **Building the Relief Platform Wheel:** Packaging the codebase into a distributable Python wheel with metadata, dependencies, and CLI hooks. | *Standard packaging formats enable reliable distribution, installation, and deployment across platforms.* |
-| **80** | **PY-10.4** | Diagnosing install failures | **Resolving Broken Dependencies:** Diagnosing package version conflicts, missing binary dependencies, and path corruptions on field machines. | *Understand package dependency resolution algorithms to diagnose and repair installation failures.* |
-| **81** | **PY-10.5** | Quality gates | **Enforcing Code Standards (`ruff`, `pyright`):** Setting up automated linters and type checkers that reject non-compliant code before deployment. | *Automated quality gates maintain code hygiene and enforce architectural constraints before merge.* |
+| **77** | **PY-10.1** | Virtual environments, dependency isolation and tools | **Zero-Friction Environment Setup:** Managing modern virtual environments with `uv` and pinning strict dependency versions in `uv.lock`. | *Hermetic virtual environments prevent system-level package conflicts.* |
+| **78** | **PY-10.2** | Project configuration with pyproject.toml | **Standard Packaging Configuration:** Configuring build-backends, metadata, CLI entry points, and test dependencies in a standard `pyproject.toml`. | *A single standard `pyproject.toml` governs the entire Python project lifecycle.* |
+| **79** | **PY-10.3** | Building distributable packages: Wheels and sdists | **Packaging `pantry-core` for Distribution:** Building distributable wheel packages so regional volunteer hubs can install the platform via pip. | *Standard wheel packages bundle source and assets for deterministic client installations.* |
+| **80** | **PY-10.4** | Release engineering: Versioning, changelogs, gates | **Semantic Versioning for Relief Deployments:** Releasing `v1.2.0` with semantic versioning, release notes, and automated verification gates. | *Disciplined semantic versioning guarantees compatibility and informs downstream operators.* |
+| **81** | **PY-10.5** | Continuous integration: Automated test and lint pipelines | **Setting Up GitHub Actions CI:** Automating linting, type checks, and pytest runs on every pull request before merging to main. | *Automated CI pipelines prevent broken code from ever reaching the production branch.* |
 
 ---
 
-### Stage 11: Concurrency, Threads, Processes & Asynchronous I/O (Units 82–86)
+### Stage 11: Concurrency, Asynchronous Programming and I/O (Units 82–86)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **82** | **PY-11.1** | Concurrency mental model | **The Disaster Surge Traffic Crisis:** Understanding CPU-bound vs I/O-bound bottlenecks when 50,000 citizens submit claims simultaneously after a flood. | *Concurrency is about dealing with lots of things at once; parallelism is about doing lots of things at once.* |
-| **83** | **PY-11.5** | Threads and processes | **Parallel Verification Pools:** Using `ThreadPoolExecutor` for concurrent I/O lookups and `ProcessPoolExecutor` for CPU-heavy identity cryptography. | *Use threads for concurrent I/O operations; use separate processes to bypass the GIL for CPU-bound tasks.* |
-| **84** | **PY-11.2** | Tracing async code | **The Async Event Loop Mental Model:** Tracing coroutine execution (`async`/`await`), tasks, and event loop scheduling on a single OS thread. | *Async code yields control cooperatively at `await` points, allowing a single thread to service thousands of I/O tasks.* |
-| **85** | **PY-11.3** | Concurrent I/O | **High-Throughput Intake Service:** Querying 5 upstream municipal validation APIs concurrently using `asyncio.gather` to return instant citizen answers. | *Concurrent I/O completes in the duration of the slowest request, not the sum of all requests.* |
-| **86** | **PY-11.4** | Async failures | **Resilient Async Error Boundaries:** Handling partial timeouts, connection resets, and task cancellations without crashing the background event loop. | *Async exceptions must be handled explicitly within coroutines or gathered defensively with `return_exceptions=True`.* |
+| **82** | **PY-11.1** | Concurrency models: CPU-bound vs I/O-bound | **Analyzing the Disaster Relief Surge:** Distinguishing between CPU-bound image verification and I/O-bound database/SMS network requests. | *Concurrency strategies must match the underlying hardware bottleneck (CPU vs I/O).* |
+| **83** | **PY-11.2** | Asynchronous programming with asyncio: Coroutines, tasks | **Async Disaster Surge Dispatch:** Using `async` and `await` to handle 2,000 concurrent volunteer logins and parcel claims without blocking. | *Asynchronous cooperative multitasking handles high I/O concurrency in a single thread.* |
+| **84** | **PY-11.3** | Concurrent HTTP and external I/O | **Concurrent Supplier Inventory Polling:** Fetching stock levels from 15 regional food bank warehouses simultaneously using `asyncio.gather()`. | *Gathering concurrent network calls reduces total latency from 15 seconds to 1 second.* |
+| **85** | **PY-11.4** | Synchronization primitives, race conditions and safety | **Preventing Double-Allocation of the Last Food Parcel:** Using `asyncio.Lock` to prevent two clerks from allocating the same remaining food box. | *Shared mutable state under concurrency requires synchronization primitives to prevent races.* |
+| **86** | **PY-11.5** | Thread and process pools: concurrent.futures | **Bulk OCR Scanning of Handwritten Intake Slips:** Offloading compute-heavy PDF processing to a `ProcessPoolExecutor` to keep the UI responsive. | *Process pools bypass the GIL for heavy CPU-bound computational workloads.* |
 
 ---
 
-### Slotted Pause 5: Git Stage 1 (Units 87–90)
+### Pause 5: Slotted Engineering Units (Git Stage 1) (Units 87–90)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **87** | **GIT-1.1** | Remotes & divergence | **Syncing Municipal Regional Repos:** Fetching, pulling, and pushing changes between central headquarters and field office remote Git repositories. | *Remote tracking branches represent remote state; reconcile divergence through rebase or merge intentionally.* |
-| **88** | **GIT-1.2** | The pull-request workflow | **Peer Reviewing Regulatory Changes:** Submitting pull requests with detailed verification evidence for peer review by senior municipal engineers. | *Pull requests provide a structured audit boundary where changes are inspected and verified before integration.* |
-| **89** | **GIT-1.3** | Undo and recovery | **Emergency Policy Rollback:** Reverting a faulty deployment in production using `git revert` without altering historical audit trails. | *Use `git revert` for safe, public rollbacks; reserve `git reset` for private, unshared branch cleanup.* |
-| **90** | **GIT-1.4** | Reading history for context | **Investigating Policy Provenance:** Using `git log` and `git blame` to determine who altered a voucher threshold, when, and under which regulatory ticket. | *Git history is an operational audit log explaining why the system reached its current state.* |
+| **87** | **GIT-1.1** | Collaborate Using Remote Repositories, Tracking Branches, and Remotes | Synchronizing central warehouse inventory code with regional relief branches. | *Remotes coordinate distributed work across independent collaborator clones.* |
+| **88** | **GIT-1.2** | Resolve Merge Conflicts Confidently Using Three-Way Merge | Resolving a merge conflict between updated nutrition guidelines and inventory caps. | *Merge conflicts are resolved by analyzing common base ancestors and intent.* |
+| **89** | **GIT-1.3** | Structure Pull Requests with Focused Scope, Context, and Tests | Submitting a small, reviewable PR for the gluten-free parcel allocation feature. | *Small, atomic pull requests accelerate review velocity and reduce defect introduction.* |
+| **90** | **GIT-1.4** | Inspect Project History Using Git Log, Blame, and Bisect | Using `git bisect` to locate the exact commit that broke the perishable date calculator. | *Binary searching git history isolates regression bugs with logarithmic efficiency.* |
 
 ---
 
-### Stage 12: Navigating Legacy Codebases, Documentation & Refactoring (Units 91–95)
+### Stage 12: Working with Existing Codebases and Refactoring (Units 91–95)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **91** | **PY-12.1** | Navigating an unfamiliar codebase | **Inheriting a 5,000-Line Legacy System:** Tracing symbol dependencies, call hierarchies, and data paths in an undocumented welfare system. | *Map entry points, core domain entities, and data flows before attempting to modify an unfamiliar codebase.* |
-| **92** | **PY-12.2** | Learning a library from docs | **Evaluating an Official PDF Engine:** Reading official documentation to integrate a compliant digital voucher PDF library without unsafe blog snippets. | *Read official source docs and specifications to understand configuration, lifecycle, and security guarantees.* |
-| **93** | **PY-12.3** | Organising a Python application | **Layered Architectural Refactor:** Restructuring sprawling legacy code into clean Presentation, Domain, Application, and Persistence layers. | *Clear architectural layering enforces separation of concerns and prevents cross-layer coupling.* |
-| **94** | **PY-12.4** | Changing existing systems safely | **The Strangler Fig Migration:** Writing characterization tests around legacy calculation logic before strangling and replacing it with clean code. | *Pin down legacy behavior with characterization tests before refactoring internal implementation.* |
-| **95** | **PY-12.5** | Refactoring | **Systemic Debt Elimination:** Extracting classes, reducing parameter lists, removing duplicate code, and proving all unit tests remain green. | *Refactoring alters internal structure without changing external behavior; verified tests are non-negotiable.* |
+| **91** | **PY-12.1** | Navigating and mapping a large unfamiliar codebase | **Inheriting a 10-Year-Old Relief Registry:** Generating dependency graphs and mapping control flow through legacy volunteer management code. | *System mapping identifies boundaries, side effects, and dependencies before editing.* |
+| **92** | **PY-12.2** | Characterization testing and safe refactoring | **Wrapping Legacy Calculations in Safety Nets:** Writing golden characterization tests to lock down old allocation calculations before refactoring. | *Characterization tests capture existing behavior as an unshakeable regression net.* |
+| **93** | **PY-12.3** | Dependency inversion and interface extraction | **Decoupling Hardcoded Database Calls:** Extracting repository interfaces so the pantry service can switch from SQLite to PostgreSQL cleanly. | *High-level policy modules must depend on abstractions, not low-level database details.* |
+| **94** | **PY-12.4** | Layered architecture: Domain, service, adapter | **Establishing Clean Hexagonal Boundaries:** Separating Core Domain rules from FastAPI Service Controllers and Database Adapters. | *Layered architecture protects business logic from framework and infrastructure churn.* |
+| **95** | **PY-12.5** | Technical debt: Identification, quantification, management | **Auditing Technical Debt in the Distribution Pipeline:** Cataloging code smells, circular imports, and unhandled failure states into actionable ADRs. | *Technical debt must be measured, prioritized, and refactored incrementally.* |
 
 ---
 
-### Slotted Pause 6: Software Design Stage 1, Git Stage 2, AI-Assisted Engineering (Units 96–107)
+### Pause 6: Slotted Engineering Units (Software Design Stage 1, Git Stage 2, AI-Assisted Engineering) (Units 96–107)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **96** | **SD-1.1** | Pattern intent & core set | **Applying GoF Patterns:** Applying Repository and Factory patterns to the voucher system to decouple storage from creation. | *Design patterns are codified solutions to recurring trade-offs; use them when their specific intent matches.* |
-| **97** | **SD-1.2** | Pattern overuse & smells | **Pruning Premature Abstraction:** Removing unnecessary abstract factories and over-engineered interfaces that add complexity without benefit. | *Premature abstraction increases cognitive burden; design for current operational reality, not hypothetical futures.* |
-| **98** | **SD-1.3** | Modelling state machines | **The Voucher Lifecycle State Machine:** Designing formal state machine transitions (`Submitted` $\rightarrow$ `UnderReview` $\rightarrow$ `Approved` $\rightarrow$ `Disbursed`). | *Explicit state machines prevent illegal state transitions and clarify complex entity lifecycles.* |
-| **99** | **SD-1.4** | Producing & defending an LDD | **The Municipal Architecture Review:** Writing and defending a formal Low-Level Design (LLD) document before an executive governance board. | *An architect must clearly communicate design trade-offs, failure modes, and boundaries in written documentation.* |
-| **100** | **GIT-2.1** | Git as safety net for agents | **Managing Autonomous AI Code Spikes:** Using Git branches, stashes, and clean diffs as the safety net when delegating coding tasks to AI agents. | *Never let an AI agent touch dirty worktrees; use clean git checkpoints to audit and reject unverified changes.* |
-| **101** | **AAE-0.1** | Agent modes & human ownership | **Defining the Human-in-the-Loop Contract:** Distinguishing between copilot assistance, subagent delegation, and human engineering responsibility. | *AI agents are untrusted junior implementers; the human systems architect retains absolute ownership of intent.* |
-| **102** | **AAE-0.2** | The task contract | **Authoring Precise Agent Briefs:** Formulating structured task specifications with clear inputs, outputs, invariants, and acceptance criteria. | *Ambiguous instructions produce hallucinated code; formal task contracts produce predictable implementations.* |
-| **103** | **AAE-0.3** | Inspect before changing | **Grounding Agents in Codebase Reality:** Enforcing read-before-write workflows so AI inspects existing domain interfaces before generating code. | *Never let an agent write code without first inspecting existing interfaces, contracts, and test conventions.* |
-| **104** | **AAE-0.4** | Context and instruction files | **Curating Repo Context:** Creating `AGENTS.md`, ADRs, and spec files that steer agent code generation toward architectural consistency. | *Context files steer agent behavior deterministically by establishing repository constraints and conventions.* |
-| **105** | **AAE-0.5** | Permissions & least privilege | **Security Boundaries for Autonomous Code:** Sandboxing AI tools, restricting file write permissions, and preventing unvetted shell execution. | *Apply the principle of least privilege to agent capabilities: never grant autonomous access to sensitive keys or networks.* |
-| **106** | **AAE-0.6** | Reviewing & verifying agent work | **No-Blind-Code Audit:** Reviewing agent-generated code with the 4 Plain-English Questions (Single Job, Ingress/Egress, Failure, Traceability). | *Never accept AI code without line-by-line understanding, independent test verification, and invariant audit.* |
-| **107** | **AAE-0.7** | Steering & diagnosing failures | **Correcting Agent Deviations:** Diagnosing context drift, hallucinated APIs, and loop regressions; steering agents back to specification. | *When an agent fails, analyze root cause in the prompt or context rather than blindly retrying.* |
+| **96** | **SD-1.1** | Apply Dependency Inversion in a Multi-Module Service | Decoupling the pantry allocation engine from concrete database and SMS implementations. | *Depend upon abstractions, never concretions.* |
+| **97** | **SD-1.2** | Design Layered Architectures with Strict Directional Dependencies | Enforcing dependencies flowing inwards: Controller $\rightarrow$ Service $\rightarrow$ Domain. | *Inner domain layers remain independent of outer delivery mechanisms.* |
+| **98** | **SD-1.3** | Apply Domain-Driven Design Primitives to Isolate Business Logic | Modeling `RecipientId` value objects, `FoodParcel` aggregate roots, and `IPantryRepository`. | *Ubiquitous domain language aligns technical models with real-world operations.* |
+| **99** | **SD-1.4** | Refactor a Monolithic Script into a Layered Service | Decomposing a 1,000-line legacy `pantry_script.py` into a modular, layered service. | *Stepwise refactoring preserves running tests while improving architectural cohesion.* |
+| **100** | **GIT-2.1** | Rewrite and Clean Commit History Using Interactive Rebase | Squashing typo commits and rebasing the delivery tracking branch before production merge. | *Clean, intentional git history serves as permanent documentation for future maintainers.* |
+| **101** | **AAE-0.1** | Direct AI Code Generation with Explicit Invariants and Constraints | Prompting AI to scaffold the warehouse schema with strict non-null foreign key constraints. | *AI generates accurate code only when supplied with unambiguous architectural constraints.* |
+| **102** | **AAE-0.2** | Verify AI-Generated Code Against a Pre-Existing Test Suite | Validating an AI-generated food safety calculator against pre-written pytest suites. | *Never accept AI code without deterministic, independent test verification.* |
+| **103** | **AAE-0.3** | Detect and Correct AI Hallucinations in System Boundaries | Catching an AI assistant attempting to import non-existent methods from a supplier SDK. | *Human architects must verify API contracts and library interfaces against official docs.* |
+| **104** | **AAE-0.4** | Use AI for Adversarial Testing and Edge-Case Discovery | Directing AI to generate 50 malformed household configurations to break the intake parser. | *AI is highly effective at exploring adversarial edge cases when directed by an engineer.* |
+| **105** | **AAE-0.5** | Steer AI Through a Multi-Step Refactoring Process | Guiding an AI pair-programmer through a 5-step refactoring loop without losing test green state. | *Refactoring with AI requires human-controlled pacing and continuous test execution.* |
+| **106** | **AAE-0.6** | Audit AI-Suggested Architecture for Hidden Coupling | Rejecting an AI proposal to put database queries inside domain model dataclasses. | *Architectural sovereignty requires rejecting suggestions that violate separation of concerns.* |
+| **107** | **AAE-0.7** | Formulate Systems Defense of an AI-Assisted Implementation | Defending design decisions, cost models, and trade-offs made during AI-assisted development. | *The engineer owns final accountability, trade-off defense, and systems narrative.* |
 
 ---
 
-### Stage 13: Building Subsystems, Interchangeable Contracts & AI Ownership (Units 108–111)
+### Stage 13: The Complete Production Microservice (Units 108–111)
 
 | Path # | Unit ID | Roadmap Unit Title | Operational Domain Scenario | Target Invariant Learned |
 | :---: | :---: | :--- | :--- | :--- |
-| **108** | **PY-13.1** | Building a Python subsystem | **Synthesizing the Complete Relief Engine:** Assembling an end-to-end, multi-component municipal assistance engine from formal specifications. | *Synthesize cohesive subsystems by connecting verified components through explicit boundary contracts.* |
-| **109** | **PY-13.2** | Interchangeable components | **Pluggable Ports & Adapters Architecture:** Swapping out local SQLite storage for PostgreSQL, or console prints for SMS dispatch, with zero core logic edits. | *Hexagonal ports and adapters isolate domain business rules from external technology and infrastructure churn.* |
-| **110** | **PY-13.3** | An integrated, reliable workflow | **Production Reliability & Chaos Verification:** Running chaos injection tests (dropped DB connections, corrupted files, malformed JSON) to prove resilience. | *Production systems prove reliability by surviving hostile inputs, partial outages, and unexpected crashes gracefully.* |
-| **111** | **PY-13.4** | Owning AI-assisted work | **The Systems Architect Capstone:** Directing AI agents to build a high-performance municipal relief service while independently verifying all invariants and audits. | *The master engineer leverages AI for rapid implementation while exercising rigorous architectural sovereignty.* |
+| **108** | **PY-13.1** | Architecture synthesis: Building the complete service | **The Unified Community Food Pantry Service:** Assembling the entire system into a cohesive multi-file **FastAPI** backend with SQLite/Postgres persistence. | *A production service harmonizes domain models, repositories, and web controllers into a single pipeline.* |
+| **109** | **PY-13.2** | Observability, health checks and error boundaries | **Production Telemetry & Metrics:** Adding `/health` checks, structured JSON logging, and error tracking across all pantry API endpoints. | *Production systems require runtime observability to diagnose issues before users report them.* |
+| **110** | **PY-13.3** | Performance, load and resource management | **Load Testing the Distribution API:** Benchmarking the FastAPI service with Locust/k6 under simulated 1,000 req/sec disaster intake spikes. | *Stress testing reveals memory leaks, database connection pool exhaustion, and latency spikes.* |
+| **111** | **PY-13.4** | Production readiness and technical handover | **The Final Capstone Review:** Delivering the complete documentation, OpenAPI schemas, deployment dockerfiles, and executive portfolio presentation. | *A project is complete only when it is verified, documented, deployable, and clearly defensible.* |
 
 ---
 
-## 3. Seamless Continuation into Phase 2: AI Engineering & Statutory RAG
+## 5. Phase 2: The Sovereign Policy & Nutrition RAG Copilot
 
-When the learner completes Stage 13 (Unit 111), the exact same operational domain continues directly into **Phase 2 (AI Engineering Roadmap v2)**:
-- **The Operational Challenge:** Field workers and citizens struggle to understand 1,500 pages of municipal relief bylaws, legal ordinances, and eligibility statutes.
-- **The AI Solution:** Ingesting statutory documents into a **Two-Stage Provenance-Firewalled RAG Platform**:
-  - Extracting chunks from official PDFs with metadata anchors.
-  - Hybrid retrieval combining **BM25 lexical search** (for exact statute numbers) and **vector embeddings** (for semantic concepts).
-  - Prompt optimization with **DSPy** to generate grounded answers with exact statutory citations.
-  - Socratic AI companions that help citizens understand requirements without hallucinating legal advice.
-
----
-
-## 4. Verification Check
-
-- **Total Path Items:** 111
-- **Core Python Units (`PY-*`):** Exactly 79
-- **Slotted Units (`DSA`, `GIT`, `SD`, `AAE`):** Exactly 32
-- **Narrative Breakdowns:** 0 (Every single unit directly advances the *Municipal Emergency Voucher & Public Assistance Logistics Network*).
+Once the Phase 1 Python & Backend foundation is established, the platform connects seamlessly into **Phase 2 (AI Engineering)**:
+* **The Domain Problem:** Food pantries operate under 800+ pages of public health regulations, USDA/FSSAI food safety bylaws, and donor grant restrictions. Volunteers and clerks make conflicting discretionary decisions.
+* **The AI Architecture:** An embedded AI copilot built with **DSPy**, isolated behind the **Provenance Firewall**.
+* **Zero Hallucination:** It indexes official food safety regulations and pantry bylaws. When a volunteer asks: *"Can we distribute canned goods past their 'Best By' date if undamaged?"*, the copilot cites the exact statutory section and guidelines with 100% provenance and zero ungrounded fabrication.
