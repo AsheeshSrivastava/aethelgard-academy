@@ -2,8 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { api, ApiError, type Exercise } from "../api/client";
+import { api, ApiError, type Exercise, type StageReviewStatus } from "../api/client";
 import { BackLink, ErrorNote, Loading } from "../components/common";
+import { RestartStageReview } from "../components/RestartStageReview";
 import { ItemForm } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
 import { courseName, reviewMessage } from "../lib/format";
@@ -76,6 +77,11 @@ function StageItems({ courseId, stage, total, done }: { courseId: string; stage:
   );
 }
 
+/** A review with a result or answered items can be restarted; an untouched one has nothing to clear. */
+function hasSomethingToRestart(data: StageReviewStatus): boolean {
+  return data.state === "passed" || data.state === "failed_waiting" || (data.items_done ?? 0) > 0;
+}
+
 export function StageReview() {
   const { courseId, stage } = useParams({ from: "/courses/$courseId/stages/$stage/review" });
   const number = Number(stage);
@@ -125,6 +131,11 @@ export function StageReview() {
             <Link to="/progress" className="button">
               See My progress
             </Link>
+          </div>
+        )}
+        {data && hasSomethingToRestart(data) && (
+          <div className="review-restart">
+            <RestartStageReview courseId={courseId} stage={number} />
           </div>
         )}
       </div>

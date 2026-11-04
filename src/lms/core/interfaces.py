@@ -195,7 +195,15 @@ class ILearnerRepository(Protocol):
     def get_recent_concepts(self, learner_id: str) -> List[str]:
         ...
 
-    def reset_unit(self, learner_id: str, unit_id: str) -> None:
+    def reset_unit(self, learner_id: str, unit_id: str, at: Optional[datetime] = None) -> None:
+        """Clear working state and write a progress reset marker; never touches the ledger."""
+        ...
+
+    def progress_resets(self, learner_id: str) -> Dict[str, datetime]:
+        """Latest reset per unit id, or `stage-review:<scope>` (ADR-0016 amendment 2026-11-04)."""
+        ...
+
+    def reset_stage_review(self, learner_id: str, scope: str, at: Optional[datetime] = None) -> None:
         ...
 
     def record_evidence(self, entry: EvidenceEntry) -> None:

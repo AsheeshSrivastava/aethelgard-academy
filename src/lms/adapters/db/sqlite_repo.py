@@ -219,6 +219,15 @@ class SQLiteLearnerRepository:
             )
             conn.execute(
                 """
+                CREATE TABLE IF NOT EXISTS progress_reset (
+                    learner_id TEXT NOT NULL,
+                    scope TEXT NOT NULL,
+                    reset_at TEXT NOT NULL
+                );
+                """
+            )
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS review_result (
                     learner_id TEXT NOT NULL,
                     kind TEXT NOT NULL,
@@ -711,10 +720,14 @@ class SQLiteLearnerRepository:
         ).fetchall()
         return [row["concept_id"] for row in rows]
 
-    def reset_unit(self, learner_id: str, unit_id: str) -> None:
-        """Clear a unit's working state. Keeps exercise_seen, and never touches evidence_ledger."""
+    def reset_unit(self, learner_id: str, unit_id: str, at: Optional[datetime] = None) -> None:
+        """Clear a unit's working state and mark its progress fresh from `at` (ADR-0016 amendment).
+
+        Keeps exercise_seen, and never touches evidence_ledger.
+        """
         conn = self._get_conn()
         with conn:
+            self._mark_reset(conn, learner_id, unit_id, at)
             for table in (
                 "unit_progress",
                 "unit_cold_check",
@@ -727,6 +740,37 @@ class SQLiteLearnerRepository:
                     f"DELETE FROM {table} WHERE learner_id = ? AND unit_id = ?",
                     (learner_id, unit_id),
                 )
+
+    @staticmethod
+    def _mark_reset(conn: sqlite3.Connection, learner_id: str, scope: str, at: Optional[datetime]) -> None:
+        moment = at or datetime.now(timezone.utc)
+        conn.execute(
+            "INSERT INTO progress_reset (learner_id, scope, reset_at) VALUES (?, ?, ?)",
+            (learner_id, scope, moment.isoformat()),
+        )
+
+    def progress_resets(self, learner_id: str) -> Dict[str, datetime]:
+        """The latest reset of each unit or stage review; progress counts only evidence after it."""
+        rows = self._get_conn().execute(
+            "SELECT scope, reset_at FROM progress_reset WHERE learner_id = ?", (learner_id,)
+        ).fetchall()
+        latest: Dict[str, datetime] = {}
+        for row in rows:
+            moment = datetime.fromisoformat(row["reset_at"])
+            if row["scope"] not in latest or moment > latest[row["scope"]]:
+                latest[row["scope"]] = moment
+        return latest
+
+    def reset_stage_review(self, learner_id: str, scope: str, at: Optional[datetime] = None) -> None:
+        """Restart a stage review: clear its rounds and result, keep the ledger (ADR-0016 amendment)."""
+        conn = self._get_conn()
+        with conn:
+            for table in ("review_item", "review_result"):
+                conn.execute(
+                    f"DELETE FROM {table} WHERE learner_id = ? AND kind = 'stage_review' AND scope = ?",
+                    (learner_id, scope),
+                )
+            self._mark_reset(conn, learner_id, f"stage-review:{scope}", at)
 
     def record_evidence(self, entry: EvidenceEntry) -> None:
         if self.events.dispatching:

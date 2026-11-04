@@ -124,6 +124,7 @@ Rules:
 - **An attempted item is not served again by default (2026-11-04).** `GET .../exercise` keeps the current item until it has an attempt; after that, the next fetch serves the next item as Regenerate would. So "practise again" never repeats the same item while an unseen one exists. This does not apply to `cold_check`, which follows its round.
 - Cold Check variants come only from curator-approved pool entries.
 - Reset clears `unit_progress`, unit state, drafts and current-exercise pointers. It never touches `evidence_ledger`.
+- **Reset also starts the unit's progress fresh (2026-11-04, ADR-0016 amendment).** It writes a `progress_reset` marker; the unit's decision and My progress row count only evidence recorded after it. The ledger keeps every entry.
 
 ### 4.1 Cold Check (ADR-0016 section 2.6)
 

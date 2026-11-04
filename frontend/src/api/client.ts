@@ -96,6 +96,8 @@ export const api = {
     request<void>(`/learners/me/courses/${courseId}/stages/${stage}/build:reset`, { method: "POST" }),
   stageReview: ({ courseId, stage }: StageRef) =>
     request<StageReviewStatus>(`/learners/me/courses/${courseId}/stages/${stage}/review`),
+  resetStageReview: ({ courseId, stage }: StageRef) =>
+    request<void>(`/learners/me/courses/${courseId}/stages/${stage}/review:reset`, { method: "POST" }),
   stageReviewExercise: ({ courseId, stage }: StageRef) =>
     request<Exercise>(`/learners/me/courses/${courseId}/stages/${stage}/review/exercise`),
   dueReviews: () => request<DueReview[]>("/learners/me/reviews/due"),

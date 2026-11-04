@@ -39,6 +39,20 @@ function withReview(build: object) {
   return { ...courseMap, stages: [{ ...first, build: { ...first!.build, ...build } }, ...others] };
 }
 
+describe("restarting a stage review (ADR-0016 amendment)", () => {
+  it("asks first, then restarts the review and keeps the ledger", async () => {
+    const calls = stubApi(routes({ state: "passed" }, { [`POST ${REVIEW}:reset`]: null }));
+    renderAt(PAGE);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Restart stage review" }));
+    const confirm = screen.getByRole("group", { name: "Confirm restart" });
+    expect(confirm).toHaveTextContent(/evidence ledger is kept/i);
+    await userEvent.click(within(confirm).getByRole("button", { name: "Yes, restart" }));
+
+    await waitFor(() => expect(calls.some((c) => c.method === "POST" && c.url.endsWith("/review:reset"))).toBe(true));
+  });
+});
+
 describe("stage review page", () => {
   it("shows one item, a count, and no AXIS", async () => {
     stubApi(routes({ state: "available" }));

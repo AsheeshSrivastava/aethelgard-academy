@@ -501,6 +501,48 @@
         }
       }
     },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review:reset": {
+      "post": {
+        "summary": "Reset My Stage Review",
+        "description": "Restart the stage review: its rounds and result go, the ledger stays (ADR-0016 amendment).",
+        "operationId": "reset_my_stage_review_api_v1_learners_me_courses__course_id__stages__stage__review_reset_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review/exercise": {
       "get": {
         "summary": "Get My Stage Review Exercise",

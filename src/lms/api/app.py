@@ -507,7 +507,7 @@ def create_app(
             lambda unit_id: cold_check_status(
                 repo.get_cold_check_timer(learner_id, unit_id), now, cold_config
             ).state,
-            lambda unit: unit_decision(unit, ledger, now, config),
+            lambda unit: unit_decision(unit, ledger, now, config, repo.progress_resets(learner_id)),
             {
                 stage: AuthoredBuild(build.title, build.kind, build.status, build.maturity)
                 for (course, stage), build in catalog.builds.items()
@@ -621,7 +621,7 @@ def create_app(
             # A failed item can come back, so it must not show its answer.
             reveal=graded.reveal if graded.passed else None,
             evidence_entry_id=entry.entry_id,
-            unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), now, config),
+            unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), now, config, repo.progress_resets(learner_id)),
         )
 
     def rechecks_due(learner_id: str) -> List[DueReview]:
@@ -648,6 +648,15 @@ def create_app(
         if course_id not in COURSES or not stage_units(course_id, stage):
             return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
         return review_status(course_id, stage, learner_id)
+
+    @app.post("/api/v1/learners/me/courses/{course_id}/stages/{stage}/review:reset", status_code=204, response_model=None)
+    def reset_my_stage_review(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
+        """Restart the stage review: its rounds and result go, the ledger stays (ADR-0016 amendment)."""
+        if course_id not in COURSES or not stage_units(course_id, stage):
+            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+        repo.reset_stage_review(learner_id, stage_scope(course_id, stage), at=clock())
+        log_event(learner_id, "reset", {"stage_review": stage_scope(course_id, stage)}, unit_id=scope_of(course_id, stage))
+        return None
 
     @app.get(
         "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review/exercise",
@@ -752,7 +761,7 @@ def create_app(
     def reset_my_build(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
         if course_id not in COURSES or not stage_units(course_id, stage):
             return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
-        repo.reset_unit(learner_id, scope_of(course_id, stage))
+        repo.reset_unit(learner_id, scope_of(course_id, stage), at=clock())
         return None
 
     def attempt_build(target: Tuple[str, int], attempt: Attempt, learner_id: str):
@@ -804,7 +813,8 @@ def create_app(
             score=Score(passed=met, total=len(checks)),
             evidence_entry_id=entries[0].entry_id if entries else None,
             unit_decision=unit_decision(
-                stage_units(course_id, stage)[0], repo.get_evidence_ledger(learner_id), clock(), config
+                stage_units(course_id, stage)[0], repo.get_evidence_ledger(learner_id), clock(), config,
+                repo.progress_resets(learner_id),
             ),
         )
 
@@ -1071,10 +1081,11 @@ def create_app(
         now = clock()
         ledger = repo.get_evidence_ledger(learner_id)
         config = EstimatorConfig(main_activities=catalog.main_activities)
+        resets = repo.progress_resets(learner_id)
 
         # My progress opens on the learner's current stage (owner decision, 2026-10-31).
         if stage is None and units:
-            anchor = first_unfinished_unit(units, ledger, now, config) or units[-1]
+            anchor = first_unfinished_unit(units, ledger, now, config, resets) or units[-1]
             stage = anchor.stage
             units = [u for u in units if course_of(u.unit_id) == course_of(anchor.unit_id)]
         if stage is not None:
@@ -1088,6 +1099,7 @@ def create_app(
             stage=stage,
             config=config,
             unseen_activities=lambda unit: unseen_activities(unit, learner_id),
+            resets=resets,
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check/feedback", response_model=ColdCheckFeedback)
@@ -1144,7 +1156,7 @@ def create_app(
         return pool_for(pending[:1], COLD_CHECK)
 
     def maybe_start_cold_check_clock(unit: Unit, learner_id: str) -> None:
-        if activities_attempted(unit, repo.get_evidence_ledger(learner_id)):
+        if activities_attempted(unit, repo.get_evidence_ledger(learner_id), repo.progress_resets(learner_id).get(unit.unit_id)):
             repo.mark_unit_activities_completed(learner_id, unit.unit_id, clock())
 
     def finish_cold_item(unit: Unit, seed: ExerciseSeed, passed: bool, learner_id: str) -> None:
@@ -1396,7 +1408,7 @@ def create_app(
             return AttemptResult(
                 outcome="passed" if result.success else "failed",
                 feedback="All checks passed." if result.success else "Some checks failed.",
-                unit_decision=unit_decision(unit, ledger, clock(), config),
+                unit_decision=unit_decision(unit, ledger, clock(), config, repo.progress_resets(learner_id)),
             )
 
         is_cold = activity == COLD_CHECK
@@ -1449,7 +1461,7 @@ def create_app(
             score=graded.score,
             reveal=reveal,
             evidence_entry_id=entry.entry_id,
-            unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), clock(), config),
+            unit_decision=unit_decision(unit, repo.get_evidence_ledger(learner_id), clock(), config, repo.progress_resets(learner_id)),
         )
 
     @app.get("/api/v1/learners/me/concepts/recent", response_model=List[ConceptSummary])
@@ -1468,7 +1480,7 @@ def create_app(
     def reset_my_unit(unit_id: str, learner_id: str = Depends(current_learner_id)):
         if not catalog.get_unit(unit_id):
             return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
-        repo.reset_unit(learner_id, unit_id)
+        repo.reset_unit(learner_id, unit_id, at=clock())
         log_event(learner_id, "reset", {}, unit_id=unit_id)
         return None
 

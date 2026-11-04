@@ -34,6 +34,8 @@ StageReviewStatus { state, available_at: datetime | null, last_attempt_at: datet
 | State | Meaning |
 | --- | --- |
 | `passed` | The last finished round passed. Stays passed if a unit is later reset. |
+
+**Restart (2026-11-04, ADR-0016 amendment).** `POST /learners/me/courses/{course_id}/stages/{stage}/review:reset` (`204`) clears the stage's review rounds and result, writes a `progress_reset` marker for the stage, and never touches the ledger. The review then starts from its rules again, so a passed review returns to `not_ready` or `available` and the build closes until it is passed. Rechecks are kept. The review page offers "Restart stage review" with a confirm step.
 | `not_ready` | Some unit has not passed its Cold Check. |
 | `unavailable` | Every unit passed, and no unseen item exists. |
 | `failed_waiting` | The last round failed; `available_at` is 24 hours after it. |

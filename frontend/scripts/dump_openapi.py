@@ -9,6 +9,7 @@ os.environ["LMS_DB_PATH"] = ":memory:"
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
+os.chdir(ROOT)  # The app reads config/ and reference/ relative to the repository root.
 
 from lms.adapters.ai.mock_axis import MockAxisCompanion  # noqa: E402
 from lms.adapters.curriculum.loader import CurriculumCatalog  # noqa: E402

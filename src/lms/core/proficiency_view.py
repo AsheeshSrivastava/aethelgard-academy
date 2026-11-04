@@ -10,7 +10,7 @@ row is decided against the highest target among the units in scope.
 """
 
 from datetime import datetime
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -38,6 +38,12 @@ from lms.core.proficiency import (
 )
 
 _DONE = (ProgressionDecision.PROGRESS, ProgressionDecision.ACCELERATE)
+NO_RESETS: Mapping[str, datetime] = {}
+
+
+def _after(ledger: List[EvidenceEntry], since: Optional[datetime]) -> List[EvidenceEntry]:
+    """Evidence recorded after a reset; the ledger itself keeps everything (ADR-0016 amendment)."""
+    return ledger if since is None else [e for e in ledger if e.recorded_at >= since]
 
 
 class EvidenceCounts(BaseModel):
@@ -84,25 +90,32 @@ def first_unfinished_unit(
     entries: Iterable[EvidenceEntry],
     now: datetime,
     config: EstimatorConfig = DEFAULT_CONFIG,
+    resets: Mapping[str, datetime] = NO_RESETS,
 ) -> Optional[Unit]:
     """The learner's place in `units` (curriculum order); None when all are finished."""
     ledger = list(entries)
     for unit in units:
-        decisions = _decide_unit_skills(unit, ledger, now, config)
+        decisions = _decide_unit_skills(unit, _after(ledger, resets.get(unit.unit_id)), now, config)
         if decisions and decide_unit(decisions) not in _DONE:
             return unit
     return None
 
 
 def unit_decision(
-    unit: Unit, entries: Iterable[EvidenceEntry], now: datetime, config: EstimatorConfig = DEFAULT_CONFIG
+    unit: Unit,
+    entries: Iterable[EvidenceEntry],
+    now: datetime,
+    config: EstimatorConfig = DEFAULT_CONFIG,
+    resets: Mapping[str, datetime] = NO_RESETS,
 ) -> ProgressionDecision:
-    return decide_unit(_decide_unit_skills(unit, list(entries), now, config))
+    ledger = _after(list(entries), resets.get(unit.unit_id))
+    return decide_unit(_decide_unit_skills(unit, ledger, now, config))
 
 
-def activities_attempted(unit: Unit, entries: Iterable[EvidenceEntry]) -> bool:
-    """Every activity of the unit has an entry, so its Cold Check clock can start."""
-    return all(activity in _tried_activities(unit, entries) for activity in unit.methods)
+def activities_attempted(unit: Unit, entries: Iterable[EvidenceEntry], since: Optional[datetime] = None) -> bool:
+    """Every activity of the unit has an entry (after its last reset), so its Cold Check clock can start."""
+    tried = _tried_activities(unit, _after(list(entries), since))
+    return all(activity in tried for activity in unit.methods)
 
 
 def _tried_activities(unit: Unit, entries: Iterable[EvidenceEntry]) -> set:
@@ -138,16 +151,24 @@ def build_proficiency_view(
     stage: Optional[int] = None,
     config: EstimatorConfig = DEFAULT_CONFIG,
     unseen_activities: Callable[[Unit], List[str]] = lambda unit: [],
+    resets: Mapping[str, datetime] = NO_RESETS,
 ) -> ProficiencyView:
-    """Decide every unit and skill in scope; `units` must be in curriculum order."""
+    """Decide every unit and skill in scope; `units` must be in curriculum order.
+
+    Each unit counts only evidence after its last reset; a skill row counts evidence after the
+    latest reset among the units in view that target it (ADR-0016 amendment 2026-11-04).
+    """
     ledger = list(entries)
     unit_rows: List[Tuple[Unit, List[SkillDecision]]] = []
     # skill_id -> (highest target, most shaky checks) across the units in scope
     scope: Dict[str, Tuple[ProficiencyLevel, int]] = {}
     names: Dict[str, str] = {}
+    skill_since: Dict[str, Optional[datetime]] = {}
 
     for unit in units:
-        shaky = consecutive_shaky_checks(ledger, unit.unit_id)
+        since = resets.get(unit.unit_id)
+        unit_ledger = _after(ledger, since)
+        shaky = consecutive_shaky_checks(unit_ledger, unit.unit_id)
         for skill in unit.target_skills:
             names[skill.skill_id] = skill.skill_name
             target, most_shaky = scope.get(skill.skill_id, (skill.goal_level, 0))
@@ -155,19 +176,21 @@ def build_proficiency_view(
                 max(target, skill.goal_level, key=LEVEL_ORDER.index),
                 max(most_shaky, shaky),
             )
-        unit_rows.append((unit, _decide_unit_skills(unit, ledger, now, config)))
+            known = skill_since.get(skill.skill_id)
+            skill_since[skill.skill_id] = max(filter(None, (known, since)), default=None)
+        unit_rows.append((unit, _decide_unit_skills(unit, unit_ledger, now, config)))
 
     return ProficiencyView(
         stage=stage,
         skills=[
-            _skill_view(skill_id, names[skill_id], target, shaky, ledger, now, config)
+            _skill_view(skill_id, names[skill_id], target, shaky, _after(ledger, skill_since[skill_id]), now, config)
             for skill_id, (target, shaky) in scope.items()
         ],
         units=[
             UnitView(unit_id=unit.unit_id, decision=decide_unit(decisions))
             for unit, decisions in unit_rows
         ],
-        next_action=_next_action(unit_rows, ledger, cold_check_status_of, unseen_activities, config),
+        next_action=_next_action(unit_rows, ledger, cold_check_status_of, unseen_activities, config, resets),
     )
 
 
@@ -205,6 +228,7 @@ def _next_action(
     cold_check_status_of: Callable[[str], ColdCheckStatus],
     unseen_activities: Callable[[Unit], List[str]] = lambda unit: [],
     config: EstimatorConfig = DEFAULT_CONFIG,
+    resets: Mapping[str, datetime] = NO_RESETS,
 ) -> Optional[NextAction]:
     """First unit in curriculum order with something to do now."""
     for unit, decisions in unit_rows:
@@ -218,7 +242,7 @@ def _next_action(
         activity = (
             _fresh_activity(unit, weakest.skill_id, unseen_activities(unit), config)
             if locked
-            else _next_activity(unit, weakest.decision, status.state, ledger)
+            else _next_activity(unit, weakest.decision, status.state, _after(ledger, resets.get(unit.unit_id)))
         )
         return NextAction(
             unit_id=unit.unit_id,

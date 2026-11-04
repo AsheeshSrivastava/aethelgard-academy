@@ -209,6 +209,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review:reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset My Stage Review
+         * @description Restart the stage review: its rounds and result go, the ledger stays (ADR-0016 amendment).
+         */
+        post: operations["reset_my_stage_review_api_v1_learners_me_courses__course_id__stages__stage__review_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learners/me/courses/{course_id}/stages/{stage}/review/exercise": {
         parameters: {
             query?: never;
@@ -2130,6 +2150,36 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["StageReviewStatus"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_my_stage_review_api_v1_learners_me_courses__course_id__stages__stage__review_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

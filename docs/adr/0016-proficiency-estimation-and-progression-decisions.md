@@ -129,3 +129,10 @@ With amendment A, one Strong entry can reach a level above a unit's target while
 ## Amendment 2026-10-31: stage review
 
 ADR-0019 changes section 2.6. A stage build no longer opens because every unit passed its Cold Check: a passed stage review opens it. When a stage has no unseen item for a review, the old rule still applies (SPEC-16 section 3.4).
+
+## Amendment 2026-11-04: reset markers (owner, options 1b.1 A and 1b.2 A)
+
+1. **The ledger is never deleted.** A reset writes a marker (`progress_reset`: learner, scope, time) and keeps every entry.
+2. **Per unit.** A unit's decision, the activities it counts as tried, and its row on My progress use only evidence recorded at or after that unit's latest reset. Other units keep their own evidence, even when they share a skill. On My progress, a skill row uses evidence after the latest reset among the units in view that target it.
+3. **Lifetime levels are unchanged.** Anything not tied to one unit (the ledger list, rechecks, a future skills page) still reads the whole ledger.
+4. **Stage review.** "Restart stage review" clears that stage's review rounds and result and writes a marker for the stage. The build closes again until the review is passed (ADR-0019). Rechecks already earned are kept.
