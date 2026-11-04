@@ -32,7 +32,17 @@ const highlight = HighlightStyle.define([
 ]);
 
 /** `value` sets the starting text; remount with a new key to replace it. */
-export function CodeEditor({ value, onChange, label }: { value: string; onChange: (value: string) => void; label: string }) {
+export function CodeEditor({
+  value,
+  onChange,
+  label,
+  language = "python",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  language?: "python" | "text";
+}) {
   const host = useRef<HTMLDivElement>(null);
   const change = useRef(onChange);
   change.current = onChange;
@@ -45,10 +55,10 @@ export function CodeEditor({ value, onChange, label }: { value: string; onChange
         doc: value,
         extensions: [
           basicSetup,
-          python(),
+          ...(language === "python" ? [python()] : []),
           theme,
           syntaxHighlighting(highlight),
-          EditorView.contentAttributes.of({ "aria-label": label }),
+          EditorView.contentAttributes.of({ "aria-label": label, "data-language": language }),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) change.current(update.state.doc.toString());
           }),

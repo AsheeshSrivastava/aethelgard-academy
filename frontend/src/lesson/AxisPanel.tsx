@@ -27,12 +27,16 @@ export function AxisPanel({
   exerciseId,
   getCode,
   socraticOnly = false,
+  feedback,
 }: {
   unitId: string;
   step: string;
   exerciseId?: string;
   getCode: () => string | undefined;
   socraticOnly?: boolean;
+  /** A one-click request for comments on something the learner wrote (ADR-0024). Ungraded:
+   *  it is sent without the exercise id, so it never counts as help on the exercise. */
+  feedback?: { label: string; page: string; prompt: string; getText: () => string };
 }) {
   const [mode, setMode] = useState<Mode>("Socratic");
   const [draft, setDraft] = useState("");
@@ -54,25 +58,39 @@ export function AxisPanel({
     event.preventDefault();
     const question = draft.trim();
     if (!question || busy) return;
+    setDraft("");
+    await ask(question, { learner_code: getCode(), exercise_id: exerciseId, page: step });
+  }
+
+  async function askForFeedback() {
+    if (!feedback || busy) return;
+    await ask(feedback.label, {
+      user_prompt: feedback.prompt,
+      learner_code: feedback.getText(),
+      exercise_id: undefined,
+      page: feedback.page,
+    });
+  }
+
+  async function ask(shown: string, request: { user_prompt?: string; learner_code?: string; exercise_id?: string; page: string }) {
     const askId = nextId.current++;
     const replyId = nextId.current++;
-    setDraft("");
     setBusy(true);
     setMessages((current) => [
       ...current,
-      { id: askId, role: "you", text: question, citations: [] },
+      { id: askId, role: "you", text: shown, citations: [] },
       { id: replyId, role: "axis", text: "", citations: [] },
     ]);
     try {
       await streamAxis(
         {
           unit_id: unitId,
-          mode,
+          mode: socraticOnly ? "Socratic" : mode,
           current_activity: activityFor(step),
-          user_prompt: question,
-          learner_code: getCode(),
-          exercise_id: exerciseId,
-          page: step,
+          user_prompt: request.user_prompt ?? shown,
+          learner_code: request.learner_code,
+          exercise_id: request.exercise_id,
+          page: request.page,
         },
         (sse) => onEvent(replyId, sse),
       );
@@ -134,6 +152,11 @@ export function AxisPanel({
           </div>
         ))}
       </div>
+      {feedback && (
+        <button type="button" className="button button-small axis-feedback" onClick={askForFeedback} disabled={busy}>
+          {feedback.label}
+        </button>
+      )}
       <form className="axis-form" onSubmit={send}>
         <label className="sr-only" htmlFor="axis-input">
           Message AXIS

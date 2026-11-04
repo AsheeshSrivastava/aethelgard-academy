@@ -56,7 +56,9 @@
     { "id": "fstrings", "label": "Output uses at least two f-strings", "unit_id": "PY-0.1", "check": { "kind": "fstring_prints", "min": 2 } },
     { "id": "sample", "label": "Output matches the sample run (Verify)", "unit_id": "PY-0.4", "check": { "kind": "behaviour", "function": "check_sample_run" } },
     { "id": "messy", "label": "Messy input is cleaned (Verify)", "unit_id": "PY-0.4", "check": { "kind": "behaviour", "function": "check_messy_input" } },
-    { "id": "readme", "label": "README says how to run the script", "unit_id": "PY-0.4", "check": { "kind": "file_contains", "path": "README.md", "any": ["python checkin.py", "python3 checkin.py", "uv run checkin.py"] } },
+    {"id": "readme-does", "label": "README says what the script does", "unit_id": "PY-0.4", "check": {"kind": "markdown_sections", "path": "README.md", "sections": [{"heading": "What this script does", "min_words": 8}]}},
+    {"id": "readme-run", "label": "README says how to run the script", "unit_id": "PY-0.4", "check": {"kind": "markdown_sections", "path": "README.md", "sections": [{"heading": "How to run it", "min_words": 2, "any": ["python checkin.py", "python3 checkin.py", "uv run checkin.py"], "hint": "Under 'How to run it', give the command that runs the script, for example python checkin.py."}]}},
+    {"id": "readme-checked", "label": "README says what you checked yourself", "unit_id": "PY-0.4", "check": {"kind": "markdown_sections", "path": "README.md", "sections": [{"heading": "What I checked myself", "min_words": 8, "any": ["typed", "tried", "input", "entered", "tested"], "hint": "Under 'What I checked myself', say what you tried: an input you typed, and what the slip showed."}]}},
     { "id": "note", "label": "Ownership note written", "unit_id": "PY-0.3", "check": { "kind": "ownership_note", "min_chars": 20 } }
   ],
   "proves": [

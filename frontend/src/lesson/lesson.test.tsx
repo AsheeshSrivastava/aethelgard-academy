@@ -393,7 +393,8 @@ describe("item types", () => {
   it("debug sends the fixed code", async () => {
     const ex = exercise("debug-validate", "debug", { broken_code: ["print(x)"], stdin: "" });
 
-    const body = await answerAndSubmit("debug-validate", ex, (u) => u.type(screen.getByLabelText("Your code"), "!"));
+    // The editor can appear just after the prompt, so wait for it rather than assume it is there.
+    const body = await answerAndSubmit("debug-validate", ex, async (u) => u.type(await screen.findByLabelText("Your code"), "!"));
 
     expect(body.files["solution.py"]).toContain("print(x)");
   });
@@ -533,7 +534,7 @@ describe("item types", () => {
       evidence_entry_id: "e",
     };
 
-    const body = await answerAndSubmit("decompose", ex, (u) => u.type(screen.getByLabelText("Your code"), "!"), attempt);
+    const body = await answerAndSubmit("decompose", ex, async (u) => u.type(await screen.findByLabelText("Your code"), "!"), attempt);
 
     expect(body.files["solution.py"]).toContain("intake_report");
     expect(screen.getByText(/too few helpers/)).toBeInTheDocument();
@@ -543,7 +544,7 @@ describe("item types", () => {
   it("a modify exercise uses the playground form and is graded", async () => {
     const ex = exercise("modify", "playground", { starter: ["x = 1"], tasks: [{ id: "t1", label: "Change x" }] });
 
-    const body = await answerAndSubmit("modify", ex, (u) => u.type(screen.getByLabelText("Your code"), "!"));
+    const body = await answerAndSubmit("modify", ex, async (u) => u.type(await screen.findByLabelText("Your code"), "!"));
 
     expect(body.activity).toBe("modify");
     expect(screen.getByText("Change x")).toBeInTheDocument();

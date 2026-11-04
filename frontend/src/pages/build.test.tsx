@@ -7,8 +7,8 @@ import { renderAt, stubApi } from "../test/harness";
 
 // CodeMirror and xterm need a real browser; the Playwright walk covers them.
 vi.mock("../lesson/CodeEditor", () => ({
-  CodeEditor: ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) => (
-    <textarea aria-label={label} defaultValue={value} onChange={(e) => onChange(e.target.value)} />
+  CodeEditor: ({ value, onChange, label, language = "python" }: { value: string; onChange: (v: string) => void; label: string; language?: string }) => (
+    <textarea aria-label={label} data-language={language} defaultValue={value} onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 vi.mock("../lesson/RunTerminal", () => ({
@@ -129,6 +129,35 @@ describe("the page", () => {
     expect(screen.getByLabelText("Ownership note")).toBeInTheDocument();
     const proves = screen.getByRole("region", { name: "What this build proves" });
     expect(within(proves).getByText("Run a script")).toBeInTheDocument();
+  });
+
+  it("colours only Python files; the README is plain text", async () => {
+    stubApi(routes());
+    renderAt(PATH);
+
+    expect(await screen.findByLabelText("checkin.py code")).toHaveAttribute("data-language", "python");
+    await userEvent.click(screen.getByRole("button", { name: "README.md" }));
+    expect(screen.getByLabelText("README.md code")).toHaveAttribute("data-language", "text");
+  });
+
+  it("asks AXIS about the README without counting it against the build (ADR-0024)", async () => {
+    const reply = () =>
+      new Response('event: token\ndata: {"text":"Who reads it first?"}\n\nevent: done\ndata: {}\n\n', {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    const calls = stubApi(routes({ "POST /api/v1/axis/stream": reply }));
+    renderAt(PATH);
+
+    const axis = await screen.findByRole("complementary", { name: "AXIS facilitator" });
+    await userEvent.click(within(axis).getByRole("button", { name: "Ask AXIS about my README" }));
+
+    expect(await within(axis).findByText("Who reads it first?")).toBeInTheDocument();
+    const body = JSON.parse(calls.find((c) => c.url.endsWith("/axis/stream"))!.body!) as Record<string, unknown>;
+    expect(body.learner_code).toBe("# Readme");
+    expect(body.mode).toBe("Socratic");
+    expect(body.page).toBe("build-readme");
+    expect(body.exercise_id).toBeUndefined();
   });
 
   it("shows AXIS in Socratic only", async () => {

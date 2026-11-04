@@ -35,9 +35,9 @@ Pushing to GitHub and Entire is always at the owner's word.
 
 Runs after phase 2's build-page work is committed, because it changes the same files.
 
-- [ ] 2b.1 Plain-Python README checks: headings kept, words in each section, run command under "How to run it", "What I checked myself" names something tried. (NOTHING, then APPROVE the updated Stage 0 build)
-- [ ] 2b.2 AXIS comment on the README: Socratic, ungraded, logged. (NOTHING)
-- [ ] 2b.3 The editor colours only `.py` files; README and other files show as plain text. (NOTHING)
+- [x] 2b.1 Plain-Python README checks: headings kept, words in each section, run command under "How to run it", "What I checked myself" names something tried. (NOTHING, then APPROVE the updated Stage 0 build) Done 2026-11-04: three README requirements (what it does, how to run it, what you checked); the Stage 0 build now has 9 requirements.
+- [x] 2b.2 AXIS comment on the README: Socratic, ungraded, logged. (NOTHING) Done 2026-11-04: "Ask AXIS about my README" button; sent without the build's id, so it never counts as help on the build.
+- [x] 2b.3 The editor colours only `.py` files; README and other files show as plain text. (NOTHING) Done 2026-11-04.
 
 ## Phase 2c: Model providers and a Settings page (ADR-0025, separate thread)
 

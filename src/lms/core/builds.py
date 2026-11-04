@@ -47,15 +47,26 @@ class BuildFile(_Strict):
     starter: List[str]
 
 
+class SectionRule(_Strict):
+    """One section of a Markdown file the learner writes (ADR-0024)."""
+
+    heading: str
+    min_words: int = 0
+    any: Optional[List[str]] = None
+    hint: Optional[str] = None
+
+
 class RequirementCheck(_Strict):
     kind: Literal[
-        "comment_lines", "input_assignments", "fstring_prints", "file_contains", "ownership_note", "behaviour"
+        "comment_lines", "input_assignments", "fstring_prints", "file_contains", "ownership_note", "behaviour",
+        "markdown_sections",
     ]
     min: Optional[int] = None
     min_chars: Optional[int] = None
     path: Optional[str] = None
     any: Optional[List[str]] = None
     function: Optional[str] = None
+    sections: Optional[List[SectionRule]] = None
 
 
 class Requirement(_Strict):
@@ -113,8 +124,10 @@ class StageBuildSpec(_Strict):
                 raise ValueError(f"checks.py has no function {function}")
         for requirement in self.requirements:
             check = requirement.check
-            if check.kind == "file_contains" and check.path not in paths:
-                raise ValueError(f"file_contains names {check.path}, which is not in files")
+            if check.kind in ("file_contains", "markdown_sections") and check.path not in paths:
+                raise ValueError(f"{check.kind} names {check.path}, which is not in files")
+            if check.kind == "markdown_sections" and not check.sections:
+                raise ValueError("markdown_sections needs at least one section")
         return self
 
 
@@ -258,6 +271,37 @@ def _run_behaviour(
     return False, _failure_detail(result, token_seen)
 
 
+_HEADING = re.compile(r"^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$")
+
+
+def _sections_of(text: str) -> Dict[str, str]:
+    """Each Markdown heading's text (lower case) and the text under it, up to the next heading."""
+    sections: Dict[str, str] = {}
+    current: Optional[str] = None
+    for line in text.splitlines():
+        match = _HEADING.match(line)
+        if match:
+            current = match.group(1).strip().lower()
+            sections.setdefault(current, "")
+        elif current is not None:
+            sections[current] += line + "\n"
+    return sections
+
+
+def _markdown_sections(text: str, rules: Sequence[SectionRule]) -> Tuple[bool, Optional[str]]:
+    """ADR-0024: plain checks on a Markdown file; the detail names the first unmet rule."""
+    sections = _sections_of(text)
+    for rule in rules:
+        body = sections.get(rule.heading.strip().lower())
+        if body is None:
+            return False, f"The heading '{rule.heading}' is missing."
+        if len(body.split()) < rule.min_words:
+            return False, f"Write at least {rule.min_words} words under '{rule.heading}'."
+        if rule.any and not any(t.lower() in body.lower() for t in rule.any):
+            return False, rule.hint or f"'{rule.heading}' needs one of: {', '.join(rule.any)}."
+    return True, None
+
+
 def _check_one(
     requirement: Requirement,
     build: StageBuildSpec,
@@ -277,6 +321,8 @@ def _check_one(
     if check.kind == "file_contains":
         content = files.get(check.path or "", "")
         return result(any(text in content for text in check.any or []))
+    if check.kind == "markdown_sections":
+        return result(*_markdown_sections(files.get(check.path or "", ""), check.sections or []))
     if check.kind == "comment_lines":
         entry = next(f for f in build.files if f.path == build.entry)
         new_comments = _comments(code) - _comments("\n".join(entry.starter))

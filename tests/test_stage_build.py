@@ -42,7 +42,12 @@ ATTEMPTS = "/api/v1/learners/me/attempts"
 EXERCISE = "python/stage-0/build"
 STAGE_0 = ("PY-0.4", "PY-0.1", "PY-0.3")
 NOTE = "I planned it, wrote it, and checked it with messy input myself."
-README = "# Build\n\nRun it with python checkin.py\n"
+# Meets the three README requirements (ADR-0024).
+README = (
+    "# Stage 0 build\n\n## What this script does\n\nIt asks for a name and a service and prints a clean slip.\n\n"
+    "## How to run it\n\nRun python checkin.py in a terminal.\n\n"
+    "## What I checked myself\n\nI typed a messy name and service and the slip came out clean.\n"
+)
 PRACTICE = (FOLDER / "practice_checks.py").read_text(encoding="utf-8")
 
 # Hidden checks and the reference solution are private (ADR-0021). Tests that need them are skipped without them.
@@ -490,7 +495,7 @@ def test_a_blank_note_does_not_count():
 def test_missing_files_are_just_unmet():
     results = met(check_requirements(spec(), {}, None, FakeRunner(), False))
 
-    assert results["readme"] is False and results["inputs"] is False
+    assert results["readme-run"] is False and results["inputs"] is False
 
 
 # --- The API ---

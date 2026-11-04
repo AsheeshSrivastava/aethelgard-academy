@@ -54,13 +54,16 @@ Every check is deterministic. All of them live on the server, so the browser nev
 | `check.kind` | Fields | Met when |
 | :--- | :--- | :--- |
 | `comment_lines` | `min` | The entry file has at least `min` full comment lines that are not in its starter |
-| `input_assignments` | `min` | At least `min` lines of the form `name = input(...)` |
+| `input_assignments` | `min` | At least `min` assignments to a name whose value calls `input(...)`, including `input().strip()` or `int(input())` (2026-11-04) |
 | `fstring_prints` | `min` | At least `min` `print()` calls with an f-string argument |
 | `file_contains` | `path`, `any` | The file holds one of the given texts |
+| `markdown_sections` | `path`, `sections` | Every listed section is in the Markdown file and meets its rule (ADR-0024, 2026-11-04). Each section is `{heading, min_words, any?, hint?}`: a heading line (`#` to `######`) whose text equals `heading`, ignoring case; at least `min_words` words before the next heading; and, if `any` is given, one of those texts in the section, ignoring case. The detail names the first unmet rule: a missing heading, too few words, or `hint` when `any` is not met. |
 | `ownership_note` | `min_chars` | The note, trimmed, has at least `min_chars` characters |
 | `behaviour` | `function` | The named function in `checks.py` passes when run against the entry file in the sandbox |
 
 `behaviour` is the only kind that runs code. A check that reads the code reports not met, with a plain detail, if the file has a syntax error.
+
+**Writing feedback (ADR-0024).** Beside the README, the build page offers "Ask AXIS about my README". AXIS reads the README and the brief and answers in Socratic mode: questions and pointers, never rewritten text. It is ungraded: it never changes a requirement, writes no evidence, and is logged like any AXIS consult.
 
 ### 2.3 A behaviour check cannot be skipped
 

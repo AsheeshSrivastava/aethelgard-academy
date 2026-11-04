@@ -92,9 +92,14 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page.getByText("Verify passed.")).toBeVisible();
   await page.getByRole("button", { name: "README.md" }).click();
-  await replaceCode(page, "# Check-in\n\nRun it with python checkin.py\n");
+  await replaceCode(
+    page,
+    "# Check-in\n\n## What this script does\n\nIt asks for a name and a service, cleans both and prints a slip.\n\n" +
+      "## How to run it\n\nRun python checkin.py in a terminal.\n\n" +
+      "## What I checked myself\n\nI typed a messy name and the service SHELTER, and the slip came out clean.\n",
+  );
   await page.getByLabel("Ownership note").fill("I planned and wrote it myself, then ran it with messy input.");
-  await expect(requirements(page)).toContainText("7 of 7 met");
+  await expect(requirements(page)).toContainText("9 of 9 met");
   await expect(submit(page)).toBeEnabled();
   await shot(page, "build-ready");
 
@@ -105,7 +110,7 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await expect(page.getByLabel("Ownership note")).toHaveValue(/messy input/);
   await expect(submit(page)).toBeDisabled();
   await page.getByRole("button", { name: "Verify" }).click();
-  await expect(requirements(page)).toContainText("7 of 7 met");
+  await expect(requirements(page)).toContainText("9 of 9 met");
 
   // AXIS answers, and stays Socratic
   const axis = page.getByRole("complementary", { name: "AXIS facilitator" });
@@ -136,7 +141,7 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.reload();
   await expect(page.locator(".cm-content")).toBeVisible();
-  await expect(requirements(page)).toContainText("5 of 7 met");
+  await expect(requirements(page)).toContainText("7 of 9 met");
   await expectNoSideScroll(page);
   const lastInPanel = (await axis.locator(".axis-note").boundingBox())!;
   const proves = (await page.getByRole("region", { name: "What this build proves" }).boundingBox())!;

@@ -6,6 +6,7 @@ import { api, ApiError, type AttemptResult, type StageBuild as Build } from "../
 import { BackLink, ErrorNote, Loading } from "../components/common";
 import { AxisPanel } from "../lesson/AxisPanel";
 import { CodeEditor } from "../lesson/CodeEditor";
+import { languageOf } from "../lib/fileLanguage";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
 import { courseName, maturityLabel } from "../lib/format";
@@ -14,6 +15,18 @@ import { useInteractionId } from "../lib/interaction";
 const NOTE_FILE = "ownership-note.txt";
 const isPython = (path: string) => path.endsWith(".py");
 const CHECK_WAIT_MS = 400;
+
+/** Ungraded writing feedback on the README (ADR-0024): Socratic, never counted as help on the build. */
+function readmeFeedback(getText: () => string) {
+  return {
+    label: "Ask AXIS about my README",
+    page: "build-readme",
+    prompt:
+      "Give feedback on my README for this build. Do not rewrite it. Ask me questions about what a new reader " +
+      "would not understand, and point to any section that is thin or unclear.",
+    getText,
+  };
+}
 const SAVE_WAIT_MS = 800;
 
 type Files = Record<string, string>;
@@ -179,6 +192,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
   );
   const ready = build.requirements.every((r) => checked[r.id]?.met === true);
   const getCode = useCallback(() => files[build.entry] ?? "", [files, build.entry]);
+  const readmePath = build.files.find((file) => file.path.toLowerCase() === "readme.md")?.path;
   const getFiles = useCallback(
     () => Object.fromEntries(Object.entries(files).filter(([path]) => isPython(path))),
     [files],
@@ -242,7 +256,13 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
                 {verify.isPending ? "Checking…" : "Verify"}
               </button>
             </div>
-            <CodeEditor key={`${open}-${version}`} value={files[open] ?? ""} onChange={edit} label={`${open} code`} />
+            <CodeEditor
+              key={`${open}-${version}`}
+              value={files[open] ?? ""}
+              onChange={edit}
+              label={`${open} code`}
+              language={languageOf(open)}
+            />
             <RunTerminal getFiles={getFiles} exerciseId={build.exercise_id} entry={build.entry} />
           </div>
           {verify.isError && <ErrorNote error={verify.error} />}
@@ -278,7 +298,14 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
         </section>
 
         <div className="build-axis">
-          <AxisPanel unitId={build.proves[0]?.unit_id ?? ""} step="build" exerciseId={build.exercise_id} getCode={getCode} socraticOnly />
+          <AxisPanel
+            unitId={build.proves[0]?.unit_id ?? ""}
+            step="build"
+            exerciseId={build.exercise_id}
+            getCode={getCode}
+            socraticOnly
+            feedback={readmePath ? readmeFeedback(() => files[readmePath] ?? "") : undefined}
+          />
           <section className="card panel" aria-labelledby="build-proves">
             <h2 id="build-proves" className="eyebrow">
               What this build proves
