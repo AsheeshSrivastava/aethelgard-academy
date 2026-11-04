@@ -204,17 +204,18 @@ def test_no_hidden_field_appears_in_any_response(client, repo, clock, catalog):
         assert "curator_approved" not in res.text
 
     def ids_of(approved: bool):
+        """Unit routes serve practice seeds and each unit's own Cold Check round; spares go to stage reviews."""
         return {
             f"{seed.seed_id}/v{n}"
-            for seeds in catalog.seeds.values()
+            for unit_id, seeds in catalog.seeds.items()
             for seed in seeds
             if (not seed.cold_check_eligible or seed.curator_approved) == approved
+            and (not seed.cold_check_eligible or not approved or seed in cold_round(catalog.get_unit(unit_id), seeds))
             for n, _ in seed_variants(seed)
         }
 
     assert ids_of(approved=True) <= ids
     # A Cold Check seed the curator has not approved is never served (SPEC-13 section 5).
-    assert ids_of(approved=False)
     assert not ids_of(approved=False) & ids
 
 

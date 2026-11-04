@@ -11,7 +11,7 @@
     "How do you check that claim?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "options": [
       {

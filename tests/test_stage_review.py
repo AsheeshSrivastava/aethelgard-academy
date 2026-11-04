@@ -13,7 +13,7 @@ from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.api.app import LOCAL_LEARNER_ID, create_app
 from lms.core.cold_check import ColdCheckTimer
 from lms.core.curriculum_checks import check_curriculum
-from lms.core.exercises import cold_round
+from lms.core.exercises import cold_round, seed_variants
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,
@@ -392,12 +392,24 @@ def answer(client, catalog, right=True):
 def send(client, catalog, exercise, activity, right):
     unit_id = exercise["unit_id"]
     seed = next(s for s in catalog.seeds[unit_id] if exercise["exercise_id"].startswith(f"{s.seed_id}/"))
-    key = seed.body["answer_key"]
-    choice = key if right else next(o["key"] for o in seed.body["options"] if o["key"] != key)
     return client.post(
         f"{BASE}/attempts",
-        json={"exercise_id": exercise["exercise_id"], "activity": activity, "choice": choice},
+        json={"exercise_id": exercise["exercise_id"], "activity": activity, **answer_for(seed, right)},
     )
+
+
+def answer_for(seed, right):
+    """A right or wrong answer for any Cold Check item type, from its answer key."""
+    body = seed.body
+    if seed.item_type == "trace":
+        return {"trace_answers": body["expected_output"] if right else ["not the output"]}
+    key = body["answer_key"]
+    if seed.item_type == "debug_locate":
+        return {"locate": key if right else {**key, "line": key["line"] + 1}}
+    if right:
+        return {"choice": key}
+    keys = [o.get("key", o.get("id")) for o in body.get("options") or body.get("sentences")]
+    return {"choice": next(k for k in keys if k != key)}
 
 
 def state(client):
@@ -459,7 +471,11 @@ def test_a_build_page_uses_the_stage_label(client, repo, catalog):
 
 
 def test_stage_with_no_items_opens_the_build_as_before(client, repo, catalog):
-    catalog.seeds = {u: [s for s in ss if "spare" not in s.seed_id and "extra" not in s.seed_id] for u, ss in catalog.seeds.items()}
+    # Keep only what each unit's own round uses, so no spare item is left for a review.
+    catalog.seeds = {
+        u: [s for s in ss if not s.cold_check_eligible or s in cold_round(catalog.get_unit(u), ss)]
+        for u, ss in catalog.seeds.items()
+    }
     pass_units(repo, catalog)
 
     assert state(client)["state"] == "unavailable"
@@ -663,6 +679,11 @@ def test_recheck_not_yet_due_is_refused(client, repo, catalog):
 def test_due_recheck_with_no_unseen_item_is_left_out(client, repo, catalog, clock):
     pass_units(repo, catalog)
     finish_review(client, catalog)
+    for unit_id, unit_seeds in catalog.seeds.items():
+        repo.set_current_exercise(LOCAL_LEARNER_ID, unit_id, "cold_check", "x", T0)
+        for seed in unit_seeds:
+            for n, _ in seed_variants(seed):
+                repo.set_current_exercise(LOCAL_LEARNER_ID, unit_id, "cold_check", f"{seed.seed_id}/v{n}", T0)
 
     clock.now = T0 + timedelta(days=7)
 
