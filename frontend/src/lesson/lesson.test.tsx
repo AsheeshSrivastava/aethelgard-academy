@@ -282,6 +282,24 @@ async function answerAndSubmit(activity: string, ex: object, act: (user: ReturnT
   return postedAttempt(calls);
 }
 
+describe("interaction log (ADR-0022)", () => {
+  it("records opening a step, and closing it when the learner moves on", async () => {
+    const ex = exercise("predict", "predict", { code: ["print(1)"], stdin: "", options });
+    const calls = stubApi({ ...routes("predict", ex), [`POST ${BASE}/interactions`]: null });
+    const router = renderAt("/units/PY-0.1/predict");
+    await screen.findByText("What happens?");
+
+    await router.navigate({ to: "/units/$unitId/$step", params: { unitId: "PY-0.1", step: "trace" } });
+
+    await waitFor(() => {
+      const events = calls.filter((c) => c.url.endsWith("/interactions")).map((c) => JSON.parse(c.body ?? "{}"));
+      expect(events[0]).toMatchObject({ event_type: "opened", unit_id: "PY-0.1", activity: "predict" });
+      expect(events).toContainEqual(expect.objectContaining({ event_type: "closed", activity: "predict" }));
+      expect(events).toContainEqual(expect.objectContaining({ event_type: "opened", activity: "trace" }));
+    });
+  });
+});
+
 describe("one record per answer (SPEC-12 section 5)", () => {
   const ex = exercise("predict", "predict", { code: ["print(1)"], stdin: "", options });
 

@@ -27,6 +27,8 @@ export default defineConfig({
     timeout: 60_000,
     env: {
       MOCK_AI: "true",
+      // Browser tests check the real waits, whatever a local .env says (ADR-0019 amendment).
+      LMS_TEST_MODE: "false",
       LMS_DB_PATH: process.env.LMS_E2E_DB,
       // Hidden build checks (ADR-0021); unset, builds grade with their practice checks.
       ...(process.env.LMS_ANSWERS_DIR ? { LMS_ANSWERS_DIR: process.env.LMS_ANSWERS_DIR } : {}),

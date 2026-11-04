@@ -18,6 +18,7 @@ from lms.core.models import (
     EvidenceEntry,
     EvidenceStrength,
 )
+from lms.core.interaction_log import InteractionEvent
 from lms.core.review import ReviewItem, ReviewResult
 
 # Added after the first release. initialize() adds any that are missing, so fresh
@@ -29,6 +30,8 @@ EVIDENCE_LEDGER_ADDED_COLUMNS = {
     "seed_id": "TEXT",
     "review_kind": "TEXT",
     "test_mode": "INTEGER NOT NULL DEFAULT 0",
+    "interaction_id": "TEXT",
+    "attempt_id": "TEXT",
 }
 
 
@@ -181,6 +184,27 @@ class SQLiteLearnerRepository:
                     PRIMARY KEY (learner_id, kind, scope, position)
                 );
                 """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS interaction_log (
+                    learner_id TEXT NOT NULL,
+                    interaction_id TEXT NOT NULL,
+                    recorded_at_ms INTEGER NOT NULL,
+                    session_id TEXT,
+                    attempt_id TEXT,
+                    unit_id TEXT,
+                    activity TEXT,
+                    item_id TEXT,
+                    event_type TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    test_mode INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (learner_id, interaction_id)
+                );
+                """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_interaction_learner_time ON interaction_log (learner_id, recorded_at_ms)"
             )
             conn.execute(
                 """
@@ -516,6 +540,40 @@ class SQLiteLearnerRepository:
         ).fetchall()
         return {r["scope"] for r in rows}
 
+    def append_interaction(self, event: InteractionEvent) -> None:
+        """Append one row. The log is never updated; a repeated id is ignored (ADR-0022)."""
+        conn = self._get_conn()
+        with conn:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO interaction_log (
+                    learner_id, interaction_id, recorded_at_ms, session_id, attempt_id,
+                    unit_id, activity, item_id, event_type, payload, test_mode
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event.learner_id, event.interaction_id, event.recorded_at_ms, event.session_id,
+                    event.attempt_id, event.unit_id, event.activity, event.item_id, event.event_type,
+                    json.dumps(event.payload), int(event.test_mode),
+                ),
+            )
+
+    def get_interactions(self, learner_id: str, limit: int = 1000) -> List[InteractionEvent]:
+        """This learner's log, newest first."""
+        rows = self._get_conn().execute(
+            "SELECT * FROM interaction_log WHERE learner_id = ? ORDER BY recorded_at_ms DESC, interaction_id DESC LIMIT ?",
+            (learner_id, limit),
+        ).fetchall()
+        return [
+            InteractionEvent(
+                interaction_id=r["interaction_id"], learner_id=r["learner_id"], recorded_at_ms=r["recorded_at_ms"],
+                session_id=r["session_id"], attempt_id=r["attempt_id"], unit_id=r["unit_id"], activity=r["activity"],
+                item_id=r["item_id"], event_type=r["event_type"], payload=json.loads(r["payload"]),
+                test_mode=bool(r["test_mode"]),
+            )
+            for r in rows
+        ]
+
     def claim_interaction(self, learner_id: str, interaction_id: str, claimed_at: datetime) -> bool:
         """Claim an idempotency key before grading; False if it was already claimed."""
         conn = self._get_conn()
@@ -681,8 +739,9 @@ class SQLiteLearnerRepository:
                     entry_id, learner_id, unit_id, skill_id,
                     evidence_category, evidence_strength, assistance_level,
                     demonstration_context, observed_reasoning, recorded_at,
-                    exercise_id, activity, cold_check, seed_id, review_kind, test_mode
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    exercise_id, activity, cold_check, seed_id, review_kind, test_mode,
+                    interaction_id, attempt_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -701,6 +760,8 @@ class SQLiteLearnerRepository:
                     entry.seed_id,
                     entry.review_kind,
                     int(entry.test_mode),
+                    entry.interaction_id,
+                    entry.attempt_id,
                 ),
             )
         self.events.publish(
@@ -759,6 +820,8 @@ class SQLiteLearnerRepository:
                     seed_id=r["seed_id"],
                     review_kind=r["review_kind"],
                     test_mode=bool(r["test_mode"]),
+                    interaction_id=r["interaction_id"],
+                    attempt_id=r["attempt_id"],
                 )
             )
         return entries

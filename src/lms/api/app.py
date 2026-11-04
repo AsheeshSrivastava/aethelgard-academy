@@ -8,13 +8,14 @@ Provides versioned REST endpoints (/api/v1/) for:
 """
 
 import asyncio
+from contextvars import ContextVar
 from datetime import datetime, timezone
 import json
 import logging
 import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
-from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -53,6 +54,13 @@ from lms.core.course_map import (
 from lms.core.curriculum_checks import ACTIVITY_EVIDENCE
 from lms.core.models import stage_label
 from lms.core.timing import timing_for
+from lms.core.interaction_log import (
+    ClientEvent,
+    InteractionEvent,
+    clean_payload,
+    new_ulid,
+    valid_id,
+)
 from lms.adapters.ai.local_llm_companion import load_dotenv_if_present
 from lms.core.review import (
     RECHECK,
@@ -144,6 +152,15 @@ def allowed_origins() -> List[str]:
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+# The interaction and attempt behind the evidence being recorded in this request (ADR-0022).
+_EVIDENCE_LINK: ContextVar[Tuple[Optional[str], Optional[str]]] = ContextVar("evidence_link", default=(None, None))
+
+
+def current_session(x_session_id: Optional[str] = Header(None)) -> Optional[str]:
+    """One id per app visit, sent by the client; a malformed one is dropped (ADR-0022)."""
+    return x_session_id if valid_id(x_session_id) else None
 
 
 def current_learner_id() -> str:
@@ -331,7 +348,70 @@ def create_app(
 
     # --- System Routes ---
     def record_evidence(entry: EvidenceEntry) -> None:
-        repo.record_evidence(entry.model_copy(update={"test_mode": test_mode}))
+        interaction_id, attempt_id = _EVIDENCE_LINK.get()
+        update: Dict[str, Any] = {"test_mode": test_mode}
+        if interaction_id:
+            update.update(interaction_id=interaction_id, attempt_id=attempt_id)
+        repo.record_evidence(entry.model_copy(update=update))
+
+    def now_ms() -> int:
+        return int(clock().timestamp() * 1000)
+
+    def log_event(
+        learner_id: str,
+        event_type: str,
+        payload: Dict[str, Any],
+        session_id: Optional[str] = None,
+        interaction_id: Optional[str] = None,
+        attempt_id: Optional[str] = None,
+        unit_id: Optional[str] = None,
+        activity: Optional[str] = None,
+        item_id: Optional[str] = None,
+    ) -> None:
+        """Append to the interaction log. A failed write is reported and never breaks learning."""
+        try:
+            moment = now_ms()
+            repo.append_interaction(
+                InteractionEvent(
+                    interaction_id=interaction_id or new_ulid(moment),
+                    learner_id=learner_id,
+                    recorded_at_ms=moment,
+                    event_type=event_type,
+                    payload=clean_payload(payload),
+                    session_id=session_id,
+                    attempt_id=attempt_id,
+                    unit_id=unit_id,
+                    activity=activity,
+                    item_id=item_id,
+                    test_mode=test_mode,
+                )
+            )
+        except Exception:
+            logger.exception("Interaction log write failed.")
+
+    @app.post("/api/v1/learners/me/interactions", status_code=204, response_model=None)
+    def post_my_interaction(
+        event: ClientEvent,
+        learner_id: str = Depends(current_learner_id),
+        session_id: Optional[str] = Depends(current_session),
+    ):
+        log_event(
+            learner_id,
+            event.event_type,
+            event.payload.model_dump(exclude_none=True),
+            session_id=session_id,
+            interaction_id=event.interaction_id,
+            unit_id=event.unit_id,
+            activity=event.activity,
+            item_id=event.item_id,
+        )
+        return None
+
+    @app.get("/api/v1/learners/me/interactions", response_model=List[InteractionEvent])
+    def get_my_interactions(
+        limit: int = Query(1000, ge=1, le=10000), learner_id: str = Depends(current_learner_id)
+    ):
+        return repo.get_interactions(learner_id, limit)
 
     @app.get("/api/v1/health")
     def health_check() -> Dict[str, str]:
@@ -648,6 +728,11 @@ def create_app(
         if too_large(payload.files, payload.ownership_note):
             return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
         results = check_requirements(build, payload.files, payload.ownership_note, runner, payload.run_checks)
+        log_event(
+            learner_id, "verify",
+            {"files": payload.files, "run_checks": payload.run_checks, "met": {r.id: r.met for r in results}},
+            unit_id=scope_of(course_id, stage), activity=BUILD_ACTIVITY, item_id=exercise_id_of(course_id, stage),
+        )
         return BuildCheckResult(requirements=results)
 
     @app.post(
@@ -750,6 +835,11 @@ def create_app(
                     continue
                 await websocket.send_json(event)
                 if event["type"] == "exit":
+                    log_event(
+                        current_learner_id(), "run",
+                        {"files": files, "entry": entry, "exit_code": event.get("code"), "timed_out": event.get("timed_out")},
+                        item_id=start.get("exercise_id"),
+                    )
                     return
 
         async def receive_stdin() -> None:
@@ -811,8 +901,18 @@ def create_app(
 
         def events() -> Iterator[str]:
             shown = set()
+            said: List[str] = []
             try:
                 for event, data in stream_axis(axis, query, guardrail, classifier):
+                    if event == "token":
+                        said.append(data.get("text", ""))
+                    if event == "done":
+                        log_event(
+                            learner_id, "axis",
+                            {"mode": query.mode.value, "question": query.user_prompt, "answer": "".join(said),
+                             "assistance": data["assistance_level"]},
+                            unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
+                        )
                     if event == "citation":
                         citation = citation_for(data["name"])
                         if citation["title"] not in shown:
@@ -839,6 +939,12 @@ def create_app(
         if is_cold_check_exercise(query.exercise_id):
             return axis_blocked()
         response = axis.consult(axis_query(query, learner_id))
+        log_event(
+            learner_id, "axis",
+            {"mode": query.mode.value, "question": query.user_prompt, "answer": response.reply,
+             "assistance": response.detected_assistance_level.value},
+            unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
+        )
         if query.exercise_id:
             repo.log_assistance(
                 learner_id, query.exercise_id, response.detected_assistance_level, clock()
@@ -847,7 +953,11 @@ def create_app(
 
     # --- CO-6 Concept Check & Mental Model Route ---
     @app.post("/api/v1/explain", response_model=ExplainResponse)
-    def evaluate_explanation(payload: ExplainRequest, learner_id: str = Depends(current_learner_id)):
+    def evaluate_explanation(
+        payload: ExplainRequest,
+        learner_id: str = Depends(current_learner_id),
+        session_id: Optional[str] = Depends(current_session),
+    ):
         clean_unit = payload.unit_id.upper()
         keywords = ["string", "text", "typeerror", "convert", "int"]
         concept_line = "A program takes input, transforms it, and produces output; input() always returns a string."
@@ -901,6 +1011,10 @@ def create_app(
         if unit:
             maybe_start_cold_check_clock(unit, learner_id)
 
+        log_event(
+            learner_id, "concept_check", {"explanation": payload.explanation, "status": status},
+            session_id=session_id, unit_id=clean_unit, activity="explain",
+        )
         return ExplainResponse(
             unit_id=clean_unit,
             status=status,
@@ -1126,6 +1240,7 @@ def create_app(
             return problem(404, "No exercise yet", f"{unit_id} has no '{activity}' exercise yet.")
         seen = repo.get_seen_exercises(learner_id, unit_id, activity)
         next_id = choose_next(pool, seen, current.exercise_id if current else None)
+        log_event(learner_id, "regenerate", {"served": next_id}, unit_id=unit_id, activity=activity, item_id=next_id)
         return serve(unit, activity, next_id, learner_id)
 
     # --- Attempts and Evidence (SPEC-12 section 5) ---
@@ -1139,23 +1254,89 @@ def create_app(
         unit = catalog.get_unit(unit_id)
         if not unit or not unit.test_code:
             return problem(404, "No checks", f"{unit_id} has no playground checks.")
-        return check_playground(unit, payload.code)
+        result = check_playground(unit, payload.code)
+        log_event(
+            learner_id, "verify", {"code": payload.code, "passed": result.success},
+            unit_id=unit_id, activity="playground",
+        )
+        return result
 
     @app.post(
         "/api/v1/learners/me/attempts",
         response_model=AttemptResult,
         response_model_exclude_none=True,
     )
-    def post_my_attempt(attempt: Attempt, learner_id: str = Depends(current_learner_id)):
-        """Idempotent per interaction_id: a repeated submit is recorded once (SPEC-12 section 5)."""
+    def post_my_attempt(
+        attempt: Attempt,
+        learner_id: str = Depends(current_learner_id),
+        session_id: Optional[str] = Depends(current_session),
+    ):
+        """Every answer is logged exactly and linked to its evidence (ADR-0022)."""
+        link_id = attempt.interaction_id or new_ulid(now_ms())
+        try:
+            attempt_id, unit_id = locate_attempt(attempt, learner_id)
+        except Exception:
+            logger.exception("Could not place the attempt.")
+            attempt_id, unit_id = None, None
+        token = _EVIDENCE_LINK.set((link_id, attempt_id))
+        try:
+            result, replayed = submit_attempt(attempt, learner_id)
+        finally:
+            _EVIDENCE_LINK.reset(token)
+        if replayed:
+            return result
+        answer = attempt.model_dump(exclude_none=True, exclude={"exercise_id", "activity", "interaction_id"})
+        if isinstance(result, JSONResponse):
+            body = json.loads(result.body)
+            payload = {"answer": answer, "status": result.status_code, "detail": body.get("detail")}
+            logged_id = None  # A refused answer keeps its id free to be sent again.
+        else:
+            payload = {
+                "answer": answer,
+                "outcome": result.outcome,
+                "score": result.score.model_dump() if result.score else None,
+                "evidence_entry_id": result.evidence_entry_id,
+            }
+            logged_id = link_id
+        log_event(
+            learner_id, "answer_submitted", payload, session_id=session_id, interaction_id=logged_id,
+            attempt_id=attempt_id, unit_id=unit_id, activity=attempt.activity, item_id=attempt.exercise_id,
+        )
+        return result
+
+    def locate_attempt(attempt: Attempt, learner_id: str) -> Tuple[Optional[str], Optional[str]]:
+        """The attempt id and unit of an answer, read before it is graded (ADR-0022 section 2.2)."""
+        if attempt.activity in (STAGE_REVIEW, RECHECK):
+            found = repo.find_open_review_item(learner_id, attempt.activity, attempt.exercise_id)
+            return (f"{attempt.activity}/{found[0]}", found[1].unit_id) if found else (None, None)
+        target = parse_exercise_id(attempt.exercise_id)
+        if target:
+            scope = scope_of(*target)
+            current = repo.get_current_exercise(learner_id, scope, BUILD_ACTIVITY)
+            return (f"{attempt.exercise_id}@{current.served_at.isoformat()}" if current else None), scope
+        unit_id = known_exercise(attempt.exercise_id)
+        if not unit_id:
+            return None, None
+        if attempt.activity == COLD_CHECK:
+            timer = repo.get_cold_check_timer(learner_id, unit_id)
+            if timer is None:
+                return None, unit_id
+            retry = timer.last_attempt_passed is False and timer.last_attempt_at is not None
+            start = timer.last_attempt_at if retry else timer.completed_at
+            return f"{unit_id}/cold_check@{start.isoformat()}", unit_id
+        current = repo.get_current_exercise(learner_id, unit_id, attempt.activity)
+        return (f"{current.exercise_id}@{current.served_at.isoformat()}" if current else None), unit_id
+
+    def submit_attempt(attempt: Attempt, learner_id: str) -> Tuple[Any, bool]:
+        """Idempotent per interaction_id (SPEC-12 section 5). True when a stored result is replayed."""
         key = attempt.interaction_id
         if key is None:
-            return handle_attempt(attempt, learner_id)
+            return handle_attempt(attempt, learner_id), False
         if not repo.claim_interaction(learner_id, key, clock()):
             stored = repo.get_interaction_response(learner_id, key)
             if stored is None:
-                return problem(409, "Already submitted", "This answer is still being checked.")
-            return JSONResponse(json.loads(stored))
+                return problem(409, "Already submitted", "This answer is still being checked."), True
+            return JSONResponse(json.loads(stored)), True
         try:
             result = handle_attempt(attempt, learner_id)
         except Exception:
@@ -1163,9 +1344,9 @@ def create_app(
             raise
         if isinstance(result, JSONResponse):
             repo.release_interaction(learner_id, key)  # A refused attempt can be sent again.
-            return result
+            return result, False
         repo.finish_interaction(learner_id, key, result.model_dump_json(exclude_none=True))
-        return result
+        return result, False
 
     def handle_attempt(attempt: Attempt, learner_id: str):
         if attempt.activity in (STAGE_REVIEW, RECHECK):
@@ -1264,6 +1445,7 @@ def create_app(
         if not catalog.get_unit(unit_id):
             return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
         repo.reset_unit(learner_id, unit_id)
+        log_event(learner_id, "reset", {}, unit_id=unit_id)
         return None
 
     @app.get("/api/v1/learners/me/units/{unit_id}/state", response_model=UnitState)

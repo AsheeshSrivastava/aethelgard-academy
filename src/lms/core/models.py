@@ -227,3 +227,5 @@ class EvidenceEntry(BaseModel):
     cold_check: bool = False                      # Recorded by a delayed Cold Check (ADR-0016 section 2.6)
     review_kind: Optional[str] = None             # "stage_review" or "recheck" (SPEC-16)
     test_mode: bool = False                       # Recorded with every wait set to zero (ADR-0019 amendment)
+    interaction_id: Optional[str] = None          # The interaction that produced it (ADR-0022)
+    attempt_id: Optional[str] = None              # The attempt it belongs to (ADR-0022)

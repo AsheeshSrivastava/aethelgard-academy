@@ -1,3 +1,4 @@
+import { newInteractionId } from "../lib/interaction";
 import type { components } from "./schema";
 
 export type Schemas = components["schemas"];
@@ -25,6 +26,9 @@ interface StageRef {
 
 const BASE = "/api/v1";
 
+/** One id per app visit, sent with every request so the interaction log can group a visit (ADR-0022). */
+export const SESSION_ID = newInteractionId();
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -35,7 +39,9 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${BASE}${path}`, init);
+  const headers = new Headers(init?.headers);
+  headers.set("X-Session-Id", SESSION_ID);
+  const response = await fetch(`${BASE}${path}`, { ...init, headers });
   if (!response.ok) {
     const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
     throw new ApiError(response.status, problem?.detail ?? `Request failed (${response.status}).`);
@@ -54,6 +60,9 @@ function json(method: string, body: unknown): RequestInit {
 }
 
 export const api = {
+  /** Fire and forget: a failed log write must never reach the page (ADR-0022). */
+  logEvent: (event: Schemas["ClientEvent"]) =>
+    request<void>("/learners/me/interactions", json("POST", event)).catch(() => undefined),
   features: () => request<Schemas["Features"]>("/features"),
   courses: () => request<Course[]>("/courses"),
   courseMap: (courseId: string) => request<CourseMap>(`/courses/${courseId}`),

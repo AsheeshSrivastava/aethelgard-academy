@@ -42,6 +42,99 @@
         }
       }
     },
+    "/api/v1/learners/me/interactions": {
+      "post": {
+        "summary": "Post My Interaction",
+        "operationId": "post_my_interaction_api_v1_learners_me_interactions_post",
+        "parameters": [
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get My Interactions",
+        "operationId": "get_my_interactions_api_v1_learners_me_interactions_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 1000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InteractionEvent"
+                  },
+                  "title": "Response Get My Interactions Api V1 Learners Me Interactions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "summary": "Health Check",
@@ -789,15 +882,33 @@
       "post": {
         "summary": "Evaluate Explanation",
         "operationId": "evaluate_explanation_api_v1_explain_post",
+        "parameters": [
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ExplainRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1194,17 +1305,35 @@
     "/api/v1/learners/me/attempts": {
       "post": {
         "summary": "Post My Attempt",
-        "description": "Idempotent per interaction_id: a repeated submit is recorded once (SPEC-12 section 5).",
+        "description": "Every answer is logged exactly and linked to its evidence (ADR-0022).",
         "operationId": "post_my_attempt_api_v1_learners_me_attempts_post",
+        "parameters": [
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Attempt"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2222,6 +2351,110 @@
         ],
         "title": "ChoiceBlock"
       },
+      "ClientEvent": {
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "opened",
+              "closed",
+              "hint_viewed",
+              "feedback_viewed"
+            ],
+            "title": "Event Type"
+          },
+          "interaction_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{8,64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction Id"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "activity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ClientPayload"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_type"
+        ],
+        "title": "ClientEvent"
+      },
+      "ClientPayload": {
+        "properties": {
+          "seconds_open": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds Open"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ClientPayload",
+        "description": "The only fields a client event may carry; anything else is refused."
+      },
       "ColdCheckState": {
         "type": "string",
         "enum": [
@@ -2847,6 +3080,28 @@
             "type": "boolean",
             "title": "Test Mode",
             "default": false
+          },
+          "interaction_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction Id"
+          },
+          "attempt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt Id"
           }
         },
         "type": "object",
@@ -3239,6 +3494,112 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InteractionEvent": {
+        "properties": {
+          "interaction_id": {
+            "type": "string",
+            "title": "Interaction Id"
+          },
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id"
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "title": "Recorded At Ms"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "answer_submitted",
+              "concept_check",
+              "run",
+              "verify",
+              "regenerate",
+              "reset",
+              "axis",
+              "opened",
+              "closed",
+              "hint_viewed",
+              "feedback_viewed"
+            ],
+            "title": "Event Type"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "attempt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt Id"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "activity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "test_mode": {
+            "type": "boolean",
+            "title": "Test Mode",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "interaction_id",
+          "learner_id",
+          "recorded_at_ms",
+          "event_type"
+        ],
+        "title": "InteractionEvent"
       },
       "LearnerProfile": {
         "properties": {

@@ -398,6 +398,21 @@ export function Lesson() {
     codeGetter.current = undefined;
   }, [step]);
 
+  // Opening and leaving a step go to the interaction log (ADR-0022); nothing waits for it.
+  useEffect(() => {
+    if (!stepKnown) return;
+    const openedAt = Date.now();
+    void api.logEvent({ event_type: "opened", unit_id: unitId, activity: step });
+    return () => {
+      void api.logEvent({
+        event_type: "closed",
+        unit_id: unitId,
+        activity: step,
+        payload: { seconds_open: Math.round((Date.now() - openedAt) / 1000) },
+      });
+    };
+  }, [unitId, step, stepKnown]);
+
   if (unit.isPending) {
     return (
       <main className="lesson-page">

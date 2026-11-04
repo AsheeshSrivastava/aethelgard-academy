@@ -38,6 +38,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/interactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Interactions */
+        get: operations["get_my_interactions_api_v1_learners_me_interactions_get"];
+        put?: never;
+        /** Post My Interaction */
+        post: operations["post_my_interaction_api_v1_learners_me_interactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -508,7 +526,7 @@ export interface paths {
         put?: never;
         /**
          * Post My Attempt
-         * @description Idempotent per interaction_id: a repeated submit is recorded once (SPEC-12 section 5).
+         * @description Every answer is logged exactly and linked to its evidence (ADR-0022).
          */
         post: operations["post_my_attempt_api_v1_learners_me_attempts_post"];
         delete?: never;
@@ -835,6 +853,33 @@ export interface components {
             /** Options */
             options: components["schemas"]["Choice"][];
         };
+        /** ClientEvent */
+        ClientEvent: {
+            /**
+             * Event Type
+             * @enum {string}
+             */
+            event_type: "opened" | "closed" | "hint_viewed" | "feedback_viewed";
+            /** Interaction Id */
+            interaction_id?: string | null;
+            /** Unit Id */
+            unit_id?: string | null;
+            /** Activity */
+            activity?: string | null;
+            /** Item Id */
+            item_id?: string | null;
+            payload?: components["schemas"]["ClientPayload"];
+        };
+        /**
+         * ClientPayload
+         * @description The only fields a client event may carry; anything else is refused.
+         */
+        ClientPayload: {
+            /** Seconds Open */
+            seconds_open?: number | null;
+            /** Step */
+            step?: string | null;
+        };
         /**
          * ColdCheckState
          * @enum {string}
@@ -1097,6 +1142,10 @@ export interface components {
              * @default false
              */
             test_mode: boolean;
+            /** Interaction Id */
+            interaction_id?: string | null;
+            /** Attempt Id */
+            attempt_id?: string | null;
         };
         /**
          * EvidenceStrength
@@ -1230,6 +1279,39 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InteractionEvent */
+        InteractionEvent: {
+            /** Interaction Id */
+            interaction_id: string;
+            /** Learner Id */
+            learner_id: string;
+            /** Recorded At Ms */
+            recorded_at_ms: number;
+            /**
+             * Event Type
+             * @enum {string}
+             */
+            event_type: "answer_submitted" | "concept_check" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed";
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Session Id */
+            session_id?: string | null;
+            /** Attempt Id */
+            attempt_id?: string | null;
+            /** Unit Id */
+            unit_id?: string | null;
+            /** Activity */
+            activity?: string | null;
+            /** Item Id */
+            item_id?: string | null;
+            /**
+             * Test Mode
+             * @default false
+             */
+            test_mode: boolean;
         };
         /** LearnerProfile */
         LearnerProfile: {
@@ -1666,6 +1748,70 @@ export interface operations {
                 };
                 content: {
                     "text/html": string;
+                };
+            };
+        };
+    };
+    get_my_interactions_api_v1_learners_me_interactions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionEvent"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_my_interaction_api_v1_learners_me_interactions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-session-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientEvent"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2209,7 +2355,9 @@ export interface operations {
     evaluate_explanation_api_v1_explain_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-session-id"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2491,7 +2639,9 @@ export interface operations {
     post_my_attempt_api_v1_learners_me_attempts_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-session-id"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };

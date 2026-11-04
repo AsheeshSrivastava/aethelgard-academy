@@ -18,6 +18,7 @@ from lms.core.models import (
     AssistanceLevel,
     EvidenceEntry,
 )
+from lms.core.interaction_log import InteractionEvent
 from lms.core.review import ReviewItem, ReviewResult
 
 
@@ -145,6 +146,12 @@ class ILearnerRepository(Protocol):
         ...
 
     def get_all_seen_exercises(self, learner_id: str) -> Set[str]:
+        ...
+
+    def append_interaction(self, event: InteractionEvent) -> None:
+        ...
+
+    def get_interactions(self, learner_id: str, limit: int = 1000) -> List[InteractionEvent]:
         ...
 
     def claim_interaction(self, learner_id: str, interaction_id: str, claimed_at: datetime) -> bool:

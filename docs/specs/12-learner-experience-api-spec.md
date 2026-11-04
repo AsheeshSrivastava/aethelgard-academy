@@ -174,6 +174,7 @@ Rules:
 - The attempt must be on the learner's current exercise: `409` otherwise.
 - **Idempotent submit (2026-11-04).** The client sends a new `interaction_id` for each answer it submits, and the same one if it sends that answer again (a double click, a retry after a network error). The server claims the id before grading. A repeat of a finished id returns the stored `AttemptResult` and records nothing new; a repeat while the first is still being graded returns `409`. A request that ends in an error releases its id. Ids are per learner.
 - **Ungraded playground:** runs the checks, returns `outcome`, and writes no evidence. `evidence_entry_id` is null.
+- **Interaction log (ADR-0022).** Every answer, accepted or refused, is written to the interaction log with the exact answer fields, and an evidence entry carries the `interaction_id` and `attempt_id` that produced it. `GET /learners/me/interactions` exports the learner's own log; `POST /learners/me/interactions` takes the allow-listed client events. Every request may carry an `X-Session-Id` header.
 - **Explain:** the free-text concept check stays on `POST /explain`.
 - **Evidence is per seed:** an entry stores `seed_id`, and repeats of a seed, including its name variants, count once. The newest result is the one that counts.
 - **Completing a unit:** once every activity in the unit's methods has been attempted, and Explain has a concept check entry, the Cold Check clock starts.
