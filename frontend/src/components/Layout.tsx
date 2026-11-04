@@ -1,5 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+
+import { api } from "../api/client";
 
 type Theme = "light" | "dark";
 
@@ -49,6 +52,17 @@ function ThemeToggle() {
   );
 }
 
+/** Every wait is zero while this shows (ADR-0019 amendment 2026-11-04); off unless the server says so. */
+function TestModeBanner() {
+  const features = useQuery({ queryKey: ["features"], queryFn: () => api.features(), staleTime: Infinity });
+  if (!features.data?.test_mode) return null;
+  return (
+    <p className="test-mode-banner" role="status" aria-label="Test mode">
+      Test mode: timers off
+    </p>
+  );
+}
+
 export function Layout() {
   return (
     <>
@@ -78,6 +92,7 @@ export function Layout() {
           <ThemeToggle />
         </div>
       </header>
+      <TestModeBanner />
       <Outlet />
     </>
   );

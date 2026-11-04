@@ -39,3 +39,13 @@ Decided by the owner on 2026-10-31: Cold Check at both unit end and stage end.
 
 ### Open
 - Whether rechecks continue after 30 days (for example 90 days) is left until there is data from the first learner.
+
+## Amendment 2026-11-04: test mode (approved by the owner)
+
+So the owner can walk a whole stage in one sitting, the app has a test mode.
+
+1. **Off by default.** `LMS_TEST_MODE=true` in the environment turns it on. Nothing else does.
+2. **Waits.** In test mode the unit Cold Check unlock wait, the 24-hour retries (unit Cold Check and stage review) and the 7 and 30 day rechecks are all zero. The real durations stay the code defaults and live in one place, `src/lms/core/timing.py`.
+3. **Visible.** `GET /api/v1/features` reports `test_mode`, and the app shows "Test mode: timers off" on every page while it is on.
+4. **Tagged evidence.** Every ledger entry recorded in test mode carries `test_mode: true` (an additive column; old rows read false). The ledger stays append-only.
+5. **Not excluded yet.** The estimator still counts tagged entries. Excluding them, or resetting a learner's test-mode work, is a later decision; the tag makes either possible without touching other rows.

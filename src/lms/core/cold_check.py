@@ -8,12 +8,13 @@ Deterministic and pure: the status is derived from stored timestamps and a
 `now` supplied by the caller, so no workflow engine or sleeping is needed.
 """
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
+
+from lms.core.timing import REAL_TIMING, ColdCheckConfig
 
 
 class ColdCheckState(str, Enum):
@@ -24,14 +25,7 @@ class ColdCheckState(str, Enum):
     FAILED_WAITING = "failed_waiting"  # Last attempt failed; retry delay still running
 
 
-@dataclass(frozen=True)
-class ColdCheckConfig:
-    """Delay marked *tunable* in ADR-0016."""
-
-    delay_hours: int = 24
-
-
-DEFAULT_CONFIG = ColdCheckConfig()
+DEFAULT_CONFIG = REAL_TIMING.cold_check
 
 
 class ColdCheckTimer(BaseModel):

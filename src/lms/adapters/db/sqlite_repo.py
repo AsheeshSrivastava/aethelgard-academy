@@ -28,6 +28,7 @@ EVIDENCE_LEDGER_ADDED_COLUMNS = {
     "cold_check": "INTEGER NOT NULL DEFAULT 0",
     "seed_id": "TEXT",
     "review_kind": "TEXT",
+    "test_mode": "INTEGER NOT NULL DEFAULT 0",
 }
 
 
@@ -636,8 +637,8 @@ class SQLiteLearnerRepository:
                     entry_id, learner_id, unit_id, skill_id,
                     evidence_category, evidence_strength, assistance_level,
                     demonstration_context, observed_reasoning, recorded_at,
-                    exercise_id, activity, cold_check, seed_id, review_kind
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    exercise_id, activity, cold_check, seed_id, review_kind, test_mode
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -655,6 +656,7 @@ class SQLiteLearnerRepository:
                     int(entry.cold_check),
                     entry.seed_id,
                     entry.review_kind,
+                    int(entry.test_mode),
                 ),
             )
         self.events.publish(
@@ -712,6 +714,7 @@ class SQLiteLearnerRepository:
                     cold_check=bool(r["cold_check"]),
                     seed_id=r["seed_id"],
                     review_kind=r["review_kind"],
+                    test_mode=bool(r["test_mode"]),
                 )
             )
         return entries

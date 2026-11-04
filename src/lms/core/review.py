@@ -16,7 +16,8 @@ from typing import AbstractSet, Dict, Iterable, List, Mapping, Optional, Sequenc
 
 from pydantic import BaseModel
 
-from lms.core.cold_check import DEFAULT_CONFIG, ColdCheckConfig
+from lms.core.cold_check import DEFAULT_CONFIG
+from lms.core.timing import REAL_TIMING, ColdCheckConfig
 from lms.core.exercises import ExerciseSeed, seed_variants
 from lms.core.models import EvidenceEntry, EvidenceStrength, ProficiencyLevel, Unit
 
@@ -173,9 +174,16 @@ def plan_recheck(
 
 
 def due_reviews(
-    ledger: Sequence[EvidenceEntry], finished: AbstractSet[str], now: datetime
+    ledger: Sequence[EvidenceEntry],
+    finished: AbstractSet[str],
+    now: datetime,
+    wait_days: Sequence[int] = REAL_TIMING.recheck_days,
 ) -> List[DueReview]:
-    """Rechecks due now, oldest first; one per skill, so the queue stays short."""
+    """Rechecks due now, oldest first; one per skill, so the queue stays short.
+
+    Rechecks keep their names (7, 30); `wait_days` is how long each waits (zero in test mode).
+    """
+    waits = dict(zip(RECHECK_DAYS, wait_days))
     first_pass: Dict[str, datetime] = {}
     for entry in ledger:
         if entry.review_kind == STAGE_REVIEW and entry.evidence_strength == EvidenceStrength.STRONG:
@@ -187,7 +195,7 @@ def due_reviews(
         days = next((d for d in RECHECK_DAYS if recheck_scope(skill_id, d) not in finished), None)
         if days is None:
             continue
-        due_at = passed_at + timedelta(days=days)
+        due_at = passed_at + timedelta(days=waits[days])
         if due_at <= now:
             due.append(DueReview(skill_id=skill_id, skill_name=skill_id, days=days, due_at=due_at))
     return sorted(due, key=lambda d: d.due_at)

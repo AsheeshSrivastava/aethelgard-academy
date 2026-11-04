@@ -779,7 +779,7 @@ def test_other_stages_keep_a_placeholder(client):
 
 
 def test_features_are_all_off(client):
-    assert client.get("/api/v1/features").json() == {"live_sessions": False, "forums": False, "gamification": False}
+    assert client.get("/api/v1/features").json() == {"live_sessions": False, "forums": False, "gamification": False, "test_mode": False}
 
 
 # --- The evidence event ---

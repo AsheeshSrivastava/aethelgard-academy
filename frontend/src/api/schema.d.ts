@@ -1087,6 +1087,11 @@ export interface components {
             cold_check: boolean;
             /** Review Kind */
             review_kind?: string | null;
+            /**
+             * Test Mode
+             * @default false
+             */
+            test_mode: boolean;
         };
         /**
          * EvidenceStrength
@@ -1210,6 +1215,11 @@ export interface components {
              * @default false
              */
             gamification: boolean;
+            /**
+             * Test Mode
+             * @default false
+             */
+            test_mode: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

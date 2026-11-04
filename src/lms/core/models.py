@@ -226,3 +226,4 @@ class EvidenceEntry(BaseModel):
     activity: Optional[ActivityType] = None       # Activity that produced the entry; BUILD qualifies for Own
     cold_check: bool = False                      # Recorded by a delayed Cold Check (ADR-0016 section 2.6)
     review_kind: Optional[str] = None             # "stage_review" or "recheck" (SPEC-16)
+    test_mode: bool = False                       # Recorded with every wait set to zero (ADR-0019 amendment)

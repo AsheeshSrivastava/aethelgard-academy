@@ -54,6 +54,7 @@ function json(method: string, body: unknown): RequestInit {
 }
 
 export const api = {
+  features: () => request<Schemas["Features"]>("/features"),
   courses: () => request<Course[]>("/courses"),
   courseMap: (courseId: string) => request<CourseMap>(`/courses/${courseId}`),
   unit: (unitId: string) => request<Unit>(`/units/${unitId}`),

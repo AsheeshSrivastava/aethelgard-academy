@@ -2829,6 +2829,11 @@
               }
             ],
             "title": "Review Kind"
+          },
+          "test_mode": {
+            "type": "boolean",
+            "title": "Test Mode",
+            "default": false
           }
         },
         "type": "object",
@@ -3197,6 +3202,11 @@
           "gamification": {
             "type": "boolean",
             "title": "Gamification",
+            "default": false
+          },
+          "test_mode": {
+            "type": "boolean",
+            "title": "Test Mode",
             "default": false
           }
         },

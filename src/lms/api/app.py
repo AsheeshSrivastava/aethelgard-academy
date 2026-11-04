@@ -52,6 +52,8 @@ from lms.core.course_map import (
 )
 from lms.core.curriculum_checks import ACTIVITY_EVIDENCE
 from lms.core.models import stage_label
+from lms.core.timing import timing_for
+from lms.adapters.ai.local_llm_companion import load_dotenv_if_present
 from lms.core.review import (
     RECHECK,
     STAGE_REVIEW,
@@ -187,6 +189,7 @@ class Features(BaseModel):
     live_sessions: bool = False
     forums: bool = False
     gamification: bool = False
+    test_mode: bool = False            # Every wait is zero (ADR-0019 amendment 2026-11-04)
 
 
 class BuildCheckRequest(BaseModel):
@@ -246,6 +249,11 @@ class ExplainResponse(BaseModel):
     evidence_logged: bool
 
 
+def env_test_mode() -> bool:
+    """Only a clear yes turns test mode on; anything else keeps the real waits."""
+    return os.environ.get("LMS_TEST_MODE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def create_app(
     repo: Optional[ILearnerRepository] = None,
     runner: Optional[ICodeRunner] = None,
@@ -255,8 +263,16 @@ def create_app(
     clock: Optional[Callable[[], datetime]] = None,
     run_limits: Optional[RunLimits] = None,
     dist_dir: Optional[Path] = None,
+    test_mode: Optional[bool] = None,
 ) -> FastAPI:
     """Application factory for the LMS API Gateway."""
+
+    # Test mode sets every wait to zero and tags the evidence (ADR-0019 amendment 2026-11-04).
+    if test_mode is None:
+        load_dotenv_if_present()  # Settings may come from a local .env, as for AXIS
+        test_mode = env_test_mode()
+    timing = timing_for(test_mode)
+    cold_config = timing.cold_check
 
     # Default dependencies
     if repo is None:
@@ -314,13 +330,16 @@ def create_app(
         return FileResponse(index_file) if index_file.exists() else serve_legacy_shell()
 
     # --- System Routes ---
+    def record_evidence(entry: EvidenceEntry) -> None:
+        repo.record_evidence(entry.model_copy(update={"test_mode": test_mode}))
+
     @app.get("/api/v1/health")
     def health_check() -> Dict[str, str]:
         return {"status": "ok", "version": "0.1.0"}
 
     @app.get("/api/v1/features", response_model=Features)
     def get_features():
-        return Features()
+        return Features(test_mode=test_mode)
 
     # --- Concept Library (KMS) Routes ---
     @app.get("/api/v1/concepts", response_model=List[ConceptSummary])
@@ -397,7 +416,7 @@ def create_app(
             catalog.get_course_units(course_id),
             catalog.get_stage_titles(course_id),
             lambda unit_id: cold_check_status(
-                repo.get_cold_check_timer(learner_id, unit_id), now
+                repo.get_cold_check_timer(learner_id, unit_id), now, cold_config
             ).state,
             lambda unit: unit_decision(unit, ledger, now, config),
             {
@@ -427,7 +446,7 @@ def create_app(
         pending = [
             u.unit_id
             for u in units
-            if cold_check_status(repo.get_cold_check_timer(learner_id, u.unit_id), now).state
+            if cold_check_status(repo.get_cold_check_timer(learner_id, u.unit_id), now, cold_config).state
             != ColdCheckState.PASSED
         ]
         scope = stage_scope(course_id, stage)
@@ -437,7 +456,7 @@ def create_app(
             and bool(plan_stage_review(units, catalog.seeds, repo.get_all_seen_exercises(learner_id)))
         )
         result = repo.get_review_result(learner_id, STAGE_REVIEW, scope)
-        return stage_review_status(pending, has_items, result, items, now)
+        return stage_review_status(pending, has_items, result, items, now, cold_config)
 
     def open_stage_round(course_id: str, stage: int, learner_id: str) -> List[ReviewItem]:
         """The stored round: made once, and after a fail its failed items are replaced."""
@@ -498,7 +517,7 @@ def create_app(
             cold_check=True,
             review_kind=kind,
         )
-        repo.record_evidence(entry)
+        record_evidence(entry)
         repo.answer_review_item(learner_id, kind, scope, item.position, graded.passed)
         items = repo.get_review_items(learner_id, kind, scope)
         if all(i.passed is not None for i in items):
@@ -522,7 +541,7 @@ def create_app(
         seen = repo.get_all_seen_exercises(learner_id)
         names = {s.skill_id: s.skill_name for u in catalog.list_all_units() for s in u.target_skills}
         due: List[DueReview] = []
-        for review in due_reviews(ledger, finished, clock()):
+        for review in due_reviews(ledger, finished, clock(), timing.recheck_days):
             stored = repo.get_review_items(
                 learner_id, RECHECK, recheck_scope(review.skill_id, review.days)
             )
@@ -680,7 +699,7 @@ def create_app(
                     seed_id=exercise_id,
                     activity=ActivityType.BUILD,
                 )
-                repo.record_evidence(entry)
+                record_evidence(entry)
                 entries.append(entry)
 
         config = EstimatorConfig(main_activities=catalog.main_activities)
@@ -877,7 +896,7 @@ def create_app(
             observed_reasoning=f"Mental model evaluated as {status}: {feedback}",
             recorded_at=clock(),
         )
-        repo.record_evidence(entry)
+        record_evidence(entry)
         unit = catalog.get_unit(clean_unit)
         if unit:
             maybe_start_cold_check_clock(unit, learner_id)
@@ -941,7 +960,7 @@ def create_app(
         return build_proficiency_view(
             units,
             ledger,
-            lambda unit_id: cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), now),
+            lambda unit_id: cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), now, cold_config),
             now=now,
             stage=stage,
             config=config,
@@ -951,7 +970,7 @@ def create_app(
     def get_my_cold_check(unit_id: str, learner_id: str = Depends(current_learner_id)):
         if not catalog.get_unit(unit_id):
             return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
-        return cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock())
+        return cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock(), cold_config)
 
     @app.get("/api/v1/learners/me/ledger", response_model=List[EvidenceEntry])
     def get_my_ledger(
@@ -966,7 +985,7 @@ def create_app(
 
     # --- Exercises, Regenerate, Reset, State and Drafts (SPEC-12 section 4) ---
     def cold_check_blocked(unit_id: str, learner_id: str) -> Optional[JSONResponse]:
-        status = cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock())
+        status = cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock(), cold_config)
         if status.state == ColdCheckState.PASSED:
             return problem(409, "Cold Check passed", f"The Cold Check for {unit_id} is already passed.")
         if status.state != ColdCheckState.AVAILABLE:
@@ -1169,7 +1188,7 @@ def create_app(
             activity=seed.activity,
             cold_check=is_cold,
         )
-        repo.record_evidence(entry)
+        record_evidence(entry)
 
         if is_cold:
             finish_cold_item(unit, seed, graded.passed, learner_id)

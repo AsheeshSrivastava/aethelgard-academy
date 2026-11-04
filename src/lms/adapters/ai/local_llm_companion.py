@@ -31,7 +31,7 @@ from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse, IAXISCompanio
 from lms.core.rag_contracts import verify_passage
 
 
-def _load_dotenv_if_present() -> None:
+def load_dotenv_if_present() -> None:
     """Read a local .env file into os.environ if not already set."""
     env_file = Path(".env")
     if env_file.exists():
@@ -391,7 +391,7 @@ def get_axis_companion(
     retriever: Optional[HybridRerankedRetriever] = None,
 ) -> IAXISCompanion:
     """Factory returning MockAxisCompanion when MOCK_AI=true, else LocalLLMCompanion."""
-    _load_dotenv_if_present()
+    load_dotenv_if_present()
     mock_flag = os.environ.get("MOCK_AI", "true").strip().lower()
     if mock_flag in ("1", "true", "yes"):
         return MockAxisCompanion()

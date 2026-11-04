@@ -100,7 +100,11 @@ Entries set `cold_check` true and `review_kind` to `stage_review` or `recheck`, 
 
 **Build page.** It shows `StageBuild.stage_label` ("DSA 0 build") and links back to the build's own course.
 
-## 8. Not in this spec
+## 8. Test mode (ADR-0019 amendment 2026-11-04)
+
+`LMS_TEST_MODE=true` sets every wait in this spec and in SPEC-12 section 4.1 to zero: the unit Cold Check unlock, the 24-hour retries and the 7 and 30 day rechecks. Recheck scopes keep their names (`CO-1/7`, `CO-1/30`), only the waits change. `GET /api/v1/features` returns `{test_mode}`; the frontend shows a banner while it is true. Ledger entries recorded in test mode have `test_mode: true`.
+
+## 9. Not in this spec
 
 - Spare Cold Check seeds, which are curriculum content for the owner to approve.
 - The volume warning in ADR-0019 section 2.6.
