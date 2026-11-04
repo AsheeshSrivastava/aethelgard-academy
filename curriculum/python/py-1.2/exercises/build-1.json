@@ -10,7 +10,7 @@
     "",
     "It asks for the price per kilogram, then the number of kilograms, and prints the donation's value rounded to 2 decimal places, as `Total value: <total>`.",
     "",
-    "If the clerk types text that is not a number, the program must stop with an error instead of printing a total."
+    "The clerk always types numbers here. Turning away bad input comes later, once you can make decisions in code."
   ],
   "cold_check_eligible": false,
   "curator_approved": false,
@@ -39,10 +39,6 @@
       {
         "id": "print",
         "label": "Print Total value: <total>"
-      },
-      {
-        "id": "refuse",
-        "label": "Text that is not a number stops the program"
       }
     ],
     "reference_solution": [
@@ -67,12 +63,7 @@
       "    assert _total(_run('40', '3').stdout) == 120",
       "",
       "def test_rounds_to_two_decimal_places():",
-      "    assert _total(_run('33.333', '3').stdout) == 100.0",
-      "",
-      "def test_refuses_text_that_is_not_a_number():",
-      "    result = _run('forty', '3')",
-      "    assert result.returncode != 0",
-      "    assert 'Total value' not in result.stdout"
+      "    assert _total(_run('33.333', '3').stdout) == 100.0"
     ],
     "wrong_solution": [
       "price = float(input(\"Price per kg: \"))",

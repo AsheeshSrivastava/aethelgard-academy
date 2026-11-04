@@ -17,7 +17,7 @@ A supplier drops off rice at the pantry. The clerk types the price per kilogram 
 `input()` returns a `str`, even when the clerk types `40`. `"40" * 3` is `"404040"`, not `120`. Turn text into a number first with `int()` or `float()`.
 
 ### C. Text that is not a number stops the program
-`float("forty")` stops with a `ValueError`. That is Python refusing bad input. Later units (PY-2.1, PY-4.1) show how to catch it politely.
+`float("forty")` stops with a `ValueError`. In this unit the clerk always types numbers. PY-2.1 turns away an empty or out-of-range answer with a clear message, and PY-4.3 does the same for text that is not a number.
 
 ### D. Rounding
 `round(99.999, 2)` gives `100.0`. Money and weights are rounded before they are recorded.
