@@ -45,3 +45,13 @@ The roadmaps now name three kinds of build work: Make steps inside units, one bu
 
 ### Not decided here
 - The capstone's content and whether it spans Python, Backend and AI Engineering.
+
+---
+
+## Amendment 2026-11-04: the Make step (approved by the owner)
+
+1. A Make step is a `playground` Build seed with `make: true` (SPEC-13). Its starter is blank apart from comments: the learner writes it from a blank file.
+2. The Build step screen shows the unit's approved Make wording (`Unit.make.task`).
+3. The curriculum checks report a Make seed in a unit with no Make step, a non-blank starter, a seed crediting another skill, and a Make unit with no Make seed (`make-seed-unexpected`, `make-starter-not-blank`, `make-seed-wrong-skill`, `make-seed-missing`).
+4. Its maturity is P0, as in section 2. First example: PY-1.2 `build-1` (approved 2026-11-04).
+5. Other stage builds are written with each stage's content, not all up front (owner, 2026-11-04).

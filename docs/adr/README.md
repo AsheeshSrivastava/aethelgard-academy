@@ -24,3 +24,4 @@
 | [ADR-0020](0020-slotted-units-and-path-order.md) | Slotted Units, Stage Ids and Path Order | **Proposed** | 2026-10-31 |
 | [ADR-0021](0021-private-answer-material.md) | Private Answer Material | **Proposed** | 2026-11-03 |
 | [ADR-0022](0022-interaction-log.md) | Interaction Log and Cold Check Feedback | **Proposed** | 2026-11-04 |
+| [ADR-0023](0023-pantryflow-case-study.md) | One Case Study for the Whole Path (PantryFlow) | **Proposed** | 2026-11-04 |
