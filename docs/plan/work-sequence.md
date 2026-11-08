@@ -54,6 +54,12 @@ Decided 2026-11-04: keys stay in `.env` for now; Gemini gets its own adapter (Go
 - [x] 2c.2 Settings page: active profile, "key set: yes/no", test connection showing the model that answered. (NOTHING) Done 2026-11-04 (commit f63bb03).
 - [x] 2c.3 Cost estimate and a monthly cap for paid providers. (DECIDE the cap) Done 2026-11-04 (commit f63bb03).
 
+## Phase 2d: Right after the README work (owner, 2026-11-08)
+
+The README work is AI feedback on README files, reusing the AI judgement from ADR-0026 (section 7) and ADR-0024. It is not broken into steps here yet.
+
+- [ ] 2d.1 AXIS answers vs RAG (owner, 2026-11-08; placed right after the README work by the owner): when a learner asks AXIS a question (not when AI judges), is the answer built only from retrieved passages, or from the model's own knowledge, and are the citations real sources for what was said? Decide the purpose of RAG at question time. Expected direction: answers are constructed from retrieved curriculum, since a direct answer is often not in one passage; say so when nothing relevant is found. Check first: what the prompt allows, whether citations match the text used, and the upstream exception in 6.3, which may close here too. (DECIDE, then NOTHING)
+
 ## Phase 3: Two decisions before more testing
 
 - [x] 3.1 Does work done in test mode count toward your own progress? Decided 2026-11-04: yes, as today.
@@ -77,7 +83,6 @@ Hidden parts always go to the private answers repo from the start (ADR-0021).
 - [ ] 6.1 Docker sandbox on by default. (NOTHING)
 - [ ] 6.2 Consent, data deletion and retention (ADR-0022 section 2.6). (NOTHING, then APPROVE the wording)
 - [ ] 6.3 Close the AXIS upstream-citation exception (ADR-0003 section 4). (NOTHING)
-- [ ] 6.5 AXIS answers vs RAG (owner, 2026-11-08): when a learner asks AXIS a question (not when AI judges), is the answer built only from retrieved passages, or from the model's own knowledge, and are the citations real sources for what was said? Decide the purpose of RAG at question time. Expected direction: answers are constructed from retrieved curriculum, since a direct answer is often not in one passage; say so when nothing relevant is found. Check first: what the prompt allows, whether citations match the text used, and the upstream exception in 6.3. (DECIDE, then NOTHING)
 - [ ] 6.4 Accept or revise the Proposed ADRs: 0015, 0016, 0018 to 0023. (APPROVE each)
 
 ---
