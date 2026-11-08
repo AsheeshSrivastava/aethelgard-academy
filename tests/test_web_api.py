@@ -68,13 +68,15 @@ def test_explain_endpoint_solid(test_client):
     client, repo = test_client
     payload = {
         "unit_id": "PY-0.1",
-        "explanation": "Statements execute top-to-bottom sequentially; input() returns unparsed string characters that must be converted before arithmetic.",
+        "explanation": "Python runs statements in order; a variable keeps the value input() returns; print shows an empty line.",
     }
     res = client.post("/api/v1/explain", json=payload)
     assert res.status_code == 200
     body = res.json()
     assert body["unit_id"] == "PY-0.1"
-    assert body["status"] == "Solid"
+    assert body["status"] == "judged"
+    assert body["verdict"] == "Solid"
+    assert body["model"] == "offline-mock"
     assert body["evidence_logged"] is True
 
     # Check evidence logged in DB
@@ -82,6 +84,7 @@ def test_explain_endpoint_solid(test_client):
     assert len(ledger) >= 1
     assert ledger[0].skill_id == "CO-6"
     assert "Solid" in (ledger[0].observed_reasoning or "")
+    assert "offline-mock" in ledger[0].demonstration_context
 
 
 def test_explain_endpoint_shaky(test_client):
@@ -95,7 +98,8 @@ def test_explain_endpoint_shaky(test_client):
     assert res.status_code == 200
     body = res.json()
     assert body["unit_id"] == "PY-0.1"
-    assert body["status"] == "Shaky"
+    assert body["status"] == "judged"
+    assert body["verdict"] == "Shaky"
     assert body["evidence_logged"] is True
 
 

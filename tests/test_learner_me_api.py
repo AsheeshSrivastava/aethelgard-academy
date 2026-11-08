@@ -287,13 +287,13 @@ def test_two_entries_without_a_cold_check_stay_provisional(client, repo):
 
 
 def test_shaky_explain_route_feeds_the_rebuild_decision(client, repo):
-    payload = {"unit_id": "PY-1.1", "explanation": "Because it is code."}
-    assert client.post("/api/v1/explain", json=payload).json()["status"] == "Shaky"
-    assert client.post("/api/v1/explain", json=payload).json()["status"] == "Shaky"
+    payload = {"unit_id": "PY-1.2", "explanation": "Because it is code."}
+    assert client.post("/api/v1/explain", json=payload).json()["verdict"] == "Shaky"
+    assert client.post("/api/v1/explain", json=payload).json()["verdict"] == "Shaky"
 
     body = proficiency(client, "course_id=python&stage=1")
 
-    assert body["units"][0] == {"unit_id": "PY-1.1", "decision": "Rebuild"}
+    assert {"unit_id": "PY-1.2", "decision": "Rebuild"} in body["units"]
     assert body["next_action"]["activity"] == "explain"
 
 

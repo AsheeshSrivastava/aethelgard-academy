@@ -165,20 +165,19 @@ class GeminiCompanion:
         self._record("connection_test", answered, response, len(sys_prompt) + len(user_msg))
         return (answered, *_counts(response))
 
-    def evaluate_concept_check(
-        self, unit_id: str, concept_line: str, explanation: str, solid_keywords: List[str]
-    ) -> Dict[str, str]:
-        user_msg = axis_rules.build_concept_check_message(unit_id, concept_line, explanation, solid_keywords)
-        sys_prompt = axis_rules.CONCEPT_CHECK_SYSTEM_PROMPT
+    def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
+        """One judging call (SPEC-18 section 3). Returns the raw reply and the model that answered.
+
+        Never falls back to anything: a failure is raised for the router to name.
+        """
+        user_msg = axis_rules.build_judging_message(unit_id, prompt, explanation, ideas)
+        sys_prompt = axis_rules.JUDGE_SYSTEM_PROMPT
         self._check_budget(sys_prompt, user_msg)
-        try:
-            response = self._client.models.generate_content(
-                model=self.model,
-                contents=user_msg,
-                config=self._config(sys_prompt, 0.0, axis_rules.CONCEPT_CHECK_MAX_TOKENS),
-            )
-            self._record("concept_check", self._answered(response), response, len(sys_prompt) + len(user_msg))
-            return axis_rules.parse_concept_check(response.text or "")
-        except Exception:
-            # The concept check is a soft gate (AGENTS.md section 6): keep the deterministic fallback.
-            return axis_rules.keyword_concept_check(explanation, solid_keywords)
+        response = self._client.models.generate_content(
+            model=self.model,
+            contents=user_msg,
+            config=self._config(sys_prompt, 0.0, axis_rules.JUDGE_MAX_TOKENS),
+        )
+        answered = self._answered(response)
+        self._record("concept_check", answered, response, len(sys_prompt) + len(user_msg))
+        return response.text or "", answered

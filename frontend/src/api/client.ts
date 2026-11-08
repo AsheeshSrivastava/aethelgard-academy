@@ -87,6 +87,8 @@ export const api = {
   attempt: (attempt: Schemas["Attempt"]) => request<AttemptResult>("/learners/me/attempts", json("POST", attempt)),
   explain: (unitId: string, explanation: string) =>
     request<ExplainResponse>("/explain", json("POST", { unit_id: unitId, explanation })),
+  disputeJudgement: (interactionId: string) =>
+    request<void>(`/learners/me/judgements/${interactionId}:dispute`, { method: "POST" }),
   getDraft: (exerciseId: string) => request<Schemas["Draft"]>(`/learners/me/drafts/${exerciseId}`),
   saveDraft: (exerciseId: string, files: Record<string, string>) =>
     request<void>(`/learners/me/drafts/${exerciseId}`, json("PUT", { files })),

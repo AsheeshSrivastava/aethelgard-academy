@@ -12,6 +12,7 @@ import { CodeWorkspace, ItemForm, type Answer } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
 import { NextLink, Result } from "../lesson/Result";
 import { nextStep, splitLessonForExplain } from "../lesson/steps";
+import { AiJudgement } from "../components/AiJudgement";
 import { coldCheckMessage, stepName } from "../lib/format";
 import { useInteractionId } from "../lib/interaction";
 import { useNow } from "../lib/useNow";
@@ -109,8 +110,9 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
   const client = useQueryClient();
   const check = useMutation({
     mutationFn: () => api.explain(unit.unit_id, text),
-    onSuccess: () => {
-      onDone();
+    onSuccess: (result) => {
+      // The step stays open until a judgement exists (ADR-0026): an unjudged answer writes nothing.
+      if (result.status === "judged") onDone();
       return client.invalidateQueries({ queryKey: ["coldCheck", unit.unit_id] });
     },
   });
@@ -142,11 +144,13 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
       </form>
       {check.isError && <ErrorNote error={check.error} />}
       {check.data && (
-        <div className={`result ${check.data.status === "Solid" ? "result-passed" : "result-failed"}`}>
-          <p className="result-title">{check.data.status}</p>
-          <p className="small">{check.data.feedback}</p>
+        <>
+          <AiJudgement
+            judgement={check.data}
+            onDispute={check.data.interaction_id ? () => api.disputeJudgement(check.data.interaction_id as string) : undefined}
+          />
           <NextLink unitId={unit.unit_id} step={next} />
-        </div>
+        </>
       )}
     </div>
   );

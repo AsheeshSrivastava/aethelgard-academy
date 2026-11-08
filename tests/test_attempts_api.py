@@ -85,7 +85,7 @@ TRACE_1 = ["waiting", "checked in"]
 
 def finish_activities(client):
     """Attempt every activity of PY-0.1, including the concept check."""
-    client.post("/api/v1/explain", json={"unit_id": "PY-0.1", "explanation": "statement order sequential return"})
+    client.post("/api/v1/explain", json={"unit_id": "PY-0.1", "explanation": "Python runs statements in order; a variable keeps the value input() returns; print shows an empty line."})
     assert attempt(client, choice="A").status_code == 200
     assert attempt(client, "trace", trace_answers=TRACE_1).status_code == 200
 

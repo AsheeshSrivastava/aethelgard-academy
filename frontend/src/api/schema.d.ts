@@ -399,6 +399,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/judgements/{interaction_id}:dispute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dispute Judgement
+         * @description Log that the learner thinks a judgement is wrong (SPEC-18 section 6). Changes nothing else.
+         */
+        post: operations["dispute_judgement_api_v1_learners_me_judgements__interaction_id__dispute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/explain-error": {
         parameters: {
             query?: never;
@@ -1306,14 +1326,35 @@ export interface components {
             /** Explanation */
             explanation: string;
         };
-        /** ExplainResponse */
+        /**
+         * ExplainResponse
+         * @description The verdict (SPEC-18 section 2) plus the unit and whether a ledger entry was written.
+         */
         ExplainResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "judged" | "not_judged";
+            /** Verdict */
+            verdict?: ("Solid" | "Shaky") | null;
+            /** Ideas */
+            ideas?: components["schemas"]["IdeaResult"][];
+            /** Feedback */
+            feedback?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Reason */
+            reason?: ("ai_off" | "no_rubric" | "cap_reached" | "provider_refused" | "no_answer" | "unreadable_reply") | null;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+            /** Interaction Id */
+            interaction_id?: string | null;
             /** Unit Id */
             unit_id: string;
-            /** Status */
-            status: string;
-            /** Feedback */
-            feedback: string;
             /** Evidence Logged */
             evidence_logged: boolean;
         };
@@ -1369,6 +1410,15 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** IdeaResult */
+        IdeaResult: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Met */
+            met: boolean;
+        };
         /** InteractionEvent */
         InteractionEvent: {
             /** Interaction Id */
@@ -1381,7 +1431,7 @@ export interface components {
              * Event Type
              * @enum {string}
              */
-            event_type: "answer_submitted" | "concept_check" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed";
+            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed";
             /** Payload */
             payload?: {
                 [key: string]: unknown;
@@ -2554,6 +2604,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ExplainResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dispute_judgement_api_v1_learners_me_judgements__interaction_id__dispute_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-session-id"?: string | null;
+            };
+            path: {
+                interaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

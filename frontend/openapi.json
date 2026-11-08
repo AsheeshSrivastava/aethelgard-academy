@@ -976,6 +976,55 @@
         }
       }
     },
+    "/api/v1/learners/me/judgements/{interaction_id}:dispute": {
+      "post": {
+        "summary": "Dispute Judgement",
+        "description": "Log that the learner thinks a judgement is wrong (SPEC-18 section 6). Changes nothing else.",
+        "operationId": "dispute_judgement_api_v1_learners_me_judgements__interaction_id__dispute_post",
+        "parameters": [
+          {
+            "name": "interaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Interaction Id"
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/explain-error": {
       "post": {
         "summary": "Explain Runtime Error",
@@ -3547,17 +3596,96 @@
       },
       "ExplainResponse": {
         "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "judged",
+              "not_judged"
+            ],
+            "title": "Status"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Solid",
+                  "Shaky"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          },
+          "ideas": {
+            "items": {
+              "$ref": "#/components/schemas/IdeaResult"
+            },
+            "type": "array",
+            "title": "Ideas"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ai_off",
+                  "no_rubric",
+                  "cap_reached",
+                  "provider_refused",
+                  "no_answer",
+                  "unreadable_reply"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          },
+          "interaction_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction Id"
+          },
           "unit_id": {
             "type": "string",
             "title": "Unit Id"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "feedback": {
-            "type": "string",
-            "title": "Feedback"
           },
           "evidence_logged": {
             "type": "boolean",
@@ -3566,12 +3694,12 @@
         },
         "type": "object",
         "required": [
-          "unit_id",
           "status",
-          "feedback",
+          "unit_id",
           "evidence_logged"
         ],
-        "title": "ExplainResponse"
+        "title": "ExplainResponse",
+        "description": "The verdict (SPEC-18 section 2) plus the unit and whether a ledger entry was written."
       },
       "ExplainSpotFlawBlock": {
         "properties": {
@@ -3695,6 +3823,29 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "IdeaResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "met": {
+            "type": "boolean",
+            "title": "Met"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "met"
+        ],
+        "title": "IdeaResult"
+      },
       "InteractionEvent": {
         "properties": {
           "interaction_id": {
@@ -3714,6 +3865,7 @@
             "enum": [
               "answer_submitted",
               "concept_check",
+              "judgement_disputed",
               "run",
               "verify",
               "regenerate",

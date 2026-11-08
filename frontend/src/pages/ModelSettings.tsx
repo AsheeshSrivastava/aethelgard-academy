@@ -24,17 +24,19 @@ function tokens(value: number | null): string {
   return value === null ? "not reported" : value.toLocaleString("en-GB");
 }
 
-function ConfirmPaid({ profile, onCancel, onConfirm, busy }: {
+function ConfirmPaid({ profile, onCancel, onConfirm, busy, title, action = "Switch" }: {
   profile: ModelProfile;
   onCancel: () => void;
   onConfirm: () => void;
   busy: boolean;
+  title?: string;
+  action?: string;
 }) {
   const [ticked, setTicked] = useState(false);
   const titleId = `confirm-${profile.id}`;
   return (
     <div role="dialog" aria-labelledby={titleId} className="card panel model-confirm">
-      <h3 id={titleId}>Switch to {profile.label}</h3>
+      <h3 id={titleId}>{title ?? `Switch to ${profile.label}`}</h3>
       <p>
         {profile.label} is paid: {priceLine(profile)}, about {money(profile.estimate_per_question_usd)} per question.
         Calls stop when this month's spend reaches the cap.
@@ -46,7 +48,7 @@ function ConfirmPaid({ profile, onCancel, onConfirm, busy }: {
       </label>
       <div className="model-actions">
         <button type="button" className="button button-primary" disabled={!ticked || busy} onClick={onConfirm}>
-          Switch
+          {action}
         </button>
         <button type="button" className="button" onClick={onCancel}>
           Cancel
@@ -159,6 +161,17 @@ export function ModelSettings() {
     },
   });
 
+  const [pendingJudge, setPendingJudge] = useState<ModelProfile | null>(null);
+  const setJudge = useMutation({
+    mutationFn: ({ profileId, confirm }: { profileId: string | null; confirm: boolean }) =>
+      modelSettingsApi.setJudge(profileId, confirm),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["model-settings"], data);
+      setPendingJudge(null);
+      setNotice("Judging model saved.");
+    },
+  });
+
   const test = useMutation({ mutationFn: modelSettingsApi.test, onSettled: refreshUsage });
 
   if (overview.isPending) return <Loading what="model settings" />;
@@ -173,6 +186,14 @@ export function ModelSettings() {
     test.reset();
     if (profile.paid) setPending(profile);
     else switchTo.mutate({ profile, confirm: false });
+  }
+
+  function chooseJudge(value: string) {
+    setNotice(null);
+    const profile = data.profiles.find((p) => p.id === value);
+    if (!profile) setJudge.mutate({ profileId: null, confirm: false });
+    else if (profile.paid) setPendingJudge(profile);
+    else setJudge.mutate({ profileId: profile.id, confirm: false });
   }
 
   return (
@@ -200,6 +221,41 @@ export function ModelSettings() {
           busy={switchTo.isPending}
           onCancel={() => setPending(null)}
           onConfirm={() => switchTo.mutate({ profile: pending, confirm: true })}
+        />
+      )}
+
+      <section className="card panel" aria-label="Judging model">
+        <label className="field">
+          <span>Judging model</span>
+          <select
+            value={data.judge_profile_id ?? ""}
+            disabled={data.mock || setJudge.isPending}
+            onChange={(event) => chooseJudge(event.target.value)}
+          >
+            <option value="">Same as AXIS chat</option>
+            {data.profiles
+              .filter((p) => p.key_set)
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+          </select>
+        </label>
+        <p className="small muted">
+          Judges written explanations, such as the concept check, so every learner is judged the same way.
+        </p>
+        {setJudge.isError && <ErrorNote error={setJudge.error} />}
+      </section>
+
+      {pendingJudge && (
+        <ConfirmPaid
+          profile={pendingJudge}
+          busy={setJudge.isPending}
+          title={`Use ${pendingJudge.label} for judging`}
+          action="Use for judging"
+          onCancel={() => setPendingJudge(null)}
+          onConfirm={() => setJudge.mutate({ profileId: pendingJudge.id, confirm: true })}
         />
       )}
 

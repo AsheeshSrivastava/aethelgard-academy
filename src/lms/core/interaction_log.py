@@ -20,6 +20,7 @@ _CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 EventType = Literal[
     "answer_submitted",
     "concept_check",
+    "judgement_disputed",
     "run",
     "verify",
     "regenerate",

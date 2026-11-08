@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import pytest
 
+from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.loader import load_roadmap_from_file, overlay_curriculum_packages
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.cli import handle_explain_command, handle_pull_command, handle_verify_command
@@ -140,9 +141,10 @@ def test_cli_concept_check_soft_gate(tmp_path):
     # Solid explanation
     res_solid = handle_explain_command(
         unit_id="PY-0.4",
-        explanation="The input function always returns a string data type. If we do math directly on it without converting via int(), Python raises a TypeError.",
+        explanation="The input function always gives back text, a string. Doing math on that text without converting it to a number stops with an error.",
         learner_id="learner_001",
         repo=repo,
+        companion=MockAxisCompanion(),
     )
     assert res_solid["success"] is True
     assert res_solid["status"] == "Solid"
@@ -153,6 +155,7 @@ def test_cli_concept_check_soft_gate(tmp_path):
         explanation="It takes stuff from the keyboard.",
         learner_id="learner_002",
         repo=repo,
+        companion=MockAxisCompanion(),
     )
     assert res_shaky["success"] is True
     assert res_shaky["status"] == "Shaky"

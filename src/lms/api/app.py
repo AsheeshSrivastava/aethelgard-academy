@@ -27,10 +27,14 @@ from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.adapters.curriculum.concepts import ConceptCatalog
+from lms.adapters.curriculum.builds import answers_dir_from_env
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
+from lms.adapters.curriculum.rubric import load_rubric
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
+from lms.core import ai_judgement
+from lms.core.ai_judgement import AiJudgement, not_judged
 from lms.core.builds import (
     RequirementResult,
     StageBuild,
@@ -262,10 +266,10 @@ class ExplainRequest(BaseModel):
     explanation: str
 
 
-class ExplainResponse(BaseModel):
+class ExplainResponse(AiJudgement):
+    """The verdict (SPEC-18 section 2) plus the unit and whether a ledger entry was written."""
+
     unit_id: str
-    status: str
-    feedback: str
     evidence_logged: bool
 
 
@@ -979,68 +983,79 @@ def create_app(
         session_id: Optional[str] = Depends(current_session),
     ):
         clean_unit = payload.unit_id.upper()
-        keywords = ["string", "text", "typeerror", "convert", "int"]
-        concept_line = "A program takes input, transforms it, and produces output; input() always returns a string."
-
-        meta_path = Path(f"curriculum/python/{clean_unit.lower()}/meta.json")
-        if meta_path.exists():
-            try:
-                meta = json.loads(meta_path.read_text(encoding="utf-8"))
-                check_cfg = meta.get("concept_check", {})
-                if "solid_keywords" in check_cfg:
-                    keywords = check_cfg["solid_keywords"]
-                if "concept_line" in check_cfg:
-                    concept_line = check_cfg["concept_line"]
-            except Exception:
-                pass
-
-        if hasattr(axis, "evaluate_concept_check"):
-            eval_res = axis.evaluate_concept_check(
-                unit_id=clean_unit,
-                concept_line=concept_line,
-                explanation=payload.explanation,
-                solid_keywords=keywords,
-            )
-            status = eval_res["status"]
-            feedback = eval_res["feedback"]
-            is_solid = status == "Solid"
-        else:
-            lower_exp = payload.explanation.lower()
-            matches = sum(1 for kw in keywords if kw.lower() in lower_exp)
-            is_solid = matches >= 2
-            status = "Solid" if is_solid else "Shaky"
-            feedback = (
-                "Explanation demonstrates solid operational mental model."
-                if is_solid
-                else "Explanation is emerging or shaky; remember to reflect on types and boundaries."
-            )
-
-        entry = EvidenceEntry(
-            learner_id=learner_id,
-            unit_id=clean_unit,
-            skill_id="CO-6",
-            evidence_category=EvidenceCategory.EXPLAIN_REASON,
-            evidence_strength=EvidenceStrength.STRONG if is_solid else EvidenceStrength.WEAK,
-            assistance_level=AssistanceLevel.NONE,
-            demonstration_context=f"CO-6 Concept Check for {clean_unit}",
-            observed_reasoning=f"Mental model evaluated as {status}: {feedback}",
-            recorded_at=clock(),
-        )
-        record_evidence(entry)
         unit = catalog.get_unit(clean_unit)
+        rubric = load_rubric(answers_dir_from_env(), clean_unit)
+        if rubric is None:
+            judgement = not_judged("no_rubric")
+        elif not hasattr(axis, "judge_explanation"):
+            judgement = not_judged("ai_off")
+        else:
+            prompt = ((unit.concept_check_config or {}).get("prompt") if unit else None) or (
+                unit.concept_line if unit else clean_unit
+            )
+            judgement = axis.judge_explanation(clean_unit, prompt, payload.explanation, rubric)
+
+        interaction_id = new_ulid(now_ms())
+        judgement = judgement.model_copy(update={"interaction_id": interaction_id})
+        is_judged = judgement.status == "judged"
+        writes = is_judged and ai_judgement.CONCEPT_CHECK_WRITES_EVIDENCE
+        if writes:
+            met = [i.id for i in judgement.ideas if i.met]
+            missed = [i.id for i in judgement.ideas if not i.met]
+            record_evidence(
+                EvidenceEntry(
+                    learner_id=learner_id,
+                    unit_id=clean_unit,
+                    skill_id="CO-6",
+                    evidence_category=EvidenceCategory.EXPLAIN_REASON,
+                    evidence_strength=EvidenceStrength.STRONG if judgement.verdict == "Solid" else EvidenceStrength.WEAK,
+                    assistance_level=AssistanceLevel.NONE,
+                    demonstration_context=f"CO-6 Concept Check for {clean_unit}, judged by {judgement.model}",
+                    observed_reasoning=(
+                        f"AI judged {judgement.verdict}. Ideas met: {', '.join(met) or 'none'}. "
+                        f"Ideas missed: {', '.join(missed) or 'none'}."
+                    ),
+                    recorded_at=clock(),
+                )
+            )
         if unit:
             maybe_start_cold_check_clock(unit, learner_id)
 
         log_event(
-            learner_id, "concept_check", {"explanation": payload.explanation, "status": status},
-            session_id=session_id, unit_id=clean_unit, activity="explain",
+            learner_id, "concept_check",
+            {
+                "explanation": payload.explanation,
+                "status": judgement.verdict or "not_judged",
+                "judged": is_judged,
+                "reason": judgement.reason,
+                "model": judgement.model,
+                "ideas": [{"id": i.id, "met": i.met} for i in judgement.ideas],
+            },
+            session_id=session_id, interaction_id=interaction_id, unit_id=clean_unit, activity="explain",
         )
-        return ExplainResponse(
-            unit_id=clean_unit,
-            status=status,
-            feedback=feedback,
-            evidence_logged=True,
+        return ExplainResponse(**judgement.model_dump(), unit_id=clean_unit, evidence_logged=bool(writes))
+
+    @app.post("/api/v1/learners/me/judgements/{interaction_id}:dispute", status_code=204, response_model=None)
+    def dispute_judgement(
+        interaction_id: str,
+        learner_id: str = Depends(current_learner_id),
+        session_id: Optional[str] = Depends(current_session),
+    ):
+        """Log that the learner thinks a judgement is wrong (SPEC-18 section 6). Changes nothing else."""
+        judged_event = next(
+            (
+                e for e in repo.get_interactions(learner_id, 10000)
+                if e.interaction_id == interaction_id and e.event_type == "concept_check"
+            ),
+            None,
         )
+        if judged_event is None:
+            return problem(404, "Judgement not found", "No judgement with that id.")
+        log_event(
+            learner_id, "judgement_disputed", {"interaction_id": interaction_id},
+            session_id=session_id, unit_id=judged_event.unit_id, activity=judged_event.activity,
+        )
+        return None
 
     # --- Socratic Error Diagnostic Route ---
     @app.post("/api/v1/explain-error")

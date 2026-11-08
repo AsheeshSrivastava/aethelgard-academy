@@ -8,6 +8,7 @@ const BASE = "/api/v1/settings/models";
 function overview(over: Partial<Record<string, unknown>> = {}) {
   return {
     active: "local",
+    judge_profile_id: null,
     mock: false,
     cap_usd: 5,
     month_spend_usd: 0.0123,
@@ -122,6 +123,50 @@ describe("Model settings page (SPEC-17 section 7)", () => {
     expect(await screen.findByText("Mock mode is on (MOCK_AI=true). No model is called.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Use Gemini" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Test connection" })).not.toBeInTheDocument();
+  });
+
+  it("chooses a judging model apart from the chat model (SPEC-18 section 8)", async () => {
+    const calls = stubApi(routes({ [`PUT ${BASE}/judge`]: overview({ judge_profile_id: null }) }));
+    renderAt("/settings/models");
+
+    const select = await screen.findByRole("combobox", { name: "Judging model" });
+    expect(select).toHaveValue("");
+    expect(within(select).getByRole("option", { name: "Same as AXIS chat" })).toBeInTheDocument();
+    expect(within(select).queryByRole("option", { name: "OpenAI" })).not.toBeInTheDocument(); // no key set
+    expect(within(select).getByRole("option", { name: "Gemini" })).toBeInTheDocument();
+    expect(calls.some((c) => c.method === "PUT")).toBe(false);
+  });
+
+  it("asks for the same paid confirmation before a paid judging model", async () => {
+    const calls = stubApi(routes({ [`PUT ${BASE}/judge`]: overview({ judge_profile_id: "gemini" }) }));
+    renderAt("/settings/models");
+
+    fireEvent.change(await screen.findByRole("combobox", { name: "Judging model" }), { target: { value: "gemini" } });
+    const panel = screen.getByRole("dialog", { name: "Use Gemini for judging" });
+    const confirm = within(panel).getByRole("button", { name: "Use for judging" });
+    expect(confirm).toBeDisabled();
+    expect(calls.some((c) => c.method === "PUT")).toBe(false);
+    fireEvent.click(within(panel).getByRole("checkbox"));
+    fireEvent.click(confirm);
+
+    await screen.findByText("Judging model saved.");
+    const put = calls.find((c) => c.method === "PUT");
+    expect(JSON.parse(put!.body!)).toEqual({ profile_id: "gemini", confirm_paid: true });
+  });
+
+  it("goes back to the chat model without a prompt", async () => {
+    const calls = stubApi(
+      routes({
+        [`GET ${BASE}`]: overview({ judge_profile_id: "gemini" }),
+        [`PUT ${BASE}/judge`]: overview({ judge_profile_id: null }),
+      }),
+    );
+    renderAt("/settings/models");
+
+    fireEvent.change(await screen.findByRole("combobox", { name: "Judging model" }), { target: { value: "" } });
+
+    await screen.findByText("Judging model saved.");
+    expect(JSON.parse(calls.find((c) => c.method === "PUT")!.body!)).toEqual({ profile_id: null, confirm_paid: false });
   });
 
   it("never shows a key, only whether one is set", async () => {

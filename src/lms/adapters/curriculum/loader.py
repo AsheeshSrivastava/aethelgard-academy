@@ -11,6 +11,7 @@ import re
 from typing import Dict, List, Optional, Set, Tuple
 
 from lms.adapters.curriculum.builds import answers_dir_from_env, load_builds
+from lms.adapters.curriculum.rubric import check_concept_checks
 from lms.adapters.curriculum.concepts import load_concepts
 from lms.core.builds import StageBuildSpec, check_builds
 from lms.core.concepts import check_concept_links
@@ -370,6 +371,7 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
     catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
     concepts, concept_problems = load_concepts(reference_dir.parent / "curriculum" / "concepts")
     catalog.builds, build_problems = load_builds(reference_dir.parent / "curriculum", answers_dir_from_env())
+    rubric_problems = check_concept_checks(reference_dir.parent / "curriculum", answers_dir_from_env())
     catalog.findings = (
         seed_problems
         + check_curriculum(
@@ -381,6 +383,7 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
         + concept_problems
         + check_concept_links(concepts, catalog.list_all_units())
         + build_problems
+        + rubric_problems
         + check_builds(catalog.builds, catalog.list_all_units())
     )
     errors = sum(1 for f in catalog.findings if f.severity == Severity.ERROR)

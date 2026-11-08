@@ -85,6 +85,14 @@ class UsageStore:
             )
             """
         )
+        self._run(
+            """
+            CREATE TABLE IF NOT EXISTS judge_settings (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                judge_profile TEXT
+            )
+            """
+        )
 
     # --- usage ---------------------------------------------------------------
 
@@ -161,6 +169,18 @@ class UsageStore:
             (profile_id,),
         )
 
+    def get_judge(self) -> Optional[str]:
+        """The judging model's profile (SPEC-18 section 8); None means the same as chat."""
+        rows = self._run("SELECT judge_profile FROM judge_settings WHERE id = 1")
+        return rows[0][0] if rows else None
+
+    def set_judge(self, profile_id: Optional[str]) -> None:
+        self._run(
+            "INSERT INTO judge_settings (id, judge_profile) VALUES (1, ?)"
+            " ON CONFLICT(id) DO UPDATE SET judge_profile = excluded.judge_profile",
+            (profile_id,),
+        )
+
     # --- inspection (tests, audits) -----------------------------------------
 
     def column_names(self) -> List[str]:
@@ -168,5 +188,5 @@ class UsageStore:
 
     def dump_text(self) -> str:
         """Every stored value as text, for key-leak checks."""
-        rows = self._run("SELECT * FROM model_usage") + self._run("SELECT * FROM model_settings")
+        rows = self._run("SELECT * FROM model_usage") + self._run("SELECT * FROM model_settings") + self._run("SELECT * FROM judge_settings")
         return "\n".join(" ".join(map(str, r)) for r in rows)

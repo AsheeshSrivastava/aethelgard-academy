@@ -6,7 +6,7 @@ No route returns, accepts or logs a key: `key_set` is the only thing said about 
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
@@ -22,6 +22,11 @@ from lms.adapters.ai.providers.router import (
 
 class SwitchRequest(BaseModel):
     profile_id: str
+    confirm_paid: bool = False
+
+
+class JudgeRequest(BaseModel):
+    profile_id: Optional[str] = None
     confirm_paid: bool = False
 
 
@@ -56,6 +61,7 @@ def model_settings_routes(router: ProviderRouter, learner_dependency: Any) -> AP
         return {
             "profiles": profiles,
             "active": router.active_profile().id,
+            "judge_profile_id": router.judge_profile_id,
             "mock": router.mock,
             "cap_usd": router.cap_usd,
             "month_spend_usd": router.store.month_spend(),
@@ -71,6 +77,20 @@ def model_settings_routes(router: ProviderRouter, learner_dependency: Any) -> AP
             return _problem(409, "Mock mode", "Mock mode is on (MOCK_AI=true); switching is disabled.")
         try:
             router.switch(body.profile_id, body.confirm_paid)
+        except UnknownProfile:
+            return _problem(404, "Unknown profile", f"No profile named '{body.profile_id}'.")
+        except KeyMissing as exc:
+            return _problem(409, "Key not set", str(exc))
+        except PaidNotConfirmed:
+            return _problem(409, "Confirmation needed", "A paid provider needs confirm_paid: true.")
+        return overview()
+
+    @api.put("/judge")
+    def put_judge(body: JudgeRequest, _: str = Depends(learner_dependency)):
+        if router.mock:
+            return _problem(409, "Mock mode", "Mock mode is on (MOCK_AI=true); the judging model cannot be changed.")
+        try:
+            router.set_judge(body.profile_id, body.confirm_paid)
         except UnknownProfile:
             return _problem(404, "Unknown profile", f"No profile named '{body.profile_id}'.")
         except KeyMissing as exc:

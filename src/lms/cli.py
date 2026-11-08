@@ -182,74 +182,62 @@ def handle_explain_command(
     repo: Optional[SQLiteLearnerRepository] = None,
     companion: Optional[Any] = None,
 ) -> Dict[str, Any]:
-    """Submit CO-6 concept check explanation, evaluate mental model, and log evidence."""
-    import json
+    """Submit a CO-6 concept check explanation, have it judged (SPEC-18), and log evidence.
+
+    Not judged (no rubric, AI off, a failed call) writes nothing and says why.
+    """
     from lms.adapters.ai.local_llm_companion import get_axis_companion
+    from lms.adapters.ai.providers.judging import judge_with
+    from lms.adapters.curriculum.builds import answers_dir_from_env
+    from lms.adapters.curriculum.rubric import load_rubric
+    from lms.core import ai_judgement
 
     clean_unit = unit_id.upper()
-    meta_path = Path(f"curriculum/python/{clean_unit.lower()}/meta.json")
-    keywords = ["string", "text", "typeerror", "convert", "int"]
-    concept_line = "A program takes input, transforms it, and produces output; input() always returns a string."
-    if meta_path.exists():
-        try:
-            meta = json.loads(meta_path.read_text(encoding="utf-8"))
-            check_cfg = meta.get("concept_check", {})
-            if "solid_keywords" in check_cfg:
-                keywords = check_cfg["solid_keywords"]
-            if "concept_line" in check_cfg:
-                concept_line = check_cfg["concept_line"]
-        except Exception:
-            pass
-
-    if companion is None:
-        companion = get_axis_companion()
-
-    if hasattr(companion, "evaluate_concept_check"):
-        eval_res = companion.evaluate_concept_check(
-            unit_id=clean_unit,
-            concept_line=concept_line,
-            explanation=explanation,
-            solid_keywords=keywords,
-        )
-        status = eval_res["status"]
-        feedback = eval_res["feedback"]
-        is_solid = status == "Solid"
+    rubric = load_rubric(answers_dir_from_env(), clean_unit)
+    if rubric is None:
+        judgement = ai_judgement.not_judged("no_rubric")
     else:
-        # Deterministic keyword rubric when using MockAxisCompanion
-        lower_exp = explanation.lower()
-        matches = sum(1 for kw in keywords if kw.lower() in lower_exp)
-        is_solid = matches >= 2
-        status = "Solid" if is_solid else "Shaky"
-        feedback = (
-            "Explanation demonstrates solid operational mental model."
-            if is_solid
-            else "Explanation is emerging or shaky; remember to reflect on types and boundaries."
+        if companion is None:
+            companion = get_axis_companion()
+        judgement = judge_with(companion, clean_unit, clean_unit, explanation, rubric)
+
+    if judgement.status != "judged":
+        return {
+            "success": True,
+            "unit_id": clean_unit,
+            "status": "not_judged",
+            "feedback": judgement.message,
+            "message": judgement.message,
+        }
+
+    if ai_judgement.CONCEPT_CHECK_WRITES_EVIDENCE:
+        if repo is None:
+            repo = SQLiteLearnerRepository()
+            repo.initialize()
+        met = [i.id for i in judgement.ideas if i.met]
+        missed = [i.id for i in judgement.ideas if not i.met]
+        repo.record_evidence(
+            EvidenceEntry(
+                learner_id=learner_id,
+                unit_id=clean_unit,
+                skill_id="CO-6",
+                evidence_category=EvidenceCategory.EXPLAIN_REASON,
+                evidence_strength=EvidenceStrength.STRONG if judgement.verdict == "Solid" else EvidenceStrength.WEAK,
+                assistance_level=AssistanceLevel.NONE,
+                demonstration_context=f"CO-6 concept check for {clean_unit}, judged by {judgement.model}",
+                observed_reasoning=(
+                    f"AI judged {judgement.verdict}. Ideas met: {', '.join(met) or 'none'}. "
+                    f"Ideas missed: {', '.join(missed) or 'none'}."
+                ),
+            )
         )
-
-    strength = EvidenceStrength.STRONG if is_solid else EvidenceStrength.WEAK
-
-    if repo is None:
-        repo = SQLiteLearnerRepository()
-        repo.initialize()
-
-    entry = EvidenceEntry(
-        learner_id=learner_id,
-        unit_id=clean_unit,
-        skill_id="CO-6",
-        evidence_category=EvidenceCategory.EXPLAIN_REASON,
-        evidence_strength=strength,
-        assistance_level=AssistanceLevel.NONE,
-        demonstration_context=f"CO-6 concept check explanation for {clean_unit}",
-        observed_reasoning=f"Mental model graded as {status}: {explanation[:120]}",
-    )
-    repo.record_evidence(entry)
 
     return {
         "success": True,
         "unit_id": clean_unit,
-        "status": status,
-        "feedback": feedback,
-        "message": f"Concept explanation evaluated as {status}. Evidence recorded in ledger.",
+        "status": judgement.verdict,
+        "feedback": judgement.feedback,
+        "message": f"Judged {judgement.verdict} by {judgement.model}. AI can be wrong.",
     }
 
 

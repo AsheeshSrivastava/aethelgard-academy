@@ -229,11 +229,31 @@ describe("video step", () => {
 });
 
 describe("explain step", () => {
-  function explainRoutes(status: string) {
-    return {
-      ...routes("predict", {}),
-      "POST /api/v1/explain": { unit_id: "PY-0.1", status, feedback: "Noted.", evidence_logged: true },
-    };
+  const IDEAS = [
+    { id: "runs-in-order", text: "Python runs statements top to bottom.", met: true },
+    { id: "variable-holds-result", text: "A variable keeps a returned value.", met: false },
+  ];
+
+  function explainRoutes(verdict: "Solid" | "Shaky" | null, extra: Record<string, unknown> = {}) {
+    const result = verdict
+      ? {
+          unit_id: "PY-0.1", status: "judged", verdict, ideas: IDEAS, feedback: "Noted.", model: "gemini-3.8-flash",
+          reason: null, message: "", interaction_id: "01J9ZK3Y4D8Q2W6X0ANSWER001", evidence_logged: true,
+        }
+      : {
+          unit_id: "PY-0.1", status: "not_judged", verdict: null, ideas: [], feedback: null, model: null,
+          reason: "no_answer", message: "The AI provider did not answer. This was not judged; try again in a moment.",
+          interaction_id: "01J9ZK3Y4D8Q2W6X0ANSWER002", evidence_logged: false,
+        };
+    return { ...routes("predict", {}), "POST /api/v1/explain": result, ...extra };
+  }
+
+  async function submit(text: string) {
+    const user = userEvent.setup();
+    renderAt("/units/PY-0.1/explain");
+    await user.type(await screen.findByLabelText("Your explanation"), text);
+    await user.click(screen.getByRole("button", { name: "Check my explanation" }));
+    return user;
   }
 
   it("shows the lesson and the concept check", async () => {
@@ -244,28 +264,45 @@ describe("explain step", () => {
     expect(screen.getByText("Explain it.")).toBeInTheDocument();
   });
 
-  it("reports Solid", async () => {
+  it("shows the verdict, the ideas and who judged", async () => {
     stubApi(explainRoutes("Solid"));
-    const user = userEvent.setup();
-    renderAt("/units/PY-0.1/explain");
-
-    await user.type(await screen.findByLabelText("Your explanation"), "It runs in order.");
-    await user.click(screen.getByRole("button", { name: "Check my explanation" }));
+    await submit("It runs in order.");
 
     expect(await screen.findByText("Solid")).toBeInTheDocument();
     expect(screen.getByText("Noted.")).toBeInTheDocument();
+    expect(screen.getByText(/Python runs statements top to bottom\./)).toBeInTheDocument();
+    expect(screen.getByText("Judged by AXIS (gemini-3.8-flash). AI can be wrong.")).toBeInTheDocument();
   });
 
   it("never blocks on Shaky", async () => {
     stubApi(explainRoutes("Shaky"));
-    const user = userEvent.setup();
-    renderAt("/units/PY-0.1/explain");
-
-    await user.type(await screen.findByLabelText("Your explanation"), "Because.");
-    await user.click(screen.getByRole("button", { name: "Check my explanation" }));
+    await submit("Because.");
 
     expect(await screen.findByText("Shaky")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Next: Predict/ })).toBeInTheDocument();
+  });
+
+  it("sends a dispute for the judged answer", async () => {
+    const calls = stubApi(
+      explainRoutes("Shaky", { "POST /api/v1/learners/me/judgements/01J9ZK3Y4D8Q2W6X0ANSWER001:dispute": null }),
+    );
+    const user = await submit("Because.");
+
+    await user.click(await screen.findByRole("button", { name: "This seems wrong" }));
+
+    expect(await screen.findByText("Thanks. Noted for review.")).toBeInTheDocument();
+    expect(calls.some((c) => c.method === "POST" && c.url.endsWith(":dispute"))).toBe(true);
+  });
+
+  it("says why an answer was not judged, with no verdict, no dispute button, and keeps the step open", async () => {
+    stubApi(explainRoutes(null));
+    await submit("Because.");
+
+    expect(await screen.findByText(/The AI provider did not answer/)).toBeInTheDocument();
+    expect(screen.queryByText("Solid")).not.toBeInTheDocument();
+    expect(screen.queryByText("Shaky")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "This seems wrong" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Explain.*done/i })).not.toBeInTheDocument();
   });
 });
 

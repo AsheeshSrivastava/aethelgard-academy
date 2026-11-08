@@ -1,7 +1,17 @@
 {
   "unit_id": "PY-0.4",
   "title": "Run a first program",
-  "concepts": ["print()", "input()", "comments", "f-strings", "reading a first error", "str()", ".strip()", ".title()", ".upper()"],
+  "concepts": [
+    "print()",
+    "input()",
+    "comments",
+    "f-strings",
+    "reading a first error",
+    "str()",
+    ".strip()",
+    ".title()",
+    ".upper()"
+  ],
   "media": [
     {
       "media_id": "vid-py-0.4-walkthrough",
@@ -10,16 +20,26 @@
       "url": "https://cdn.example.org/videos/py-0.4-communication-cycle.mp4",
       "duration_seconds": 360,
       "timestamps": [
-        {"time": "00:00", "topic": "Interpreter Mental Model: Top-to-Bottom Execution"},
-        {"time": "01:45", "topic": "Input Ingress: Why input() Always Returns Text"},
-        {"time": "03:30", "topic": "Output Egress: Packaging with f-strings and print()"},
-        {"time": "04:50", "topic": "Diagnosing Your First Error: Type, Message, Line Number"}
+        {
+          "time": "00:00",
+          "topic": "Interpreter Mental Model: Top-to-Bottom Execution"
+        },
+        {
+          "time": "01:45",
+          "topic": "Input Ingress: Why input() Always Returns Text"
+        },
+        {
+          "time": "03:30",
+          "topic": "Output Egress: Packaging with f-strings and print()"
+        },
+        {
+          "time": "04:50",
+          "topic": "Diagnosing Your First Error: Type, Message, Line Number"
+        }
       ]
     }
   ],
   "concept_check": {
-    "prompt": "Explain in your own words why input() always returns text, and what happens if you try to do math with it directly.",
-    "solid_keywords": ["string", "text", "typeerror", "convert", "int", "float", "type"],
-    "rubric": "Learner must recognize that input returns a string and performing direct arithmetic without conversion triggers a TypeError."
+    "prompt": "Explain in your own words why input() always returns text, and what happens if you try to do math with it directly."
   }
 }

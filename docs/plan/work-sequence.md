@@ -85,3 +85,5 @@ Hidden parts always go to the private answers repo from the start (ADR-0021).
 
 - 2026-11-04: answers moved to the private repo, backed up to a private GitHub repo (ADR-0021 amendment).
 - 2026-11-04: ADR audit; ADR-0023 written, ADR-0018 and ADR-0021 amended.
+
+- 2026-11-08: AI judgement of concept checks (ADR-0026, SPEC-18): private required ideas, status always shown, no keyword fallback, "AI can be wrong" + dispute, separate judging model.

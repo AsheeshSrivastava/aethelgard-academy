@@ -298,30 +298,22 @@ class OpenAICompatibleCompanion:
             getattr(usage, "completion_tokens", None) if usage else None,
         )
 
-    def evaluate_concept_check(
-        self,
-        unit_id: str,
-        concept_line: str,
-        explanation: str,
-        solid_keywords: List[str],
-    ) -> Dict[str, str]:
-        """The 10% lightweight classifier: evaluates a CO-6 free-text mental model."""
-        user_msg = axis_rules.build_concept_check_message(unit_id, concept_line, explanation, solid_keywords)
-        sys_prompt = axis_rules.CONCEPT_CHECK_SYSTEM_PROMPT
+    def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
+        """One judging call (SPEC-18 section 3). Returns the raw reply and the model that answered.
+
+        Never falls back to anything: a failure is raised for the router to name.
+        """
+        user_msg = axis_rules.build_judging_message(unit_id, prompt, explanation, ideas)
+        sys_prompt = axis_rules.JUDGE_SYSTEM_PROMPT
         self._check_budget(sys_prompt, user_msg)
-        try:
-            target_model = self.resolve_model()
-            resp = self._client.chat.completions.create(
-                **self._params(target_model, sys_prompt, user_msg, 0.0, axis_rules.CONCEPT_CHECK_MAX_TOKENS)
-            )
-            answered = resp.model or target_model
-            self.last_model_answered = answered
-            self._record("concept_check", answered, resp.usage, len(sys_prompt) + len(user_msg))
-            return axis_rules.parse_concept_check(str(resp.choices[0].message.content))
-        except Exception as exc:
-            if not self.fallback_to_mock:
-                raise LocalLLMError(f"Concept check classification failed: {type(exc).__name__}") from None
-            return axis_rules.keyword_concept_check(explanation, solid_keywords)
+        target_model = self.resolve_model()
+        resp = self._client.chat.completions.create(
+            **self._params(target_model, sys_prompt, user_msg, 0.0, axis_rules.JUDGE_MAX_TOKENS)
+        )
+        answered = resp.model or target_model
+        self.last_model_answered = answered
+        self._record("concept_check", answered, resp.usage, len(sys_prompt) + len(user_msg))
+        return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
 
 
 # Older name, kept for the CLI and SPEC-08 tests.

@@ -4,11 +4,14 @@ Provides deterministic responses for Coach, Hybrid, and Socratic modes
 without incurring external API calls or network dependency (MOCK_AI=true).
 """
 
+import json
 import re
-from typing import Iterator, List, Tuple
+from typing import Any, Iterator, List, Tuple
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
 from lms.core.models import AssistanceLevel
+from lms.adapters.ai.providers.judging import judge_with
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
+from lms.core.ai_judgement import AiJudgement, Rubric
 
 
 class MockAxisCompanion:
@@ -17,6 +20,21 @@ class MockAxisCompanion:
     def __init__(self, guardrail: SocraticGuardrail = None, classifier: AssistanceClassifier = None):
         self.guardrail = guardrail or SocraticGuardrail()
         self.classifier = classifier or AssistanceClassifier()
+
+    def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, str]:
+        """Offline judging (SPEC-18 section 3): an idea is met when the explanation holds a
+        whole word of 5 or more letters from the idea's text. Same input, same answer."""
+        words = set(re.findall(r"[a-z]+", explanation.lower()))
+        results = []
+        for idea in ideas:
+            wanted = {w for w in re.findall(r"[a-z]+", idea.text.lower()) if len(w) >= 5}
+            results.append({"id": idea.id, "met": bool(wanted & words)})
+        missed = [i.text for i, r in zip(ideas, results) if not r["met"]]
+        feedback = "Every idea is shown." if not missed else "Not shown yet: " + " ".join(missed)
+        return json.dumps({"ideas": results, "feedback": feedback[:400]}), "offline-mock"
+
+    def judge_explanation(self, unit_id: str, prompt: str, explanation: str, rubric: Rubric) -> AiJudgement:
+        return judge_with(self, unit_id, prompt, explanation, rubric)
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
         """The consult reply, word by word. Returns (deltas, cited concepts)."""

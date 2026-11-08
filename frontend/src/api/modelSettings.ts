@@ -17,6 +17,7 @@ export interface ModelProfile {
 export interface ModelOverview {
   profiles: ModelProfile[];
   active: string;
+  judge_profile_id: string | null;
   mock: boolean;
   cap_usd: number;
   month_spend_usd: number;
@@ -51,6 +52,12 @@ export const modelSettingsApi = {
   usage: () => request<ModelUsage>(`${BASE}/usage`),
   switchTo: (profileId: string, confirmPaid: boolean) =>
     request<ModelOverview>(`${BASE}/active`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile_id: profileId, confirm_paid: confirmPaid }),
+    }),
+  setJudge: (profileId: string | null, confirmPaid: boolean) =>
+    request<ModelOverview>(`${BASE}/judge`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profile_id: profileId, confirm_paid: confirmPaid }),

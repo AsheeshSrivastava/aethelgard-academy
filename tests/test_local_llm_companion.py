@@ -17,6 +17,7 @@ from lms.adapters.ai.local_llm_companion import (
     get_axis_companion,
 )
 from lms.adapters.ai.mock_axis import MockAxisCompanion
+from lms.core.ai_judgement import Idea
 from lms.core.interfaces import AxisMode, AxisQuery, ExecutionResult
 from lms.core.models import ActivityType, AssistanceLevel
 
@@ -157,24 +158,13 @@ def test_coach_mode_syntax_lookup_classification_and_concept_grounding():
     assert len(res.cited_concepts) >= 1
 
 
-def test_lightweight_classifier_evaluates_concept_check_json():
+def test_the_judge_call_returns_the_raw_reply_and_the_model_that_answered():
     def handler(request: httpx.Request) -> httpx.Response:
-        # Simulate local LLM returning JSON wrapped in markdown fences
         return httpx.Response(
             200,
             json={
-                "choices": [
-                    {
-                        "message": {
-                            "role": "assistant",
-                            "content": (
-                                "```json\n"
-                                '{"status": "Solid", "feedback": "Clear grasp of input() returning str and requiring int() conversion."}\n'
-                                "```"
-                            ),
-                        }
-                    }
-                ]
+                "model": "Qwopus-answered",
+                "choices": [{"message": {"role": "assistant", "content": '{"ideas": [], "feedback": "ok"}'}}],
             },
         )
 
@@ -184,14 +174,27 @@ def test_lightweight_classifier_evaluates_concept_check_json():
         http_client=_make_mock_client(handler),
     )
 
-    result = companion.evaluate_concept_check(
-        unit_id="PY-0.4",
-        concept_line="A program takes input, transforms it, and produces output; input() always returns a string.",
-        explanation="Because input() returns a string, we must convert it with int() before math to avoid TypeError.",
-        solid_keywords=["string", "int", "typeerror", "convert"],
+    raw, model = companion.judge(
+        "PY-0.4", "Explain input().", "It gives text.", [Idea(id="returns-text", text="input() gives text.")]
     )
-    assert result["status"] == "Solid"
-    assert "input()" in result["feedback"]
+
+    assert raw == '{"ideas": [], "feedback": "ok"}'
+    assert model == "Qwopus-answered"
+
+
+def test_the_judge_call_does_not_fall_back_when_the_server_is_down():
+    def failing_handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("Connection refused")
+
+    companion = LocalLLMCompanion(
+        base_url="http://127.0.0.1:8000/v1",
+        model="m",
+        http_client=_make_mock_client(failing_handler),
+        fallback_to_mock=True,
+    )
+
+    with pytest.raises(Exception):
+        companion.judge("PY-0.4", "Explain.", "text", [Idea(id="a", text="b")])
 
 
 def test_offline_server_fallback_and_strict_mode():

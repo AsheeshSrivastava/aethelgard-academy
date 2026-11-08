@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
 
 from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.mock_axis import MockAxisCompanion
+from lms.adapters.ai.providers.judging import judge_with
 from lms.adapters.ai.providers.metering import BudgetExceeded, MONTHLY_CAP_USD, UsageMeter
 from lms.adapters.ai.providers.profiles import (
     DEFAULT_PROFILE_ID,
@@ -21,6 +22,7 @@ from lms.adapters.ai.providers.profiles import (
 )
 from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
 from lms.adapters.db.model_usage import UsageStore
+from lms.core.ai_judgement import AiJudgement, Rubric, not_judged
 from lms.core.interfaces import AxisQuery, AxisResponse
 
 BUDGET_MESSAGE = (
@@ -90,6 +92,8 @@ class ProviderRouter:
         self._companions: Dict[str, Any] = {}
         stored = store.get_active()
         self._active_id = stored if stored in profiles else self._fallback_id()
+        stored_judge = store.get_judge()
+        self._judge_id: Optional[str] = stored_judge if stored_judge in profiles else None
 
     def _fallback_id(self) -> str:
         return DEFAULT_PROFILE_ID if DEFAULT_PROFILE_ID in self.profiles else next(iter(self.profiles))
@@ -102,7 +106,7 @@ class ProviderRouter:
     def key_set(self, profile: ProviderProfile) -> bool:
         return profile.key_set(self.environ)
 
-    def switch(self, profile_id: str, confirm_paid: bool) -> ProviderProfile:
+    def _checked_profile(self, profile_id: str, confirm_paid: bool) -> ProviderProfile:
         if self.mock:
             raise RuntimeError("Mock mode is on (MOCK_AI=true); switching is disabled.")
         profile = self.profiles.get(profile_id)
@@ -112,18 +116,52 @@ class ProviderRouter:
             raise KeyMissing(f"{profile.key_env} is not set in .env")
         if profile.paid and not confirm_paid:
             raise PaidNotConfirmed(profile_id)
+        return profile
+
+    def switch(self, profile_id: str, confirm_paid: bool) -> ProviderProfile:
+        profile = self._checked_profile(profile_id, confirm_paid)
         self.store.set_active(profile_id)
         self._active_id = profile_id
         return profile
+
+    # --- the judging model (SPEC-18 section 8) ---------------------------------------
+
+    @property
+    def judge_profile_id(self) -> Optional[str]:
+        """The chosen judging profile; None means the same as AXIS chat."""
+        return self._judge_id
+
+    def judge_profile(self) -> ProviderProfile:
+        return self.profiles[self._judge_id] if self._judge_id else self.active_profile()
+
+    def set_judge(self, profile_id: Optional[str], confirm_paid: bool) -> None:
+        if profile_id is None:
+            self.store.set_judge(None)
+            self._judge_id = None
+            return
+        self._checked_profile(profile_id, confirm_paid)
+        self.store.set_judge(profile_id)
+        self._judge_id = profile_id
+
+    def judge_explanation(self, unit_id: str, prompt: str, explanation: str, rubric: Rubric) -> AiJudgement:
+        """Judge with the judging profile. Never raises and never falls back to keywords."""
+        if self.mock:
+            return judge_with(self._mock_companion, unit_id, prompt, explanation, rubric)
+        profile = self.judge_profile()
+        if not self.key_set(profile):
+            return not_judged("ai_off")
+        return judge_with(self._companion_for(profile), unit_id, prompt, explanation, rubric)
+
+    def _companion_for(self, profile: ProviderProfile) -> Any:
+        if profile.id not in self._companions:
+            self._companions[profile.id] = self.factory(profile, profile.api_key(self.environ), self.meter)
+        return self._companions[profile.id]
 
     def current(self) -> Any:
         """The companion that answers right now."""
         if self.mock:
             return self._mock_companion
-        profile = self.active_profile()
-        if profile.id not in self._companions:
-            self._companions[profile.id] = self.factory(profile, profile.api_key(self.environ), self.meter)
-        return self._companions[profile.id]
+        return self._companion_for(self.active_profile())
 
     # --- IAXISCompanion -----------------------------------------------------------
 
@@ -138,21 +176,6 @@ class ProviderRouter:
             return self.current().stream(query)
         except BudgetExceeded:
             return iter([BUDGET_MESSAGE]), []
-
-    def evaluate_concept_check(
-        self, unit_id: str, concept_line: str, explanation: str, solid_keywords: List[str]
-    ) -> Dict[str, str]:
-        companion = self.current()
-        if not hasattr(companion, "evaluate_concept_check"):
-            from lms.adapters.ai.providers.axis_rules import keyword_concept_check
-
-            return keyword_concept_check(explanation, solid_keywords)
-        try:
-            return companion.evaluate_concept_check(unit_id, concept_line, explanation, solid_keywords)
-        except BudgetExceeded:
-            from lms.adapters.ai.providers.axis_rules import keyword_concept_check
-
-            return keyword_concept_check(explanation, solid_keywords)
 
     @property
     def last_backend_used(self) -> str:
