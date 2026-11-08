@@ -807,7 +807,7 @@ def test_the_course_map_shows_the_real_build(client, repo):
 
 
 def test_other_stages_keep_a_placeholder(client):
-    build = client.get("/api/v1/courses/python").json()["stages"][1]["build"]
+    build = next(s for s in client.get("/api/v1/courses/python").json()["stages"] if s["stage"] == 1)["build"]
 
     assert build["authored"] is False
     assert build["title"] == "Module 1 build"

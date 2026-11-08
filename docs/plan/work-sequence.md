@@ -54,11 +54,16 @@ Decided 2026-11-04: keys stay in `.env` for now; Gemini gets its own adapter (Go
 - [x] 2c.2 Settings page: active profile, "key set: yes/no", test connection showing the model that answered. (NOTHING) Done 2026-11-04 (commit f63bb03).
 - [x] 2c.3 Cost estimate and a monthly cap for paid providers. (DECIDE the cap) Done 2026-11-04 (commit f63bb03).
 
-## Phase 2d: Right after the README work (owner, 2026-11-08)
+## Phase 2d: Technical Writing, the README work (owner, 2026-11-08)
 
-The README work is AI feedback on README files, reusing the AI judgement from ADR-0026 (section 7) and ADR-0024. It is not broken into steps here yet.
+Scope approved 2026-11-08: `docs/proposals/technical-writing-course-2026-11-08.md`.
 
-- [ ] 2d.1 AXIS answers vs RAG (owner, 2026-11-08; placed right after the README work by the owner): when a learner asks AXIS a question (not when AI judges), is the answer built only from retrieved passages, or from the model's own knowledge, and are the citations real sources for what was said? Decide the purpose of RAG at question time. Expected direction: answers are constructed from retrieved curriculum, since a direct answer is often not in one passage; say so when nothing relevant is found. Check first: what the prompt allows, whether citations match the text used, and the upstream exception in 6.3, which may close here too. (DECIDE, then NOTHING)
+- [x] 2d.1 Roadmap file `reference/Technical Writing Roadmap v1.md`, slotted into the Python path (TW 0, 1, 2). (NOTHING, then APPROVE the wording) Done 2026-11-08.
+- [ ] 2d.2 Learning Method Amendment A2 and its ADR: for documents, AI drafting is expected and the review is the evidence. Settle ADR-0024 sections 2.2 and 2.4 here. (APPROVE)
+- [ ] 2d.3 TW-0.1 and TW-0.2 content; keys in the private answers repo. (APPROVE)
+- [ ] 2d.4 Stage 0 build change: "Learn it in TW Module 0" button, "Draft my README", checklist panel, review note, stronger Verify. (NOTHING, then TEST)
+- [ ] 2d.5 AXIS data-based build feedback, point by point, no Socratic questions. (NOTHING, then TEST)
+- [ ] 2d.6 AXIS answers vs RAG (owner, 2026-11-08; placed right after the README work, 2d.1 to 2d.5, by the owner): when a learner asks AXIS a question (not when AI judges), is the answer built only from retrieved passages, or from the model's own knowledge, and are the citations real sources for what was said? Decide the purpose of RAG at question time. Expected direction: answers are constructed from retrieved curriculum, since a direct answer is often not in one passage; say so when nothing relevant is found. Check first: what the prompt allows, whether citations match the text used, and the upstream exception in 6.3, which may close here too. (DECIDE, then NOTHING)
 
 ## Phase 3: Two decisions before more testing
 

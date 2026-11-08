@@ -163,7 +163,7 @@ def test_courses_lists_the_three_courses_with_counts(client):
 
     assert res.status_code == 200
     counts = {c["course_id"]: (c["stage_count"], c["unit_count"]) for c in res.json()}
-    assert counts == {"python": (22, 111), "backend": (21, 98), "ai-engineering": (18, 81)}
+    assert counts == {"python": (25, 117), "backend": (21, 98), "ai-engineering": (18, 81)}
     assert all(c["title"] and c["summary"] for c in res.json())
 
 
@@ -243,7 +243,7 @@ def test_python_stages_have_the_approved_titles(client):
 def test_authored_marks_units_with_a_lesson_package(client):
     body = client.get("/api/v1/courses/python").json()
     stage_0 = {u["unit_id"]: u["authored"] for u in body["stages"][0]["units"]}
-    stage_1 = body["stages"][1]["units"]
+    stage_1 = next(s for s in body["stages"] if s["stage"] == 1)["units"]
 
     assert stage_0 == {"PY-0.4": True, "PY-0.1": True, "PY-0.3": True}
     authored = {u["unit_id"]: u["authored"] for u in stage_1}
@@ -339,7 +339,7 @@ def test_proficiency_rows_carry_the_skill_name(client):
 def test_units_can_be_filtered_by_course(client):
     units = client.get("/api/v1/units?course_id=python").json()
 
-    assert len(units) == 111
+    assert len(units) == 117
     assert client.get("/api/v1/units?course_id=cooking").status_code == 404
 
 

@@ -41,7 +41,8 @@ test("a slotted stage sits in the path under its own name", async ({ page }) => 
   await page.goto("/courses/python");
   await expect(page.getByRole("heading", { name: "Cost, sorting and search" })).toBeVisible();
   const labels = await page.getByRole("region", { name: "Modules" }).locator(".stage-head .mono").allTextContents();
-  expect(labels.slice(3, 6)).toEqual(["Module 3", "DSA 0", "Module 4"]);
+  expect(labels.slice(0, 3)).toEqual(["Module 0", "TW 0", "Module 1"]);
+  expect(labels.slice(4, 7)).toEqual(["Module 3", "DSA 0", "Module 4"]);
   expect(labels).toContain("AAE 0");
   // ADR-0027: the real course map says "Module", never "Stage".
   expect(await page.locator("main").innerText()).not.toMatch(/stages?/i);

@@ -44,6 +44,7 @@ ROADMAP_FILES = (
     "AI-Assisted Engineering Roadmap v2.md",
     "Networking Web Foundations Roadmap v2.md",
     "Database SQL Roadmap v2.md",
+    "Technical Writing Roadmap v1.md",
 )
 LEARNING_METHOD_FILE = "Learning Method v2.md"
 

@@ -71,7 +71,7 @@ ACTIVITY_BY_SLUG: Dict[str, ActivityType] = {a.slug: a for a in ActivityType}
 GRADED_PLAYGROUND_ACTIVITIES = (ActivityType.MODIFY, ActivityType.BUILD)
 
 # Slotted roadmaps number their own stages from 0; these bases keep ids unique (ADR-0020).
-SLOTTED_STAGE_BASE: Dict[str, int] = {"DSA": 100, "GIT": 200, "SD": 300, "AAE": 400, "NET": 500, "DB": 600}
+SLOTTED_STAGE_BASE: Dict[str, int] = {"DSA": 100, "GIT": 200, "SD": 300, "AAE": 400, "NET": 500, "DB": 600, "TW": 700}
 
 
 def slotted_stage(unit_id: str, roadmap_stage: int) -> int:

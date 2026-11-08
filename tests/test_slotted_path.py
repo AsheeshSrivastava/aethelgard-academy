@@ -67,6 +67,7 @@ def unit(unit_id: str, stage: int, methods=None, skill: str = "CO-1", make=None)
         ("GIT-2.1", "python"),
         ("SD-1.4", "python"),
         ("AAE-0.7", "python"),
+        ("TW-0.1", "python"),
         ("NET-0.1", "backend"),
         ("DB-1.6", "backend"),
         ("PY-1.1", "python"),
@@ -85,7 +86,7 @@ def test_course_of_covers_slotted_prefixes(unit_id, course):
 @pytest.mark.parametrize(
     "unit_id, roadmap_stage, stage",
     [("DSA-1.1", 1, 101), ("GIT-2.1", 2, 202), ("SD-0.1", 0, 300), ("AAE-0.1", 0, 400),
-     ("NET-0.1", 0, 500), ("DB-1.1", 1, 601), ("PY-4.1", 4, 4), ("BE-11.1", 11, 11)],
+     ("NET-0.1", 0, 500), ("DB-1.1", 1, 601), ("TW-2.1", 2, 702), ("PY-4.1", 4, 4), ("BE-11.1", 11, 11)],
 )
 def test_slotted_stage_ids(unit_id, roadmap_stage, stage):
     assert slotted_stage(unit_id, roadmap_stage) == stage
@@ -94,7 +95,7 @@ def test_slotted_stage_ids(unit_id, roadmap_stage, stage):
 @pytest.mark.parametrize(
     "stage, label",
     [(4, "Module 4"), (0, "Module 0"), (17, "Module 17"), (100, "DSA 0"), (101, "DSA 1"),
-     (202, "GIT 2"), (301, "SD 1"), (400, "AAE 0"), (500, "NET 0"), (601, "DB 1")],
+     (202, "GIT 2"), (301, "SD 1"), (400, "AAE 0"), (500, "NET 0"), (601, "DB 1"), (700, "TW 0"), (702, "TW 2")],
 )
 def test_stage_labels(stage, label):
     assert stage_label(stage) == label
@@ -110,20 +111,40 @@ def test_course_counts_with_slotted_units(catalog):
         for units in [catalog.get_course_units(course)]
     }
 
-    assert counts == {"python": (111, 22), "backend": (98, 21), "ai-engineering": (81, 18)}
-    assert len(catalog.list_all_units()) == 290
+    assert counts == {"python": (117, 25), "backend": (98, 21), "ai-engineering": (81, 18)}
+    assert len(catalog.list_all_units()) == 296
 
 
 def test_table_1_is_read_in_order():
     python = load_path_order(PYTHON_V4)
     backend = load_path_order(BACKEND_V3)
 
-    assert (len(python), len(backend)) == (111, 98)
+    assert (len(python), len(backend)) == (117, 98)
     assert python[:2] == ["PY-0.4", "PY-0.1"]
-    assert python[23:25] == ["DSA-0.1", "DSA-0.2"]
+    assert python[25:27] == ["DSA-0.1", "DSA-0.2"]
     assert python[-1] == "PY-13.4"
     assert backend[0] == "NET-0.1"
     assert backend[6] == "BE-0.1"
+
+
+def test_technical_writing_is_slotted_where_the_scope_puts_it():
+    """Owner scope 2026-11-08: TW 0 after Python Stage 0's units, TW 1 before Stage 11, TW 2 before Stage 13."""
+    python = load_path_order(PYTHON_V4)
+
+    assert python[3:5] == ["TW-0.1", "TW-0.2"]
+    assert python[2] == "PY-0.3"
+    assert python[python.index("TW-1.1") + 2].startswith("PY-11.")
+    assert python[python.index("TW-1.1") - 1].startswith("PY-10.")
+    assert python[python.index("TW-2.2") + 1].startswith("PY-13.")
+    assert python.index("TW-2.1") > python.index("AAE-0.7")
+
+
+def test_no_python_unit_needs_technical_writing(catalog):
+    """TW 0 is recommended, not a prerequisite (owner, 2026-11-08)."""
+    needing = [u.unit_id for u in catalog.list_all_units() if not u.unit_id.startswith("TW-") and any(p.startswith("TW-") for p in u.prerequisites)]
+
+    assert needing == []
+    assert {u.stage for u in catalog.get_course_units("python") if u.unit_id.startswith("TW-")} == {700, 701, 702}
 
 
 def test_a_file_without_table_1_has_no_path(tmp_path):
@@ -162,7 +183,7 @@ def test_slotted_stages_take_their_roadmap_titles(catalog):
 
 def test_python_stage_order_follows_table_1(catalog):
     assert stages_in_path_order(catalog.get_course_units("python")) == [
-        0, 1, 2, 3, 100, 4, 200, 5, 6, 300, 7, 8, 101, 9, 10, 11, 201, 12, 301, 202, 400, 13,
+        0, 700, 1, 2, 3, 100, 4, 200, 5, 6, 300, 7, 8, 101, 9, 10, 701, 11, 201, 12, 301, 202, 400, 702, 13,
     ]
 
 

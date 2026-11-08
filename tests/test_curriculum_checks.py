@@ -174,12 +174,12 @@ def test_a_new_catalog_has_no_findings():
 KNOWN_FINDINGS = {
     "apply-needs-perform": 0,
     "adapt-needs-diagnose": 0,
-    "cold-check-seed-missing": 931,  # Of 941 skill targets; falls as seeds are written
+    "cold-check-seed-missing": 943,  # Of 953 skill targets; falls as seeds are written
     "own-needs-stage-build": 30,     # Clears when stage builds are curated
     "stage-missing-evidence": 0,
     "make-credit-invalid": 0,
     "make-seed-wrong-skill": 0,
-    "stage-review-short": 60,        # Every stage but Stage 0; clears as spare seeds are written
+    "stage-review-short": 63,        # Every stage but Stage 0; clears as spare seeds are written
 }
 
 

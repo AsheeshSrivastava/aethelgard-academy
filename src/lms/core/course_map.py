@@ -34,7 +34,7 @@ COURSES: Dict[str, CourseInfo] = {
         title="Python",
         summary="Read, reason about and build reliable Python programs.",
         unit_prefix="PY-",
-        slotted_prefixes=("DSA-", "GIT-", "SD-", "AAE-"),
+        slotted_prefixes=("DSA-", "GIT-", "SD-", "AAE-", "TW-"),
     ),
     "backend": CourseInfo(
         title="Python for Backend/AI",

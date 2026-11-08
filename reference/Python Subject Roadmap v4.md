@@ -31,16 +31,19 @@ All changes follow the roadmap review of 2026-10-31 and Learning Method v2 Amend
 
 ## Path order
 
-The learning path is this roadmap's units with the supporting units slotted in where they are first needed. Table 1 lists the whole path in order (111 units: 79 Python units and 32 slotted units). Slotted units keep their own IDs and details in their own roadmaps.
+The learning path is this roadmap's units with the supporting units slotted in where they are first needed. Table 1 lists the whole path in order (117 units: 79 Python units and 38 slotted units). Slotted units keep their own IDs and details in their own roadmaps.
 
 | After | Slotted units | From |
 | --- | --- | --- |
+| PY-0.3 (end of Stage 0, before its build; recommended, not required) | TW-0.1 to TW-0.2 | Technical Writing Roadmap v1, Stage 0 |
 | PY-3.5 (end of Stage 3) | DSA-0.1 to DSA-0.4 | Practical DSA Roadmap v3, Stage 0 |
 | PY-4.4 (end of Stage 4) | GIT-0.1 to GIT-0.4 | Git Version Control Roadmap v2, Stage 0 |
 | PY-6.7 (end of Stage 6) | SD-0.1 to SD-0.4 | Software Design Roadmap v2, Stage 0 |
 | PY-8.5 (end of Stage 8) | DSA-1.1 to DSA-1.4 | Practical DSA Roadmap v3, Stage 1 |
+| PY-10.5 (end of Stage 10) | TW-1.1 to TW-1.2 | Technical Writing Roadmap v1, Stage 1 |
 | PY-11.4 (end of Stage 11) | GIT-1.1 to GIT-1.4 | Git Version Control Roadmap v2, Stage 1 |
 | PY-12.5 (end of Stage 12) | SD-1.1 to SD-1.4, GIT-2.1, AAE-0.1 to AAE-0.7 | Software Design v2 Stage 1, Git v2 Stage 2, AI-Assisted Engineering v2 |
+| AAE-0.7 (end of the Stage 12 slotted units) | TW-2.1 to TW-2.2 | Technical Writing Roadmap v1, Stage 2 (added 2026-11-08, owner-approved scope) |
 
 Backend Engineering Roadmap v3 continues the path with the Networking and Database units.
 
@@ -51,114 +54,120 @@ Backend Engineering Roadmap v3 continues the path with the Networking and Databa
 | 1 | PY-0.4 Run a first program | 0 | CO-1 (Understand), VE-4 (Understand) | Explain → Predict → Debug & Validate |
 | 2 | PY-0.1 Python as an executing program | 0 | CO-1 (Understand), CO-2 (Understand), CO-6 (Understand) | Explain → Predict → Trace |
 | 3 | PY-0.3 Tool help versus your own reasoning | 0 | DE-2 (Understand), DE-3 (Understand), DE-4 (Understand) | Explain → Direct |
-| 4 | PY-1.2 Numbers, booleans and None | 1 | CO-1 (Apply), VE-6 (Apply) | Explain → Predict → Debug & Validate → Build |
-| 5 | PY-1.7 Text | 1 | BU-1 (Apply), VE-6 (Apply) | Explain → Modify → Debug & Validate → Build |
-| 6 | PY-1.1 Names, objects and expressions | 1 | CO-1 (Apply), CO-2 (Apply), CO-6 (Apply) | Explain → Predict → Trace |
-| 7 | PY-1.8 Checking code with assert | 1 | VE-1 (Apply) | Explain → Debug & Validate → Build |
-| 8 | PY-1.3 Lists and tuples | 1 | CO-2 (Apply), VE-2 (Apply) | Explain → Trace → Debug & Validate |
-| 9 | PY-1.9 Copies, aliases and nested data | 1 | CO-2 (Adapt), VE-2 (Adapt) | Explain → Trace → Debug & Validate |
-| 10 | PY-1.4 Mappings | 1 | CO-3 (Apply), BU-1 (Adapt), VE-6 (Adapt) | Explain → Modify → Debug & Validate → Build |
-| 11 | PY-1.5 Choosing data structures | 1 | DE-6 (Apply), DE-1 (Apply) | Explain → Evaluate |
-| 12 | PY-1.6 Specialised collections and the standard library | 1 | BU-3 (Apply), DE-4 (Apply) | Explain → Build → Direct |
-| 13 | PY-2.1 Conditions | 2 | VE-1 (Adapt), VE-6 (Adapt), SP-1 (Apply) | Explain → Specify → Debug & Validate → Build |
-| 14 | PY-2.2 Iteration | 2 | VE-1 (Adapt), VE-2 (Adapt), VE-5 (Apply), CO-1 (Adapt) | Explain → Predict → Trace → Debug & Validate → Build |
-| 15 | PY-2.5 Debugging basics | 2 | VE-3 (Apply), VE-4 (Apply) | Explain → Debug & Validate |
-| 16 | PY-2.3 Comprehensions | 2 | BU-2 (Apply), BU-4 (Apply) | Explain → Modify → Evaluate → Build |
-| 17 | PY-2.4 Choosing control flow | 2 | DE-6 (Apply), BU-4 (Apply) | Explain → Evaluate → Modify → Build |
-| 18 | PY-3.1 Function calls and scope | 3 | CO-2 (Adapt), CO-3 (Adapt), CO-6 (Adapt), BU-2 (Apply) | Explain → Trace → Build |
-| 19 | PY-3.6 Recursion | 3 | CO-2 (Apply), VE-2 (Apply) | Explain → Trace → Debug & Validate |
-| 20 | PY-3.2 Function interfaces | 3 | BU-1 (Adapt), DE-1 (Adapt), VE-2 (Adapt) | Explain → Modify → Evaluate → Debug & Validate → Build |
-| 21 | PY-3.3 Functions as values | 3 | CO-3 (Apply), CO-4 (Apply), DE-1 (Apply) | Explain → Evaluate |
-| 22 | PY-3.4 Coherent functions | 3 | SP-1 (Adapt), SP-2 (Apply), SP-4 (Apply), VE-1 (Adapt) | Explain → Specify → Debug & Validate → Build |
-| 23 | PY-3.5 Decomposing a requirement | 3 | SP-1 (Adapt), SP-3 (Apply), BU-2 (Adapt), DE-3 (Apply) | Explain → Specify → Decompose → Modify → Direct |
-| 24 | DSA-0.1 Growth and the cost of common operations *(Practical DSA v3)* | DSA 0 | CO-1 (Apply), DE-6 (Apply) | Explain → Predict → Evaluate |
-| 25 | DSA-0.2 Finding repeated and nested work *(Practical DSA v3)* | DSA 0 | CO-3 (Apply), BU-1 (Adapt) | Explain → Trace → Modify |
-| 26 | DSA-0.3 Theory versus measured runtime *(Practical DSA v3)* | DSA 0 | VE-3 (Apply), DE-1 (Apply) | Explain → Debug & Validate → Evaluate |
-| 27 | DSA-0.4 Sorting and binary search *(Practical DSA v3)* | DSA 0 | CO-2 (Adapt), VE-1 (Adapt) | Explain → Trace → Debug & Validate |
-| 28 | PY-4.1 Exception flow | 4 | CO-2 (Adapt), VE-4 (Adapt), DE-1 (Adapt), DE-2 (Apply) | Explain → Trace → Debug & Validate → Evaluate → Direct |
-| 29 | PY-4.2 Failure contracts | 4 | SP-1 (Adapt), SP-2 (Adapt), SP-4 (Adapt), VE-1 (Adapt) | Explain → Specify → Decompose → Debug & Validate → Build |
-| 30 | PY-4.3 Validation | 4 | BU-1 (Adapt), VE-6 (Adapt), DE-5 (Apply) | Explain → Modify → Debug & Validate → Direct → Build |
-| 31 | PY-4.4 Making failures explicit | 4 | VE-3 (Adapt), VE-5 (Adapt), BU-5 (Apply) | Explain → Debug & Validate → Modify |
-| 32 | GIT-0.1 Repository state: working tree, staging and history *(Git v2)* | GIT 0 | CO-2 (Apply), CO-6 (Apply) | Explain → Trace |
-| 33 | GIT-0.2 Diffs, staging and meaningful commits *(Git v2)* | GIT 0 | CO-3 (Apply), BU-5 (Apply) | Explain → Trace → Modify |
-| 34 | GIT-0.3 Branches, HEAD and merging *(Git v2)* | GIT 0 | CO-1 (Apply), CO-2 (Apply) | Explain → Predict → Trace |
-| 35 | GIT-0.4 Resolving merge conflicts *(Git v2)* | GIT 0 | BU-1 (Adapt), VE-5 (Apply) | Explain → Modify → Debug & Validate |
-| 36 | PY-5.1 Modules and imports | 5 | VE-3 (Adapt), VE-4 (Adapt), CO-6 (Adapt) | Explain → Debug & Validate |
-| 37 | PY-5.2 Splitting code across modules | 5 | SP-3 (Adapt), BU-4 (Adapt), CO-4 (Adapt), BU-5 (Adapt) | Explain → Decompose → Modify → Evaluate → Build |
-| 38 | PY-5.3 Packages | 5 | CO-5 (Apply), VE-3 (Adapt) | Explain → Trace → Debug & Validate |
-| 39 | PY-5.4 Entry points | 5 | CO-1 (Apply), BU-1 (Apply), DE-4 (Apply) | Explain → Predict → Modify → Direct → Build |
-| 40 | PY-0.2 Reading a small Python application | 5 | CO-4 (Apply), CO-5 (Apply) | Explain → Trace |
-| 41 | PY-6.1 Classes, instances and state | 6 | CO-2 (Adapt), CO-6 (Adapt), BU-1 (Adapt) | Explain → Trace → Modify |
-| 42 | PY-6.2 Constructing objects | 6 | VE-1 (Adapt), VE-2 (Adapt) | Explain → Debug & Validate |
-| 43 | PY-6.3 Instance, class and static methods | 6 | DE-6 (Apply), BU-4 (Apply) | Explain → Evaluate → Modify |
-| 44 | PY-6.4 Controlled object interfaces | 6 | DE-1 (Adapt), BU-4 (Adapt), VE-6 (Adapt) | Explain → Evaluate → Modify → Debug & Validate |
-| 45 | PY-6.8 Special methods | 6 | CO-1 (Apply), DE-1 (Apply) | Explain → Predict → Evaluate |
-| 46 | PY-6.9 Data classes and named values | 6 | DE-6 (Adapt), BU-3 (Adapt) | Explain → Evaluate → Build |
-| 47 | PY-6.5 Inheritance and resolution | 6 | CO-1 (Adapt), CO-6 (Adapt), VE-2 (Adapt) | Explain → Predict → Debug & Validate |
-| 48 | PY-6.6 Polymorphism and shared contracts | 6 | SP-2 (Adapt), DE-6 (Adapt), DE-1 (Adapt), VE-1 (Adapt) | Explain → Specify → Evaluate → Debug & Validate |
-| 49 | PY-6.7 Composition and object responsibility | 6 | SP-3 (Adapt), DE-6 (Adapt), BU-4 (Adapt), BU-5 (Adapt) | Explain → Decompose → Evaluate → Modify |
-| 50 | SD-0.1 Framing a design problem and its trade-offs *(Software Design v2)* | SD 0 | SP-1 (Adapt), DE-6 (Adapt) | Explain → Specify → Evaluate |
-| 51 | SD-0.2 Interfaces, contracts and dependency direction *(Software Design v2)* | SD 0 | SP-2 (Adapt), BU-4 (Adapt), CO-5 (Adapt) | Explain → Specify → Modify |
-| 52 | SD-0.3 SOLID as change reasoning *(Software Design v2)* | SD 0 | DE-1 (Adapt), BU-4 (Adapt) | Explain → Evaluate → Modify |
-| 53 | SD-0.4 Substitutability: Liskov and interface segregation *(Software Design v2)* | SD 0 | CO-1 (Adapt), VE-2 (Adapt) | Explain → Predict → Debug & Validate |
-| 54 | PY-7.1 Iterables and iterators | 7 | CO-1 (Apply), CO-6 (Apply), VE-2 (Apply) | Explain → Predict → Debug & Validate |
-| 55 | PY-7.2 Generators | 7 | CO-2 (Adapt), CO-5 (Adapt), BU-2 (Adapt), DE-6 (Adapt) | Explain → Trace → Modify → Evaluate |
-| 56 | PY-7.3 Decorators | 7 | CO-4 (Apply), BU-1 (Apply), VE-2 (Apply) | Explain → Modify → Debug & Validate |
-| 57 | PY-7.4 Context managers | 7 | CO-2 (Adapt), BU-3 (Adapt), VE-6 (Adapt) | Explain → Trace → Build → Debug & Validate |
-| 58 | PY-7.5 Type annotations | 7 | CO-3 (Adapt), DE-1 (Adapt), VE-4 (Adapt) | Explain → Evaluate → Debug & Validate |
-| 59 | PY-7.6 Interface-style type contracts | 7 | SP-2 (Apply), SP-4 (Apply), DE-6 (Apply) | Explain → Specify → Evaluate |
-| 60 | PY-8.1 Files and paths | 8 | BU-3 (Adapt), VE-6 (Adapt), DE-5 (Adapt) | Explain → Build → Debug & Validate → Direct |
-| 61 | PY-8.2 Structured data | 8 | VE-1 (Adapt), VE-6 (Adapt), BU-3 (Adapt) | Explain → Debug & Validate → Build |
-| 62 | PY-8.6 Pattern matching in text | 8 | CO-3 (Apply), VE-1 (Apply) | Explain → Debug & Validate |
-| 63 | PY-8.3 Configuration | 8 | SP-1 (Adapt), SP-2 (Adapt), SP-4 (Adapt), DE-5 (Adapt) | Explain → Specify → Decompose → Direct |
-| 64 | PY-8.7 Command-line programs and running other programs | 8 | BU-3 (Apply), DE-5 (Apply), VE-4 (Apply) | Explain → Build → Direct → Debug & Validate |
-| 65 | PY-8.4 Calling HTTP services | 8 | BU-2 (Adapt), VE-2 (Adapt), VE-6 (Adapt), DE-4 (Adapt) | Explain → Modify → Debug & Validate → Direct |
-| 66 | PY-8.5 Dates, times and timezones | 8 | VE-2 (Apply), VE-6 (Apply), DE-4 (Apply) | Explain → Debug & Validate → Direct |
-| 67 | DSA-1.1 Stacks, queues and priority queues *(Practical DSA v3)* | DSA 1 | DE-6 (Adapt), BU-3 (Apply) | Explain → Evaluate → Build |
-| 68 | DSA-1.2 Trees and hierarchical data *(Practical DSA v3)* | DSA 1 | CO-2 (Adapt), VE-2 (Adapt) | Explain → Trace → Debug & Validate |
-| 69 | DSA-1.3 Graphs, BFS, DFS and dependency order *(Practical DSA v3)* | DSA 1 | CO-2 (Adapt), SP-3 (Adapt) | Explain → Trace → Decompose |
-| 70 | DSA-1.4 Choosing under changing constraints *(Practical DSA v3)* | DSA 1 | DE-6 (Adapt), DE-1 (Adapt), VE-6 (Adapt) | Explain → Evaluate → Debug & Validate |
-| 71 | PY-9.1 Debugging | 9 | VE-3 (Adapt), VE-5 (Adapt), CO-2 (Adapt), DE-2 (Adapt) | Explain → Debug & Validate → Trace → Direct |
-| 72 | PY-9.2 Logging and runtime evidence | 9 | VE-4 (Adapt), BU-4 (Adapt), DE-5 (Adapt) | Explain → Debug & Validate → Modify → Direct |
-| 73 | PY-9.3 Behavioural tests with pytest | 9 | VE-1 (Adapt), VE-5 (Adapt), VE-6 (Adapt), DE-3 (Adapt) | Explain → Debug & Validate → Direct |
-| 74 | PY-9.4 Isolating code under test | 9 | VE-1 (Apply), DE-6 (Apply) | Explain → Debug & Validate → Evaluate |
-| 75 | PY-9.5 When passing is not proof | 9 | VE-2 (Adapt), VE-6 (Adapt), DE-1 (Adapt), SP-4 (Adapt) | Explain → Debug & Validate → Evaluate → Specify |
-| 76 | PY-9.6 Measuring runtime | 9 | VE-3 (Apply), CO-1 (Apply), DE-1 (Apply) | Explain → Predict → Debug & Validate → Evaluate |
-| 77 | PY-10.1 Environments | 10 | VE-3 (Adapt), VE-4 (Adapt), CO-6 (Adapt) | Explain → Debug & Validate |
-| 78 | PY-10.2 Dependencies | 10 | DE-5 (Adapt), DE-6 (Adapt), BU-5 (Adapt) | Explain → Direct → Evaluate → Modify |
-| 79 | PY-10.3 Project metadata and packaging | 10 | CO-3 (Apply), CO-4 (Apply), CO-5 (Apply) | Explain → Trace |
-| 80 | PY-10.4 Diagnosing install and environment failures | 10 | VE-3 (Adapt), VE-5 (Adapt) | Explain → Debug & Validate |
-| 81 | PY-10.5 Quality gates | 10 | BU-4 (Apply), VE-4 (Apply), DE-3 (Apply) | Explain → Modify → Debug & Validate → Direct |
-| 82 | PY-11.1 Concurrency mental model | 11 | CO-6 (Understand), DE-6 (Understand) | Explain → Evaluate |
-| 83 | PY-11.5 Threads and processes | 11 | BU-3 (Apply), VE-2 (Apply) | Explain → Build → Debug & Validate |
-| 84 | PY-11.2 Tracing async code | 11 | CO-1 (Adapt), CO-2 (Adapt), DE-2 (Adapt) | Explain → Predict → Trace → Direct |
-| 85 | PY-11.3 Concurrent I/O | 11 | BU-2 (Adapt), VE-2 (Adapt), VE-3 (Adapt), DE-4 (Adapt) | Explain → Modify → Debug & Validate → Direct |
-| 86 | PY-11.4 Async failures | 11 | VE-3 (Adapt), VE-5 (Adapt), DE-6 (Adapt) | Explain → Debug & Validate → Evaluate |
-| 87 | GIT-1.1 Remotes: fetch, pull, push and divergence *(Git v2)* | GIT 1 | CO-1 (Adapt), VE-3 (Adapt) | Explain → Predict → Debug & Validate |
-| 88 | GIT-1.2 The pull-request workflow *(Git v2)* | GIT 1 | SP-4 (Adapt), DE-1 (Adapt) | Explain → Specify → Evaluate |
-| 89 | GIT-1.3 Undo and recovery *(Git v2)* | GIT 1 | VE-3 (Adapt), DE-6 (Adapt) | Explain → Debug & Validate → Evaluate |
-| 90 | GIT-1.4 Reading history for context *(Git v2)* | GIT 1 | CO-3 (Adapt), CO-4 (Adapt) | Explain → Trace |
-| 91 | PY-12.1 Navigating an unfamiliar codebase | 12 | CO-3 (Own), CO-4 (Own), CO-5 (Own), SP-3 (Own) | Explain → Trace → Decompose |
-| 92 | PY-12.2 Learning a library from its documentation | 12 | DE-2 (Adapt), DE-4 (Adapt), BU-3 (Adapt) | Explain → Direct → Build |
-| 93 | PY-12.3 Organising a Python application | 12 | SP-3 (Adapt), DE-6 (Adapt), BU-4 (Adapt), CO-5 (Adapt) | Explain → Decompose → Evaluate → Modify |
-| 94 | PY-12.4 Changing an existing subsystem safely | 12 | BU-1 (Own), BU-5 (Own), VE-1 (Own), VE-5 (Own) | Explain → Modify → Debug & Validate |
-| 95 | PY-12.5 Refactoring | 12 | BU-4 (Adapt), BU-5 (Adapt), VE-5 (Adapt), DE-6 (Adapt) | Explain → Modify → Debug & Validate → Evaluate |
-| 96 | SD-1.1 Pattern intent and a small core set *(Software Design v2)* | SD 1 | DE-6 (Adapt), BU-3 (Adapt) | Explain → Evaluate → Build |
-| 97 | SD-1.2 Pattern overuse and design smells *(Software Design v2)* | SD 1 | CO-3 (Adapt), DE-1 (Adapt) | Explain → Evaluate |
-| 98 | SD-1.3 Modelling a workflow or state machine *(Software Design v2)* | SD 1 | SP-2 (Adapt), CO-5 (Adapt), VE-1 (Adapt) | Explain → Specify → Debug & Validate |
-| 99 | SD-1.4 Producing and defending a low-level design *(Software Design v2)* | SD 1 | SP-3 (Adapt), DE-6 (Adapt), BU-2 (Adapt) | Explain → Decompose → Evaluate → Modify |
-| 100 | GIT-2.1 Git as the safety net for agent work *(Git v2)* | GIT 2 | BU-5 (Adapt), DE-5 (Adapt), VE-5 (Adapt) | Explain → Modify → Direct → Debug & Validate |
-| 101 | AAE-0.1 Agent modes and human ownership *(AI-Assisted Engineering v2)* | AAE 0 | DE-3 (Adapt), DE-2 (Adapt) | Explain → Direct |
-| 102 | AAE-0.2 The task contract *(AI-Assisted Engineering v2)* | AAE 0 | SP-1 (Adapt), SP-2 (Adapt), SP-3 (Adapt) | Explain → Specify → Decompose |
-| 103 | AAE-0.3 Inspect before changing *(AI-Assisted Engineering v2)* | AAE 0 | CO-3 (Adapt), DE-4 (Adapt) | Explain → Trace → Direct |
-| 104 | AAE-0.4 Context and instruction files *(AI-Assisted Engineering v2)* | AAE 0 | SP-4 (Adapt), DE-3 (Adapt) | Explain → Specify → Direct |
-| 105 | AAE-0.5 Permissions, least privilege and untrusted content *(AI-Assisted Engineering v2)* | AAE 0 | DE-5 (Adapt), DE-1 (Adapt) | Explain → Direct → Evaluate |
-| 106 | AAE-0.6 Reviewing and verifying agent work *(AI-Assisted Engineering v2)* | AAE 0 | VE-2 (Adapt), VE-6 (Adapt), DE-1 (Adapt) | Explain → Debug & Validate → Evaluate |
-| 107 | AAE-0.7 Diagnosing agent failures and steering *(AI-Assisted Engineering v2)* | AAE 0 | VE-3 (Adapt), DE-2 (Adapt) | Explain → Debug & Validate → Direct |
-| 108 | PY-13.1 Building a Python subsystem | 13 | SP-1 (Own), SP-3 (Own), BU-2 (Own), DE-3 (Own) | Explain → Specify → Decompose → Modify → Direct |
-| 109 | PY-13.2 Interchangeable components behind contracts | 13 | SP-2 (Own), BU-3 (Own), DE-5 (Own), DE-6 (Own) | Explain → Specify → Build → Direct → Evaluate |
-| 110 | PY-13.3 An integrated, reliable workflow | 13 | BU-2 (Own), VE-4 (Own), VE-6 (Own), DE-5 (Own) | Explain → Modify → Debug & Validate → Direct |
-| 111 | PY-13.4 Owning AI-assisted Python work | 13 | SP-4 (Own), DE-1 (Own), DE-2 (Own), DE-3 (Own) | Explain → Specify → Direct → Evaluate |
+| 4 | TW-0.1 What a README is for *(Technical Writing v1)* | TW 0 | CO-4 (Understand), SP-4 (Understand) | Explain → Evaluate |
+| 5 | TW-0.2 Reviewing an AI-drafted README *(Technical Writing v1)* | TW 0 | VE-2 (Understand), SP-4 (Understand) | Explain → Debug & Validate → Direct |
+| 6 | PY-1.2 Numbers, booleans and None | 1 | CO-1 (Apply), VE-6 (Apply) | Explain → Predict → Debug & Validate → Build |
+| 7 | PY-1.7 Text | 1 | BU-1 (Apply), VE-6 (Apply) | Explain → Modify → Debug & Validate → Build |
+| 8 | PY-1.1 Names, objects and expressions | 1 | CO-1 (Apply), CO-2 (Apply), CO-6 (Apply) | Explain → Predict → Trace |
+| 9 | PY-1.8 Checking code with assert | 1 | VE-1 (Apply) | Explain → Debug & Validate → Build |
+| 10 | PY-1.3 Lists and tuples | 1 | CO-2 (Apply), VE-2 (Apply) | Explain → Trace → Debug & Validate |
+| 11 | PY-1.9 Copies, aliases and nested data | 1 | CO-2 (Adapt), VE-2 (Adapt) | Explain → Trace → Debug & Validate |
+| 12 | PY-1.4 Mappings | 1 | CO-3 (Apply), BU-1 (Adapt), VE-6 (Adapt) | Explain → Modify → Debug & Validate → Build |
+| 13 | PY-1.5 Choosing data structures | 1 | DE-6 (Apply), DE-1 (Apply) | Explain → Evaluate |
+| 14 | PY-1.6 Specialised collections and the standard library | 1 | BU-3 (Apply), DE-4 (Apply) | Explain → Build → Direct |
+| 15 | PY-2.1 Conditions | 2 | VE-1 (Adapt), VE-6 (Adapt), SP-1 (Apply) | Explain → Specify → Debug & Validate → Build |
+| 16 | PY-2.2 Iteration | 2 | VE-1 (Adapt), VE-2 (Adapt), VE-5 (Apply), CO-1 (Adapt) | Explain → Predict → Trace → Debug & Validate → Build |
+| 17 | PY-2.5 Debugging basics | 2 | VE-3 (Apply), VE-4 (Apply) | Explain → Debug & Validate |
+| 18 | PY-2.3 Comprehensions | 2 | BU-2 (Apply), BU-4 (Apply) | Explain → Modify → Evaluate → Build |
+| 19 | PY-2.4 Choosing control flow | 2 | DE-6 (Apply), BU-4 (Apply) | Explain → Evaluate → Modify → Build |
+| 20 | PY-3.1 Function calls and scope | 3 | CO-2 (Adapt), CO-3 (Adapt), CO-6 (Adapt), BU-2 (Apply) | Explain → Trace → Build |
+| 21 | PY-3.6 Recursion | 3 | CO-2 (Apply), VE-2 (Apply) | Explain → Trace → Debug & Validate |
+| 22 | PY-3.2 Function interfaces | 3 | BU-1 (Adapt), DE-1 (Adapt), VE-2 (Adapt) | Explain → Modify → Evaluate → Debug & Validate → Build |
+| 23 | PY-3.3 Functions as values | 3 | CO-3 (Apply), CO-4 (Apply), DE-1 (Apply) | Explain → Evaluate |
+| 24 | PY-3.4 Coherent functions | 3 | SP-1 (Adapt), SP-2 (Apply), SP-4 (Apply), VE-1 (Adapt) | Explain → Specify → Debug & Validate → Build |
+| 25 | PY-3.5 Decomposing a requirement | 3 | SP-1 (Adapt), SP-3 (Apply), BU-2 (Adapt), DE-3 (Apply) | Explain → Specify → Decompose → Modify → Direct |
+| 26 | DSA-0.1 Growth and the cost of common operations *(Practical DSA v3)* | DSA 0 | CO-1 (Apply), DE-6 (Apply) | Explain → Predict → Evaluate |
+| 27 | DSA-0.2 Finding repeated and nested work *(Practical DSA v3)* | DSA 0 | CO-3 (Apply), BU-1 (Adapt) | Explain → Trace → Modify |
+| 28 | DSA-0.3 Theory versus measured runtime *(Practical DSA v3)* | DSA 0 | VE-3 (Apply), DE-1 (Apply) | Explain → Debug & Validate → Evaluate |
+| 29 | DSA-0.4 Sorting and binary search *(Practical DSA v3)* | DSA 0 | CO-2 (Adapt), VE-1 (Adapt) | Explain → Trace → Debug & Validate |
+| 30 | PY-4.1 Exception flow | 4 | CO-2 (Adapt), VE-4 (Adapt), DE-1 (Adapt), DE-2 (Apply) | Explain → Trace → Debug & Validate → Evaluate → Direct |
+| 31 | PY-4.2 Failure contracts | 4 | SP-1 (Adapt), SP-2 (Adapt), SP-4 (Adapt), VE-1 (Adapt) | Explain → Specify → Decompose → Debug & Validate → Build |
+| 32 | PY-4.3 Validation | 4 | BU-1 (Adapt), VE-6 (Adapt), DE-5 (Apply) | Explain → Modify → Debug & Validate → Direct → Build |
+| 33 | PY-4.4 Making failures explicit | 4 | VE-3 (Adapt), VE-5 (Adapt), BU-5 (Apply) | Explain → Debug & Validate → Modify |
+| 34 | GIT-0.1 Repository state: working tree, staging and history *(Git v2)* | GIT 0 | CO-2 (Apply), CO-6 (Apply) | Explain → Trace |
+| 35 | GIT-0.2 Diffs, staging and meaningful commits *(Git v2)* | GIT 0 | CO-3 (Apply), BU-5 (Apply) | Explain → Trace → Modify |
+| 36 | GIT-0.3 Branches, HEAD and merging *(Git v2)* | GIT 0 | CO-1 (Apply), CO-2 (Apply) | Explain → Predict → Trace |
+| 37 | GIT-0.4 Resolving merge conflicts *(Git v2)* | GIT 0 | BU-1 (Adapt), VE-5 (Apply) | Explain → Modify → Debug & Validate |
+| 38 | PY-5.1 Modules and imports | 5 | VE-3 (Adapt), VE-4 (Adapt), CO-6 (Adapt) | Explain → Debug & Validate |
+| 39 | PY-5.2 Splitting code across modules | 5 | SP-3 (Adapt), BU-4 (Adapt), CO-4 (Adapt), BU-5 (Adapt) | Explain → Decompose → Modify → Evaluate → Build |
+| 40 | PY-5.3 Packages | 5 | CO-5 (Apply), VE-3 (Adapt) | Explain → Trace → Debug & Validate |
+| 41 | PY-5.4 Entry points | 5 | CO-1 (Apply), BU-1 (Apply), DE-4 (Apply) | Explain → Predict → Modify → Direct → Build |
+| 42 | PY-0.2 Reading a small Python application | 5 | CO-4 (Apply), CO-5 (Apply) | Explain → Trace |
+| 43 | PY-6.1 Classes, instances and state | 6 | CO-2 (Adapt), CO-6 (Adapt), BU-1 (Adapt) | Explain → Trace → Modify |
+| 44 | PY-6.2 Constructing objects | 6 | VE-1 (Adapt), VE-2 (Adapt) | Explain → Debug & Validate |
+| 45 | PY-6.3 Instance, class and static methods | 6 | DE-6 (Apply), BU-4 (Apply) | Explain → Evaluate → Modify |
+| 46 | PY-6.4 Controlled object interfaces | 6 | DE-1 (Adapt), BU-4 (Adapt), VE-6 (Adapt) | Explain → Evaluate → Modify → Debug & Validate |
+| 47 | PY-6.8 Special methods | 6 | CO-1 (Apply), DE-1 (Apply) | Explain → Predict → Evaluate |
+| 48 | PY-6.9 Data classes and named values | 6 | DE-6 (Adapt), BU-3 (Adapt) | Explain → Evaluate → Build |
+| 49 | PY-6.5 Inheritance and resolution | 6 | CO-1 (Adapt), CO-6 (Adapt), VE-2 (Adapt) | Explain → Predict → Debug & Validate |
+| 50 | PY-6.6 Polymorphism and shared contracts | 6 | SP-2 (Adapt), DE-6 (Adapt), DE-1 (Adapt), VE-1 (Adapt) | Explain → Specify → Evaluate → Debug & Validate |
+| 51 | PY-6.7 Composition and object responsibility | 6 | SP-3 (Adapt), DE-6 (Adapt), BU-4 (Adapt), BU-5 (Adapt) | Explain → Decompose → Evaluate → Modify |
+| 52 | SD-0.1 Framing a design problem and its trade-offs *(Software Design v2)* | SD 0 | SP-1 (Adapt), DE-6 (Adapt) | Explain → Specify → Evaluate |
+| 53 | SD-0.2 Interfaces, contracts and dependency direction *(Software Design v2)* | SD 0 | SP-2 (Adapt), BU-4 (Adapt), CO-5 (Adapt) | Explain → Specify → Modify |
+| 54 | SD-0.3 SOLID as change reasoning *(Software Design v2)* | SD 0 | DE-1 (Adapt), BU-4 (Adapt) | Explain → Evaluate → Modify |
+| 55 | SD-0.4 Substitutability: Liskov and interface segregation *(Software Design v2)* | SD 0 | CO-1 (Adapt), VE-2 (Adapt) | Explain → Predict → Debug & Validate |
+| 56 | PY-7.1 Iterables and iterators | 7 | CO-1 (Apply), CO-6 (Apply), VE-2 (Apply) | Explain → Predict → Debug & Validate |
+| 57 | PY-7.2 Generators | 7 | CO-2 (Adapt), CO-5 (Adapt), BU-2 (Adapt), DE-6 (Adapt) | Explain → Trace → Modify → Evaluate |
+| 58 | PY-7.3 Decorators | 7 | CO-4 (Apply), BU-1 (Apply), VE-2 (Apply) | Explain → Modify → Debug & Validate |
+| 59 | PY-7.4 Context managers | 7 | CO-2 (Adapt), BU-3 (Adapt), VE-6 (Adapt) | Explain → Trace → Build → Debug & Validate |
+| 60 | PY-7.5 Type annotations | 7 | CO-3 (Adapt), DE-1 (Adapt), VE-4 (Adapt) | Explain → Evaluate → Debug & Validate |
+| 61 | PY-7.6 Interface-style type contracts | 7 | SP-2 (Apply), SP-4 (Apply), DE-6 (Apply) | Explain → Specify → Evaluate |
+| 62 | PY-8.1 Files and paths | 8 | BU-3 (Adapt), VE-6 (Adapt), DE-5 (Adapt) | Explain → Build → Debug & Validate → Direct |
+| 63 | PY-8.2 Structured data | 8 | VE-1 (Adapt), VE-6 (Adapt), BU-3 (Adapt) | Explain → Debug & Validate → Build |
+| 64 | PY-8.6 Pattern matching in text | 8 | CO-3 (Apply), VE-1 (Apply) | Explain → Debug & Validate |
+| 65 | PY-8.3 Configuration | 8 | SP-1 (Adapt), SP-2 (Adapt), SP-4 (Adapt), DE-5 (Adapt) | Explain → Specify → Decompose → Direct |
+| 66 | PY-8.7 Command-line programs and running other programs | 8 | BU-3 (Apply), DE-5 (Apply), VE-4 (Apply) | Explain → Build → Direct → Debug & Validate |
+| 67 | PY-8.4 Calling HTTP services | 8 | BU-2 (Adapt), VE-2 (Adapt), VE-6 (Adapt), DE-4 (Adapt) | Explain → Modify → Debug & Validate → Direct |
+| 68 | PY-8.5 Dates, times and timezones | 8 | VE-2 (Apply), VE-6 (Apply), DE-4 (Apply) | Explain → Debug & Validate → Direct |
+| 69 | DSA-1.1 Stacks, queues and priority queues *(Practical DSA v3)* | DSA 1 | DE-6 (Adapt), BU-3 (Apply) | Explain → Evaluate → Build |
+| 70 | DSA-1.2 Trees and hierarchical data *(Practical DSA v3)* | DSA 1 | CO-2 (Adapt), VE-2 (Adapt) | Explain → Trace → Debug & Validate |
+| 71 | DSA-1.3 Graphs, BFS, DFS and dependency order *(Practical DSA v3)* | DSA 1 | CO-2 (Adapt), SP-3 (Adapt) | Explain → Trace → Decompose |
+| 72 | DSA-1.4 Choosing under changing constraints *(Practical DSA v3)* | DSA 1 | DE-6 (Adapt), DE-1 (Adapt), VE-6 (Adapt) | Explain → Evaluate → Debug & Validate |
+| 73 | PY-9.1 Debugging | 9 | VE-3 (Adapt), VE-5 (Adapt), CO-2 (Adapt), DE-2 (Adapt) | Explain → Debug & Validate → Trace → Direct |
+| 74 | PY-9.2 Logging and runtime evidence | 9 | VE-4 (Adapt), BU-4 (Adapt), DE-5 (Adapt) | Explain → Debug & Validate → Modify → Direct |
+| 75 | PY-9.3 Behavioural tests with pytest | 9 | VE-1 (Adapt), VE-5 (Adapt), VE-6 (Adapt), DE-3 (Adapt) | Explain → Debug & Validate → Direct |
+| 76 | PY-9.4 Isolating code under test | 9 | VE-1 (Apply), DE-6 (Apply) | Explain → Debug & Validate → Evaluate |
+| 77 | PY-9.5 When passing is not proof | 9 | VE-2 (Adapt), VE-6 (Adapt), DE-1 (Adapt), SP-4 (Adapt) | Explain → Debug & Validate → Evaluate → Specify |
+| 78 | PY-9.6 Measuring runtime | 9 | VE-3 (Apply), CO-1 (Apply), DE-1 (Apply) | Explain → Predict → Debug & Validate → Evaluate |
+| 79 | PY-10.1 Environments | 10 | VE-3 (Adapt), VE-4 (Adapt), CO-6 (Adapt) | Explain → Debug & Validate |
+| 80 | PY-10.2 Dependencies | 10 | DE-5 (Adapt), DE-6 (Adapt), BU-5 (Adapt) | Explain → Direct → Evaluate → Modify |
+| 81 | PY-10.3 Project metadata and packaging | 10 | CO-3 (Apply), CO-4 (Apply), CO-5 (Apply) | Explain → Trace |
+| 82 | PY-10.4 Diagnosing install and environment failures | 10 | VE-3 (Adapt), VE-5 (Adapt) | Explain → Debug & Validate |
+| 83 | PY-10.5 Quality gates | 10 | BU-4 (Apply), VE-4 (Apply), DE-3 (Apply) | Explain → Modify → Debug & Validate → Direct |
+| 84 | TW-1.1 Reading an ADR *(Technical Writing v1)* | TW 1 | CO-4 (Apply), SP-4 (Adapt) | Explain → Evaluate |
+| 85 | TW-1.2 Recording your own decision *(Technical Writing v1)* | TW 1 | DE-6 (Adapt), DE-1 (Adapt) | Explain → Direct → Evaluate |
+| 86 | PY-11.1 Concurrency mental model | 11 | CO-6 (Understand), DE-6 (Understand) | Explain → Evaluate |
+| 87 | PY-11.5 Threads and processes | 11 | BU-3 (Apply), VE-2 (Apply) | Explain → Build → Debug & Validate |
+| 88 | PY-11.2 Tracing async code | 11 | CO-1 (Adapt), CO-2 (Adapt), DE-2 (Adapt) | Explain → Predict → Trace → Direct |
+| 89 | PY-11.3 Concurrent I/O | 11 | BU-2 (Adapt), VE-2 (Adapt), VE-3 (Adapt), DE-4 (Adapt) | Explain → Modify → Debug & Validate → Direct |
+| 90 | PY-11.4 Async failures | 11 | VE-3 (Adapt), VE-5 (Adapt), DE-6 (Adapt) | Explain → Debug & Validate → Evaluate |
+| 91 | GIT-1.1 Remotes: fetch, pull, push and divergence *(Git v2)* | GIT 1 | CO-1 (Adapt), VE-3 (Adapt) | Explain → Predict → Debug & Validate |
+| 92 | GIT-1.2 The pull-request workflow *(Git v2)* | GIT 1 | SP-4 (Adapt), DE-1 (Adapt) | Explain → Specify → Evaluate |
+| 93 | GIT-1.3 Undo and recovery *(Git v2)* | GIT 1 | VE-3 (Adapt), DE-6 (Adapt) | Explain → Debug & Validate → Evaluate |
+| 94 | GIT-1.4 Reading history for context *(Git v2)* | GIT 1 | CO-3 (Adapt), CO-4 (Adapt) | Explain → Trace |
+| 95 | PY-12.1 Navigating an unfamiliar codebase | 12 | CO-3 (Own), CO-4 (Own), CO-5 (Own), SP-3 (Own) | Explain → Trace → Decompose |
+| 96 | PY-12.2 Learning a library from its documentation | 12 | DE-2 (Adapt), DE-4 (Adapt), BU-3 (Adapt) | Explain → Direct → Build |
+| 97 | PY-12.3 Organising a Python application | 12 | SP-3 (Adapt), DE-6 (Adapt), BU-4 (Adapt), CO-5 (Adapt) | Explain → Decompose → Evaluate → Modify |
+| 98 | PY-12.4 Changing an existing subsystem safely | 12 | BU-1 (Own), BU-5 (Own), VE-1 (Own), VE-5 (Own) | Explain → Modify → Debug & Validate |
+| 99 | PY-12.5 Refactoring | 12 | BU-4 (Adapt), BU-5 (Adapt), VE-5 (Adapt), DE-6 (Adapt) | Explain → Modify → Debug & Validate → Evaluate |
+| 100 | SD-1.1 Pattern intent and a small core set *(Software Design v2)* | SD 1 | DE-6 (Adapt), BU-3 (Adapt) | Explain → Evaluate → Build |
+| 101 | SD-1.2 Pattern overuse and design smells *(Software Design v2)* | SD 1 | CO-3 (Adapt), DE-1 (Adapt) | Explain → Evaluate |
+| 102 | SD-1.3 Modelling a workflow or state machine *(Software Design v2)* | SD 1 | SP-2 (Adapt), CO-5 (Adapt), VE-1 (Adapt) | Explain → Specify → Debug & Validate |
+| 103 | SD-1.4 Producing and defending a low-level design *(Software Design v2)* | SD 1 | SP-3 (Adapt), DE-6 (Adapt), BU-2 (Adapt) | Explain → Decompose → Evaluate → Modify |
+| 104 | GIT-2.1 Git as the safety net for agent work *(Git v2)* | GIT 2 | BU-5 (Adapt), DE-5 (Adapt), VE-5 (Adapt) | Explain → Modify → Direct → Debug & Validate |
+| 105 | AAE-0.1 Agent modes and human ownership *(AI-Assisted Engineering v2)* | AAE 0 | DE-3 (Adapt), DE-2 (Adapt) | Explain → Direct |
+| 106 | AAE-0.2 The task contract *(AI-Assisted Engineering v2)* | AAE 0 | SP-1 (Adapt), SP-2 (Adapt), SP-3 (Adapt) | Explain → Specify → Decompose |
+| 107 | AAE-0.3 Inspect before changing *(AI-Assisted Engineering v2)* | AAE 0 | CO-3 (Adapt), DE-4 (Adapt) | Explain → Trace → Direct |
+| 108 | AAE-0.4 Context and instruction files *(AI-Assisted Engineering v2)* | AAE 0 | SP-4 (Adapt), DE-3 (Adapt) | Explain → Specify → Direct |
+| 109 | AAE-0.5 Permissions, least privilege and untrusted content *(AI-Assisted Engineering v2)* | AAE 0 | DE-5 (Adapt), DE-1 (Adapt) | Explain → Direct → Evaluate |
+| 110 | AAE-0.6 Reviewing and verifying agent work *(AI-Assisted Engineering v2)* | AAE 0 | VE-2 (Adapt), VE-6 (Adapt), DE-1 (Adapt) | Explain → Debug & Validate → Evaluate |
+| 111 | AAE-0.7 Diagnosing agent failures and steering *(AI-Assisted Engineering v2)* | AAE 0 | VE-3 (Adapt), DE-2 (Adapt) | Explain → Debug & Validate → Direct |
+| 112 | TW-2.1 From function spec to spec document *(Technical Writing v1)* | TW 2 | SP-2 (Adapt), SP-4 (Adapt) | Explain → Specify → Evaluate |
+| 113 | TW-2.2 Spec before build *(Technical Writing v1)* | TW 2 | SP-1 (Adapt), SP-2 (Adapt) | Explain → Direct → Specify |
+| 114 | PY-13.1 Building a Python subsystem | 13 | SP-1 (Own), SP-3 (Own), BU-2 (Own), DE-3 (Own) | Explain → Specify → Decompose → Modify → Direct |
+| 115 | PY-13.2 Interchangeable components behind contracts | 13 | SP-2 (Own), BU-3 (Own), DE-5 (Own), DE-6 (Own) | Explain → Specify → Build → Direct → Evaluate |
+| 116 | PY-13.3 An integrated, reliable workflow | 13 | BU-2 (Own), VE-4 (Own), VE-6 (Own), DE-5 (Own) | Explain → Modify → Debug & Validate → Direct |
+| 117 | PY-13.4 Owning AI-assisted Python work | 13 | SP-4 (Own), DE-1 (Own), DE-2 (Own), DE-3 (Own) | Explain → Specify → Direct → Evaluate |
 
 The CO-6 concept check runs in every unit as part of Explain and is a target only where listed.
 
