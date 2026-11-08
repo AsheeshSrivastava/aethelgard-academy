@@ -1,5 +1,7 @@
 # SPEC-11: Unified Platform Shell, Navigation Topology & Concept Library Specification
 
+> **Learner wording (ADR-0027):** screens say "Module" where this spec says "stage"; code, routes and data keep "stage".
+
 ## 1. Executive Summary
 This specification defines the complete information architecture, page navigation topology, data contracts, and interaction mechanics of the **Aethelgard Academy Unified Web Platform**. It formalizes the five core platform views:
 1. **Academy Landing Dashboard** (`/`)

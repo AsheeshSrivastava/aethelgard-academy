@@ -5,9 +5,9 @@ import { api } from "../api/client";
 import { CourseCards } from "./Courses";
 
 const SPINE = [
-  ["Single intake desk", "Python · Stage 0"],
-  ["Batch validation", "Python · Stages 2 to 4"],
-  ["File and JSON store", "Python · Stage 8"],
+  ["Single intake desk", "Python · Module 0"],
+  ["Batch validation", "Python · Modules 2 to 4"],
+  ["File and JSON store", "Python · Module 8"],
   ["Backend service", "Python for Backend/AI"],
   ["Grounded AI agents", "AI Engineering"],
 ] as const;

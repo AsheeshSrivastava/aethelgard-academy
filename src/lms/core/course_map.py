@@ -103,7 +103,7 @@ class AuthoredBuild(NamedTuple):
 
 class StageView(BaseModel):
     stage: int
-    label: str                         # What the learner sees: "Stage 4", "DSA 0"
+    label: str                         # What the learner sees: "Module 4", "DSA 0" (ADR-0027)
     title: str
     units: List[UnitSummary]
     build: Optional[BuildSummary] = None

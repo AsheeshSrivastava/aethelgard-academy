@@ -93,7 +93,7 @@ def test_slotted_stage_ids(unit_id, roadmap_stage, stage):
 
 @pytest.mark.parametrize(
     "stage, label",
-    [(4, "Stage 4"), (0, "Stage 0"), (17, "Stage 17"), (100, "DSA 0"), (101, "DSA 1"),
+    [(4, "Module 4"), (0, "Module 0"), (17, "Module 17"), (100, "DSA 0"), (101, "DSA 1"),
      (202, "GIT 2"), (301, "SD 1"), (400, "AAE 0"), (500, "NET 0"), (601, "DB 1")],
 )
 def test_stage_labels(stage, label):
@@ -194,7 +194,7 @@ def test_course_map_uses_labels_and_path_order():
     ).stages
 
     assert [s.stage for s in stages] == [1, 100, 2]
-    assert [s.label for s in stages] == ["Stage 1", "DSA 0", "Stage 2"]
+    assert [s.label for s in stages] == ["Module 1", "DSA 0", "Module 2"]
     assert stages[1].build.title == "DSA 0 build"
 
 
@@ -212,8 +212,8 @@ def test_course_map_route_shows_the_slotted_stage_in_place(client):
     stages = client.get("/api/v1/courses/python").json()["stages"]
     labels = [s["label"] for s in stages]
 
-    assert labels.index("DSA 0") == labels.index("Stage 3") + 1
-    assert labels.index("DSA 0") == labels.index("Stage 4") - 1
+    assert labels.index("DSA 0") == labels.index("Module 3") + 1
+    assert labels.index("DSA 0") == labels.index("Module 4") - 1
     dsa = stages[labels.index("DSA 0")]
     assert dsa["title"] == "Cost, sorting and search"
     assert [u["unit_id"] for u in dsa["units"]] == ["DSA-0.1", "DSA-0.2", "DSA-0.3", "DSA-0.4"]
@@ -222,7 +222,7 @@ def test_course_map_route_shows_the_slotted_stage_in_place(client):
 def test_unit_route_gives_the_stage_label_and_make_step(client):
     body = client.get("/api/v1/units/PY-1.2").json()
 
-    assert body["stage_label"] == "Stage 1"
+    assert body["stage_label"] == "Module 1"
     assert body["make"]["skill_id"] == "VE-6"
     assert body["make"]["task"].startswith("a rice-donation calculator")
     assert client.get("/api/v1/units/DSA-0.1").json()["stage_label"] == "DSA 0"

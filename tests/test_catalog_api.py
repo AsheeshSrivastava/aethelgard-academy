@@ -215,7 +215,7 @@ def test_stage_without_a_roadmap_title_falls_back_to_its_number():
 
     body = client.get("/api/v1/courses/python").json()
 
-    assert body["stages"][0]["title"] == "Stage 1"
+    assert body["stages"][0]["title"] == "Module 1"
 
 
 def test_python_stages_have_the_approved_titles(client):
@@ -274,7 +274,7 @@ def test_build_is_locked_until_every_unit_passed_its_cold_check():
     repo.mark_unit_activities_completed(LOCAL_LEARNER_ID, "PY-1.2", T0)
     repo.record_cold_check_attempt(LOCAL_LEARNER_ID, "PY-1.2", passed=True, attempted_at=T0)
     assert stage_1_build() == {
-        "title": "Stage 1 build",
+        "title": "Module 1 build",
         "kind": "script",
         "maturity": "P1",
         "locked": False,

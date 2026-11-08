@@ -1,5 +1,7 @@
 # SPEC-15: Stage Build
 
+> **Learner wording (ADR-0027):** screens say "Module" where this spec says "stage"; code, routes and data keep "stage".
+
 - **Status:** Accepted for implementation
 - **Governed by:** ADR-0016 (Own rule, section 2.6 gate), ADR-0009 (Socratic boundary), ADR-0014 (feature modules), SPEC-12 (sections 3, 4.1, 5 and 9), SPEC-13 (findings, not crashes)
 - **Design reference:** Aethelgard LMS design canvas, Stage 0 build artboard

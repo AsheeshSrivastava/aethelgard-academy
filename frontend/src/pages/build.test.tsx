@@ -28,7 +28,7 @@ const build = {
   exercise_id: "python/stage-0/build",
   course_id: "python",
   stage: 0,
-  stage_label: "Stage 0",
+  stage_label: "Module 0",
   title: "Pantry intake check-in script",
   kind: "script",
   maturity: "P1",
@@ -93,7 +93,7 @@ describe("locked", () => {
   });
 
   it("says plainly when a build is not written yet", async () => {
-    stubApi({ [`GET ${API}`]: new Response(JSON.stringify({ detail: "The build for stage 0 is not written yet." }), { status: 404 }) });
+    stubApi({ [`GET ${API}`]: new Response(JSON.stringify({ detail: "The build for Module 0 is not written yet." }), { status: 404 }) });
     renderAt(PATH);
 
     expect(await screen.findByText(/not written yet/)).toBeInTheDocument();
@@ -107,7 +107,7 @@ describe("a slotted stage", () => {
     renderAt("/courses/backend/stages/600/build");
 
     expect(await screen.findByText("DB 0 build")).toBeInTheDocument();
-    expect(screen.queryByText(/Stage 600/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Module 600/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to Python for Backend/AI course map" })).toHaveAttribute("href", "/courses/backend");
   });
 });
@@ -120,7 +120,7 @@ describe("the page", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Pantry intake check-in script" })).toBeInTheDocument();
     expect(screen.getByText("Draft")).toBeInTheDocument();
     expect(screen.getByText("Script")).toBeInTheDocument();
-    expect(screen.getByText("P1 · Stage build")).toBeInTheDocument();
+    expect(screen.getByText("P1 · Module build")).toBeInTheDocument();
     expect((await screen.findByText("the desk")).tagName).toBe("STRONG");
     expect(screen.getByText(/--- CHECK-IN SLIP ---/)).toBeInTheDocument();
     expect(within(await requirements()).getAllByRole("listitem")).toHaveLength(3);
@@ -445,7 +445,7 @@ describe("course map", () => {
     stubApi(mapWith({ title: "Check-in", kind: "script", maturity: "P1", locked: true, pending_units: ["PY-0.1"], authored: true, status: "draft" }));
     renderAt("/courses/python");
 
-    expect(await screen.findByText("P1 · Stage build")).toBeInTheDocument();
+    expect(await screen.findByText("P1 · Module build")).toBeInTheDocument();
     expect(screen.getByText("Script")).toBeInTheDocument();
   });
 
@@ -458,7 +458,7 @@ describe("course map", () => {
   });
 
   it("says when an unlocked build is not written yet", async () => {
-    stubApi(mapWith({ title: "Stage 0 build", kind: "script", locked: false, pending_units: [], authored: false, status: null }));
+    stubApi(mapWith({ title: "Module 0 build", kind: "script", locked: false, pending_units: [], authored: false, status: null }));
     renderAt("/courses/python");
 
     expect(await screen.findByText("Not written yet")).toBeInTheDocument();

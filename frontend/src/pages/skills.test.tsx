@@ -63,7 +63,7 @@ describe("My skills (SPEC-12 section 6.1)", () => {
     const area = await screen.findByRole("region", { name: "Comprehend" });
     expect(within(area).getByText(/owns the mental model/)).toBeInTheDocument();
     expect(within(area).getByText("Predict before running")).toBeInTheDocument();
-    expect(screen.queryByText(/Stage 0/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Module 0/)).not.toBeInTheDocument();
   });
 
   it("shows the level, where it was practised and where it comes up", async () => {

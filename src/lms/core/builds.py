@@ -143,7 +143,7 @@ class StageBuild(BaseModel):
     exercise_id: str
     course_id: str
     stage: int
-    stage_label: str                   # "Stage 4", "DSA 0"
+    stage_label: str                   # "Module 4", "DSA 0" (ADR-0027)
     title: str
     kind: str
     maturity: Maturity

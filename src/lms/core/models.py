@@ -83,12 +83,16 @@ def is_slotted_stage(stage: int) -> bool:
     return stage >= min(SLOTTED_STAGE_BASE.values())
 
 
+# ADR-0027: learners read "Module"; code, data and roadmaps keep "stage".
+LEARNER_STAGE_TERM = "Module"
+
+
 def stage_label(stage: int) -> str:
-    """The name a learner sees: "Stage 4", or the roadmap's own "DSA 0"."""
+    """The name a learner sees: "Module 4", or the roadmap's own "DSA 0"."""
     for name, base in SLOTTED_STAGE_BASE.items():
         if base <= stage < base + 100:
             return f"{name} {stage - base}"
-    return f"Stage {stage}"
+    return f"{LEARNER_STAGE_TERM} {stage}"
 
 
 class TargetSkill(BaseModel):

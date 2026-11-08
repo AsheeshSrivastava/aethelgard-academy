@@ -44,7 +44,7 @@ describe("restarting a stage review (ADR-0016 amendment)", () => {
     const calls = stubApi(routes({ state: "passed" }, { [`POST ${REVIEW}:reset`]: null }));
     renderAt(PAGE);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Restart stage review" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Restart module review" }));
     const confirm = screen.getByRole("group", { name: "Confirm restart" });
     expect(confirm).toHaveTextContent(/evidence ledger is kept/i);
     await userEvent.click(within(confirm).getByRole("button", { name: "Yes, restart" }));
@@ -59,7 +59,7 @@ describe("stage review page", () => {
     renderAt(PAGE);
 
     expect(await screen.findByText("Question 1")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Stage 0 review" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Module 0 review" })).toBeInTheDocument();
     expect(screen.getByText("Item 1 of 2")).toBeInTheDocument();
     expect(screen.getByRole("note")).toHaveTextContent(/AXIS is off/);
     expect(screen.queryByRole("complementary", { name: /AXIS/i })).not.toBeInTheDocument();
@@ -138,7 +138,7 @@ describe("stage review page", () => {
 });
 
 describe("course map tile", () => {
-  const tile = () => screen.findByText("Stage review");
+  const tile = () => screen.findByText("Module review");
   const render = (build: object) => {
     stubApi({
       "GET /api/v1/courses/python": withReview(build),
@@ -155,8 +155,8 @@ describe("course map tile", () => {
     expect(link).toHaveTextContent("Ready");
     const stage = link?.closest(".unit-grid");
     const tiles = [...(stage?.querySelectorAll(".build-tile") ?? [])];
-    expect(tiles[0]).toHaveTextContent("Stage review");
-    expect(tiles[1]).toHaveTextContent("Stage 0 build");
+    expect(tiles[0]).toHaveTextContent("Module review");
+    expect(tiles[1]).toHaveTextContent("Module 0 build");
   });
 
   it("is plain text before the units pass", async () => {
@@ -168,15 +168,15 @@ describe("course map tile", () => {
   it("is hidden when no review is planned", async () => {
     render({ review_state: "not_ready", review_planned: false });
 
-    await screen.findByText("Stage 0 build");
-    expect(screen.queryByText("Stage review")).not.toBeInTheDocument();
+    await screen.findByText("Module 0 build");
+    expect(screen.queryByText("Module review")).not.toBeInTheDocument();
   });
 
   it("is hidden when the stage has no items", async () => {
     render({ review_state: "unavailable", review_planned: false });
 
-    await screen.findByText("Stage 0 build");
-    expect(screen.queryByText("Stage review")).not.toBeInTheDocument();
+    await screen.findByText("Module 0 build");
+    expect(screen.queryByText("Module review")).not.toBeInTheDocument();
   });
 
   it("shows a slotted stage by its name, never its id", async () => {
@@ -188,7 +188,7 @@ describe("course map tile", () => {
     renderAt("/courses/python");
 
     expect(await screen.findByText("DSA 0")).toBeInTheDocument();
-    expect(screen.queryByText("Stage 100")).not.toBeInTheDocument();
+    expect(screen.queryByText("Module 100")).not.toBeInTheDocument();
   });
 
   it("stays a link after a fail and after a pass", async () => {

@@ -11,7 +11,7 @@ export const courseMap: Schemas["CourseMap"] = {
   stages: [
     {
       stage: 0,
-      label: "Stage 0",
+      label: "Module 0",
       title: "Running your first program",
       units: [
         {
@@ -33,11 +33,11 @@ export const courseMap: Schemas["CourseMap"] = {
           cold_check_state: "not_ready",
         },
       ],
-      build: { title: "Stage 0 build", kind: "script", maturity: "P1", locked: true, pending_units: ["PY-0.1"], authored: true, status: "draft", review_planned: false },
+      build: { title: "Module 0 build", kind: "script", maturity: "P1", locked: true, pending_units: ["PY-0.1"], authored: true, status: "draft", review_planned: false },
     },
     {
       stage: 1,
-      label: "Stage 1",
+      label: "Module 1",
       title: "Values, text and collections",
       units: [
         {
@@ -50,7 +50,7 @@ export const courseMap: Schemas["CourseMap"] = {
           cold_check_state: "not_ready",
         },
       ],
-      build: { title: "Stage 1 build", kind: "script", maturity: "P1", locked: false, pending_units: [], authored: false, review_planned: false },
+      build: { title: "Module 1 build", kind: "script", maturity: "P1", locked: false, pending_units: [], authored: false, review_planned: false },
     },
   ],
 };
@@ -59,7 +59,7 @@ export const unit = {
   unit_id: "PY-0.1",
   title: "Python as an executing program",
   stage: 0,
-  stage_label: "Stage 0",
+  stage_label: "Module 0",
   concept_line: "Python runs statements in order, and each statement can change the program's state.",
   target_skills: [
     { skill_id: "CO-1", skill_name: "Predict before running", goal_level: "Understand" },

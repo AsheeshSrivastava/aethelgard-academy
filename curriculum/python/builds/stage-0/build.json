@@ -29,7 +29,7 @@
     {
       "path": "checkin.py",
       "starter": [
-        "# Stage 0 build: pantry intake check-in",
+        "# Module 0 build: pantry intake check-in",
         "# Plan your steps as comments first, then write the code under each one.",
         ""
       ]
@@ -37,7 +37,7 @@
     {
       "path": "README.md",
       "starter": [
-        "# Stage 0 build",
+        "# Module 0 build",
         "",
         "## What this script does",
         "",

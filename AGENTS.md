@@ -105,6 +105,7 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
 ### Project rules
 
 - One step at a time.
+- Learner-facing term (ADR-0027): stage (code, data, roadmaps, ADRs) = Module (anything a learner reads). Never rename code identifiers; change labels only.
 - Answer material never goes into this repo: answer keys, hidden checks, Make tests, reference and wrong solutions, worked answers and build checks. Review docs holding answers stay git-ignored. Keep the guard test `tests/test_private_seed_answers.py`.
 - Local only: commit locally, never push. Never print keys. No paid run without a printed cost estimate first; the owner runs paid steps himself.
 - After substantive work, state **"Restarting review of the work"** and do a fresh pass against the approved scope, changed files, checks, and governing documents. Record findings and fixes.

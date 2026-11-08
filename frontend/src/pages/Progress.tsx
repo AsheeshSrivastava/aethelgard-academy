@@ -9,7 +9,7 @@ import { formatDate, formatDateTime, nextActionMessage, stepName } from "../lib/
 import { DECISION_MEANINGS } from "../lib/meanings";
 
 const ledgerActivity = (entry: EvidenceEntry) => {
-  if (entry.review_kind === "stage_review") return "Stage review";
+  if (entry.review_kind === "stage_review") return "Module review";
   if (entry.review_kind === "recheck") return "Recheck";
   return entry.cold_check ? "Cold Check" : (entry.activity ?? "Concept check");
 };
@@ -120,7 +120,7 @@ export function Progress() {
   }
 
   const { skills, units, next_action: next, stage: shownStage } = view.data;
-  const shownLabel = map.data?.stages.find((s) => s.stage === shownStage)?.label ?? `Stage ${shownStage}`;
+  const shownLabel = map.data?.stages.find((s) => s.stage === shownStage)?.label ?? `Module ${shownStage}`;
 
   return (
     <main className="container page">
@@ -129,7 +129,7 @@ export function Progress() {
         <h1 className="page-title">My progress</h1>
         {map.data && (
           <label className="filter">
-            <span>Stage</span>
+            <span>Module</span>
             <select
               value={shownStage ?? ""}
               onChange={(event) => navigate({ search: { course, stage: Number(event.target.value) } })}

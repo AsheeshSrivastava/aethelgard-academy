@@ -54,7 +54,7 @@ with db:
 
 // Stage 0 only: other stages (Stage 5 with PY-0.2) can have a review tile too.
 const reviewTile = (page: Page) =>
-  page.locator(".stage", { hasText: "Running your first program" }).locator(".build-tile", { hasText: /^Stage review/ });
+  page.locator(".stage", { hasText: "Running your first program" }).locator(".build-tile", { hasText: /^Module review/ });
 
 async function answer(page: Page, option: number) {
   await page.getByRole("radio").nth(option).check();
@@ -68,11 +68,11 @@ test.describe.serial("stage review and rechecks", () => {
 
     await page.goto(MAP);
     await expect(reviewTile(page)).toContainText("Ready");
-    await expect(page.locator(".build-tile", { hasText: "Pantry intake" })).toContainText("Locked until you pass the stage review");
+    await expect(page.locator(".build-tile", { hasText: "Pantry intake" })).toContainText("Locked until you pass the module review");
     await shot(page, "review-course-map");
 
     await reviewTile(page).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Stage 0 review" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Module 0 review" })).toBeVisible();
     await expect(page.getByText("Item 1 of 2")).toBeVisible();
     await expect(page.getByRole("note")).toContainText("AXIS is off");
     await expect(page.locator(".axis-panel")).toHaveCount(0);
@@ -91,7 +91,7 @@ test.describe.serial("stage review and rechecks", () => {
     await page.goto(MAP);
     await expect(reviewTile(page)).toContainText("Not yet");
     await page.goto("/courses/python/stages/0/build");
-    await expect(page.getByText("Pass the stage review first.")).toBeVisible();
+    await expect(page.getByText("Pass the module review first.")).toBeVisible();
 
     database("a-day-later");
     await page.goto(REVIEW);
@@ -100,7 +100,7 @@ test.describe.serial("stage review and rechecks", () => {
 
     await expect(page.getByText("Passed.")).toBeVisible();
     await page.getByRole("link", { name: "Go to the build" }).click();
-    await expect(page.getByText("Stage 0 build", { exact: true })).toBeVisible();
+    await expect(page.getByText("Module 0 build", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Back to Python course map" })).toBeVisible();
   });
 
@@ -110,7 +110,7 @@ test.describe.serial("stage review and rechecks", () => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(REVIEW);
     await page.getByText("Item 1 of 2").waitFor();
-    await page.getByRole("heading", { level: 1, name: "Stage 0 review" }).waitFor();
+    await page.getByRole("heading", { level: 1, name: "Module 0 review" }).waitFor();
     await expectNoSideScroll(page);
     await shot(page, "phone-review-item");
     await page.goto(MAP);
@@ -121,7 +121,7 @@ test.describe.serial("stage review and rechecks", () => {
     await page.goto(REVIEW);
     await page.getByRole("button", { name: /switch to dark theme/i }).click();
     await page.getByText("Item 1 of 2").waitFor();
-    await page.getByRole("heading", { level: 1, name: "Stage 0 review" }).waitFor();
+    await page.getByRole("heading", { level: 1, name: "Module 0 review" }).waitFor();
     await shot(page, "dark-review-item");
   });
 

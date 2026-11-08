@@ -651,14 +651,14 @@ def create_app(
     @app.get("/api/v1/learners/me/courses/{course_id}/stages/{stage}/review", response_model=StageReviewStatus)
     def get_my_stage_review(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
         if course_id not in COURSES or not stage_units(course_id, stage):
-            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+            return problem(404, "Module not found", f"{course_id} has no module {stage}.")
         return review_status(course_id, stage, learner_id)
 
     @app.post("/api/v1/learners/me/courses/{course_id}/stages/{stage}/review:reset", status_code=204, response_model=None)
     def reset_my_stage_review(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
         """Restart the stage review: its rounds and result go, the ledger stays (ADR-0016 amendment)."""
         if course_id not in COURSES or not stage_units(course_id, stage):
-            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+            return problem(404, "Module not found", f"{course_id} has no module {stage}.")
         repo.reset_stage_review(learner_id, stage_scope(course_id, stage), at=clock())
         log_event(learner_id, "reset", {"stage_review": stage_scope(course_id, stage)}, unit_id=scope_of(course_id, stage))
         return None
@@ -672,17 +672,17 @@ def create_app(
         course_id: str, stage: int, learner_id: str = Depends(current_learner_id)
     ):
         if course_id not in COURSES or not stage_units(course_id, stage):
-            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+            return problem(404, "Module not found", f"{course_id} has no module {stage}.")
         status = review_status(course_id, stage, learner_id)
         if status.state == ReviewState.PASSED:
-            return problem(409, "Stage review passed", "This stage review is already passed.")
+            return problem(409, "Module review passed", "This module review is already passed.")
         if status.state == ReviewState.UNAVAILABLE:
-            return problem(404, "No review yet", "This stage has no review items yet.")
+            return problem(404, "No review yet", "This module has no review items yet.")
         if status.state != ReviewState.AVAILABLE:
-            return problem(423, "Stage review locked", f"Available at: {status.available_at}.")
+            return problem(423, "Module review locked", f"Available at: {status.available_at}.")
         exercise = serve_review_item(open_stage_round(course_id, stage, learner_id), STAGE_REVIEW, learner_id)
         if exercise is None:
-            return problem(404, "No review yet", "This stage has no review items yet.")
+            return problem(404, "No review yet", "This module has no review items yet.")
         return exercise
 
     @app.get("/api/v1/learners/me/reviews/due", response_model=List[DueReview])
@@ -709,12 +709,12 @@ def create_app(
         """The build if this learner may have it, otherwise the problem to answer with."""
         units = stage_units(course_id, stage) if course_id in COURSES else []
         if not units:
-            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+            return problem(404, "Module not found", f"{course_id} has no module {stage}.")
         review = review_status(course_id, stage, learner_id)
         if not build_is_open(review.state):
             if review.pending_units:
                 return problem(423, "Build locked", f"Pass the Cold Check in: {', '.join(review.pending_units)}.")
-            return problem(423, "Build locked", "Pass the stage review first.")
+            return problem(423, "Build locked", "Pass the module review first.")
         build = catalog.builds.get((course_id, stage))
         if not build:
             return problem(404, "No build yet", f"The build for {stage_label(stage)} is not written yet.")
@@ -765,7 +765,7 @@ def create_app(
     )
     def reset_my_build(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
         if course_id not in COURSES or not stage_units(course_id, stage):
-            return problem(404, "Stage not found", f"{course_id} has no stage {stage}.")
+            return problem(404, "Module not found", f"{course_id} has no module {stage}.")
         repo.reset_unit(learner_id, scope_of(course_id, stage), at=clock())
         return None
 

@@ -102,14 +102,14 @@ export function StageReview() {
     <main className="container page review-page">
       <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName(courseId)} course map`} />
       <div className="card lesson-card">
-        <h1 className="step-title">{view ? `${view.label} review` : "Stage review"}</h1>
+        <h1 className="step-title">{view ? `${view.label} review` : "Module review"}</h1>
         {status.isPending && <Loading what="the review" />}
         {status.isError && <ErrorNote error={status.error} />}
         {data && data.state !== "available" && <p className="cold-message">{reviewMessage(data, now)}</p>}
         {data?.state === "available" && (
           <>
             <p className="cold-notice" role="note">
-              A mix from every unit of this stage. One try for each item. AXIS is off, so this shows what you can do on your own.
+              A mix from every unit of this module. One try for each item. AXIS is off, so this shows what you can do on your own.
             </p>
             <StageItems courseId={courseId} stage={number} total={data.items_total ?? 0} done={data.items_done ?? 0} />
           </>

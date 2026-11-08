@@ -54,7 +54,7 @@ describe("front page", () => {
     for (const mode of ["Coach", "Hybrid", "Socratic"]) {
       expect(screen.getByRole("heading", { name: mode })).toBeInTheDocument();
     }
-    expect(await screen.findByText("18 stages · 81 units")).toBeInTheDocument();
+    expect(await screen.findByText("18 modules · 81 units")).toBeInTheDocument();
   });
 
   it("has no back arrow", async () => {
@@ -79,7 +79,7 @@ describe("courses page", () => {
     renderAt("/courses");
 
     expect(await screen.findByRole("link", { name: /Python for Backend\/AI/ })).toHaveAttribute("href", "/courses/backend");
-    expect(screen.getByText("22 stages · 111 units")).toBeInTheDocument();
+    expect(screen.getByText("22 modules · 111 units")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/");
   });
 });
@@ -205,7 +205,7 @@ describe("my progress", () => {
     const next = await screen.findByRole("region", { name: /next learning action/i });
     expect(within(next).getByText(proficiency.next_action!.message)).toBeInTheDocument();
     expect(within(next).getByRole("link", { name: /PY-0\.1/ })).toHaveAttribute("href", "/units/PY-0.1/debug-validate");
-    expect(await screen.findByRole("heading", { name: /Skills · Stage 0/ })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Skills · Module 0/ })).toBeInTheDocument();
     expect(calls.find((c) => c.url.includes("/proficiency"))!.url).not.toContain("stage=");
   });
 
@@ -222,7 +222,7 @@ describe("my progress", () => {
     stubApi(progressRoutes());
     renderAt("/progress");
 
-    const units = await screen.findByRole("region", { name: /Units · Stage 0/ });
+    const units = await screen.findByRole("region", { name: /Units · Module 0/ });
     expect(within(units).getByRole("link", { name: /PY-0\.4/ })).toHaveTextContent("Progress");
   });
 
@@ -253,8 +253,8 @@ describe("my progress", () => {
     const user = userEvent.setup();
     renderAt("/progress");
 
-    await screen.findByRole("heading", { name: /Skills · Stage 0/ });
-    await user.selectOptions(await screen.findByLabelText("Stage"), "1");
+    await screen.findByRole("heading", { name: /Skills · Module 0/ });
+    await user.selectOptions(await screen.findByLabelText("Module"), "1");
 
     await waitFor(() => expect(calls.some((c) => c.url.includes("stage=1"))).toBe(true));
   });

@@ -17,7 +17,7 @@ const REVIEW_TILE_TEXT: Record<string, string> = {
 function ReviewTile({ courseId, stage }: { courseId: string; stage: Stage }) {
   const state = stage.build?.review_state;
   if (!state || state === "unavailable" || (state === "not_ready" && !stage.build?.review_planned)) return null;
-  const head = <span className="mono">Stage review</span>;
+  const head = <span className="mono">Module review</span>;
   if (state === "not_ready") {
     return (
       <div className="build-tile">
@@ -132,7 +132,7 @@ export function CourseMap() {
             <p className="small">{course.summary}</p>
             <div className="counts">
               <span>
-                <strong>{course.stage_count}</strong> stages
+                <strong>{course.stage_count}</strong> modules
               </span>
               <span>
                 <strong>{course.unit_count}</strong> units
@@ -153,7 +153,7 @@ export function CourseMap() {
             </div>
           )}
         </aside>
-        <section className="stage-list" aria-label="Stages">
+        <section className="stage-list" aria-label="Modules">
           {stages.map((stage) => (
             <StageCard key={stage.stage} courseId={courseId} stage={stage} current={stage.stage === progress.data?.stage} />
           ))}

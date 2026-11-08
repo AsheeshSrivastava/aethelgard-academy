@@ -810,7 +810,7 @@ def test_other_stages_keep_a_placeholder(client):
     build = client.get("/api/v1/courses/python").json()["stages"][1]["build"]
 
     assert build["authored"] is False
-    assert build["title"] == "Stage 1 build"
+    assert build["title"] == "Module 1 build"
 
 
 def test_features_are_all_off(client):

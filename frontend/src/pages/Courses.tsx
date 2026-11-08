@@ -17,7 +17,7 @@ export function CourseCards({ showSummary = false }: { showSummary?: boolean }) 
           <span className="course-title">{course.title}</span>
           {showSummary && <span className="muted small">{course.summary}</span>}
           <span className="muted small">
-            {course.stage_count} stages · {course.unit_count} units
+            {course.stage_count} modules · {course.unit_count} units
           </span>
         </Link>
       ))}

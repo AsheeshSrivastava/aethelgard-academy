@@ -470,7 +470,7 @@ def test_a_build_page_uses_the_stage_label(client, repo, catalog):
     pass_units(repo, catalog)
     finish_review(client, catalog)
 
-    assert client.get("/api/v1/courses/python/stages/0/build").json()["stage_label"] == "Stage 0"
+    assert client.get("/api/v1/courses/python/stages/0/build").json()["stage_label"] == "Module 0"
 
 
 def test_stage_with_no_items_opens_the_build_as_before(client, repo, catalog):
@@ -723,3 +723,14 @@ def test_review_kind_survives_the_ledger(repo):
 
 def test_timer_type_is_untouched():
     assert ColdCheckTimer(learner_id="l", unit_id="u", completed_at=T0).last_attempt_passed is None
+
+
+def test_learner_facing_messages_say_module_not_stage(client):
+    """ADR-0027: problem titles and details reach the learner, so they say "module"."""
+    missing = client.get("/api/v1/learners/me/courses/python/stages/99/review").json()
+    build = client.post("/api/v1/learners/me/courses/python/stages/0/build:check", json={"files": {}, "ownership_note": "", "run_checks": False}).json()
+
+    for body in (missing, build):
+        text = f"{body.get('title', '')} {body.get('detail', '')}"
+        assert "stage" not in text.lower(), text
+    assert missing["title"] == "Module not found"

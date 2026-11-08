@@ -50,7 +50,7 @@ StageBuild { course_id, stage, title, kind, brief_markdown, sample_run: [str],
 
 Course ids map to the three spine roadmaps: Python Subject Roadmap v4, Backend Engineering Roadmap v3 (shown as "Python for Backend/AI"), AI Engineering Roadmap v2.
 
-Supporting roadmaps are slotted into a spine course (ADR-0020): Practical DSA, Git, Software Design and AI-Assisted Engineering into `python`; Networking and Database into `backend`. Units and stages follow Table 1 of Python v4 and Backend v3. `StageView.label` and `Unit.stage_label` give the stage's display name ("Stage 4", "DSA 0"); the frontend shows these, never a raw stage id. `Unit.make` is `{skill_id, task}` for a unit with a Make step, otherwise null.
+Supporting roadmaps are slotted into a spine course (ADR-0020): Practical DSA, Git, Software Design and AI-Assisted Engineering into `python`; Networking and Database into `backend`. Units and stages follow Table 1 of Python v4 and Backend v3. `StageView.label` and `Unit.stage_label` give the stage's display name ("Module 4", "DSA 0"; learners see "Module", ADR-0027); the frontend shows these, never a raw stage id. `Unit.make` is `{skill_id, task}` for a unit with a Make step, otherwise null.
 
 
 ### 3.1 Content ownership and curriculum checks

@@ -19,14 +19,14 @@ export function RestartStageReview({ courseId, stage }: { courseId: string; stag
   if (!confirming) {
     return (
       <button type="button" className="button" onClick={() => setConfirming(true)}>
-        Restart stage review
+        Restart module review
       </button>
     );
   }
   return (
     <div className="reset-confirm" role="group" aria-label="Confirm restart">
       <p className="small">
-        This clears this stage review and its result, so the build closes until you pass it again. Your evidence ledger is kept.
+        This clears this module review and its result, so the build closes until you pass it again. Your evidence ledger is kept.
       </p>
       {restart.isError && <ErrorNote error={restart.error} />}
       <div className="actions">

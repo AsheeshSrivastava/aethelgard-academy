@@ -16,7 +16,7 @@ async function expectNoSideScroll(page: Page) {
 test("a learner walks from the front page to a unit and back", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: /learn to build/i })).toBeVisible();
-  await expect(page.getByText("18 stages · 81 units")).toBeVisible();
+  await expect(page.getByText("18 modules · 81 units")).toBeVisible();
   await shot(page, "front-page");
 
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Courses" }).click();
@@ -40,9 +40,11 @@ test("a learner walks from the front page to a unit and back", async ({ page }) 
 test("a slotted stage sits in the path under its own name", async ({ page }) => {
   await page.goto("/courses/python");
   await expect(page.getByRole("heading", { name: "Cost, sorting and search" })).toBeVisible();
-  const labels = await page.getByRole("region", { name: "Stages" }).locator(".stage-head .mono").allTextContents();
-  expect(labels.slice(3, 6)).toEqual(["Stage 3", "DSA 0", "Stage 4"]);
+  const labels = await page.getByRole("region", { name: "Modules" }).locator(".stage-head .mono").allTextContents();
+  expect(labels.slice(3, 6)).toEqual(["Module 3", "DSA 0", "Module 4"]);
   expect(labels).toContain("AAE 0");
+  // ADR-0027: the real course map says "Module", never "Stage".
+  expect(await page.locator("main").innerText()).not.toMatch(/stages?/i);
 
   await page.getByRole("link", { name: /DSA-0\.1/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: /Growth and the cost/ })).toBeVisible();
@@ -81,7 +83,7 @@ test("a real answer shows up in My progress", async ({ page, request }) => {
 
   await page.goto("/progress");
 
-  await expect(page.getByRole("heading", { name: /Skills · Stage 0/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Skills · Module 0/ })).toBeVisible();
   await expect(page.getByRole("img", { name: /^CO-1: target/ })).toBeVisible();
   await expect(page.getByRole("table", { name: "Evidence ledger" }).getByText("PY-0.1")).toBeVisible();
   await shot(page, "my-progress");

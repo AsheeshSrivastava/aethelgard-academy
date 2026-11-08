@@ -64,7 +64,7 @@ export const decisionLabel = (decision: Decision) => (decision === "Undecided" ?
 /** The P0 to P4 ladder (ADR-0018): the type of work follows from the level. */
 const MATURITY_WORK: Record<string, string> = {
   P0: "Make step",
-  P1: "Stage build",
+  P1: "Module build",
   P2: "Course project",
   P3: "Course project",
   P4: "Capstone",
@@ -76,7 +76,7 @@ export function maturityLabel(maturity: string): string {
 }
 
 export function buildLockMessage(pending: string[]): string {
-  if (pending.length === 0) return "Locked until you pass the stage review";
+  if (pending.length === 0) return "Locked until you pass the module review";
   if (pending.length === 1) return `Locked until ${pending[0]} passes its Cold Check`;
   if (pending.length === 2) return `Locked until ${pending[0]} and ${pending[1]} pass their Cold Checks`;
   return `Locked until ${pending.length} units pass their Cold Checks`;
@@ -108,7 +108,7 @@ export function reviewMessage(status: StageReviewStatus, now: Date): string {
     case "not_ready":
       return "Pass every unit's Cold Check first.";
     case "unavailable":
-      return "This stage has no review yet. Its build opens when every unit has passed.";
+      return "This module has no review yet. Its build opens when every unit has passed.";
     case "failed_waiting":
       return wait ? `Not yet. Try again in ${wait}.` : "Ready to try again.";
     case "passed":
