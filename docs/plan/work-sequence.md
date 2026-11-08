@@ -77,6 +77,7 @@ Hidden parts always go to the private answers repo from the start (ADR-0021).
 - [ ] 6.1 Docker sandbox on by default. (NOTHING)
 - [ ] 6.2 Consent, data deletion and retention (ADR-0022 section 2.6). (NOTHING, then APPROVE the wording)
 - [ ] 6.3 Close the AXIS upstream-citation exception (ADR-0003 section 4). (NOTHING)
+- [ ] 6.5 AXIS answers vs RAG (owner, 2026-11-08): when a learner asks AXIS a question (not when AI judges), is the answer built only from retrieved passages, or from the model's own knowledge, and are the citations real sources for what was said? Decide the purpose of RAG at question time. Expected direction: answers are constructed from retrieved curriculum, since a direct answer is often not in one passage; say so when nothing relevant is found. Check first: what the prompt allows, whether citations match the text used, and the upstream exception in 6.3. (DECIDE, then NOTHING)
 - [ ] 6.4 Accept or revise the Proposed ADRs: 0015, 0016, 0018 to 0023. (APPROVE each)
 
 ---
