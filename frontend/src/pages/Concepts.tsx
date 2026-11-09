@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { api, type ConceptSummary } from "../api/client";
-import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ErrorNote, Loading } from "../components/common";
 
 const SEARCH_WAIT_MS = 250;
 const MAX_QUERY = 200;
@@ -127,7 +127,6 @@ export function Concepts() {
 
   return (
     <main className="container page">
-      <BackLink to="/" label="Home" />
       <h1 className="page-title">Concept library</h1>
       <p className="lead">Short notes on the ideas in your lessons.</p>
       <div ref={area} className="concept-area" onKeyDown={moveFocus}>

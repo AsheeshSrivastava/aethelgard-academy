@@ -3,11 +3,11 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { api, ApiError, type Exercise, type StageReviewStatus } from "../api/client";
-import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ErrorNote, Loading } from "../components/common";
 import { RestartStageReview } from "../components/RestartStageReview";
 import { ItemForm } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
-import { courseName, reviewMessage } from "../lib/format";
+import { reviewMessage } from "../lib/format";
 import { useInteractionId } from "../lib/interaction";
 import { useNow } from "../lib/useNow";
 
@@ -100,7 +100,6 @@ export function StageReview() {
 
   return (
     <main className="container page review-page">
-      <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName(courseId)} course map`} />
       <div className="card lesson-card">
         <h1 className="step-title">{view ? `${view.label} review` : "Module review"}</h1>
         {status.isPending && <Loading what="the review" />}
@@ -156,7 +155,6 @@ export function Recheck() {
 
   return (
     <main className="container page review-page">
-      <BackLink to="/progress" label="My progress" />
       <div className="card lesson-card">
         <h1 className="step-title">{`${number}-day recheck`}</h1>
         {review && (

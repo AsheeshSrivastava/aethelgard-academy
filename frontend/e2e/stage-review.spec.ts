@@ -101,7 +101,7 @@ test.describe.serial("stage review and rechecks", () => {
     await expect(page.getByText("Passed.")).toBeVisible();
     await page.getByRole("link", { name: "Go to the build" }).click();
     await expect(page.getByText("Module 0 build", { exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Back to Python course map" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Go back" })).toBeVisible();
   });
 
   test("the review fits a phone, and works in dark mode", async ({ page }) => {

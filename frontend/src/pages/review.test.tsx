@@ -133,7 +133,7 @@ describe("stage review page", () => {
     renderAt("/courses/python/stages/100/review");
 
     expect(await screen.findByRole("heading", { level: 1, name: "DSA 0 review" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Python course map" })).toHaveAttribute("href", "/courses/python");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses/python");
   });
 });
 

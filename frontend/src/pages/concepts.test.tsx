@@ -182,7 +182,7 @@ describe("a note", () => {
     const units = screen.getByRole("region", { name: "Used in units" });
     expect(within(units).getByRole("link", { name: /PY-0\.1/ })).toHaveAttribute("href", "/units/PY-0.1");
     expect(screen.getByRole("link", { name: /official documentation/i })).toHaveAttribute("href", "https://docs.python.org/3/");
-    expect(screen.getByRole("link", { name: "Back to Concept library" })).toHaveAttribute("href", "/concepts");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/concepts");
   });
 
   it("turns wiki links in the body into links", async () => {
@@ -216,7 +216,7 @@ describe("a note", () => {
     renderAt("/concepts/gone");
 
     expect(await screen.findByText(/no concept note here/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Concept library" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Go back" })).toBeInTheDocument();
   });
 
   it("keeps a note's HTML as text", async () => {

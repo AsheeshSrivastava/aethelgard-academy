@@ -152,7 +152,7 @@ describe("step rail", () => {
     for (const name of ["Video", "Explain", "Predict", "Trace", "Playground", "Cold Check"]) {
       expect(within(rail).getByRole("link", { name: new RegExp(name) })).toBeInTheDocument();
     }
-    expect(screen.getByRole("link", { name: /^Back to PY-0\.1/ })).toHaveAttribute("href", "/units/PY-0.1");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/units/PY-0.1");
   });
 
   it("marks the current step and a locked Cold Check", async () => {

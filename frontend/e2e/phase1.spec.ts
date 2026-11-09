@@ -17,6 +17,7 @@ test("a learner walks from the front page to a unit and back", async ({ page }) 
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: /learn to build/i })).toBeVisible();
   await expect(page.getByText("18 modules · 81 units")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Go back" })).toHaveCount(0);
   await shot(page, "front-page");
 
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Courses" }).click();
@@ -33,7 +34,7 @@ test("a learner walks from the front page to a unit and back", async ({ page }) 
   await expect(page.getByRole("list", { name: "Lesson path" }).getByText("Cold Check")).toBeVisible();
   await shot(page, "unit-map");
 
-  await page.getByRole("link", { name: "Back to Python course map" }).click();
+  await page.getByRole("link", { name: "Go back" }).click();
   await expect(page).toHaveURL(/\/courses\/python$/);
 });
 
@@ -51,11 +52,14 @@ test("a slotted stage sits in the path under its own name", async ({ page }) => 
   await expect(page.getByRole("heading", { level: 1, name: /Growth and the cost/ })).toBeVisible();
   await expect(page.getByText(/Python · DSA 0 · Unit DSA-0\.1/)).toBeVisible();
 
-  await page.getByRole("link", { name: "Back to Python course map" }).click();
+  await page.getByRole("link", { name: "Go back" }).click();
   await expect(page).toHaveURL(/\/courses\/python$/);
 
+  // A deep link has no earlier page in the tab, so the arrow goes up to the unit's course map.
   await page.goto("/units/NET-0.1");
-  await expect(page.getByRole("link", { name: "Back to Python for Backend/AI course map" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses/backend");
+  await page.getByRole("link", { name: "Go back" }).click();
+  await expect(page).toHaveURL(/\/courses\/backend$/);
 });
 
 test("deep links survive a reload", async ({ page }) => {

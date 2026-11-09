@@ -3,7 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { api, ApiError, type ColdCheckStatus, type Exercise, type Unit } from "../api/client";
-import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ErrorNote, Loading } from "../components/common";
 import { ResetUnit } from "../components/ResetUnit";
 import { AxisPanel } from "../lesson/AxisPanel";
 import { AxisResizer } from "../lesson/AxisResizer";
@@ -477,7 +477,6 @@ export function Lesson() {
   return (
     <main className="lesson-page">
       <div className="lesson-top">
-        <BackLink to="/units/$unitId" params={{ unitId }} label={unitId} />
         <StepRail unit={data} step={step} done={doneSteps} cold={cold.data} />
         <ResetUnit unitId={unitId} />
       </div>

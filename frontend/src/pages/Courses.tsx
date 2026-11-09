@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { api } from "../api/client";
-import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ErrorNote, Loading } from "../components/common";
 
 export function CourseCards({ showSummary = false }: { showSummary?: boolean }) {
   const courses = useQuery({ queryKey: ["courses"], queryFn: api.courses });
@@ -28,7 +28,6 @@ export function CourseCards({ showSummary = false }: { showSummary?: boolean }) 
 export function Courses() {
   return (
     <main className="container page">
-      <BackLink to="/" label="Home" />
       <h1 className="page-title">Courses</h1>
       <p className="lead">Three courses, one growing system. Start with Python, then go on to backend and AI work.</p>
       <CourseCards showSummary />

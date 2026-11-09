@@ -3,13 +3,13 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, ApiError, type AttemptResult, type StageBuild as Build } from "../api/client";
-import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ErrorNote, Loading } from "../components/common";
 import { AxisPanel } from "../lesson/AxisPanel";
 import { CodeEditor } from "../lesson/CodeEditor";
 import { languageOf } from "../lib/fileLanguage";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
-import { courseName, maturityLabel } from "../lib/format";
+import { maturityLabel } from "../lib/format";
 import { buildPath } from "../lib/backPath";
 import { useInteractionId } from "../lib/interaction";
 
@@ -485,7 +485,6 @@ export function StageBuild() {
 
   return (
     <main className="lesson-page build-page">
-      <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName(courseId)} course map`} />
       {build.isPending && <Loading what="the build" />}
       {closed && <p>{(build.error as ApiError).message}</p>}
       {build.isError && !closed && <ErrorNote error={build.error} />}

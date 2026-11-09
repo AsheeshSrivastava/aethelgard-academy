@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { api, type EvidenceEntry } from "../api/client";
-import { BackLink, DecisionChip, ErrorNote, Loading, Panel } from "../components/common";
+import { DecisionChip, ErrorNote, Loading, Panel } from "../components/common";
 import { SkillLadder } from "../components/SkillLadder";
 import { formatDate, formatDateTime, nextActionMessage, stepName } from "../lib/format";
 import { DECISION_MEANINGS } from "../lib/meanings";
@@ -102,7 +102,6 @@ export function Progress() {
   });
   const map = useQuery({ queryKey: ["courseMap", course], queryFn: () => api.courseMap(course) });
 
-  const back = <BackLink to="/" label="Home" />;
   if (view.isPending) {
     return (
       <main className="container page">
@@ -113,7 +112,6 @@ export function Progress() {
   if (view.isError) {
     return (
       <main className="container page">
-        {back}
         <ErrorNote error={view.error} />
       </main>
     );
@@ -124,7 +122,6 @@ export function Progress() {
 
   return (
     <main className="container page">
-      {back}
       <div className="section-head">
         <h1 className="page-title">My progress</h1>
         {map.data && (

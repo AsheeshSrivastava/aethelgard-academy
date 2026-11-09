@@ -3,7 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 
 import { api } from "../api/client";
 import type { Schemas } from "../api/client";
-import { BackLink, DecisionChip, ErrorNote, Loading } from "../components/common";
+import { DecisionChip, ErrorNote, Loading } from "../components/common";
 import { buildLockMessage, maturityLabel, nextActionMessage } from "../lib/format";
 
 type Stage = Schemas["StageView"];
@@ -111,7 +111,6 @@ export function CourseMap() {
   if (map.isError) {
     return (
       <main className="container page">
-        <BackLink to="/courses" label="Courses" />
         <ErrorNote error={map.error} />
       </main>
     );
@@ -123,7 +122,6 @@ export function CourseMap() {
 
   return (
     <main className="container page">
-      <BackLink to="/courses" label="Courses" />
       <div className="course-layout">
         <aside className="course-aside">
           <div className="card panel">

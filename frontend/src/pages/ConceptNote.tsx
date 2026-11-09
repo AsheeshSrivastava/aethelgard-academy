@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 
 import { api, ApiError } from "../api/client";
-import { BackLink, ErrorNote, Loading, Panel } from "../components/common";
+import { ErrorNote, Loading, Panel } from "../components/common";
 import { Prose } from "../lesson/Prose";
 
 export function ConceptNote() {
@@ -14,7 +14,6 @@ export function ConceptNote() {
 
   return (
     <main className="container page concept-page">
-      <BackLink to="/concepts" label="Concept library" />
       {note.isPending && <Loading what="the note" />}
       {missing && <p>There is no concept note here.</p>}
       {note.isError && !missing && <ErrorNote error={note.error} />}

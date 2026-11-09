@@ -80,7 +80,7 @@ describe("courses page", () => {
 
     expect(await screen.findByRole("link", { name: /Python for Backend\/AI/ })).toHaveAttribute("href", "/courses/backend");
     expect(screen.getByText("22 modules · 111 units")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/");
   });
 });
 
@@ -133,7 +133,7 @@ describe("course map", () => {
     stubApi(routes());
     renderAt("/courses/python");
 
-    expect(await screen.findByRole("link", { name: "Back to Courses" })).toHaveAttribute("href", "/courses");
+    expect(await screen.findByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses");
   });
 
   it("shows a clear message when the course does not exist", async () => {
@@ -171,14 +171,14 @@ describe("unit map", () => {
     stubApi(unitRoutes());
     renderAt("/units/PY-0.1");
 
-    expect(await screen.findByRole("link", { name: "Back to Python course map" })).toHaveAttribute("href", "/courses/python");
+    expect(await screen.findByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses/python");
   });
 
   it("returns to the build that sent the learner here (SPEC-15 section 9.5)", async () => {
     stubApi(unitRoutes());
     renderAt("/units/PY-0.1?back=%2Fcourses%2Fpython%2Fstages%2F0%2Fbuild");
 
-    const link = await screen.findByRole("link", { name: "Back to your build" });
+    const link = await screen.findByRole("link", { name: "Go back" });
     expect(link).toHaveAttribute("href", "/courses/python/stages/0/build");
   });
 
@@ -192,8 +192,7 @@ describe("unit map", () => {
     stubApi(unitRoutes());
     renderAt(`/units/PY-0.1?back=${back}`);
 
-    expect(await screen.findByRole("link", { name: "Back to Python course map" })).toHaveAttribute("href", "/courses/python");
-    expect(screen.queryByRole("link", { name: "Back to your build" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses/python");
   });
 
   it("shows a Cold Check countdown", async () => {

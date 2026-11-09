@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, Outlet } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type MouseEvent } from "react";
 
 import { api } from "../api/client";
+import { parentPath } from "../lib/backPath";
 
 type Theme = "light" | "dark";
 
@@ -73,6 +74,49 @@ function TestModeBanner() {
   );
 }
 
+/**
+ * One back arrow for every page but the front page. It returns to the page the learner was on;
+ * with no earlier page in this tab it goes to the page above (parentPath). The href is that
+ * parent, so the link still works when opened in a new tab.
+ */
+function BackArrow() {
+  const router = useRouter();
+  const location = useRouterState({ select: (state) => state.location });
+  const parent = parentPath(location.pathname, location.search as Record<string, unknown>);
+  if (parent === null) return null;
+
+  function goBack(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (router.history.canGoBack()) router.history.back();
+    else router.history.push(parent!);
+  }
+
+  return (
+    <div className="container shell-back">
+      <a href={parent} className="back-link" aria-label="Go back" onClick={goBack}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19 12H5M11 6l-6 6 6 6" />
+        </svg>
+        Back
+      </a>
+    </div>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div className="container site-footer-inner">
+        <DiamondMark className="footer-mark" />
+        <span className="footer-name">Aethelgard</span>
+        <span className="footer-credit">by Quest &amp; Crossfire</span>
+        <span className="footer-tagline">Small fixes, big clarity.</span>
+      </div>
+    </footer>
+  );
+}
+
 export function Layout() {
   return (
     <>
@@ -112,7 +156,11 @@ export function Layout() {
         </div>
       </header>
       <TestModeBanner />
-      <Outlet />
+      <BackArrow />
+      <div className="shell-main">
+        <Outlet />
+      </div>
+      <SiteFooter />
     </>
   );
 }

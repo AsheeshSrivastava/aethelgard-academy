@@ -88,7 +88,7 @@ describe("locked", () => {
     renderAt(PATH);
 
     expect(await screen.findByText("Pass the Cold Check in: PY-0.3.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Python course map" })).toHaveAttribute("href", "/courses/python");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses/python");
     expect(screen.queryByRole("button", { name: "Submit build" })).not.toBeInTheDocument();
   });
 
@@ -108,7 +108,7 @@ describe("a slotted stage", () => {
 
     expect(await screen.findByText("DB 0 build")).toBeInTheDocument();
     expect(screen.queryByText(/Module 600/)).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to Python for Backend/AI course map" })).toHaveAttribute("href", "/courses/backend");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/courses/backend");
   });
 });
 

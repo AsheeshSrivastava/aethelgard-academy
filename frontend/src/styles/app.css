@@ -37,10 +37,14 @@ ul {
 }
 
 /* Shared pieces */
+/* Full-width shell (redesign step 2): content up to 1680px, side gutters 16px to 64px.
+   Reading text keeps its own narrower measure (.lead, concept notes). */
 .container {
-  max-width: 1200px;
+  /* width keeps it full width inside the flex shell, where auto margins would shrink it. */
+  width: 100%;
+  max-width: 1680px;
   margin: 0 auto;
-  padding-inline: 24px;
+  padding-inline: clamp(16px, 4vw, 64px);
 }
 
 .page {
@@ -288,7 +292,8 @@ ul {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 24px;
-  padding: 12px 24px;
+  /* Lines up with .container: same gutter, same 1680px frame on wide screens. */
+  padding: 12px max(clamp(16px, 4vw, 64px), calc((100% - 1552px) / 2));
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -352,6 +357,63 @@ ul {
 }
 
 .top-bar-end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Page shell (redesign step 2): back arrow, page, footer. The footer sits at the bottom of short pages. */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-main {
+  flex: 1 0 auto;
+}
+
+.shell-back {
+  padding-top: 16px;
+}
+
+.shell-back + .shell-main > .page {
+  padding-top: 16px;
+}
+
+.site-footer {
+  margin-top: 48px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-block: 20px;
+}
+
+.footer-mark {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.footer-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.footer-credit,
+.footer-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.footer-tagline {
   margin-left: auto;
 }
 
@@ -1857,12 +1919,15 @@ button:disabled {
     padding-inline: 16px;
   }
 
+  /* Phones: mark and buttons on the first row, the four links on a full-width row below. */
   .top-bar {
-    flex-wrap: nowrap;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 4px 8px;
   }
 
   .primary-nav {
+    order: 3;
+    width: 100%;
     flex-wrap: nowrap;
     gap: 0;
   }
@@ -1884,16 +1949,6 @@ button:disabled {
 
   .on-narrow {
     display: inline;
-  }
-
-  /* The mark alone leaves room for three links. It stays the link's name for screen readers. */
-  .wordmark-text {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   .course-aside {

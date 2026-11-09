@@ -219,8 +219,16 @@ test("a learner finds a concept by search, and by a wiki link in a lesson", asyn
   await page.locator(".prose").getByRole("link", { name: "variable" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Variables" })).toBeVisible();
 
-  // The back arrow, and the recent list. Only what was opened from search is listed.
-  await page.getByRole("link", { name: "Back to Concept library" }).click();
+  // The back arrow returns to the page before, one step at a time: the first note, then the library.
+  await page.getByRole("link", { name: "Go back" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "print() function" })).toBeVisible();
+  await page.getByRole("link", { name: "Go back" }).click();
+  await expect(page).toHaveURL(/\/concepts\?q=print/);
+  await expect(page.getByRole("searchbox", { name: "Search concepts" })).toHaveValue("print");
+
+  // The recent list. Only what was opened from search is listed.
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Concept library" }).click();
+  await expect(page).toHaveURL(/\/concepts$/);
   const recent = page.getByRole("region", { name: "Recently opened" });
   await expect(recent.getByRole("link", { name: /print\(\) function/ })).toBeVisible();
   await expect(recent.getByRole("link", { name: /Variables/ })).toHaveCount(0);

@@ -8,7 +8,7 @@ import {
   type ModelProfile,
   type UsageRow,
 } from "../api/modelSettings";
-import { BackLink, ErrorNote, Loading } from "../components/common";
+import { ErrorNote, Loading } from "../components/common";
 
 function money(value: number, digits = 4): string {
   return `$${value.toFixed(digits)}`;
@@ -198,7 +198,6 @@ export function ModelSettings() {
 
   return (
     <main className="container page">
-      <BackLink to="/" label="Home" />
       <h1 className="page-title">AI model</h1>
       <p className="lead">
         Choose which model answers AXIS. AXIS keeps the same rules whichever you pick: it answers only from the
