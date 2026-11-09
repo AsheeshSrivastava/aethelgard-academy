@@ -153,7 +153,7 @@ describe("course map tile", () => {
     const link = (await tile()).closest("a");
     expect(link).toHaveAttribute("href", PAGE);
     expect(link).toHaveTextContent("Ready");
-    const stage = link?.closest(".unit-grid");
+    const stage = link?.closest(".stage");
     const tiles = [...(stage?.querySelectorAll(".build-tile") ?? [])];
     expect(tiles[0]).toHaveTextContent("Module review");
     expect(tiles[1]).toHaveTextContent("Module 0 build");

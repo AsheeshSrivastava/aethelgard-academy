@@ -683,47 +683,6 @@ a.build-tile {
 }
 
 /* Course map */
-.course-layout {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  align-items: flex-start;
-}
-
-.course-aside {
-  flex: 1 1 280px;
-  min-width: 0;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.counts {
-  display: flex;
-  gap: 20px;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.counts strong {
-  font-size: 20px;
-  color: var(--text);
-}
-
-.meter {
-  height: 8px;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  overflow: hidden;
-}
-
-.meter div {
-  height: 8px;
-  min-width: 2px;
-  background: var(--accent);
-}
-
 .stage-list {
   flex: 999 1 640px;
   min-width: 0;
@@ -754,10 +713,6 @@ a.build-tile {
 .stage-head h2 {
   font-size: 18px;
   font-weight: 600;
-}
-
-.stage-count {
-  margin-left: auto;
 }
 
 .unit-grid {
@@ -1852,10 +1807,6 @@ button:disabled {
     display: inline;
   }
 
-  .course-aside {
-    max-width: none;
-  }
-
   .page-title {
     font-size: 28px;
   }
@@ -2518,5 +2469,396 @@ button:disabled {
 
   .ld-rung-4 .ld-rung-bar {
     height: 76px;
+  }
+}
+
+/* Course map (redesign step 4, owner-approved mock "CourseMap"). Prefix cm- = course map.
+   The older stage, stage-head, unit-tile and build-tile rules above still apply. */
+.cm-page {
+  gap: 24px;
+}
+
+.cm-eyebrow {
+  color: var(--accent-text);
+}
+
+.cm-hero {
+  padding: 28px;
+  border-radius: 20px;
+  background-image: var(--glow);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 32px;
+}
+
+.cm-hero-copy {
+  flex: 1 1 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cm-title {
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cm-hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 28px;
+}
+
+.cm-ring {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cm-ring-inner {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cm-ring-value {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.cm-ring-label {
+  font-size: 11px;
+}
+
+.cm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cm-stat strong {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.cm-ok {
+  color: var(--ok);
+}
+
+/* The row of Modules */
+.cm-path {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cm-path-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.cm-path-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cm-steps {
+  list-style: none;
+  padding: 0 0 6px;
+  display: flex;
+  overflow-x: auto;
+}
+
+.cm-step {
+  flex: 1 0 86px;
+  position: relative;
+}
+
+.cm-step::before {
+  content: "";
+  position: absolute;
+  top: 21px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--line);
+}
+
+.cm-step button {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cm-step button:hover {
+  background: var(--surface-muted);
+}
+
+.cm-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+}
+
+.cm-step-name {
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.cm-step-current .cm-step-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 5px var(--accent-soft);
+}
+
+.cm-step-current .cm-step-name {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.cm-step-done .cm-step-dot {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+/* Modules and the side column */
+.cm-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.cm-modules {
+  gap: 20px;
+}
+
+.cm-modules .stage {
+  padding: 22px;
+  gap: 16px;
+}
+
+.cm-modules .stage-head {
+  align-items: center;
+}
+
+.cm-modules .stage-head h2 {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.cm-chip-accent {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  box-shadow: none;
+}
+
+.cm-chip-info {
+  background: var(--info-soft);
+  color: var(--info);
+  box-shadow: none;
+}
+
+.cm-stage-progress {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cm-bar {
+  display: block;
+  width: 120px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.cm-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+}
+
+.cm-modules .unit-grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.cm-modules .unit-tile {
+  padding: 16px;
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.cm-modules .unit-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cm-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.cm-tiles .build-tile {
+  padding: 16px;
+  border-radius: 12px;
+  gap: 8px;
+}
+
+.cm-tile-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* The build title gets its own line; its chips sit under it. */
+.cm-tiles .build-head {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.cm-tiles .build-head .cm-tile-title {
+  flex-basis: 100%;
+}
+
+.cm-review-tile {
+  background: var(--surface);
+  border: 1px dashed var(--line-strong);
+  color: var(--text);
+}
+
+.cm-review-passed {
+  border-style: solid;
+  border-color: var(--ok);
+}
+
+.cm-build-open {
+  border-style: solid;
+  border-color: var(--warm-text);
+}
+
+.cm-side {
+  flex: 1 1 300px;
+  max-width: 380px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cm-side-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cm-next {
+  border-color: var(--accent-line);
+}
+
+.cm-next .button {
+  align-self: stretch;
+  justify-content: center;
+}
+
+.cm-side-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cm-skills {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cm-skills li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cm-skill-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.cm-skill-line .muted {
+  white-space: nowrap;
+}
+
+.cm-skills .cm-bar {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .cm-hero {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .cm-title {
+    font-size: 32px;
+  }
+
+  .cm-stage-progress {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .cm-side {
+    max-width: none;
+  }
+
+  .cm-modules .stage {
+    padding: 16px;
   }
 }

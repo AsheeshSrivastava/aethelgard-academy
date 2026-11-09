@@ -150,6 +150,37 @@ describe("course map", () => {
     expect(screen.getByText("Not written yet")).toBeInTheDocument();
   });
 
+  it("shows the core Modules as a path, by their real titles, with the current one marked", async () => {
+    stubApi(routes());
+    renderAt("/courses/python");
+
+    const path = await screen.findByRole("navigation", { name: "Your path through the Modules" });
+    expect(path).toHaveTextContent("Your path through 2 Modules");
+    // "Current" comes from the progress request, which answers after the map.
+    await waitFor(() =>
+      expect(within(path).getByRole("button", { name: "Module 0: Running your first program" })).toHaveAttribute("aria-current", "step"),
+    );
+    expect(within(path).getByRole("button", { name: "Module 1: Values, text and collections" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("counts passed units from the data and says when a lesson is not written", async () => {
+    stubApi(routes());
+    renderAt("/courses/python");
+
+    expect(await screen.findByText("1 of 2 units passed")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "1 of 111 units passed" })).toHaveTextContent("1%");
+    expect(screen.getByText("Lesson not written yet")).toBeInTheDocument();
+  });
+
+  it("shows the current Module's skills with the level reached", async () => {
+    stubApi(routes());
+    renderAt("/courses/python");
+
+    expect(await screen.findByRole("heading", { name: "Skills in Module 0" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "CO-1: 1 of 4 levels" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "DE-2: 0 of 4 levels" })).toBeInTheDocument();
+  });
+
   it("shows no build tile for a stage that has no build by design", async () => {
     const [first] = courseMap.stages;
     stubApi({

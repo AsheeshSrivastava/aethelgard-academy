@@ -1,4 +1,4 @@
-import{G as e,J as t,W as n}from"./common-E4-bsreL.js";import{t as r}from"./Prose-1auPMIKB.js";var i=t(e(),1);function a(e){let t=e.replaceAll(`\r
+import{G as e,J as t,W as n}from"./common-E4-bsreL.js";import{t as r}from"./Prose-B1SZSDgF.js";var i=t(e(),1);function a(e){let t=e.replaceAll(`\r
 `,`
 `).split(`
 
