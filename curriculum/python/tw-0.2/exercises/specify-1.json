@@ -11,7 +11,7 @@
     "Mark **every** checklist point the draft gets wrong or leaves out."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "specify_contract": {
     "material": [
       "README (drafted by AI) - stamp.py",

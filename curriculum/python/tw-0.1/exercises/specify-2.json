@@ -10,7 +10,7 @@
     "Read this README. Mark **every** checklist point that is missing, or present but not usable by a stranger."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "specify_contract": {
     "material": [
       "README - sign.py",

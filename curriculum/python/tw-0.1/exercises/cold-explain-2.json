@@ -12,7 +12,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Ask who opens the README and what they are trying to do.",
-  "hint_approved": false,
+  "hint_approved": true,
   "explain_spot_flaw": {
     "sentences": [
       {

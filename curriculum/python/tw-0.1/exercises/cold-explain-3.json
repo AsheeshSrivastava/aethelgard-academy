@@ -12,7 +12,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "A sample run is evidence; ask where it should come from.",
-  "hint_approved": false,
+  "hint_approved": true,
   "explain_spot_flaw": {
     "sentences": [
       {

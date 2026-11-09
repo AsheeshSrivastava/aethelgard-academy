@@ -15,7 +15,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Run the README's command and its sample input yourself, and check every install step a fresh computer would need.",
-  "hint_approved": false,
+  "hint_approved": true,
   "debug": {
     "broken_code": [
       "\"\"\"README (drafted by AI) - queue.py",

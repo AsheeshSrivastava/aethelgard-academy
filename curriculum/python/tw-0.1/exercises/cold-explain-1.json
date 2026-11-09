@@ -12,7 +12,7 @@
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint": "Think about what a stranger does with the run command: they copy it exactly.",
-  "hint_approved": false,
+  "hint_approved": true,
   "explain_spot_flaw": {
     "sentences": [
       {
