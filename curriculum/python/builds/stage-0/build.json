@@ -39,32 +39,175 @@
       "starter": [
         "# Module 0 build",
         "",
-        "## What this script does",
+        "## What it does",
+        "",
+        "",
+        "## What you need first",
         "",
         "",
         "## How to run it",
         "",
         "",
-        "## What I checked myself",
+        "## A sample run",
+        "",
+        "",
+        "## Limits",
         ""
       ]
     }
   ],
   "requirements": [
-    { "id": "plan", "label": "Plan written as comments", "unit_id": "PY-0.1", "check": { "kind": "comment_lines", "min": 3 } },
-    { "id": "inputs", "label": "Both answers captured with input() into variables", "unit_id": "PY-0.1", "check": { "kind": "input_assignments", "min": 2 } },
-    { "id": "fstrings", "label": "Output uses at least two f-strings", "unit_id": "PY-0.1", "check": { "kind": "fstring_prints", "min": 2 } },
-    { "id": "sample", "label": "Output matches the sample run (Verify)", "unit_id": "PY-0.4", "check": { "kind": "behaviour", "function": "check_sample_run" } },
-    { "id": "messy", "label": "Messy input is cleaned (Verify)", "unit_id": "PY-0.4", "check": { "kind": "behaviour", "function": "check_messy_input" } },
-    {"id": "readme-does", "label": "README says what the script does", "unit_id": "PY-0.4", "check": {"kind": "markdown_sections", "path": "README.md", "sections": [{"heading": "What this script does", "min_words": 8}]}},
-    {"id": "readme-run", "label": "README says how to run the script", "unit_id": "PY-0.4", "check": {"kind": "markdown_sections", "path": "README.md", "sections": [{"heading": "How to run it", "min_words": 2, "any": ["python checkin.py", "python3 checkin.py", "uv run checkin.py"], "hint": "Under 'How to run it', give the command that runs the script, for example python checkin.py."}]}},
-    {"id": "readme-checked", "label": "README says what you checked yourself", "unit_id": "PY-0.4", "check": {"kind": "markdown_sections", "path": "README.md", "sections": [{"heading": "What I checked myself", "min_words": 8, "any": ["typed", "tried", "input", "entered", "tested"], "hint": "Under 'What I checked myself', say what you tried: an input you typed, and what the slip showed."}]}},
-    { "id": "note", "label": "Ownership note written", "unit_id": "PY-0.3", "check": { "kind": "ownership_note", "min_chars": 20 } }
+    {
+      "id": "plan",
+      "label": "Plan written as comments",
+      "unit_id": "PY-0.1",
+      "check": {
+        "kind": "comment_lines",
+        "min": 3
+      }
+    },
+    {
+      "id": "inputs",
+      "label": "Both answers captured with input() into variables",
+      "unit_id": "PY-0.1",
+      "check": {
+        "kind": "input_assignments",
+        "min": 2
+      }
+    },
+    {
+      "id": "fstrings",
+      "label": "Output uses at least two f-strings",
+      "unit_id": "PY-0.1",
+      "check": {
+        "kind": "fstring_prints",
+        "min": 2
+      }
+    },
+    {
+      "id": "sample",
+      "label": "Output matches the sample run (Verify)",
+      "unit_id": "PY-0.4",
+      "check": {
+        "kind": "behaviour",
+        "function": "check_sample_run"
+      }
+    },
+    {
+      "id": "messy",
+      "label": "Messy input is cleaned (Verify)",
+      "unit_id": "PY-0.4",
+      "check": {
+        "kind": "behaviour",
+        "function": "check_messy_input"
+      }
+    },
+    {
+      "id": "readme-sections",
+      "label": "README answers the five checklist points",
+      "unit_id": "PY-0.4",
+      "check": {
+        "kind": "markdown_sections",
+        "path": "README.md",
+        "sections": [
+          {
+            "heading": "What it does",
+            "min_words": 8,
+            "hint": "Say in a sentence or two what the script does and who it is for."
+          },
+          {
+            "heading": "What you need first",
+            "min_words": 4,
+            "hint": "Say what must be installed or ready before the script runs."
+          },
+          {
+            "heading": "How to run it",
+            "min_words": 4,
+            "hint": "Give the exact command that runs the script."
+          },
+          {
+            "heading": "A sample run",
+            "min_words": 4,
+            "hint": "Paste one real run inside a code block."
+          },
+          {
+            "heading": "Limits",
+            "min_words": 4,
+            "hint": "Say what the script does not do, or where it can fail."
+          }
+        ]
+      }
+    },
+    {
+      "id": "readme-run",
+      "label": "README gives the exact command for checkin.py",
+      "unit_id": "PY-0.4",
+      "check": {
+        "kind": "markdown_sections",
+        "path": "README.md",
+        "sections": [
+          {
+            "heading": "How to run it",
+            "min_words": 2,
+            "any": [
+              "uv run checkin.py",
+              "python checkin.py",
+              "python3 checkin.py"
+            ],
+            "hint": "Under 'How to run it', give the command that runs the script, for example uv run checkin.py."
+          }
+        ]
+      }
+    },
+    {
+      "id": "readme-sample",
+      "label": "README's sample run is real (Verify)",
+      "unit_id": "PY-0.4",
+      "check": {
+        "kind": "readme_sample_run",
+        "path": "README.md",
+        "heading": "A sample run"
+      }
+    },
+    {
+      "id": "note",
+      "label": "Ownership note written",
+      "unit_id": "PY-0.3",
+      "check": {
+        "kind": "ownership_note",
+        "min_chars": 20
+      }
+    },
+    {
+      "id": "review",
+      "label": "Review note written",
+      "unit_id": "PY-0.4",
+      "check": {
+        "kind": "review_note",
+        "min_chars": 20
+      }
+    }
   ],
   "proves": [
-    { "skill_id": "CO-1", "unit_id": "PY-0.4", "label": "Run a script and predict what it does" },
-    { "skill_id": "VE-4", "unit_id": "PY-0.4", "label": "Read and fix your own errors" },
-    { "skill_id": "CO-2", "unit_id": "PY-0.1", "label": "Order, state and output" },
-    { "skill_id": "DE-3", "unit_id": "PY-0.3", "label": "Own the reasoning" }
+    {
+      "skill_id": "CO-1",
+      "unit_id": "PY-0.4",
+      "label": "Run a script and predict what it does"
+    },
+    {
+      "skill_id": "VE-4",
+      "unit_id": "PY-0.4",
+      "label": "Read and fix your own errors"
+    },
+    {
+      "skill_id": "CO-2",
+      "unit_id": "PY-0.1",
+      "label": "Order, state and output"
+    },
+    {
+      "skill_id": "DE-3",
+      "unit_id": "PY-0.3",
+      "label": "Own the reasoning"
+    }
   ]
 }

@@ -91,37 +91,62 @@ def readme_results(text):
     return {r.id: (r.met, r.detail) for r in results if r.id.startswith("readme")}
 
 
-GOOD = """# Stage 0 build
+GOOD = """# Module 0 build
 
-## What this script does
+## What it does
 
 It asks a visitor for their name and service, cleans both, and prints a check-in slip.
 
+## What you need first
+
+You need Python installed and this file saved on your computer.
+
 ## How to run it
 
-Run python checkin.py and answer the two questions.
+Run uv run checkin.py and answer the two questions.
 
-## What I checked myself
+## A sample run
 
-I typed a messy name like '  meera ' and the service 'SHELTER' and saw a clean slip.
+```
+Name: meera
+Service needed: shelter
+```
+
+## Limits
+
+It serves one visitor per run and saves nothing at all.
 """
 
 
-def test_a_good_readme_meets_every_readme_requirement():
-    assert all(met for met, _ in readme_results(GOOD).values())
-    assert len(readme_results(GOOD)) == 3
+def test_a_good_readme_meets_the_two_readme_checks_that_read_text():
+    results = readme_results(GOOD)
+
+    assert results["readme-sections"] == (True, None)
+    assert results["readme-run"] == (True, None)
 
 
-def test_the_owners_first_readme_gets_two_clear_details():
-    """The README from the owner's screenshot, 2026-11-04."""
+def test_the_sample_run_waits_for_verify():
+    assert readme_results(GOOD)["readme-sample"] == (None, None)
+
+
+
+
+def test_the_owners_first_readme_gets_a_clear_detail_for_the_first_gap():
+    """The README from the owner's screenshot, 2026-11-04, under the five headings."""
     first = (
-        "# Stage 0 build\n\n## What this script does\n"
+        "# Module 0 build\n\n## What it does\n"
         "This script is use for creating Check-IN Slip for walkin customers\n\n"
-        "## How to run it\n\n\n## What I checked myself\n\n"
+        "## What you need first\n\n## How to run it\n\n\n## A sample run\n\n## Limits\n\n"
     )
 
     results = readme_results(first)
 
-    assert results["readme-does"] == (True, None)
+    assert results["readme-sections"][0] is False and "What you need first" in results["readme-sections"][1]
     assert results["readme-run"][0] is False and "How to run it" in results["readme-run"][1]
-    assert results["readme-checked"][0] is False and "What I checked myself" in results["readme-checked"][1]
+
+
+def test_a_heading_inside_a_code_block_is_not_a_heading():
+    text = "## A sample run\n\n```\n# not a heading\nName: meera\n```\n\n## Limits\n\nOne two three four.\n"
+    rules = [{"heading": "A sample run", "min_words": 4}, {"heading": "Limits", "min_words": 4}]
+
+    assert readme_result(build(rules), text).met is True

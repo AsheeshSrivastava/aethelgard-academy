@@ -7,6 +7,7 @@ in the app knows which provider answers.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
@@ -24,6 +25,8 @@ from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
 from lms.adapters.db.model_usage import UsageStore
 from lms.core.ai_judgement import AiJudgement, Rubric, not_judged
 from lms.core.interfaces import AxisQuery, AxisResponse
+
+logger = logging.getLogger(__name__)
 
 BUDGET_MESSAGE = (
     "The monthly AI budget is used up. Switch to the local model or wait until next month."
@@ -43,6 +46,10 @@ class KeyMissing(Exception):
 
 class PaidNotConfirmed(Exception):
     pass
+
+
+class DraftFailed(Exception):
+    """A README draft could not be made. The message is plain and safe to show."""
 
 
 def default_factory(
@@ -152,6 +159,26 @@ class ProviderRouter:
             return not_judged("ai_off")
         return judge_with(self._companion_for(profile), unit_id, prompt, explanation, rubric)
 
+    # --- document drafts (SPEC-15 section 9.4, ADR-0028) ------------------------------
+
+    def draft_readme(self, entry: str, code: str, brief: str) -> Tuple[str, str]:
+        """A README draft from the active profile. Raises DraftFailed with a plain message; no fallback."""
+        if self.mock:
+            return self._mock_companion.draft_readme(entry, code, brief)
+        profile = self.active_profile()
+        if not self.key_set(profile):
+            raise DraftFailed("AXIS is not set up for drafting. Check the model settings.")
+        try:
+            text, model = self._companion_for(profile).draft_readme(entry, code, brief)
+        except BudgetExceeded:
+            raise DraftFailed(BUDGET_MESSAGE) from None
+        except Exception as exc:
+            logger.warning("README draft call failed: %s", type(exc).__name__)  # a provider's text can echo a key
+            raise DraftFailed("AXIS could not draft the README right now. Try again, or write it yourself.") from None
+        if not text.strip():
+            raise DraftFailed("AXIS sent back an empty draft. Try again, or write it yourself.")
+        return text, model or profile.model
+
     def _companion_for(self, profile: ProviderProfile) -> Any:
         if profile.id not in self._companions:
             self._companions[profile.id] = self.factory(profile, profile.api_key(self.environ), self.meter)
@@ -233,6 +260,7 @@ def build_default_router(db_path: str, profiles_path: Optional[str] = None) -> P
 
 __all__ = [
     "BUDGET_MESSAGE",
+    "DraftFailed",
     "KeyMissing",
     "MONTHLY_CAP_USD",
     "PaidNotConfirmed",

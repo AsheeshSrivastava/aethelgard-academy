@@ -298,6 +298,22 @@ class OpenAICompatibleCompanion:
             getattr(usage, "completion_tokens", None) if usage else None,
         )
 
+    def draft_readme(self, entry: str, code: str, brief: str) -> Tuple[str, Optional[str]]:
+        """One README drafting call (SPEC-15 section 9.4). Returns the Markdown and the model that answered.
+
+        Never falls back to the mock: a failure is raised for the caller to name.
+        """
+        sys_prompt, user_msg = axis_rules.readme_draft_prompts(entry, code, brief)
+        self._check_budget(sys_prompt, user_msg)
+        target_model = self.resolve_model()
+        resp = self._client.chat.completions.create(
+            **self._params(target_model, sys_prompt, user_msg, 0.3, axis_rules.DRAFT_MAX_TOKENS)
+        )
+        answered = resp.model or target_model
+        self.last_model_answered = answered
+        self._record("document_draft", answered, resp.usage, len(sys_prompt) + len(user_msg))
+        return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
+
     def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
         """One judging call (SPEC-18 section 3). Returns the raw reply and the model that answered.
 

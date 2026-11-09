@@ -115,6 +115,20 @@ describe("course map", () => {
     expect(screen.getByText("Not written yet")).toBeInTheDocument();
   });
 
+  it("shows no build tile for a stage that has no build by design", async () => {
+    const [first] = courseMap.stages;
+    stubApi({
+      "GET /api/v1/courses/python": { ...courseMap, stages: [{ ...first!, stage: 700, label: "TW 0", title: "Writing basics", build: null }] },
+      "GET /api/v1/learners/me/proficiency": proficiency,
+    });
+    renderAt("/courses/python");
+
+    expect(await screen.findByRole("heading", { name: "Writing basics" })).toBeInTheDocument();
+    expect(screen.queryByText(/Locked until/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Not written yet")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Script|Mini-project/)).not.toBeInTheDocument();
+  });
+
   it("goes back to the courses page", async () => {
     stubApi(routes());
     renderAt("/courses/python");
@@ -158,6 +172,28 @@ describe("unit map", () => {
     renderAt("/units/PY-0.1");
 
     expect(await screen.findByRole("link", { name: "Back to Python course map" })).toHaveAttribute("href", "/courses/python");
+  });
+
+  it("returns to the build that sent the learner here (SPEC-15 section 9.5)", async () => {
+    stubApi(unitRoutes());
+    renderAt("/units/PY-0.1?back=%2Fcourses%2Fpython%2Fstages%2F0%2Fbuild");
+
+    const link = await screen.findByRole("link", { name: "Back to your build" });
+    expect(link).toHaveAttribute("href", "/courses/python/stages/0/build");
+  });
+
+  it.each([
+    ["another page of this app", "%2Fprogress"],
+    ["a build path with extra text", "%2Fcourses%2Fpython%2Fstages%2F0%2Fbuild%2Fx"],
+    ["a build path with a bad stage", "%2Fcourses%2Fpython%2Fstages%2Fx%2Fbuild"],
+    ["another site", "https%3A%2F%2Fevil.example%2Fcourses%2Fpython%2Fstages%2F0%2Fbuild"],
+    ["a protocol-relative address", "%2F%2Fevil.example%2Fcourses%2Fpython%2Fstages%2F0%2Fbuild"],
+  ])("ignores a back value that is %s", async (_label, back) => {
+    stubApi(unitRoutes());
+    renderAt(`/units/PY-0.1?back=${back}`);
+
+    expect(await screen.findByRole("link", { name: "Back to Python course map" })).toHaveAttribute("href", "/courses/python");
+    expect(screen.queryByRole("link", { name: "Back to your build" })).not.toBeInTheDocument();
   });
 
   it("shows a Cold Check countdown", async () => {

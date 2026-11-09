@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
-from lms.adapters.ai.providers.router import ProviderRouter, build_default_router
+from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
 from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -221,11 +221,24 @@ class BuildCheckRequest(BaseModel):
 
     files: Dict[str, str]
     ownership_note: Optional[str] = None
+    review_note: Optional[str] = None
     run_checks: bool = False
 
 
 class BuildCheckResult(BaseModel):
     requirements: List[RequirementResult]
+
+
+class DraftReadmeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    files: Dict[str, str]
+
+
+class DraftReadmeResult(BaseModel):
+    markdown: str
+    status: str                        # "drafted"
+    model: str                         # What answered; never written in code
 
 
 class AttemptResult(BaseModel):
@@ -720,8 +733,8 @@ def create_app(
             return problem(404, "No build yet", f"The build for {stage_label(stage)} is not written yet.")
         return build
 
-    def too_large(files: Dict[str, str], note: Optional[str]) -> bool:
-        return sum(len(content) for content in files.values()) + len(note or "") > MAX_DRAFT_CHARS
+    def too_large(files: Dict[str, str], *notes: Optional[str]) -> bool:
+        return sum(len(content) for content in files.values()) + sum(len(n or "") for n in notes) > MAX_DRAFT_CHARS
 
     @app.get("/api/v1/courses/{course_id}/stages/{stage}/build", response_model=StageBuild)
     def get_stage_build(course_id: str, stage: int, learner_id: str = Depends(current_learner_id)):
@@ -748,15 +761,49 @@ def create_app(
         build = open_build(course_id, stage, learner_id)
         if isinstance(build, JSONResponse):
             return build
-        if too_large(payload.files, payload.ownership_note):
+        if too_large(payload.files, payload.ownership_note, payload.review_note):
             return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
-        results = check_requirements(build, payload.files, payload.ownership_note, runner, payload.run_checks)
+        results = check_requirements(
+            build, payload.files, payload.ownership_note, runner, payload.run_checks, payload.review_note
+        )
         log_event(
             learner_id, "verify",
             {"files": payload.files, "run_checks": payload.run_checks, "met": {r.id: r.met for r in results}},
             unit_id=scope_of(course_id, stage), activity=BUILD_ACTIVITY, item_id=exercise_id_of(course_id, stage),
         )
         return BuildCheckResult(requirements=results)
+
+    @app.post(
+        "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:draft-readme",
+        response_model=DraftReadmeResult,
+    )
+    def draft_my_readme(
+        course_id: str,
+        stage: int,
+        payload: DraftReadmeRequest,
+        learner_id: str = Depends(current_learner_id),
+    ):
+        """AXIS drafts the README (SPEC-15 section 9.4, ADR-0028). Document help, so it is logged as a
+        document_draft with no exercise id: it never counts as help on the build's code."""
+        build = open_build(course_id, stage, learner_id)
+        if isinstance(build, JSONResponse):
+            return build
+        if too_large(payload.files):
+            return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
+        if not hasattr(axis, "draft_readme"):
+            return problem(503, "Draft unavailable", "Drafting is not available right now.")
+        entry = next(f for f in build.files if f.path == build.entry)
+        code = payload.files.get(build.entry, "\n".join(entry.starter))
+        try:
+            markdown, model = axis.draft_readme(build.entry, code, build.brief_markdown)
+        except DraftFailed as failure:
+            log_event(learner_id, "document_draft", {"course_id": course_id, "stage": stage, "status": "failed"})
+            return problem(502, "Draft unavailable", str(failure))
+        log_event(
+            learner_id, "document_draft",
+            {"course_id": course_id, "stage": stage, "status": "drafted", "model": model, "markdown": markdown},
+        )
+        return DraftReadmeResult(markdown=markdown, status="drafted", model=model)
 
     @app.post(
         "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset",
@@ -777,10 +824,12 @@ def create_app(
         if attempt.activity != BUILD_ACTIVITY:
             return problem(422, "Unknown activity", "A build takes the 'build' activity.")
         files = attempt.files or {}
-        if too_large(files, attempt.ownership_note):
+        if too_large(files, attempt.ownership_note, attempt.review_note):
             return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
 
-        results = check_requirements(build, files, attempt.ownership_note, runner, run_checks=True)
+        results = check_requirements(
+            build, files, attempt.ownership_note, runner, run_checks=True, review_note=attempt.review_note
+        )
         labels = {r.id: r.label for r in build.requirements}
         checks = [Check(label=labels[r.id], passed=bool(r.met), detail=r.detail) for r in results]
         met = sum(1 for check in checks if check.passed)
@@ -802,6 +851,7 @@ def create_app(
                     assistance_level=assistance,
                     demonstration_context=f"Stage build {exercise_id}",
                     observed_reasoning=attempt.ownership_note,
+                    review_note=attempt.review_note,
                     recorded_at=clock(),
                     exercise_id=exercise_id,
                     seed_id=exercise_id,

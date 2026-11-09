@@ -59,7 +59,7 @@ class SectionRule(_Strict):
 class RequirementCheck(_Strict):
     kind: Literal[
         "comment_lines", "input_assignments", "fstring_prints", "file_contains", "ownership_note", "behaviour",
-        "markdown_sections",
+        "markdown_sections", "readme_sample_run", "review_note",
     ]
     min: Optional[int] = None
     min_chars: Optional[int] = None
@@ -67,6 +67,7 @@ class RequirementCheck(_Strict):
     any: Optional[List[str]] = None
     function: Optional[str] = None
     sections: Optional[List[SectionRule]] = None
+    heading: Optional[str] = None      # readme_sample_run: the section that holds the pasted run
 
 
 class Requirement(_Strict):
@@ -124,10 +125,12 @@ class StageBuildSpec(_Strict):
                 raise ValueError(f"checks.py has no function {function}")
         for requirement in self.requirements:
             check = requirement.check
-            if check.kind in ("file_contains", "markdown_sections") and check.path not in paths:
+            if check.kind in ("file_contains", "markdown_sections", "readme_sample_run") and check.path not in paths:
                 raise ValueError(f"{check.kind} names {check.path}, which is not in files")
             if check.kind == "markdown_sections" and not check.sections:
                 raise ValueError("markdown_sections needs at least one section")
+            if check.kind == "readme_sample_run" and not check.heading:
+                raise ValueError("readme_sample_run needs a heading")
         return self
 
 
@@ -272,14 +275,19 @@ def _run_behaviour(
 
 
 _HEADING = re.compile(r"^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$")
+_FENCE = re.compile(r"^\s{0,3}(```|~~~)")
 
 
 def _sections_of(text: str) -> Dict[str, str]:
     """Each Markdown heading's text (lower case) and the text under it, up to the next heading."""
     sections: Dict[str, str] = {}
     current: Optional[str] = None
+    fence: Optional[str] = None        # A "#" line inside a code block is text, not a heading.
     for line in text.splitlines():
-        match = _HEADING.match(line)
+        marker = _FENCE.match(line)
+        if marker:
+            fence = None if fence == marker.group(1) else (fence or marker.group(1))
+        match = None if (fence or marker) else _HEADING.match(line)
         if match:
             current = match.group(1).strip().lower()
             sections.setdefault(current, "")
@@ -302,6 +310,101 @@ def _markdown_sections(text: str, rules: Sequence[SectionRule]) -> Tuple[bool, O
     return True, None
 
 
+def _input_prompts(tree: ast.AST) -> List[str]:
+    """The text of each input("...") call, in code order. Read from the code; nothing runs."""
+    found = []
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "input"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, str)
+        ):
+            found.append((node.lineno, node.col_offset, node.args[0].value))
+    return [text for _, _, text in sorted(found) if text.strip()]
+
+
+def _first_code_block(body: str) -> Optional[List[str]]:
+    lines: List[str] = []
+    fence: Optional[str] = None
+    for line in body.splitlines():
+        marker = _FENCE.match(line)
+        if marker and fence is None:
+            fence = marker.group(1)
+        elif marker and fence == marker.group(1):
+            return lines
+        elif fence:
+            lines.append(line)
+    return lines if fence else None
+
+
+def _split_transcript(lines: Sequence[str], prompts: Sequence[str]) -> Tuple[List[str], List[str]]:
+    """Typed values and expected output lines (SPEC-15 section 9.2).
+
+    The next unused prompt, in code order, marks a typed line. Once every prompt is used, the rest
+    is output, so a slip line that starts like a prompt ("Name: Meera") is not mistaken for typing.
+    """
+    typed: List[str] = []
+    output: List[str] = []
+    for line in lines:
+        if not line.strip():
+            continue
+        if len(typed) < len(prompts):
+            full = prompts[len(typed)]
+            prompt = full.rstrip()
+            if line.lstrip().startswith(prompt):
+                rest = line.lstrip()[len(prompt):]
+                typed.append(rest[1:] if full.endswith(" ") and rest.startswith(" ") else rest)
+                continue
+        output.append(line.strip())
+    return typed, output
+
+
+def _first_missing_line(stdout: str, expected: Sequence[str], prompts: Sequence[str]) -> Optional[str]:
+    """The first expected line the script's output lacks, in order. Prompts print without a newline
+    when input is piped, so a line may follow one or more of them."""
+    lead = "|".join(re.escape(p.rstrip()) for p in sorted(set(prompts), key=len, reverse=True))
+    lead_part = f"(?:(?:{lead})[ \\t]*)*" if lead else ""
+    cursor = 0
+    for line in expected:
+        pattern = re.compile(rf"^[ \t]*{lead_part}{re.escape(line)}[ \t]*\r?$", re.MULTILINE)
+        match = pattern.search(stdout, cursor)
+        if not match:
+            return line
+        cursor = match.end()
+    return None
+
+
+def _readme_sample_run(
+    build: StageBuildSpec, check: RequirementCheck, files: Mapping[str, str], runner: Runner
+) -> Tuple[bool, Optional[str]]:
+    """SPEC-15 section 9.2: the README's pasted run must be what the script really does."""
+    heading = check.heading or ""
+    body = _sections_of(files.get(check.path or "", "")).get(heading.strip().lower())
+    block = _first_code_block(body) if body is not None else None
+    if block is None:
+        return False, f"Paste one real run inside a code block under '{heading}'."
+    code = files.get(build.entry, "")
+    tree, problem = _parse(code)
+    if tree is None:
+        return False, problem
+    prompts = _input_prompts(tree)
+    typed, expected = _split_transcript(block, prompts)
+    if not typed:
+        return False, "Show what you typed: start each typed line with the question your script asks."
+    if not expected:
+        return False, "Show what the script printed after you typed."
+    result = runner.execute(code=code, stdin_input="\n".join(typed) + "\n", files=other_python_files(build, files))
+    if not result.success:
+        return False, "The script stopped before the sample run finished."
+    missing = _first_missing_line(result.stdout, expected, prompts)
+    if missing is not None:
+        return False, f"Your script did not print: `{missing}`"
+    return True, None
+
+
 def _check_one(
     requirement: Requirement,
     build: StageBuildSpec,
@@ -309,6 +412,7 @@ def _check_one(
     note: Optional[str],
     runner: Runner,
     run_checks: bool,
+    review: Optional[str] = None,
 ) -> RequirementResult:
     check = requirement.check
     code = files.get(build.entry, "")
@@ -318,6 +422,12 @@ def _check_one(
 
     if check.kind == "ownership_note":
         return result(len((note or "").strip()) >= (check.min_chars or 0))
+    if check.kind == "review_note":
+        return result(len((review or "").strip()) >= (check.min_chars or 0))
+    if check.kind == "readme_sample_run":
+        if not run_checks:
+            return result(None)
+        return result(*_readme_sample_run(build, check, files, runner))
     if check.kind == "file_contains":
         content = files.get(check.path or "", "")
         return result(any(text in content for text in check.any or []))
@@ -345,9 +455,10 @@ def check_requirements(
     ownership_note: Optional[str],
     runner: Runner,
     run_checks: bool,
+    review_note: Optional[str] = None,
 ) -> List[RequirementResult]:
     """Every requirement, in order. `run_checks` False skips the checks that run code."""
-    return [_check_one(r, build, files, ownership_note, runner, run_checks) for r in build.requirements]
+    return [_check_one(r, build, files, ownership_note, runner, run_checks, review_note) for r in build.requirements]
 
 
 def check_builds(builds: Mapping[Tuple[str, int], StageBuildSpec], units: Sequence[Unit]) -> List[Finding]:

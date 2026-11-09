@@ -39,6 +39,7 @@ class Attempt(BaseModel):
     fields: Optional[Dict[str, object]] = None
     plan: Optional[List[str]] = None
     ownership_note: Optional[str] = None
+    review_note: Optional[str] = None
     interaction_id: Optional[str] = Field(None, pattern=r"^[A-Za-z0-9_-]{8,64}$")  # Idempotency key (SPEC-12 section 5)
 
 

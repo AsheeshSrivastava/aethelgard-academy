@@ -42,11 +42,15 @@ ATTEMPTS = "/api/v1/learners/me/attempts"
 EXERCISE = "python/stage-0/build"
 STAGE_0 = ("PY-0.4", "PY-0.1", "PY-0.3")
 NOTE = "I planned it, wrote it, and checked it with messy input myself."
-# Meets the three README requirements (ADR-0024).
+REVIEW = "I fixed the run command after trying it, and pasted a real run."
+# Meets the README requirements for the reference solution (SPEC-15 section 9; ADR-0024).
 README = (
-    "# Stage 0 build\n\n## What this script does\n\nIt asks for a name and a service and prints a clean slip.\n\n"
-    "## How to run it\n\nRun python checkin.py in a terminal.\n\n"
-    "## What I checked myself\n\nI typed a messy name and service and the slip came out clean.\n"
+    "# Module 0 build\n\n## What it does\n\nIt asks for a name and a service and prints a clean slip.\n\n"
+    "## What you need first\n\nYou need Python and this file on your computer.\n\n"
+    "## How to run it\n\nRun `uv run checkin.py` in a terminal.\n\n"
+    "## A sample run\n\n```\nName: meera\nService needed: food parcel\n\n--- CHECK-IN SLIP ---\n"
+    "Name: Meera\nService: Food Parcel\nPlease wait for the Food Parcel desk.\n```\n\n"
+    "## Limits\n\nIt serves one visitor per run and saves nothing.\n"
 )
 PRACTICE = (FOLDER / "practice_checks.py").read_text(encoding="utf-8")
 
@@ -103,7 +107,7 @@ class FakeRunner:
 
     def execute(self, code, test_code=None, timeout_seconds=5.0, stdin_input=None, files=None):
         self.calls.append((code, test_code))
-        token = test_code.split('print("')[-1].split('"')[0] if self.print_token else ""
+        token = test_code.split('print("')[-1].split('"')[0] if (self.print_token and test_code) else ""
 
         class Result:
             success = self.success
@@ -206,7 +210,7 @@ def test_the_hidden_checks_are_not_the_practice_checks():
 
 @needs_answers
 def test_the_reference_solution_passes_the_practice_checks_too():
-    results = check_requirements(spec(PRACTICE), solved_files(), NOTE, SubprocessRunner(), run_checks=True)
+    results = check_requirements(spec(PRACTICE), solved_files(), NOTE, SubprocessRunner(), run_checks=True, review_note=REVIEW)
 
     assert all(r.met for r in results), [r for r in results if not r.met]
 
@@ -360,7 +364,7 @@ def test_other_exercise_ids_are_not_builds(value):
 
 @needs_answers
 def test_the_reference_solution_meets_everything_in_the_real_sandbox():
-    results = check_requirements(spec(), solved_files(), NOTE, SubprocessRunner(), run_checks=True)
+    results = check_requirements(spec(), solved_files(), NOTE, SubprocessRunner(), run_checks=True, review_note=REVIEW)
 
     assert all(r.met for r in results), [r for r in results if not r.met]
 
@@ -535,12 +539,18 @@ def pass_cold_checks(repo, units=STAGE_0):
 def submit(client, files=None, note=NOTE, **extra):
     return client.post(
         ATTEMPTS,
-        json={"exercise_id": EXERCISE, "activity": "build", "files": files or good_files(), "ownership_note": note, **extra},
+        json={
+            "exercise_id": EXERCISE, "activity": "build", "files": files or good_files(),
+            "ownership_note": note, "review_note": REVIEW, **extra,
+        },
     )
 
 
 def check(client, **body):
-    return client.post(f"{ME}/build:check", json={"files": good_files(), "ownership_note": NOTE, "run_checks": False, **body})
+    return client.post(
+        f"{ME}/build:check",
+        json={"files": good_files(), "ownership_note": NOTE, "review_note": REVIEW, "run_checks": False, **body},
+    )
 
 
 def test_a_build_is_locked_until_every_unit_passes(client, repo):

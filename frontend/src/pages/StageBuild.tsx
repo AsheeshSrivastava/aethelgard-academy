@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, ApiError, type AttemptResult, type StageBuild as Build } from "../api/client";
@@ -10,9 +10,13 @@ import { languageOf } from "../lib/fileLanguage";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
 import { courseName, maturityLabel } from "../lib/format";
+import { buildPath } from "../lib/backPath";
 import { useInteractionId } from "../lib/interaction";
 
 const NOTE_FILE = "ownership-note.txt";
+const REVIEW_FILE = "review-note.txt";
+const README_SAMPLE = "readme-sample";
+const README_POINTS = ["What it does", "What you need first", "How to run it", "A sample run", "Limits"];
 const isPython = (path: string) => path.endsWith(".py");
 const CHECK_WAIT_MS = 400;
 
@@ -36,6 +40,72 @@ const starters = (build: Build): Files => Object.fromEntries(build.files.map((fi
 
 function byId(requirements: { id: string; met: boolean | null; detail?: string | null }[]): Checked {
   return Object.fromEntries(requirements.map(({ id, met, detail }) => [id, { met, detail }]));
+}
+
+type PointState = "met" | "missing" | "unchecked";
+
+/** The five README points from the checks the server ran (SPEC-15 section 9.5). The page judges nothing itself. */
+function readmePoints(checked: Checked): { heading: string; state: PointState; detail?: string | null }[] {
+  const sections = checked["readme-sections"];
+  const run = checked["readme-run"];
+  const sample = checked[README_SAMPLE];
+  // The sections check stops at the first gap and names it, so earlier points are met and later ones unchecked.
+  const gap = sections?.met === false ? README_POINTS.findIndex((heading) => sections.detail?.includes(`'${heading}'`)) : -1;
+  const fromSections = (index: number): PointState => {
+    if (sections?.met === true) return "met";
+    if (sections?.met !== false) return "unchecked";
+    if (gap < 0 || index === gap) return "missing";
+    return index < gap ? "met" : "unchecked";
+  };
+  return README_POINTS.map((heading, index) => {
+    const base = fromSections(index);
+    const detail = index === gap || gap < 0 ? sections?.detail : undefined;
+    if (heading === "How to run it") {
+      if (run?.met === false) return { heading, state: "missing", detail: run.detail };
+      return { heading, state: base === "met" && run?.met === true ? "met" : base === "met" ? "unchecked" : base, detail };
+    }
+    if (heading === "A sample run") {
+      if (base === "missing") return { heading, state: "missing", detail };
+      if (sample?.met === true) return { heading, state: "met" };
+      return { heading, state: sample?.met === false ? "missing" : "unchecked", detail: sample?.detail };
+    }
+    return { heading, state: base, detail: base === "missing" ? detail : undefined };
+  });
+}
+
+const POINT_TEXT: Record<PointState, string> = { met: "Met", missing: "Missing", unchecked: "Not checked yet" };
+
+function ReadmeChecklist({ checked, review, onReview }: { checked: Checked; review: string; onReview: (value: string) => void }) {
+  const points = readmePoints(checked);
+  return (
+    <section className="card panel" aria-labelledby="readme-checklist">
+      <h2 id="readme-checklist" className="eyebrow">
+        README checklist
+      </h2>
+      <ul className="plain-list requirement-list">
+        {points.map((point) => (
+          <li key={point.heading} className="requirement">
+            <span className={`requirement-box${point.state === "met" ? " requirement-met" : ""}`} aria-hidden="true">
+              {point.state === "met" ? "✓" : ""}
+            </span>
+            <span className="requirement-text">
+              <span className="small">{point.heading}</span>
+              {point.detail && point.state === "missing" && <span className="small requirement-detail">{point.detail}</span>}
+            </span>
+            <span className="small muted">{POINT_TEXT[point.state]}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="small muted">The sample run is checked when you press Verify.</p>
+      <div className="field">
+        <label htmlFor="review-note">README review note</label>
+        <span id="review-hint" className="small muted">
+          What did you change in the README, and why? If AXIS drafted it, say what you fixed after running your script.
+        </span>
+        <textarea id="review-note" aria-describedby="review-hint" rows={4} value={review} onChange={(event) => onReview(event.target.value)} />
+      </div>
+    </section>
+  );
 }
 
 function BuildResult({ result }: { result: AttemptResult }) {
@@ -93,10 +163,27 @@ function Requirements({ build, checked }: { build: Build; checked: Checked }) {
   );
 }
 
-function Workspace({ build, courseId, stage, initial, initialNote }: { build: Build; courseId: string; stage: number; initial: Files; initialNote: string }) {
+function Workspace({
+  build,
+  courseId,
+  stage,
+  initial,
+  initialNote,
+  initialReview,
+}: {
+  build: Build;
+  courseId: string;
+  stage: number;
+  initial: Files;
+  initialNote: string;
+  initialReview: string;
+}) {
   const client = useQueryClient();
   const [files, setFiles] = useState(initial);
   const [note, setNote] = useState(initialNote);
+  const [review, setReview] = useState(initialReview);
+  const [confirmingDraft, setConfirmingDraft] = useState(false);
+  const [drafted, setDrafted] = useState(false);
   const [open, setOpen] = useState(build.entry);
   const [version, setVersion] = useState(0);
   const [live, setLive] = useState<Checked>({});
@@ -114,7 +201,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
     const round = ++liveRound.current;
     const timer = setTimeout(() => {
       void api
-        .checkBuild(stageArgs, { files, ownership_note: note, run_checks: false })
+        .checkBuild(stageArgs, { files, ownership_note: note, review_note: review, run_checks: false })
         .then((result) => {
           if (round === liveRound.current) setLive(byId(result.requirements));
         })
@@ -122,7 +209,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
     }, CHECK_WAIT_MS);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files, note]);
+  }, [files, note, review]);
 
   useEffect(() => {
     if (!started.current) {
@@ -130,12 +217,12 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
       return;
     }
     const timer = setTimeout(() => {
-      const saved = { ...files, [NOTE_FILE]: note };
+      const saved = { ...files, [NOTE_FILE]: note, [REVIEW_FILE]: review };
       void api.saveDraft(build.exercise_id, saved).catch(() => undefined);
       client.setQueryData(["draft", build.exercise_id], { files: saved });
     }, SAVE_WAIT_MS);
     return () => clearTimeout(timer);
-  }, [files, note, build.exercise_id, client]);
+  }, [files, note, review, build.exercise_id, client]);
 
   function edit(value: string) {
     setFiles((current) => ({ ...current, [open]: value }));
@@ -143,13 +230,21 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
     if (isPython(open)) {
       codeEdits.current += 1;
       setVerified({});
+    } else {
+      dropSampleRun();
     }
+  }
+
+  // The README's sample run is checked against the script, so a README edit makes that one result stale.
+  function dropSampleRun() {
+    codeEdits.current += 1;
+    setVerified(({ [README_SAMPLE]: _stale, ...rest }) => rest);
   }
 
   const verify = useMutation({
     mutationFn: () => {
       const editsAtStart = codeEdits.current;
-      return api.checkBuild(stageArgs, { files, ownership_note: note, run_checks: true }).then((result) => ({ result, editsAtStart }));
+      return api.checkBuild(stageArgs, { files, ownership_note: note, review_note: review, run_checks: true }).then((result) => ({ result, editsAtStart }));
     },
     onSuccess: ({ result, editsAtStart }) => {
       if (editsAtStart === codeEdits.current) setVerified(byId(result.requirements));
@@ -159,7 +254,14 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
   const interaction = useInteractionId();
   const submit = useMutation({
     mutationFn: () =>
-      api.attempt({ exercise_id: build.exercise_id, activity: "build", files, ownership_note: note, interaction_id: interaction.current() }),
+      api.attempt({
+        exercise_id: build.exercise_id,
+        activity: "build",
+        files,
+        ownership_note: note,
+        review_note: review,
+        interaction_id: interaction.current(),
+      }),
     onSuccess: (result) => {
       interaction.next();
       setSubmitted(result);
@@ -169,6 +271,27 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
     },
   });
 
+  const readmePath = build.files.find((file) => file.path.toLowerCase() === "readme.md")?.path;
+  const readmeStarter = build.files.find((file) => file.path === readmePath)?.starter.join("\n") ?? "";
+
+  const draftReadme = useMutation({
+    mutationFn: () => api.draftReadme(stageArgs, files),
+    onSuccess: ({ markdown }) => {
+      if (!readmePath) return;
+      setFiles((current) => ({ ...current, [readmePath]: markdown }));
+      setVersion((current) => current + 1);
+      setOpen(readmePath);
+      setConfirmingDraft(false);
+      setDrafted(true);
+      dropSampleRun();
+    },
+  });
+
+  function askForDraft() {
+    if (readmePath && (files[readmePath] ?? "") !== readmeStarter) setConfirmingDraft(true);
+    else draftReadme.mutate();
+  }
+
   const reset = useMutation({
     mutationFn: () => api.resetBuild(stageArgs),
     onSuccess: () => {
@@ -177,6 +300,8 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
       codeEdits.current += 1;
       setFiles(starters(build));
       setNote("");
+      setReview("");
+      setDrafted(false);
       setVerified({});
       setSubmitted(null);
       setConfirming(false);
@@ -192,7 +317,6 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
   );
   const ready = build.requirements.every((r) => checked[r.id]?.met === true);
   const getCode = useCallback(() => files[build.entry] ?? "", [files, build.entry]);
-  const readmePath = build.files.find((file) => file.path.toLowerCase() === "readme.md")?.path;
   const getFiles = useCallback(
     () => Object.fromEntries(Object.entries(files).filter(([path]) => isPython(path))),
     [files],
@@ -234,6 +358,7 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
             <pre className="material">{build.sample_run.join("\n")}</pre>
           </section>
           <Requirements build={build} checked={checked} />
+          {readmePath && <ReadmeChecklist checked={checked} review={review} onReview={setReview} />}
         </aside>
 
         <section className="build-work" aria-label="Build workspace">
@@ -256,6 +381,35 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
                 {verify.isPending ? "Checking…" : "Verify"}
               </button>
             </div>
+            {readmePath && open === readmePath && (
+              <div className="readme-tools">
+                <button type="button" className="button button-small" disabled={draftReadme.isPending} onClick={askForDraft}>
+                  {draftReadme.isPending ? "Drafting…" : "Draft my README"}
+                </button>
+                <Link to="/units/$unitId" params={{ unitId: "TW-0.1" }} search={{ back: buildPath(courseId, stage) }} className="small">
+                  Stuck on the README? Learn it in TW Module 0
+                </Link>
+              </div>
+            )}
+            {confirmingDraft && (
+              <div className="card reset-confirm" role="alertdialog" aria-label="Replace your README">
+                <p className="small">Replace your README with an AXIS draft?</p>
+                <div className="actions">
+                  <button type="button" className="button button-small" onClick={() => setConfirmingDraft(false)}>
+                    Cancel
+                  </button>
+                  <button type="button" className="button button-small button-primary" disabled={draftReadme.isPending} onClick={() => draftReadme.mutate()}>
+                    Replace README
+                  </button>
+                </div>
+              </div>
+            )}
+            {draftReadme.isError && <ErrorNote error={draftReadme.error} />}
+            {drafted && open === readmePath && !draftReadme.isError && (
+              <p className="small muted" role="status">
+                AXIS wrote this from your script. It has not run it. Run your script, paste a real run, and fix anything that is wrong.
+              </p>
+            )}
             <CodeEditor
               key={`${open}-${version}`}
               value={files[open] ?? ""}
@@ -279,12 +433,13 @@ function Workspace({ build, courseId, stage, initial, initialNote }: { build: Bu
             }}
           >
             <div className="field">
-              <label htmlFor="ownership-note">Ownership note</label>
+              <label htmlFor="ownership-note">Code ownership note</label>
               <span id="ownership-hint" className="small muted">
                 What did you write yourself, what did a tool or AXIS help with, and how did you check the result?
               </span>
               <textarea id="ownership-note" aria-describedby="ownership-hint" rows={4} value={note} onChange={(event) => setNote(event.target.value)} />
             </div>
+
             <div className="actions">
               <button type="submit" className="button button-primary" disabled={!ready || submit.isPending}>
                 {submit.isPending ? "Checking…" : "Submit build"}
@@ -338,10 +493,10 @@ export function StageBuild() {
   const closed = build.error instanceof ApiError && (build.error.status === 423 || build.error.status === 404);
 
   const data = build.data;
-  const { [NOTE_FILE]: savedNote, ...savedFiles } = draft.data?.files ?? {};
+  const { [NOTE_FILE]: savedNote, [REVIEW_FILE]: savedReview, ...savedFiles } = draft.data?.files ?? {};
 
   return (
-    <main className="lesson-page">
+    <main className="lesson-page build-page">
       <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName(courseId)} course map`} />
       {build.isPending && <Loading what="the build" />}
       {closed && <p>{(build.error as ApiError).message}</p>}
@@ -358,7 +513,10 @@ export function StageBuild() {
           {draft.isPending ? (
             <Loading what="your work" />
           ) : (
-            <Workspace build={data} courseId={courseId} stage={number} initial={{ ...starters(data), ...savedFiles }} initialNote={savedNote ?? ""} />
+            <Workspace build={data} courseId={courseId} stage={number} initial={{ ...starters(data), ...savedFiles }}
+              initialNote={savedNote ?? ""}
+              initialReview={savedReview ?? ""}
+            />
           )}
         </>
       )}

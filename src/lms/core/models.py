@@ -239,3 +239,4 @@ class EvidenceEntry(BaseModel):
     test_mode: bool = False                       # Recorded with every wait set to zero (ADR-0019 amendment)
     interaction_id: Optional[str] = None          # The interaction that produced it (ADR-0022)
     attempt_id: Optional[str] = None              # The attempt it belongs to (ADR-0022)
+    review_note: Optional[str] = None             # A build's README review note, beside the ownership note (SPEC-15 section 9.3)

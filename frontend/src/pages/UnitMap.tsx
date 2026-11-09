@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 
 import { api } from "../api/client";
 import type { ColdCheckStatus, Unit } from "../api/client";
 import { BackLink, ErrorNote, Loading, Panel } from "../components/common";
 import { ResetUnit } from "../components/ResetUnit";
+import { parseBuildPath } from "../lib/backPath";
 import { coldCheckMessage, courseName as nameOfCourse, courseOfUnit, stepDescription, stepName } from "../lib/format";
 import { useNow } from "../lib/useNow";
 
@@ -45,7 +46,14 @@ export function UnitMap() {
 
   const courseId = courseOfUnit(unitId);
   const courseName = nameOfCourse(courseId);
-  const back = <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName} course map`} />;
+  // A build can send the learner here and ask to come back (SPEC-15 section 9.5); anything else is ignored.
+  const { back: backTo } = useSearch({ from: "/units/$unitId" });
+  const build = parseBuildPath(backTo);
+  const back = build ? (
+    <BackLink to="/courses/$courseId/stages/$stage/build" params={build} label="your build" />
+  ) : (
+    <BackLink to="/courses/$courseId" params={{ courseId }} label={`${courseName} course map`} />
+  );
 
   if (unit.isPending) {
     return (

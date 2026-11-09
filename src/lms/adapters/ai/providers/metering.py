@@ -12,7 +12,7 @@ from lms.adapters.db.model_usage import UsageStore
 
 MONTHLY_CAP_USD = 5.0  # owner decision 2026-11-04 (ADR-0025 section 4)
 
-CALLS = ("consult", "stream", "concept_check", "connection_test")
+CALLS = ("consult", "stream", "concept_check", "connection_test", "document_draft")
 
 
 class BudgetExceeded(Exception):

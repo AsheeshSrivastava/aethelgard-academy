@@ -767,6 +767,65 @@
         }
       }
     },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:draft-readme": {
+      "post": {
+        "summary": "Draft My Readme",
+        "description": "AXIS drafts the README (SPEC-15 section 9.4, ADR-0028). Document help, so it is logged as a\ndocument_draft with no exercise id: it never counts as help on the build's code.",
+        "operationId": "draft_my_readme_api_v1_learners_me_courses__course_id__stages__stage__build_draft_readme_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftReadmeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftReadmeResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset": {
       "post": {
         "summary": "Reset My Build",
@@ -2003,6 +2062,17 @@
             ],
             "title": "Ownership Note"
           },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
           "interaction_id": {
             "anyOf": [
               {
@@ -2291,6 +2361,17 @@
               }
             ],
             "title": "Ownership Note"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
           },
           "run_checks": {
             "type": "boolean",
@@ -3100,6 +3181,46 @@
         ],
         "title": "Draft"
       },
+      "DraftReadmeRequest": {
+        "properties": {
+          "files": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Files"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "DraftReadmeRequest"
+      },
+      "DraftReadmeResult": {
+        "properties": {
+          "markdown": {
+            "type": "string",
+            "title": "Markdown"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "markdown",
+          "status",
+          "model"
+        ],
+        "title": "DraftReadmeResult"
+      },
       "DueReview": {
         "properties": {
           "skill_id": {
@@ -3285,6 +3406,17 @@
               }
             ],
             "title": "Attempt Id"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
           }
         },
         "type": "object",
@@ -3874,7 +4006,8 @@
               "opened",
               "closed",
               "hint_viewed",
-              "feedback_viewed"
+              "feedback_viewed",
+              "document_draft"
             ],
             "title": "Event Type"
           },

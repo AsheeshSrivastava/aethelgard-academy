@@ -95,6 +95,11 @@ export const api = {
   stageBuild: ({ courseId, stage }: StageRef) => request<StageBuild>(`/courses/${courseId}/stages/${stage}/build`),
   checkBuild: ({ courseId, stage }: StageRef, body: Schemas["BuildCheckRequest"]) =>
     request<Schemas["BuildCheckResult"]>(`/learners/me/courses/${courseId}/stages/${stage}/build:check`, json("POST", body)),
+  draftReadme: ({ courseId, stage }: StageRef, files: Record<string, string>) =>
+    request<Schemas["DraftReadmeResult"]>(
+      `/learners/me/courses/${courseId}/stages/${stage}/build:draft-readme`,
+      json("POST", { files }),
+    ),
   resetBuild: ({ courseId, stage }: StageRef) =>
     request<void>(`/learners/me/courses/${courseId}/stages/${stage}/build:reset`, { method: "POST" }),
   stageReview: ({ courseId, stage }: StageRef) =>

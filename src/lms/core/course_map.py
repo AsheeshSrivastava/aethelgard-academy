@@ -16,10 +16,20 @@ from lms.core.models import (
     ProficiencyLevel,
     ProgressionDecision,
     Unit,
+    SLOTTED_STAGE_BASE,
     is_slotted_stage,
     stage_label,
 )
 from lms.core.review import ReviewState, build_is_open
+
+
+# Roadmaps whose stages have no build by design: their documents attach to the Python builds
+# (SPEC-15 section 9.6). A stage of one of these has no build tile.
+NO_BUILD_ROADMAPS: Tuple[str, ...] = ("TW",)
+
+
+def has_no_build_by_design(stage: int) -> bool:
+    return any(SLOTTED_STAGE_BASE[name] <= stage < SLOTTED_STAGE_BASE[name] + 100 for name in NO_BUILD_ROADMAPS)
 
 
 class CourseInfo(BaseModel):
@@ -200,8 +210,9 @@ def _stage_view(
         label=label,
         title=stage_titles.get(stage, label),
         units=[_unit_summary(u, decision_of(u), states[u.unit_id]) for u in units],
-        # Every stage has one build (owner decision); curator data replaces these defaults.
-        build=BuildSummary(
+        # Every stage has one build (owner decision), except where a roadmap has none by design.
+        # Curator data replaces these defaults.
+        build=None if has_no_build_by_design(stage) else BuildSummary(
             title=authored.title if authored else f"{label} build",
             kind=authored.kind if authored else "script",
             maturity=authored.maturity if authored else STAGE_BUILD_MATURITY,

@@ -30,6 +30,7 @@ EventType = Literal[
     "closed",
     "hint_viewed",
     "feedback_viewed",
+    "document_draft",
 ]
 ClientEventType = Literal["opened", "closed", "hint_viewed", "feedback_viewed"]
 

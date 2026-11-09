@@ -33,6 +33,23 @@ class MockAxisCompanion:
         feedback = "Every idea is shown." if not missed else "Not shown yet: " + " ".join(missed)
         return json.dumps({"ideas": results, "feedback": feedback[:400]}), "offline-mock"
 
+    def draft_readme(self, entry: str, code: str, brief: str) -> Tuple[str, str]:
+        """A fixed README draft (SPEC-15 section 9.4): five headings, the real entry name, no network."""
+        return (
+            "# Check-in script\n\n"
+            "## What it does\n\n"
+            "This script asks a visitor for their name and the service they need, then prints a check-in slip.\n\n"
+            "## What you need first\n\n"
+            "You need Python installed and the file " + entry + " saved on your computer.\n\n"
+            "## How to run it\n\n"
+            "Open a terminal in the folder and run `uv run " + entry + "`.\n\n"
+            "## A sample run\n\n"
+            "```\n(paste a real run here)\n```\n\n"
+            "## Limits\n\n"
+            "It handles one visitor each time it runs and does not save anything.\n",
+            "offline-mock",
+        )
+
     def judge_explanation(self, unit_id: str, prompt: str, explanation: str, rubric: Rubric) -> AiJudgement:
         return judge_with(self, unit_id, prompt, explanation, rubric)
 

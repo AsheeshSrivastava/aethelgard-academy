@@ -165,6 +165,22 @@ class GeminiCompanion:
         self._record("connection_test", answered, response, len(sys_prompt) + len(user_msg))
         return (answered, *_counts(response))
 
+    def draft_readme(self, entry: str, code: str, brief: str) -> Tuple[str, Optional[str]]:
+        """One README drafting call (SPEC-15 section 9.4). Returns the Markdown and the model that answered.
+
+        Never falls back to anything: a failure is raised for the caller to name.
+        """
+        sys_prompt, user_msg = axis_rules.readme_draft_prompts(entry, code, brief)
+        self._check_budget(sys_prompt, user_msg)
+        response = self._client.models.generate_content(
+            model=self.model,
+            contents=user_msg,
+            config=self._config(sys_prompt, 0.3, axis_rules.DRAFT_MAX_TOKENS),
+        )
+        answered = self._answered(response)
+        self._record("document_draft", answered, response, len(sys_prompt) + len(user_msg))
+        return response.text or "", answered
+
     def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
         """One judging call (SPEC-18 section 3). Returns the raw reply and the model that answered.
 

@@ -32,6 +32,7 @@ EVIDENCE_LEDGER_ADDED_COLUMNS = {
     "test_mode": "INTEGER NOT NULL DEFAULT 0",
     "interaction_id": "TEXT",
     "attempt_id": "TEXT",
+    "review_note": "TEXT",             # A build's README review note (SPEC-15 section 9.3)
 }
 
 
@@ -784,8 +785,8 @@ class SQLiteLearnerRepository:
                     evidence_category, evidence_strength, assistance_level,
                     demonstration_context, observed_reasoning, recorded_at,
                     exercise_id, activity, cold_check, seed_id, review_kind, test_mode,
-                    interaction_id, attempt_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    interaction_id, attempt_id, review_note
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -806,6 +807,7 @@ class SQLiteLearnerRepository:
                     int(entry.test_mode),
                     entry.interaction_id,
                     entry.attempt_id,
+                    entry.review_note,
                 ),
             )
         self.events.publish(
@@ -866,6 +868,7 @@ class SQLiteLearnerRepository:
                     test_mode=bool(r["test_mode"]),
                     interaction_id=r["interaction_id"],
                     attempt_id=r["attempt_id"],
+                    review_note=r["review_note"],
                 )
             )
         return entries

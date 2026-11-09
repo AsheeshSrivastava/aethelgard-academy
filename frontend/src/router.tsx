@@ -54,7 +54,13 @@ const routeTree = rootRoute.addChildren([
     path: "/settings/models",
     component: lazyRouteComponent(() => import("./pages/ModelSettings"), "ModelSettings"),
   }),
-  createRoute({ getParentRoute: () => rootRoute, path: "/units/$unitId", component: UnitMap }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/units/$unitId",
+    component: UnitMap,
+    validateSearch: (search: Record<string, unknown>) =>
+      (typeof search.back === "string" && search.back ? { back: search.back } : {}) as { back?: string },
+  }),
   createRoute({
     getParentRoute: () => rootRoute,
     path: "/units/$unitId/$step",

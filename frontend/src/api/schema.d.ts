@@ -314,6 +314,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:draft-readme": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft My Readme
+         * @description AXIS drafts the README (SPEC-15 section 9.4, ADR-0028). Document help, so it is logged as a
+         *     document_draft with no exercise id: it never counts as help on the build's code.
+         */
+        post: operations["draft_my_readme_api_v1_learners_me_courses__course_id__stages__stage__build_draft_readme_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset": {
         parameters: {
             query?: never;
@@ -775,6 +796,8 @@ export interface components {
             plan?: string[] | null;
             /** Ownership Note */
             ownership_note?: string | null;
+            /** Review Note */
+            review_note?: string | null;
             /** Interaction Id */
             interaction_id?: string | null;
         };
@@ -856,6 +879,8 @@ export interface components {
             };
             /** Ownership Note */
             ownership_note?: string | null;
+            /** Review Note */
+            review_note?: string | null;
             /**
              * Run Checks
              * @default false
@@ -1154,6 +1179,22 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** DraftReadmeRequest */
+        DraftReadmeRequest: {
+            /** Files */
+            files: {
+                [key: string]: string;
+            };
+        };
+        /** DraftReadmeResult */
+        DraftReadmeResult: {
+            /** Markdown */
+            markdown: string;
+            /** Status */
+            status: string;
+            /** Model */
+            model: string;
+        };
         /** DueReview */
         DueReview: {
             /** Skill Id */
@@ -1239,6 +1280,8 @@ export interface components {
             interaction_id?: string | null;
             /** Attempt Id */
             attempt_id?: string | null;
+            /** Review Note */
+            review_note?: string | null;
         };
         /**
          * EvidenceStrength
@@ -1431,7 +1474,7 @@ export interface components {
              * Event Type
              * @enum {string}
              */
-            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed";
+            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "document_draft";
             /** Payload */
             payload?: {
                 [key: string]: unknown;
@@ -2439,6 +2482,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BuildCheckResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_my_readme_api_v1_learners_me_courses__course_id__stages__stage__build_draft_readme_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftReadmeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftReadmeResult"];
                 };
             };
             /** @description Validation Error */
