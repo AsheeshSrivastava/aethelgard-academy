@@ -48,13 +48,41 @@ describe("front page", () => {
     renderAt("/");
 
     expect(await screen.findByRole("heading", { level: 1, name: /learn to build/i })).toBeInTheDocument();
-    for (const step of ["Video", "Explain", "Activities", "Cold Check"]) {
+    for (const step of ["Video", "Explain", "Practise", "Playground", "Cold Check"]) {
       expect(screen.getByRole("heading", { name: step })).toBeInTheDocument();
     }
     for (const mode of ["Coach", "Hybrid", "Socratic"]) {
       expect(screen.getByRole("heading", { name: mode })).toBeInTheDocument();
     }
     expect(await screen.findByText("18 modules · 81 units")).toBeInTheDocument();
+  });
+
+  it("names the app Aethelgard, without 'Academy'", async () => {
+    stubApi(homeRoutes());
+    renderAt("/");
+
+    await screen.findByRole("heading", { level: 1 });
+    expect(screen.queryByText(/academy/i)).not.toBeInTheDocument();
+  });
+
+  it("counts courses and units from the course data, not fixed numbers", async () => {
+    stubApi(homeRoutes());
+    renderAt("/");
+
+    const stats = await screen.findByRole("region", { name: "The path in numbers" });
+    // The fixture has 3 courses with 111 + 98 + 81 = 290 units.
+    await waitFor(() => expect(stats).toHaveTextContent("3courses in one path"));
+    expect(stats).toHaveTextContent("290hands-on units");
+  });
+
+  it("shows the first build as a plan in comments, never as code", async () => {
+    stubApi(homeRoutes());
+    renderAt("/");
+
+    const plan = await screen.findByLabelText("Your first build starts as a plan");
+    for (const line of plan.textContent!.split("\n")) {
+      expect(line.trim()).toMatch(/^#/);
+    }
   });
 
   it("has no back arrow", async () => {

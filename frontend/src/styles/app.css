@@ -430,105 +430,6 @@ ul {
   cursor: pointer;
 }
 
-/* Front page */
-.hero {
-  padding-block: 72px 56px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 48px;
-  align-items: center;
-}
-
-.hero-copy {
-  flex: 1 1 520px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.hero h1 {
-  font-size: clamp(34px, 6vw, 52px);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-}
-
-.spine {
-  flex: 1 1 340px;
-  min-width: 0;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.spine ol {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.spine li {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 0 18px 28px;
-}
-
-.spine li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 4px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 2px var(--line-strong);
-}
-
-.spine li::after {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 22px;
-  bottom: 0;
-  width: 2px;
-  background: var(--line);
-}
-
-.spine li:last-child {
-  padding-bottom: 0;
-}
-
-.spine li:last-child::after {
-  display: none;
-}
-
-.spine .spine-first::before {
-  background: var(--accent);
-  box-shadow: none;
-}
-
-.spine-name {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.step-card {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.step-card h3 {
-  font-size: 17px;
-  font-weight: 600;
-}
-
 .axis-band {
   background: var(--band);
   color: #ffffff;
@@ -1955,10 +1856,6 @@ button:disabled {
     max-width: none;
   }
 
-  .hero {
-    padding-block: 40px 32px;
-  }
-
   .page-title {
     font-size: 28px;
   }
@@ -2087,4 +1984,539 @@ button:disabled {
 
 .review-restart {
   margin-top: 20px;
+}
+
+/* Front page (redesign step 3, owner-approved mock "Landing"). Prefix ld- = landing. */
+.landing {
+  display: flex;
+  flex-direction: column;
+}
+
+.ld-eyebrow {
+  color: var(--accent-text);
+}
+
+.ld-hero {
+  background: var(--glow);
+}
+
+.ld-hero-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 56px;
+  padding-block: 56px;
+}
+
+.ld-hero-copy {
+  flex: 1 1 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ld-title {
+  font-size: clamp(40px, 4.4vw, 64px);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.ld-title-accent {
+  color: var(--accent-text);
+}
+
+.ld-lead {
+  font-size: 19px;
+  line-height: 30px;
+  color: var(--text-muted);
+  max-width: 620px;
+}
+
+.ld-button {
+  min-height: 52px;
+  padding-inline: 26px;
+  font-size: 16px;
+}
+
+.ld-promises {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.ld-promises li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+}
+
+.ld-tile {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.ld-tile-lg {
+  width: 52px;
+  height: 52px;
+}
+
+.ld-tile-warm {
+  background: var(--warm);
+  color: var(--warm-text);
+}
+
+.ld-tile-ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+/* The project spine card */
+.ld-spine {
+  flex: 1 1 560px;
+  min-width: 0;
+  margin: 0;
+  padding: 28px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ld-spine-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ld-spine-title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.ld-spine-nodes {
+  list-style: none;
+  padding: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.ld-spine-nodes::before {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 31px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent) 0 18%, var(--line) 18% 100%);
+}
+
+.ld-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.ld-node-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+}
+
+.ld-node-first .ld-node-icon {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 6px var(--accent-soft);
+}
+
+.ld-node-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Code panels are dark in both themes, like the editor. */
+.ld-plan,
+.ld-mini-code {
+  margin: 0;
+  background: var(--code-bg);
+  color: #e6edf3;
+  font-family: var(--font-mono);
+  border-radius: 14px;
+}
+
+.ld-plan {
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 24px;
+  white-space: pre-wrap;
+}
+
+.ld-mini-code {
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.ld-kw {
+  color: #c792ea;
+}
+
+.ld-fn {
+  color: #82aaff;
+}
+
+.ld-cm {
+  color: #9aa7b6;
+  font-style: italic;
+}
+
+/* Numbers strip */
+.ld-stats {
+  border-block: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.ld-stats-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  padding-block: 28px;
+}
+
+.ld-stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ld-stat-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ld-stat-value {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Sections */
+.ld-section {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-block: 64px 24px;
+}
+
+.ld-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ld-section-head-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.ld-section-head-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ld-section-title {
+  font-size: 34px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ld-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.ld-step {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ld-step-last {
+  border-color: var(--accent-line);
+}
+
+.ld-step-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ld-step h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Course cards */
+.ld-course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.ld-course-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.ld-course-card:hover {
+  color: var(--text);
+  border-color: var(--accent-line);
+}
+
+.ld-course-visual {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: var(--accent-soft);
+  color: var(--text-muted);
+}
+
+.ld-visual-info {
+  background: var(--info-soft);
+}
+
+.ld-visual-warm {
+  background: var(--warm);
+}
+
+.ld-pill {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ld-pill-info {
+  color: var(--info);
+}
+
+.ld-pill-ok {
+  color: var(--ok);
+}
+
+.ld-pill-warm {
+  color: var(--warm-text);
+}
+
+.ld-course-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ld-course-title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* Skill ladder */
+.ld-ladder {
+  padding: 32px;
+  border-radius: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 40px;
+}
+
+.ld-ladder-copy {
+  flex: 1 1 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ld-ladder-title {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.ld-rungs {
+  flex: 2 1 520px;
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.ld-rung {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ld-rung-bar {
+  display: block;
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.ld-rung-1 .ld-rung-bar {
+  height: 56px;
+  background: var(--accent);
+}
+
+.ld-rung-2 .ld-rung-bar {
+  height: 92px;
+  background: var(--accent-soft);
+  border: 2px dashed var(--accent-line);
+}
+
+.ld-rung-3 .ld-rung-bar {
+  height: 128px;
+}
+
+.ld-rung-4 .ld-rung-bar {
+  height: 164px;
+}
+
+.ld-rung-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .ld-hero-inner {
+    padding-block: 32px;
+    gap: 32px;
+  }
+
+  .ld-lead {
+    font-size: 17px;
+    line-height: 26px;
+  }
+
+  .ld-spine {
+    padding: 20px;
+  }
+
+  /* Five nodes do not fit across a phone, so they become a short list. */
+  .ld-spine-nodes {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ld-spine-nodes::before {
+    display: none;
+  }
+
+  .ld-node {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    column-gap: 12px;
+    row-gap: 0;
+    text-align: left;
+    align-items: center;
+  }
+
+  .ld-node-icon {
+    grid-row: span 2;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .ld-node-first .ld-node-icon {
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  .ld-section {
+    padding-block: 40px 16px;
+  }
+
+  .ld-section-title {
+    font-size: 26px;
+  }
+
+  .ld-course-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ld-ladder {
+    padding: 20px;
+    gap: 24px;
+  }
+
+  /* Four rungs side by side are too narrow for their names on a phone: two by two. */
+  .ld-rungs {
+    flex-basis: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+  }
+
+  .ld-rung-1 .ld-rung-bar {
+    height: 28px;
+  }
+
+  .ld-rung-2 .ld-rung-bar {
+    height: 44px;
+  }
+
+  .ld-rung-3 .ld-rung-bar {
+    height: 60px;
+  }
+
+  .ld-rung-4 .ld-rung-bar {
+    height: 76px;
+  }
 }
