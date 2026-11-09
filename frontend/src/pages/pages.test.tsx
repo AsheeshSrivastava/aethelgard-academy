@@ -57,6 +57,13 @@ describe("front page", () => {
     expect(await screen.findByText("18 modules · 81 units")).toBeInTheDocument();
   });
 
+  it("names the case study PantryFlow (ADR-0023)", async () => {
+    stubApi(homeRoutes());
+    renderAt("/");
+
+    expect(await screen.findByText("PantryFlow grows with you")).toBeInTheDocument();
+  });
+
   it("names the app Aethelgard, without 'Academy'", async () => {
     stubApi(homeRoutes());
     renderAt("/");

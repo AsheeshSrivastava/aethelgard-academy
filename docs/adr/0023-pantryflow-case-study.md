@@ -1,6 +1,6 @@
 # ADR 0023: One Case Study for the Whole Path (PantryFlow)
 
-- **Status:** Proposed (2026-11-04)
+- **Status:** Accepted (2026-11-09) by the owner ("PantryFlow is approved"). Proposed 2026-11-04.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-04
 - **Governed by:** AGENTS.md section 4 (the cumulative project spine), Python Subject Roadmap v4, `docs/architecture/02-operational-narrative-spine-79-units.md`

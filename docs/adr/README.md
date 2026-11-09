@@ -24,7 +24,7 @@
 | [ADR-0020](0020-slotted-units-and-path-order.md) | Slotted Units, Stage Ids and Path Order | **Proposed** | 2026-10-31 |
 | [ADR-0021](0021-private-answer-material.md) | Private Answer Material | **Proposed** | 2026-11-03 |
 | [ADR-0022](0022-interaction-log.md) | Interaction Log and Cold Check Feedback | **Proposed** | 2026-11-04 |
-| [ADR-0023](0023-pantryflow-case-study.md) | One Case Study for the Whole Path (PantryFlow) | **Proposed** | 2026-11-04 |
+| [ADR-0023](0023-pantryflow-case-study.md) | One Case Study for the Whole Path (PantryFlow) | **Accepted** | 2026-11-09 |
 | [ADR-0024](0024-writing-feedback-on-build-documents.md) | Writing Feedback on Build Documents | **Proposed** (sections 2.2, 2.4 superseded by ADR-0028) | 2026-11-04 |
 | [ADR-0025](0025-model-provider-profiles.md) | Model Provider Profiles and a Settings Page | **Accepted**, built (SPEC-17) | 2026-11-04 |
 | [ADR-0026](0026-ai-judgement-of-written-explanations.md) | AI Judgement of Written Explanations | **Accepted** (SPEC-18) | 2026-11-08 |

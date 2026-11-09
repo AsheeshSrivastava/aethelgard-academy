@@ -180,7 +180,8 @@ export function Home() {
             </h1>
             <p className="ld-lead">
               For career switchers from policy, operations and the social sector, and for students who want industry
-              skills. Every lesson grows one real system, from a pantry intake desk to a grounded AI service.
+              skills. Every lesson grows one real system, PantryFlow, from a food pantry's intake desk to a grounded AI
+              service.
             </p>
             <div className="actions">
               <Link to="/courses" className="button button-primary ld-button">
@@ -207,7 +208,7 @@ export function Home() {
           <figure className="card ld-spine" aria-label="The project spine: one system that grows through every course">
             <figcaption className="ld-spine-head">
               <span className="eyebrow ld-eyebrow">One project, every lesson</span>
-              <span className="ld-spine-title">One system grows with you</span>
+              <span className="ld-spine-title">PantryFlow grows with you</span>
             </figcaption>
             <ol className="ld-spine-nodes">
               {SPINE.map(([icon, name, where], index) => (
