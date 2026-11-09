@@ -189,7 +189,11 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
           <h2 id="explain-part-title" className="explain-part-title" ref={heading} tabIndex={-1}>
             {part.title}
           </h2>
-          {!sayItBack && <Prose wikiLinks>{part.body}</Prose>}
+          {!sayItBack && (
+            <Prose wikiLinks unitId={unit.unit_id}>
+              {part.body}
+            </Prose>
+          )}
           {sayItBack && (
             <>
       <form
@@ -228,13 +232,13 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
         <div className="explain-nav">
           {index > 0 && (
             <button type="button" className="button" onClick={() => go(index - 1)}>
-              <span aria-hidden="true">← </span>Part {index}: {parts[index - 1]!.title}
+              <span aria-hidden="true">←</span>Part {index}: {parts[index - 1]!.title}
             </button>
           )}
           {!sayItBack && (
             <button type="button" className="button button-primary explain-next" onClick={() => go(index + 1)}>
               Part {index + 2}: {parts[index + 1]!.title}
-              <span aria-hidden="true"> →</span>
+              <span aria-hidden="true">→</span>
             </button>
           )}
         </div>

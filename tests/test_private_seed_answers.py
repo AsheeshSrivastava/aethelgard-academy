@@ -177,3 +177,15 @@ def test_no_public_seed_file_holds_an_answer():
             leaks += [f"{path.relative_to(REPO)}: {field}" for field in PRIVATE_FIELDS & set(block)]
 
     assert leaks == []
+
+
+def test_no_public_lesson_holds_a_quick_check_answer():
+    """SPEC-19 section 3: a quickcheck block in lesson.md never holds `answer` or `why`."""
+    from lms.adapters.curriculum.quick_checks import parse_quick_checks
+
+    leaks = []
+    for path in sorted((REPO / "curriculum").glob("*/*/lesson.md")):
+        checks, _ = parse_quick_checks(path.read_text(encoding="utf-8"))
+        leaks += [f"{path.relative_to(REPO)}: {check.id} {field}" for check in checks for field in check.leaked]
+
+    assert leaks == []

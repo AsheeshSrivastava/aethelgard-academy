@@ -30,6 +30,7 @@ from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.builds import answers_dir_from_env
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
 from lms.adapters.curriculum.rubric import load_rubric
+from lms.adapters.curriculum.quick_checks import load_quick_check_key, parse_quick_checks
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
@@ -277,6 +278,19 @@ class ProgressUpdateRequest(BaseModel):
 class ExplainRequest(BaseModel):
     unit_id: str
     explanation: str
+
+
+class QuickCheckRequest(BaseModel):
+    """A learner's choice in a quick check (SPEC-19 section 4)."""
+
+    choice: str
+
+
+class QuickCheckResult(BaseModel):
+    """Right or not; the why only when right, so a wrong try does not reveal the answer."""
+
+    correct: bool
+    why: Optional[str] = None
 
 
 class ExplainResponse(AiJudgement):
@@ -1026,6 +1040,24 @@ def create_app(
         return response
 
     # --- CO-6 Concept Check & Mental Model Route ---
+    @app.post("/api/v1/units/{unit_id}/quick-checks/{check_id}", response_model=QuickCheckResult)
+    def check_quick_check(unit_id: str, check_id: str, payload: QuickCheckRequest):
+        """Mark a quick check in an Explain part (SPEC-19 section 4). Practice only: no evidence."""
+        unit = catalog.get_unit(unit_id.upper())
+        if unit is None:
+            return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
+        checks, _ = parse_quick_checks(unit.lesson_markdown or "")
+        quick_check = next((c for c in checks if c.id == check_id), None)
+        if quick_check is None:
+            return problem(404, "Quick check not found", f"{unit.unit_id} has no quick check '{check_id}'.")
+        if payload.choice not in quick_check.options:
+            return problem(422, "Not an option", f"Choose one of {', '.join(quick_check.options)}.")
+        key = load_quick_check_key(answers_dir_from_env(), unit.unit_id, check_id)
+        if key is None or key.answer not in quick_check.options:
+            return problem(503, "Quick check not available", "This quick check can't be marked here.")
+        correct = payload.choice == key.answer
+        return QuickCheckResult(correct=correct, why=key.why if correct else None)
+
     @app.post("/api/v1/explain", response_model=ExplainResponse)
     def evaluate_explanation(
         payload: ExplainRequest,

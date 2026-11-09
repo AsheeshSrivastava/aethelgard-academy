@@ -2,11 +2,12 @@ import { pythonLanguage } from "@codemirror/lang-python";
 import { classHighlighter, highlightCode } from "@lezer/highlight";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { api } from "../api/client";
+import { parseQuickCheck, parseSteps, QuickCheckBox, StepsFigure } from "./LessonBlocks";
 import { remarkWikiLinks } from "./wikiLinks";
 
 function highlightPython(code: string): ReactNode[] {
@@ -97,15 +98,47 @@ const onlyWebLinks = (url: string) => (/^https?:\/\//i.test(url) ? url : "");
 const PLUGINS = [remarkGfm];
 const PLUGINS_WITH_LINKS = [remarkGfm, remarkWikiLinks];
 
+/** The text inside a fenced block, and its language (`language-steps` and so on). */
+function fenced(children: ReactNode): { language: string; text: string } {
+  const element = children as ReactElement<{ className?: string; children?: ReactNode }>;
+  const language = /language-([\w-]+)/.exec(element?.props?.className ?? "")?.[1] ?? "";
+  return { language, text: String(element?.props?.children ?? "").replace(/\n$/, "") };
+}
+
+function textOf(node: unknown): string {
+  const item = node as { value?: string; children?: unknown[] };
+  return item.value ?? (item.children ?? []).map(textOf).join("");
+}
+
+/** Lesson-only blocks (SPEC-19): steps diagrams, quick checks and the key-idea box. */
+function lessonComponents(base: Components, unitId: string): Components {
+  return {
+    ...base,
+    pre: ({ children }) => {
+      const { language, text } = fenced(children);
+      if (language === "steps") {
+        const block = parseSteps(text);
+        if (block) return <StepsFigure block={block} />;
+      }
+      if (language === "quickcheck") {
+        const block = parseQuickCheck(text);
+        if (block) return <QuickCheckBox unitId={unitId} block={block} />;
+      }
+      return <CodeBlock>{children}</CodeBlock>;
+    },
+    blockquote: ({ node, children }) => (
+      <blockquote className={/^\s*Key idea:/.test(textOf(node)) ? "key-idea" : undefined}>{children}</blockquote>
+    ),
+  };
+}
+
 /** Curriculum text and AXIS replies. Raw HTML is shown as text, never run. */
-export function Prose({ children, wikiLinks = false }: { children: string; wikiLinks?: boolean }) {
+export function Prose({ children, wikiLinks = false, unitId }: { children: string; wikiLinks?: boolean; unitId?: string }) {
+  const base = wikiLinks ? withConceptLinks : components;
+  const chosen = useMemo(() => (unitId ? lessonComponents(base, unitId) : base), [base, unitId]);
   return (
     <div className="prose">
-      <Markdown
-        remarkPlugins={wikiLinks ? PLUGINS_WITH_LINKS : PLUGINS}
-        urlTransform={onlyWebLinks}
-        components={wikiLinks ? withConceptLinks : components}
-      >
+      <Markdown remarkPlugins={wikiLinks ? PLUGINS_WITH_LINKS : PLUGINS} urlTransform={onlyWebLinks} components={chosen}>
         {children}
       </Markdown>
     </div>

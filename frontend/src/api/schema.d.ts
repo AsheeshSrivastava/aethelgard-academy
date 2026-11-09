@@ -403,6 +403,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/units/{unit_id}/quick-checks/{check_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Quick Check
+         * @description Mark a quick check in an Explain part (SPEC-19 section 4). Practice only: no evidence.
+         */
+        post: operations["check_quick_check_api_v1_units__unit_id__quick_checks__check_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/explain": {
         parameters: {
             query?: never;
@@ -1624,6 +1644,24 @@ export interface components {
             /** Unit Id */
             unit_id: string;
         };
+        /**
+         * QuickCheckRequest
+         * @description A learner's choice in a quick check (SPEC-19 section 4).
+         */
+        QuickCheckRequest: {
+            /** Choice */
+            choice: string;
+        };
+        /**
+         * QuickCheckResult
+         * @description Right or not; the why only when right, so a wrong try does not reveal the answer.
+         */
+        QuickCheckResult: {
+            /** Correct */
+            correct: boolean;
+            /** Why */
+            why?: string | null;
+        };
         /** RequirementResult */
         RequirementResult: {
             /** Id */
@@ -2647,6 +2685,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AxisResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_quick_check_api_v1_units__unit_id__quick_checks__check_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unit_id: string;
+                check_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickCheckResult"];
                 };
             };
             /** @description Validation Error */

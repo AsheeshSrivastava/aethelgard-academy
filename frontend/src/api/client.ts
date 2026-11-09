@@ -87,6 +87,12 @@ export const api = {
   attempt: (attempt: Schemas["Attempt"]) => request<AttemptResult>("/learners/me/attempts", json("POST", attempt)),
   explain: (unitId: string, explanation: string) =>
     request<ExplainResponse>("/explain", json("POST", { unit_id: unitId, explanation })),
+  /** SPEC-19 section 4: practice only; the why comes back only for a right choice. */
+  quickCheck: (unitId: string, checkId: string, choice: string) =>
+    request<Schemas["QuickCheckResult"]>(
+      `/units/${encodeURIComponent(unitId)}/quick-checks/${encodeURIComponent(checkId)}`,
+      json("POST", { choice }),
+    ),
   disputeJudgement: (interactionId: string) =>
     request<void>(`/learners/me/judgements/${interactionId}:dispute`, { method: "POST" }),
   getDraft: (exerciseId: string) => request<Schemas["Draft"]>(`/learners/me/drafts/${exerciseId}`),

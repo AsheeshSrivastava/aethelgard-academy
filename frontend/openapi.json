@@ -979,6 +979,65 @@
         }
       }
     },
+    "/api/v1/units/{unit_id}/quick-checks/{check_id}": {
+      "post": {
+        "summary": "Check Quick Check",
+        "description": "Mark a quick check in an Explain part (SPEC-19 section 4). Practice only: no evidence.",
+        "operationId": "check_quick_check_api_v1_units__unit_id__quick_checks__check_id__post",
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Unit Id"
+            }
+          },
+          {
+            "name": "check_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Check Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickCheckResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/explain": {
       "post": {
         "summary": "Evaluate Explanation",
@@ -4432,6 +4491,45 @@
           "unit_id"
         ],
         "title": "PublicRequirement"
+      },
+      "QuickCheckRequest": {
+        "properties": {
+          "choice": {
+            "type": "string",
+            "title": "Choice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "choice"
+        ],
+        "title": "QuickCheckRequest",
+        "description": "A learner's choice in a quick check (SPEC-19 section 4)."
+      },
+      "QuickCheckResult": {
+        "properties": {
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "correct"
+        ],
+        "title": "QuickCheckResult",
+        "description": "Right or not; the why only when right, so a wrong try does not reveal the answer."
       },
       "RequirementResult": {
         "properties": {
