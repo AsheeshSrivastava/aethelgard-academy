@@ -84,7 +84,22 @@ def test_the_first_line_the_script_did_not_print_is_named():
     result = run_check({"checkin.py": SCRIPT, "README.md": readme("Name: ada\nHello\nName: ADA\nBye")})
 
     assert result.met is False
-    assert result.detail == "Your script did not print: `Name: ADA`"
+    assert result.detail == "Your script did not print: `Name: ADA`. If you pasted more than one run, keep just one."
+
+
+def test_two_pasted_runs_get_a_friendly_one_run_hint():
+    """Owner 1A (2026-11-09): one run only; a second run fails with a plain hint."""
+    two = GOOD_RUN + "\n\nName: bo\nHello\nName: Bo\nBye"
+    result = run_check({"checkin.py": SCRIPT, "README.md": readme(two)})
+
+    assert result.met is False
+    assert result.detail.endswith("If you pasted more than one run, keep just one.")
+
+
+def test_a_missing_line_that_is_not_like_a_prompt_gets_no_hint():
+    result = run_check({"checkin.py": SCRIPT, "README.md": readme("Name: ada\nHello\nName: Ada\nGoodbye")})
+
+    assert result.detail == "Your script did not print: `Goodbye`"
 
 
 def test_lines_must_come_in_order():

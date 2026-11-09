@@ -401,6 +401,9 @@ def _readme_sample_run(
         return False, "The script stopped before the sample run finished."
     missing = _first_missing_line(result.stdout, expected, prompts)
     if missing is not None:
+        # A line that starts like a prompt is often the typing of a second pasted run (owner 1A, 2026-11-09).
+        if any(missing.startswith(p.rstrip()) for p in prompts):
+            return False, f"Your script did not print: `{missing}`. If you pasted more than one run, keep just one."
         return False, f"Your script did not print: `{missing}`"
     return True, None
 

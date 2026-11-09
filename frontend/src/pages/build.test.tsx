@@ -140,24 +140,19 @@ describe("the page", () => {
     expect(screen.getByLabelText("README.md code")).toHaveAttribute("data-language", "text");
   });
 
-  it("asks AXIS about the README without counting it against the build (ADR-0024)", async () => {
-    const reply = () =>
-      new Response('event: token\ndata: {"text":"Who reads it first?"}\n\nevent: done\ndata: {}\n\n', {
-        status: 200,
-        headers: { "content-type": "text/event-stream" },
-      });
-    const calls = stubApi(routes({ "POST /api/v1/axis/stream": reply }));
+  it("has no Socratic README button any more (owner 2B, ADR-0028)", async () => {
+    stubApi(routes());
     renderAt(PATH);
 
     const axis = await screen.findByRole("complementary", { name: "AXIS facilitator" });
-    await userEvent.click(within(axis).getByRole("button", { name: "Ask AXIS about my README" }));
+    expect(within(axis).queryByRole("button", { name: /about my README/i })).not.toBeInTheDocument();
+  });
 
-    expect(await within(axis).findByText("Who reads it first?")).toBeInTheDocument();
-    const body = JSON.parse(calls.find((c) => c.url.endsWith("/axis/stream"))!.body!) as Record<string, unknown>;
-    expect(body.learner_code).toBe("# Readme");
-    expect(body.mode).toBe("Socratic");
-    expect(body.page).toBe("build-readme");
-    expect(body.exercise_id).toBeUndefined();
+  it("asks for one real run in the README checklist (owner 1A)", async () => {
+    stubApi(routes());
+    renderAt(PATH);
+
+    expect(await screen.findByText(/Paste one real run/)).toBeInTheDocument();
   });
 
   it("shows AXIS in Socratic only", async () => {

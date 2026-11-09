@@ -20,17 +20,6 @@ const README_POINTS = ["What it does", "What you need first", "How to run it", "
 const isPython = (path: string) => path.endsWith(".py");
 const CHECK_WAIT_MS = 400;
 
-/** Ungraded writing feedback on the README (ADR-0024): Socratic, never counted as help on the build. */
-function readmeFeedback(getText: () => string) {
-  return {
-    label: "Ask AXIS about my README",
-    page: "build-readme",
-    prompt:
-      "Give feedback on my README for this build. Do not rewrite it. Ask me questions about what a new reader " +
-      "would not understand, and point to any section that is thin or unclear.",
-    getText,
-  };
-}
 const SAVE_WAIT_MS = 800;
 
 type Files = Record<string, string>;
@@ -96,7 +85,7 @@ function ReadmeChecklist({ checked, review, onReview }: { checked: Checked; revi
           </li>
         ))}
       </ul>
-      <p className="small muted">The sample run is checked when you press Verify.</p>
+      <p className="small muted">Paste one real run: what you typed and what it printed. It is checked when you press Verify.</p>
       <div className="field">
         <label htmlFor="review-note">README review note</label>
         <span id="review-hint" className="small muted">
@@ -459,7 +448,6 @@ function Workspace({
             exerciseId={build.exercise_id}
             getCode={getCode}
             socraticOnly
-            feedback={readmePath ? readmeFeedback(() => files[readmePath] ?? "") : undefined}
           />
           <section className="card panel" aria-labelledby="build-proves">
             <h2 id="build-proves" className="eyebrow">

@@ -65,7 +65,7 @@ Every check is deterministic. All of them live on the server, so the browser nev
 
 `behaviour` is the only kind that runs code. A check that reads the code reports not met, with a plain detail, if the file has a syntax error.
 
-**Writing feedback (ADR-0024).** Beside the README, the build page offers "Ask AXIS about my README". AXIS reads the README and the brief and answers in Socratic mode: questions and pointers, never rewritten text. It is ungraded: it never changes a requirement, writes no evidence, and is logged like any AXIS consult.
+**Writing feedback.** The Socratic "Ask AXIS about my README" button (ADR-0024 section 2.2) was removed on 2026-11-09 (owner, option 2B; superseded by ADR-0028). Data-based README feedback will add a new entry point in work sequence 2d.5.
 
 ### 2.3 A behaviour check cannot be skipped
 
@@ -217,6 +217,7 @@ Fields: `path` (the README), `heading` (`A sample run`). Met when:
 3. At least one typed line and one output line. Otherwise: not met, with a plain detail.
 4. The entry file runs in the sandbox with the typed values as stdin, one per line. Each expected output line, trimmed, must appear in the captured stdout in the same order (prompts are printed without a newline when stdin is piped, so stdout is split on prompts as well as newlines). The first missing line is named in the detail: "Your script did not print: `<line>`".
 5. A run error or timeout: not met, "The script stopped before the sample run finished."
+6. **One run only (owner, option 1A, 2026-11-09).** The section holds one run. When the first missing line starts with one of the prompts, which is how the typing of a second pasted run looks, the detail adds: "If you pasted more than one run, keep just one." The README checklist panel says: "Paste one real run: what you typed and what it printed."
 
 This is generic, public logic: it reveals no answer, so it lives in the public code, not in `checks.py`.
 
@@ -250,7 +251,7 @@ A stage of a roadmap with no build by design has no build tile: today the Techni
 
 ### 9.7 Not in this step
 
-AXIS data-based feedback on the README and the review note (work sequence 2d.5; the existing "Ask AXIS about my README" stays until then), a README item type and an AXIS-judged Direct item for TW units.
+AXIS data-based feedback on the README and the review note (work sequence 2d.5, with a new entry point on the build page; the old Socratic README button was removed on 2026-11-09), a README item type and an AXIS-judged Direct item for TW units.
 
 ---
 
