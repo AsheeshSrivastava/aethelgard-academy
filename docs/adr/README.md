@@ -10,7 +10,7 @@
 | [ADR-0006](0006-hybrid-workspace-and-local-cli.md) | Hybrid Learner Workspace: Local CLI with Zed / VS Code + Cloud Sandbox Fallback | **Accepted** | 2026-10-30 |
 | [ADR-0007](0007-document-loaders-and-inspection-gate.md) | Document Loaders, Format Normalization, and the Inspection Gate | **Accepted** | 2026-10-30 |
 | [ADR-0008](0008-curriculum-lesson-packages-and-overlay-loader.md) | Modular Curriculum Lesson Packages and Overlay Loader | **Accepted** | 2026-10-30 |
-| [ADR-0009](0009-socratic-boundary-and-assistance-accounting.md) | Socratic Boundary Guardrails and Assistance Accounting | **Accepted** | 2026-10-30 |
+| [ADR-0009](0009-socratic-boundary-and-assistance-accounting.md) | Socratic Boundary Guardrails and Assistance Accounting | **Accepted** (amended by ADR-0028) | 2026-10-30 |
 | [ADR-0010](0010-local-first-llm-facilitation-and-deterministic-telemetry.md) | Deterministic Telemetry, Andragogical Facilitation, and Local-First AI Stack | **Accepted** | 2026-10-30 |
 | [ADR-0011](0011-rag-chunking-and-hybrid-reranking-pipeline.md) | RAG Chunking, Hybrid Retrieval, and Cross-Encoder Reranking | **Accepted** | 2026-10-30 |
 | [ADR-0012](0012-persistent-rag-artifacts-and-upstream-indexer.md) | Persistent RAG Artifacts & Upstream Documentation Indexer | **Accepted** | 2026-10-30 |
@@ -25,7 +25,8 @@
 | [ADR-0021](0021-private-answer-material.md) | Private Answer Material | **Proposed** | 2026-11-03 |
 | [ADR-0022](0022-interaction-log.md) | Interaction Log and Cold Check Feedback | **Proposed** | 2026-11-04 |
 | [ADR-0023](0023-pantryflow-case-study.md) | One Case Study for the Whole Path (PantryFlow) | **Proposed** | 2026-11-04 |
-| [ADR-0024](0024-writing-feedback-on-build-documents.md) | Writing Feedback on Build Documents | **Proposed** | 2026-11-04 |
+| [ADR-0024](0024-writing-feedback-on-build-documents.md) | Writing Feedback on Build Documents | **Proposed** (sections 2.2, 2.4 superseded by ADR-0028) | 2026-11-04 |
 | [ADR-0025](0025-model-provider-profiles.md) | Model Provider Profiles and a Settings Page | **Accepted**, built (SPEC-17) | 2026-11-04 |
 | [ADR-0026](0026-ai-judgement-of-written-explanations.md) | AI Judgement of Written Explanations | **Accepted** (SPEC-18) | 2026-11-08 |
 | [ADR-0027](0027-learner-facing-term-module.md) | Learner-facing term: Module (code keeps stage) | **Accepted** | 2026-11-08 |
+| [ADR-0028](0028-ai-drafted-documents-learner-review-as-evidence.md) | AI-drafted documents, learner review as evidence | **Accepted** | 2026-11-09 |

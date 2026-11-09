@@ -90,6 +90,7 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
 - **The Soft Gate:** Concept checks (`CO-6`) evaluate mental models into `Solid` or `Shaky`. Shaky explanations record a warning but **never hard-block** the learner from progressing.
 - **Socratic Boundary:** In Socratic mode, AXIS AI is strictly forbidden from generating direct code solutions. It must ask guiding questions that prompt the learner to inspect their own logic.
 - **Assistance Accounting:** Looking up syntax or docs is not disqualifying. However, if AI supplies the reasoning path, the evidence entry is tagged as `supplied_reasoning` and routes to `STRENGTHEN` (targeted practice) rather than full progression.
+- **Documents (Amendment A2, ADR-0028):** for READMEs, ADRs and specs, AI drafting is expected and the learner's review is the evidence (checklist + review note); a document draft is not `supplied_reasoning`. Code is unchanged: learners write it, AXIS stays Socratic on it.
 
 ### Architecture and Implementation Order
 

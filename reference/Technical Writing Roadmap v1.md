@@ -4,7 +4,7 @@ created-date: 2026-11-08
 status: scope-approved
 approved-date: 2026-11-08
 version: "1.0"
-governed-by: "AI-Era Programming Skills Framework v1 (27 skills); Learning Method v2 with Amendment A1 (2026-10-31)"
+governed-by: "AI-Era Programming Skills Framework v1 (27 skills); Learning Method v2 with Amendments A1 (2026-10-31) and A2 (2026-11-09)"
 roadmap-role: "Supporting roadmap, slotted into the Python path"
 ai-involvement: collaborative
 ai-provider: Claude
@@ -158,5 +158,5 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 
 1. **Scope and placement** approved by Asheesh on 2026-11-08: name Technical Writing (TW); three stages of two units; the README stage is recommended, not required (adult learning principles); learners see "Module" (ADR-0027).
 2. **Wording still to review:** target skills, levels, concept and outcome lines.
-3. **Documents and AI (later step):** for documents, AI drafting is expected and the learner's review is the evidence (Learning Method Amendment A2 and a new ADR, not yet written). Cold Checks still use no AI; exact keys wherever possible. Keys go in the private answers repo (ADR-0021).
+3. **Documents and AI:** for documents, AI drafting is expected and the learner's review is the evidence (Learning Method v2 Amendment A2, ADR-0028). Cold Checks still use no AI; exact keys wherever possible. Keys go in the private answers repo (ADR-0021).
 4. **Stage builds:** no separate builds; the documents attach to the Python stage builds named above.

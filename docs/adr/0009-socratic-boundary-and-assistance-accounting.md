@@ -1,6 +1,6 @@
 # ADR-0009: Socratic Boundary Guardrails and Assistance Accounting
 
-- **Status:** Accepted
+- **Status:** Accepted. **Amended by ADR-0028** (2026-11-09): an AI draft of a document (README, ADR, spec) is recorded as a document draft, not supplied reasoning; code is unchanged.
 - **Date:** 2026-10-30
 - **Deciders:** Asheesh Ranjan Srivastava (Platform Architect & Owner), AI Systems Architect
 

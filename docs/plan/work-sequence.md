@@ -59,7 +59,7 @@ Decided 2026-11-04: keys stay in `.env` for now; Gemini gets its own adapter (Go
 Scope approved 2026-11-08: `docs/proposals/technical-writing-course-2026-11-08.md`.
 
 - [x] 2d.1 Roadmap file `reference/Technical Writing Roadmap v1.md`, slotted into the Python path (TW 0, 1, 2). (NOTHING, then APPROVE the wording) Done 2026-11-08.
-- [ ] 2d.2 Learning Method Amendment A2 and its ADR: for documents, AI drafting is expected and the review is the evidence. Settle ADR-0024 sections 2.2 and 2.4 here. (APPROVE)
+- [x] 2d.2 Learning Method Amendment A2 and its ADR: for documents, AI drafting is expected and the review is the evidence. Settle ADR-0024 sections 2.2 and 2.4 here. (APPROVE) Done 2026-11-09: `reference/Learning Method v2 Amendment A2.md`, ADR-0028 (supersedes ADR-0024 sections 2.2 and 2.4, amends ADR-0009).
 - [ ] 2d.3 TW-0.1 and TW-0.2 content; keys in the private answers repo. (APPROVE)
 - [ ] 2d.4 Stage 0 build change: "Learn it in TW Module 0" button, "Draft my README", checklist panel, review note, stronger Verify. (NOTHING, then TEST)
 - [ ] 2d.5 AXIS data-based build feedback, point by point, no Socratic questions. (NOTHING, then TEST)
