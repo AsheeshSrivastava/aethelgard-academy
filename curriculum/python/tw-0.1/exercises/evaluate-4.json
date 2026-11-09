@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/evaluate-4",
+  "unit_id": "TW-0.1",
+  "activity": "Evaluate",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "a good README beside a weak one",
+  "prompt_markdown": [
+    "Two READMEs for the same script, `slot.py`.",
+    "",
+    "Which statement is true?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "material": [
+      "README A",
+      "  What it does: prints a collection time slip for one family.",
+      "  What you need first: Python 3.12 or newer, and uv installed.",
+      "  How to run it: uv run slot.py",
+      "  Sample run: Name: ana lopez / Time: 10:30 / Ana Lopez - collection at 10:30",
+      "  Limits: one slip per run; it does not check the time is free.",
+      "",
+      "README B",
+      "  What it does: prints a collection time slip.",
+      "  What you need first: Python 3.12 or newer, and uv installed.",
+      "  How to run it: uv run slot.py"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "Both meet all five points."
+      },
+      {
+        "key": "B",
+        "text": "A meets all five points; B misses the sample run and the limits."
+      },
+      {
+        "key": "C",
+        "text": "B is better because it is shorter."
+      },
+      {
+        "key": "D",
+        "text": "A misses the limits; B misses nothing."
+      }
+    ]
+  }
+}

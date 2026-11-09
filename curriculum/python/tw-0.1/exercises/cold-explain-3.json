@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/cold-explain-3",
+  "unit_id": "TW-0.1",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Understand",
+  "topic": "the five checklist points",
+  "prompt_markdown": [
+    "One sentence about the sample run is wrong. Which one?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "A sample run is evidence; ask where it should come from.",
+  "hint_approved": false,
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "A sample run shows what to type when the script asks."
+      },
+      {
+        "key": "B",
+        "text": "It shows the output the reader should expect to see."
+      },
+      {
+        "key": "C",
+        "text": "It can be made up, as long as it looks realistic."
+      },
+      {
+        "key": "D",
+        "text": "It lets a reader check their own run against the README."
+      }
+    ]
+  }
+}

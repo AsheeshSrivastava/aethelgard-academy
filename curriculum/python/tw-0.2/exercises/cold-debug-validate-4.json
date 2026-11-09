@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/cold-debug-validate-4",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "missing setup steps",
+  "prompt_markdown": [
+    "This is `queue.py`. An AI drafted the README at the top, between the triple quotes. It has exactly **3 mistakes**.",
+    "",
+    "Run the script, compare what really happens with what the README claims, and fix the README.",
+    "Fix the README only: leave the code below it as it is."
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Run the README's command and its sample input yourself, and check every install step a fresh computer would need.",
+  "hint_approved": false,
+  "debug": {
+    "broken_code": [
+      "\"\"\"README (drafted by AI) - queue.py",
+      "",
+      "What it does: prints a queue ticket for one person.",
+      "What you need first: Python 3.12 or newer.",
+      "How to run it: uv run ticket.py",
+      "Sample run:",
+      "  Name: sara ali",
+      "  Number: 12",
+      "  TICKET #12 - Sara Ali",
+      "Limits: one ticket per run; it does not check the number is free.",
+      "\"\"\"",
+      "",
+      "name = input(\"Name: \")",
+      "number = input(\"Number: \")",
+      "print(f\"TICKET {number.strip()} - {name.strip().title()}\")"
+    ],
+    "stdin": "sara ali\n12"
+  }
+}

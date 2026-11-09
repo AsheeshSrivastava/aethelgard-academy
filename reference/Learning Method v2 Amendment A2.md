@@ -12,7 +12,7 @@ tags:
 ---
 
 > [!info] Provenance
-> AI-drafted with Claude on 2026-11-09 at Asheesh's direction. **Asheesh approved the rule on 2026-11-08** as part of the Technical Writing course scope (`docs/proposals/technical-writing-course-2026-11-08.md`). The wording below is new and not yet reviewed by Asheesh. Learning Method v2 and Amendment A1 are unchanged, including the skill-to-activity table, which the app reads. How the app applies this rule is decided in ADR-0028.
+> AI-drafted with Claude on 2026-11-09 at Asheesh's direction. **Asheesh approved the rule on 2026-11-08** as part of the Technical Writing course scope (`docs/proposals/technical-writing-course-2026-11-08.md`). Asheesh read the wording on 2026-11-09 and said "go". Learning Method v2 and Amendment A1 are unchanged, including the skill-to-activity table, which the app reads. How the app applies this rule is decided in ADR-0028.
 
 # Learning Method v2 Amendment A2
 

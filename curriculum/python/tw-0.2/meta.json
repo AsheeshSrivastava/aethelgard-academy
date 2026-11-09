@@ -1,0 +1,34 @@
+{
+  "unit_id": "TW-0.2",
+  "title": "Reviewing an AI-drafted README",
+  "media": [
+    {
+      "media_id": "vid-tw-0.2-walkthrough",
+      "kind": "video",
+      "title": "Lesson Walkthrough: Reviewing an AI-Drafted README (placeholder, video to come)",
+      "url": "https://cdn.example.org/videos/tw-0.2-reviewing-an-ai-readme.mp4",
+      "duration_seconds": 360,
+      "timestamps": [
+        {
+          "time": "00:00",
+          "topic": "Why an AI draft reads well whether or not it is true"
+        },
+        {
+          "time": "01:30",
+          "topic": "Run what it claims: the command and the sample run"
+        },
+        {
+          "time": "03:15",
+          "topic": "The setup step nobody wrote down"
+        },
+        {
+          "time": "04:30",
+          "topic": "Asking AXIS for a draft, then fixing it"
+        }
+      ]
+    }
+  ],
+  "concept_check": {
+    "prompt": "Explain in your own words why you must run the script before you trust a README that an AI drafted for it."
+  }
+}

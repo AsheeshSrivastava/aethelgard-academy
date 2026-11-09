@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/evaluate-6",
+  "unit_id": "TW-0.1",
+  "activity": "Evaluate",
+  "skill_id": "CO-4",
+  "level": "Understand",
+  "topic": "the five checklist points",
+  "prompt_markdown": [
+    "A README's Limits point says: \"One label per run; it does not check that the shelf exists.\"",
+    "",
+    "What is this point for?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "It tells a reader what not to rely on before they use the script."
+      },
+      {
+        "key": "B",
+        "text": "It apologises for the code."
+      },
+      {
+        "key": "C",
+        "text": "It lists bugs the author will fix next."
+      },
+      {
+        "key": "D",
+        "text": "It is optional decoration and can be left out."
+      }
+    ]
+  }
+}

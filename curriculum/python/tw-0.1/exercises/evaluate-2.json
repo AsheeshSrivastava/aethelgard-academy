@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/evaluate-2",
+  "unit_id": "TW-0.1",
+  "activity": "Evaluate",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "marking what is missing",
+  "prompt_markdown": [
+    "Read this README for `tally.py`.",
+    "",
+    "Which checklist point does this README miss?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "material": [
+      "What it does: adds up the tins counted at two tables.",
+      "How to run it: uv run tally.py",
+      "Sample run:",
+      "  Table 1 tins: 14",
+      "  Table 2 tins: 9",
+      "  Total tins: 23",
+      "Limits: whole numbers only; it does not save the total."
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "What it does"
+      },
+      {
+        "key": "B",
+        "text": "What you need first"
+      },
+      {
+        "key": "C",
+        "text": "How to run it (the exact command)"
+      },
+      {
+        "key": "D",
+        "text": "A sample run (real input and real output)"
+      },
+      {
+        "key": "E",
+        "text": "Limits"
+      }
+    ]
+  }
+}

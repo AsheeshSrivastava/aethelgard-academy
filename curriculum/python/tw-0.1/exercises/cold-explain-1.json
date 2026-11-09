@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/cold-explain-1",
+  "unit_id": "TW-0.1",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Understand",
+  "topic": "the five checklist points",
+  "prompt_markdown": [
+    "One sentence in this explanation of a README is wrong. Which one?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Think about what a stranger does with the run command: they copy it exactly.",
+  "hint_approved": false,
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "A README tells a new reader what the script does."
+      },
+      {
+        "key": "B",
+        "text": "It says what to install first, such as Python and uv."
+      },
+      {
+        "key": "C",
+        "text": "Its run command can be approximate, because readers will work out the real one."
+      },
+      {
+        "key": "D",
+        "text": "Its sample run shows real input and the output the script really prints."
+      }
+    ]
+  }
+}

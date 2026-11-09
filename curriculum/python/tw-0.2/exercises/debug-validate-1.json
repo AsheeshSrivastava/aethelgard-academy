@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/debug-validate-1",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "running the command the README gives",
+  "prompt_markdown": [
+    "This is `label.py`. An AI drafted the README at the top, between the triple quotes. It has exactly **3 mistakes**.",
+    "",
+    "Run the script, compare what really happens with what the README claims, and fix the README.",
+    "Fix the README only: leave the code below it as it is."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "debug": {
+    "broken_code": [
+      "\"\"\"README (drafted by AI) - label.py",
+      "",
+      "What it does: prints a shelf label for one donated item.",
+      "What you need first: Python 3.12 or newer.",
+      "How to run it: uv run labels.py",
+      "Sample run:",
+      "  Item: rice",
+      "  Shelf: b2",
+      "  LABEL: RICE | SHELF b2",
+      "Limits: one label per run; it does not check that the shelf exists.",
+      "\"\"\"",
+      "",
+      "item = input(\"Item: \")",
+      "shelf = input(\"Shelf: \")",
+      "print(f\"LABEL: {item.strip().title()} | SHELF {shelf.strip().upper()}\")"
+    ],
+    "stdin": "rice\nb2"
+  }
+}

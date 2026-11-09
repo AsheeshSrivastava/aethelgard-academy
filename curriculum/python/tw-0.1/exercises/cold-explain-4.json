@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/cold-explain-4",
+  "unit_id": "TW-0.1",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Understand",
+  "topic": "who reads a README and when",
+  "prompt_markdown": [
+    "A new volunteer opens the pantry folder and finds `crate.py` with a README beside it.",
+    "",
+    "Which picture of the README is right?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Picture someone who has never seen the code. What do they read first, and why?",
+  "hint_approved": false,
+  "explain_model_choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "The README is where they learn what the script does and how to run it, before reading any code."
+      },
+      {
+        "key": "B",
+        "text": "They should read the code first; a README only repeats it."
+      },
+      {
+        "key": "C",
+        "text": "The README is only useful to the person who wrote the script."
+      },
+      {
+        "key": "D",
+        "text": "The README is a formality that tools require."
+      }
+    ]
+  }
+}

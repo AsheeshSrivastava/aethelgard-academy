@@ -1,6 +1,6 @@
 # ADR 0028: AI-drafted documents, learner review as evidence
 
-- **Status:** Accepted (2026-11-09) by the owner (rule approved 2026-11-08 in the Technical Writing scope; "go" for this step 2026-11-09).
+- **Status:** Accepted (2026-11-09) by the owner (rule approved 2026-11-08 in the Technical Writing scope; "go" for this step 2026-11-09; wording read by the owner 2026-11-09).
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-09
 - **Governed by:** Learning Method v2 Amendment A2; ADR-0009 (Socratic boundary, assistance accounting); ADR-0024 (writing feedback); ADR-0026 (AI judgement); ADR-0027 (learner term "Module")

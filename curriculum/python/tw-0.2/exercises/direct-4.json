@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/direct-4",
+  "unit_id": "TW-0.2",
+  "activity": "Direct",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "asking AXIS for a draft and fixing it",
+  "prompt_markdown": [
+    "AXIS's draft has no Limits point.",
+    "",
+    "What is the best next step?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Leave it out; a README without limits looks more confident."
+      },
+      {
+        "key": "B",
+        "text": "Add a Limits point, and check each limit is true by reading or running the code."
+      },
+      {
+        "key": "C",
+        "text": "Write \"No limits\" so the point is there."
+      },
+      {
+        "key": "D",
+        "text": "Ask AXIS to list every possible bug."
+      }
+    ]
+  }
+}

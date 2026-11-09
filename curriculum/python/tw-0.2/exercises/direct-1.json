@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/direct-1",
+  "unit_id": "TW-0.2",
+  "activity": "Direct",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "asking AXIS for a draft and fixing it",
+  "prompt_markdown": [
+    "You want AXIS to draft a README for `label.py` that you can check.",
+    "",
+    "Which request is best?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Write a README."
+      },
+      {
+        "key": "B",
+        "text": "Draft a README for label.py with these five points: what it does, what you need first, how to run it, a sample run, limits. I run it with uv run label.py. Here is one real run I copied: Item: rice / Shelf: b2 / LABEL: Rice | SHELF B2."
+      },
+      {
+        "key": "C",
+        "text": "Write a long, professional README that will impress reviewers."
+      },
+      {
+        "key": "D",
+        "text": "Fix my README."
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/evaluate-3",
+  "unit_id": "TW-0.1",
+  "activity": "Evaluate",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "the five checklist points",
+  "prompt_markdown": [
+    "Read this README for `badge.py`.",
+    "",
+    "Which checklist point is present but **not met**?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "material": [
+      "What it does: prints a volunteer badge.",
+      "What you need first: Python 3.12 or newer, and uv installed.",
+      "How to run it: run the file the usual way.",
+      "Sample run:",
+      "  Name: amara okafor",
+      "  VOLUNTEER: Amara Okafor",
+      "Limits: one badge per run."
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "What it does"
+      },
+      {
+        "key": "B",
+        "text": "What you need first"
+      },
+      {
+        "key": "C",
+        "text": "How to run it (the exact command)"
+      },
+      {
+        "key": "D",
+        "text": "A sample run (real input and real output)"
+      },
+      {
+        "key": "E",
+        "text": "Limits"
+      }
+    ]
+  }
+}

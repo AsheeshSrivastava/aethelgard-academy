@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/debug-validate-2",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "comparing the sample run with real output",
+  "prompt_markdown": [
+    "This is `badge.py`. An AI drafted the README at the top, between the triple quotes. It has exactly **3 mistakes**.",
+    "",
+    "Run the script, compare what really happens with what the README claims, and fix the README.",
+    "Fix the README only: leave the code below it as it is."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "debug": {
+    "broken_code": [
+      "\"\"\"README (drafted by AI) - badge.py",
+      "",
+      "What it does: prints a badge for one volunteer.",
+      "What you need first: Python 3.12 or newer.",
+      "How to run it: uv run badge",
+      "Sample run:",
+      "  Name: amara okafor",
+      "  Role: Sorting",
+      "  VOLUNTEER: Amara Okafor (Sorting)",
+      "Limits: one badge per run; it does not check the role is a real one.",
+      "\"\"\"",
+      "",
+      "name = input(\"Name: \")",
+      "role = input(\"Role: \")",
+      "print(f\"VOLUNTEER: {name.strip().title()} ({role.strip().lower()})\")"
+    ],
+    "stdin": "amara okafor\nSorting"
+  }
+}

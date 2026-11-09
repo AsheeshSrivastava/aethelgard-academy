@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/cold-debug-validate-3",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "running the command the README gives",
+  "prompt_markdown": [
+    "This is `crate.py`. An AI drafted the README at the top, between the triple quotes. It has exactly **3 mistakes**.",
+    "",
+    "Run the script, compare what really happens with what the README claims, and fix the README.",
+    "Fix the README only: leave the code below it as it is."
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Run the README's command and its sample input yourself, and check every install step a fresh computer would need.",
+  "hint_approved": false,
+  "debug": {
+    "broken_code": [
+      "\"\"\"README (drafted by AI) - crate.py",
+      "",
+      "What it does: prints where one crate goes.",
+      "What you need first: Python 3.12 or newer.",
+      "How to run it: uv run crates.py",
+      "Sample run:",
+      "  Crate: c7",
+      "  Zone: north",
+      "  CRATE c7 GOES TO ZONE North",
+      "Limits: one crate per run; it does not check the zone exists.",
+      "\"\"\"",
+      "",
+      "crate = input(\"Crate: \")",
+      "zone = input(\"Zone: \")",
+      "print(f\"CRATE {crate.strip().upper()} GOES TO ZONE {zone.strip().upper()}\")"
+    ],
+    "stdin": "c7\nnorth"
+  }
+}

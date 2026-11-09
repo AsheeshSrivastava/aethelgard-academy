@@ -1,0 +1,30 @@
+{
+  "unit_id": "TW-0.1",
+  "title": "What a README is for",
+  "media": [
+    {
+      "media_id": "vid-tw-0.1-walkthrough",
+      "kind": "video",
+      "title": "Lesson Walkthrough: What a README Is For (placeholder, video to come)",
+      "url": "https://cdn.example.org/videos/tw-0.1-what-a-readme-is-for.mp4",
+      "duration_seconds": 300,
+      "timestamps": [
+        {
+          "time": "00:00",
+          "topic": "Who opens your script first, and what they need"
+        },
+        {
+          "time": "01:15",
+          "topic": "The five checklist points"
+        },
+        {
+          "time": "03:00",
+          "topic": "A good README beside a weak one"
+        }
+      ]
+    }
+  ],
+  "concept_check": {
+    "prompt": "Explain in your own words what a README must tell someone who has never seen your script, and why the run command has to be the exact one."
+  }
+}

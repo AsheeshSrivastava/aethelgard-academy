@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/cold-explain-2",
+  "unit_id": "TW-0.1",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Understand",
+  "topic": "who reads a README and when",
+  "prompt_markdown": [
+    "One sentence in this explanation is wrong. Which one?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Ask who opens the README and what they are trying to do.",
+  "hint_approved": false,
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "The first reader of a README is often its own author, weeks later."
+      },
+      {
+        "key": "B",
+        "text": "A README is mainly there to impress reviewers, so longer is always better."
+      },
+      {
+        "key": "C",
+        "text": "A volunteer should be able to run the script from the README alone."
+      },
+      {
+        "key": "D",
+        "text": "A README is read before the code, not after it."
+      }
+    ]
+  }
+}

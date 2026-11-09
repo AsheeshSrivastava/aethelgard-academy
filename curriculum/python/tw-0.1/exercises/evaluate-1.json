@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/evaluate-1",
+  "unit_id": "TW-0.1",
+  "activity": "Evaluate",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "marking what is missing",
+  "prompt_markdown": [
+    "Read this README for `reminder.py`.",
+    "",
+    "Which checklist point does this README miss?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "material": [
+      "What it does: prints a pickup reminder for one family.",
+      "What you need first: Python 3.12 or newer, and uv installed.",
+      "How to run it: uv run reminder.py",
+      "Limits: one reminder per run; it does not send anything, it only prints."
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "What it does"
+      },
+      {
+        "key": "B",
+        "text": "What you need first"
+      },
+      {
+        "key": "C",
+        "text": "How to run it (the exact command)"
+      },
+      {
+        "key": "D",
+        "text": "A sample run (real input and real output)"
+      },
+      {
+        "key": "E",
+        "text": "Limits"
+      }
+    ]
+  }
+}

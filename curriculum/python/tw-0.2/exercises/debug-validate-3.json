@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/debug-validate-3",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "missing setup steps",
+  "prompt_markdown": [
+    "This is `reminder.py`. An AI drafted the README at the top, between the triple quotes. It has exactly **3 mistakes**.",
+    "",
+    "Run the script, compare what really happens with what the README claims, and fix the README.",
+    "Fix the README only: leave the code below it as it is."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "debug": {
+    "broken_code": [
+      "\"\"\"README (drafted by AI) - reminder.py",
+      "",
+      "What it does: prints a pickup reminder for one family.",
+      "What you need first: Python 3.12 or newer.",
+      "How to run it: uv run main.py",
+      "Sample run:",
+      "  Name: kofi",
+      "  Day: friday",
+      "  Hi Kofi, your pickup is on friday.",
+      "Limits: one reminder per run; it only prints, it does not send a message.",
+      "\"\"\"",
+      "",
+      "name = input(\"Name: \")",
+      "day = input(\"Day: \")",
+      "print(f\"Hi {name.strip().title()}, your pickup is on {day.strip().title()}.\")"
+    ],
+    "stdin": "kofi\nfriday"
+  }
+}

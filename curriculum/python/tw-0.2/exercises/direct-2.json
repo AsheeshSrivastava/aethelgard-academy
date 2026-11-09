@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/direct-2",
+  "unit_id": "TW-0.2",
+  "activity": "Direct",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "running the command the README gives",
+  "prompt_markdown": [
+    "AXIS's draft says: \"How to run it: python label.py\". You always run it with `uv run label.py`.",
+    "",
+    "What do you do?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Keep it; AXIS knows more about Python than you do."
+      },
+      {
+        "key": "B",
+        "text": "Run the command you actually use to be sure it works, then put that exact command in the README."
+      },
+      {
+        "key": "C",
+        "text": "Delete the How to run it point, since it might be wrong."
+      },
+      {
+        "key": "D",
+        "text": "Ask AXIS again until it gives a different answer."
+      }
+    ]
+  }
+}

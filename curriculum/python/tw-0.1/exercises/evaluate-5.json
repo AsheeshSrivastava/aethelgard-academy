@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/evaluate-5",
+  "unit_id": "TW-0.1",
+  "activity": "Evaluate",
+  "skill_id": "CO-4",
+  "level": "Understand",
+  "topic": "who reads a README and when",
+  "prompt_markdown": [
+    "Who is a README written for first?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Someone who has never seen the script, including you in a month."
+      },
+      {
+        "key": "B",
+        "text": "The computer, so the script runs faster."
+      },
+      {
+        "key": "C",
+        "text": "Only the person who wrote the code."
+      },
+      {
+        "key": "D",
+        "text": "A reviewer who wants to see long, detailed writing."
+      }
+    ]
+  }
+}
