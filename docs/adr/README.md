@@ -30,3 +30,4 @@
 | [ADR-0026](0026-ai-judgement-of-written-explanations.md) | AI Judgement of Written Explanations | **Accepted** (SPEC-18) | 2026-11-08 |
 | [ADR-0027](0027-learner-facing-term-module.md) | Learner-facing term: Module (code keeps stage) | **Accepted** | 2026-11-08 |
 | [ADR-0028](0028-ai-drafted-documents-learner-review-as-evidence.md) | AI-drafted documents, learner review as evidence | **Accepted** | 2026-11-09 |
+| [ADR-0029](0029-explain-in-parts-steps-and-quick-checks.md) | Explain in parts, step diagrams and quick checks | **Accepted** (SPEC-19) | 2026-11-09 |
