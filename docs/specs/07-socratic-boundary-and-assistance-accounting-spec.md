@@ -1,6 +1,6 @@
 # Specification 07: Socratic Boundary Guardrail and Assistance Accounting
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed By:** 
   - `ADR-0009: Socratic Boundary Guardrails and Assistance Accounting`
   - `AGENTS.md` (Sections 5 & 6)

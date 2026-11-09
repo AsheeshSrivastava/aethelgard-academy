@@ -3,6 +3,7 @@
 - **Governed by:** ADR-0026 (this design), ADR-0025 / SPEC-17 (provider profiles), ADR-0022 (interaction log), ADR-0021 (answers private)
 - **Date:** 2026-11-08
 - **First user:** the CO-6 concept check (`POST /api/v1/explain`). README, ADR and spec feedback reuse it later (ADR-0024).
+- **Status:** Accepted (2026-11-09, by the owner, as built). ADR-0026 accepted 2026-11-08.
 
 ---
 

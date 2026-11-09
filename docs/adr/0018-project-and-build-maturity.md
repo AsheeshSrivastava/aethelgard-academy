@@ -1,6 +1,6 @@
 # ADR 0018: Project and Build Maturity in the Learning Path
 
-- **Status:** Proposed (2026-10-31)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Proposed 2026-10-31.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-10-31
 - **Governed by:** Projects & Capstones Integration Layer v1 (P0 to P4 ladder), ADR-0016 (Cold Check), ADR-0019 (stage review unlocks the stage build), Learning Method v2 Amendment A1

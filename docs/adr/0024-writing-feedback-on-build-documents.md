@@ -1,6 +1,6 @@
 # ADR 0024: Writing Feedback on Build Documents
 
-- **Status:** Proposed (2026-11-04). **Superseded in part by ADR-0028 (sections 2.2, 2.4)**, 2026-11-09; sections 2.1 and 2.3 stay.
+- **Status:** Sections 2.1 and 2.3 Accepted (2026-11-09, by the owner, as built). Sections 2.2 and 2.4 superseded by ADR-0028 (2026-11-09). Proposed 2026-11-04.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-04
 - **Governed by:** ADR-0009 (Socratic boundary, assistance accounting), ADR-0016 (deterministic grading), SPEC-15 (stage build), ADR-0018 (build maturity)

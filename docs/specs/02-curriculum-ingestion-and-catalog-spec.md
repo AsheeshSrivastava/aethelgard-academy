@@ -1,6 +1,6 @@
 # Specification 02: Curriculum Ingestion & Catalog Specification
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed By:** 
   - `Python Subject Roadmap v3.md` (28 units across 13 stages)
   - `AI Engineering Roadmap v2.md`

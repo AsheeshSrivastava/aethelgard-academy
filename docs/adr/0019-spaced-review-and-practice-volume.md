@@ -1,6 +1,6 @@
 # ADR 0019: Unit Cold Check, Stage Review, Spaced Rechecks and Practice Volume
 
-- **Status:** Proposed (2026-10-31)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Proposed 2026-10-31.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-10-31
 - **Governed by:** Learning Method v2 Amendment A1 (A1.5, A1.6), ADR-0016 (Cold Check and progression), ADR-0017 (variant pools)

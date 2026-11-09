@@ -1,6 +1,6 @@
 # Specification 04: LMS Platform API Gateway Specification
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed By:** 
   - `docs/specs/01-lesson-and-curriculum-spec.md` (Domain Schemas & Ports)
   - `docs/specs/02-curriculum-ingestion-and-catalog-spec.md` (Unit Catalog)

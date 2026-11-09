@@ -1,6 +1,6 @@
 # SPEC-12: Learner Experience API Contract
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed by:** ADR-0017 (variant generation), ADR-0014 (frontend stack), ADR-0015 (identity), ADR-0016 (proficiency), ADR-0004, ADR-0009, ADR-0010
 - **Design reference:** Aethelgard LMS design canvas (2026-10-30): front page, courses, course map, unit map, lesson, stage build, My progress
 - **Date:** 2026-10-30

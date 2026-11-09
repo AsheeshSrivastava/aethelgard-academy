@@ -1,6 +1,6 @@
 # Specification 01: Unit, Activity & Evidence Ledger Contract
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed By:** 
   - `Learning Method v2` (10 activities, CO-6 soft gate)
   - `Proficiency & Progression System v1` (4 levels, 4 decisions, evidence ledger)

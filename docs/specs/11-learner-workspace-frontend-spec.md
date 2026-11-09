@@ -1,5 +1,7 @@
 # SPEC-11: Unified Platform Shell, Navigation Topology & Concept Library Specification
 
+- **Status:** Accepted (2026-11-09, by the owner, as built). The React shell (ADR-0014) differs in places, for example the route is `/courses`, not `/tracks`; where they differ, the code and its tests are current.
+
 > **Learner wording (ADR-0027):** screens say "Module" where this spec says "stage"; code, routes and data keep "stage".
 
 ## 1. Executive Summary

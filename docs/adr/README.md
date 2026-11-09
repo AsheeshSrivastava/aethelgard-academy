@@ -16,16 +16,16 @@
 | [ADR-0012](0012-persistent-rag-artifacts-and-upstream-indexer.md) | Persistent RAG Artifacts & Upstream Documentation Indexer | **Accepted** | 2026-10-30 |
 | [ADR-0013](0013-learner-workspace-frontend.md) | Unified Platform Shell, Pedagogical Workspace & Concept Library | **Accepted** (section 1 superseded by ADR-0014) | 2026-10-30 |
 | [ADR-0014](0014-react-typescript-vite-frontend.md) | React + TypeScript + Vite Learner Frontend | **Accepted** | 2026-10-30 |
-| [ADR-0015](0015-learner-identity-and-sessions.md) | Learner Identity and Sessions | **Proposed** | 2026-10-30 |
-| [ADR-0016](0016-proficiency-estimation-and-progression-decisions.md) | Proficiency Estimation and Progression Decisions over the Whole Ledger | **Proposed** | 2026-10-30 |
+| [ADR-0015](0015-learner-identity-and-sessions.md) | Learner Identity and Sessions | **Accepted in part** (accounts and sessions deferred) | 2026-10-30 |
+| [ADR-0016](0016-proficiency-estimation-and-progression-decisions.md) | Proficiency Estimation and Progression Decisions over the Whole Ledger | **Accepted** | 2026-10-30 |
 | [ADR-0017](0017-batch-exercise-variant-generation.md) | Batch Exercise Variant Generation from Curator Seeds | **Accepted** | 2026-10-30 |
-| [ADR-0018](0018-project-and-build-maturity.md) | Project and Build Maturity in the Learning Path | **Proposed** | 2026-10-31 |
-| [ADR-0019](0019-spaced-review-and-practice-volume.md) | Unit Cold Check, Stage Review, Spaced Rechecks and Practice Volume | **Proposed** | 2026-10-31 |
-| [ADR-0020](0020-slotted-units-and-path-order.md) | Slotted Units, Stage Ids and Path Order | **Proposed** | 2026-10-31 |
-| [ADR-0021](0021-private-answer-material.md) | Private Answer Material | **Proposed** | 2026-11-03 |
-| [ADR-0022](0022-interaction-log.md) | Interaction Log and Cold Check Feedback | **Proposed** | 2026-11-04 |
+| [ADR-0018](0018-project-and-build-maturity.md) | Project and Build Maturity in the Learning Path | **Accepted** (as built, 2026-11-09) | 2026-10-31 |
+| [ADR-0019](0019-spaced-review-and-practice-volume.md) | Unit Cold Check, Stage Review, Spaced Rechecks and Practice Volume | **Accepted** (as built, 2026-11-09) | 2026-10-31 |
+| [ADR-0020](0020-slotted-units-and-path-order.md) | Slotted Units, Stage Ids and Path Order | **Accepted** (as built, 2026-11-09) | 2026-10-31 |
+| [ADR-0021](0021-private-answer-material.md) | Private Answer Material | **Accepted** (as built, 2026-11-09) | 2026-11-03 |
+| [ADR-0022](0022-interaction-log.md) | Interaction Log and Cold Check Feedback | **Accepted** (as built, 2026-11-09) | 2026-11-04 |
 | [ADR-0023](0023-pantryflow-case-study.md) | One Case Study for the Whole Path (PantryFlow) | **Accepted** | 2026-11-09 |
-| [ADR-0024](0024-writing-feedback-on-build-documents.md) | Writing Feedback on Build Documents | **Proposed** (sections 2.2, 2.4 superseded by ADR-0028) | 2026-11-04 |
+| [ADR-0024](0024-writing-feedback-on-build-documents.md) | Writing Feedback on Build Documents | **Accepted** 2.1, 2.3 (as built, 2026-11-09); 2.2, 2.4 superseded by ADR-0028 | 2026-11-04 |
 | [ADR-0025](0025-model-provider-profiles.md) | Model Provider Profiles and a Settings Page | **Accepted**, built (SPEC-17) | 2026-11-04 |
 | [ADR-0026](0026-ai-judgement-of-written-explanations.md) | AI Judgement of Written Explanations | **Accepted** (SPEC-18) | 2026-11-08 |
 | [ADR-0027](0027-learner-facing-term-module.md) | Learner-facing term: Module (code keeps stage) | **Accepted** | 2026-11-08 |

@@ -1,6 +1,6 @@
 # Specification 03: Code Execution Sandbox & Runner Specification
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed By:** 
   - `ADR-0005: Defer Kubernetes in Favor of Container-Isolated Runners`
   - `docs/specs/01-lesson-and-curriculum-spec.md` Section 3.2

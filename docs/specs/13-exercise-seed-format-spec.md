@@ -1,6 +1,6 @@
 # SPEC-13: Exercise Seed Format
 
-- **Status:** Draft (Step 2: Specification Drafting). Spec only; no loader or grader code yet.
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed by:** ADR-0008 (lesson packages), ADR-0016 (Cold Check and its 2026-10-31 amendment), ADR-0017 (variants), SPEC-12 section 4 (Exercise API)
 - **Date:** 2026-10-31
 

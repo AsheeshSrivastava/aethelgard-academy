@@ -1,6 +1,6 @@
 # ADR 0022: Interaction Log and Cold Check Feedback
 
-- **Status:** Proposed (2026-11-04)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Proposed 2026-11-04.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-04
 - **Governed by:** ADR-0004 (append-only evidence ledger), ADR-0016 (estimator), ADR-0019 (test mode amendment), SPEC-12 section 5 (idempotent submit)

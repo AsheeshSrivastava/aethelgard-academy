@@ -1,6 +1,6 @@
 # ADR 0021: Private Answer Material
 
-- **Status:** Proposed (2026-11-03)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Proposed 2026-11-03.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-03
 - **Governed by:** SPEC-15 (Stage Build), ADR-0016 (Own needs a build), the 10-week plan, Step 1 "New hidden checks"

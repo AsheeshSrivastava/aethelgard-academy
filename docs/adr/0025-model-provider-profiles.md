@@ -1,6 +1,6 @@
 # ADR 0025: Model Provider Profiles and a Settings Page
 
-- **Status:** Accepted (2026-11-04) by the owner. Not built yet.
+- **Status:** Accepted (2026-11-04) by the owner. Built (SPEC-17, Model settings page).
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-04
 - **Governed by:** ADR-0003 (AXIS answers only from our curriculum), ADR-0010 (local-first AI), `IAXISCompanion` (provider-agnostic port), AGENTS.md ("never print keys", "no paid run without a cost estimate")

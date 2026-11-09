@@ -1,6 +1,6 @@
 # ADR 0020: Slotted Units, Stage Ids and Path Order
 
-- **Status:** Proposed (2026-10-31)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Proposed 2026-10-31.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-10-31
 - **Governed by:** Python Subject Roadmap v4 and Backend Engineering Roadmap v3 (Table 1), Learning Method v2 Amendment A1, the roadmap conversion approved on 2026-10-31

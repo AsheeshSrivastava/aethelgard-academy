@@ -2,7 +2,7 @@
 
 > **Learner wording (ADR-0027):** screens say "Module" where this spec says "stage"; code, routes and data keep "stage".
 
-- **Status:** Draft (2026-10-31)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed by:** ADR-0019, Learning Method v2 Amendment A1 (A1.5), ADR-0016 (Cold Check), SPEC-12 sections 4.1 and 5, SPEC-13 section 5, SPEC-15
 
 ---

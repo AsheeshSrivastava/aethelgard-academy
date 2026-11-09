@@ -1,6 +1,6 @@
 # Specification 08: Runtime-Agnostic Local LLM Companion & Rubric Classifier
 
-- **Status:** Draft (Step 2: Specification Drafting)
+- **Status:** Accepted (2026-11-09, by the owner, as built). Was a draft.
 - **Governed By:**
   - `ADR-0001: Hexagonal Architecture and Pluggable Boundary Ports`
   - `ADR-0003: Two-Stage RAG: Upstream Research vs. Downstream AXIS AI Grounding`

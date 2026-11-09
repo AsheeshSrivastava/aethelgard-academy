@@ -1,5 +1,7 @@
 # SPEC-06: Interactive Lesson Engine and Workspace Execution
 
+- **Status:** Accepted (2026-11-09, by the owner, as built).
+
 ## 1. Overview & Operational Persona
 - **Audience:** Non-traditional career switchers (social sector, operations, policy) and modern students.
 - **Mental Model:** Programs as operational intake desks (Ingress $\rightarrow$ Transformation $\rightarrow$ Egress).
