@@ -14,7 +14,7 @@ body {
 }
 
 a {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 a:hover {
@@ -90,7 +90,7 @@ ul {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .kicker-light {
@@ -106,7 +106,7 @@ ul {
 }
 
 .eyebrow-light {
-  color: #8b95a3;
+  color: var(--band-text);
 }
 
 .mono {
@@ -119,7 +119,7 @@ ul {
 }
 
 .accent {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .small {
@@ -304,13 +304,26 @@ ul {
 }
 
 .wordmark-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: #0b6e6e;
+  width: 30px;
+  height: 30px;
+  flex: none;
+}
+
+.wordmark-text {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.wordmark-name {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.wordmark-credit {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .primary-nav {
@@ -670,7 +683,7 @@ a.build-tile {
 }
 
 .file-tab-open {
-  border-bottom-color: #5cc4c0;
+  border-bottom-color: var(--band-accent);
   opacity: 1;
 }
 
@@ -975,7 +988,7 @@ a.build-tile {
 }
 
 .path-state-current {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .skill-row,
@@ -1006,9 +1019,9 @@ a.build-tile {
 }
 
 .next-action .button-primary {
-  background: #0b6e6e;
-  border-color: #0b6e6e;
-  color: #ffffff;
+  background: var(--band-accent);
+  border-color: var(--band-accent);
+  color: var(--on-band-accent);
 }
 
 .next-message {
@@ -1353,7 +1366,7 @@ button:disabled {
 }
 
 .copy-button:hover {
-  border-color: #5cc4c0;
+  border-color: var(--band-accent);
 }
 
 /* The same colours as the editor; code blocks are dark in both themes. */
@@ -1854,9 +1867,15 @@ button:disabled {
     gap: 0;
   }
 
+  /* Inter runs wider than the old face; these keep the phone header within the screen. */
   .primary-nav a {
-    padding: 10px 8px;
+    padding: 10px 6px;
     white-space: nowrap;
+  }
+
+  .wordmark-mark {
+    width: 28px;
+    height: 28px;
   }
 
   .on-wide {

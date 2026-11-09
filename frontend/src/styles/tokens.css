@@ -1,88 +1,134 @@
-/* Design tokens from the owner-approved canvas (ADR-0014). */
+/* Design tokens: Palette A "Crossfire" from the owner-approved Aethelgard mock (2026-11-09),
+   built on the Quest & Crossfire tokens. The older names (--ground, --line, --warm...) stay
+   because app.css uses them; the mock's names (--bg, --border, --accent2...) are added for
+   the redesign steps. Dark is set three ways: the toggle (data-theme), or the system setting
+   when no toggle choice is stored. Keep the two dark blocks identical. */
 :root {
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --accent: #0b6e6e;
-  --accent-strong: #084f4f;
-  --accent-soft: #e3f0ef;
-  --accent-line: #a9cfcd;
+  /* Brand mark: cyan diamond in both themes; the edge keeps it visible on white. */
+  --brand-cyan: #4ff5f5;
+  --brand-edge: #0a7f8c;
+
+  --accent: #0a7f8c;
+  --accent-strong: #08707c;
+  --accent-text: #08707c;
+  --accent-soft: #e0f5f6;
+  --accent-line: rgba(10, 127, 140, 0.45);
   --on-accent: #ffffff;
 
-  --ground: #f4f5f7;
+  --ground: #f3f6f9;
   --surface: #ffffff;
-  --surface-muted: #f9fafb;
-  --line: #e3e6eb;
-  --line-strong: #d5dae1;
-  --text: #12161c;
-  --text-soft: #3d4651;
-  --text-muted: #5b6470;
+  --surface-muted: #eaf0f5;
+  --line: #d3dce5;
+  --line-strong: #b4c1ce;
+  --text: #0e1620;
+  --text-soft: #2e3b49;
+  --text-muted: #526172;
 
-  --warm: #fbf6ee;
-  --warm-line: #ead9bf;
-  --warm-text: #8a5200;
-  --danger: #a4262c;
-  --danger-soft: #fdecec;
+  --warm: #fdf1df;
+  --warm-line: #efd3a8;
+  --warm-text: #8f5200;
+  --danger: #c2303d;
+  --danger-soft: #fbe7e9;
+  --ok: #17703f;
+  --ok-soft: #e3f5ea;
+  --info: #2f5fd0;
+  --info-soft: #e7eefc;
 
-  --band: #12161c;
-  --band-line: #2a313b;
-  --band-text: #c9ced6;
-  --band-accent: #7fd3d1;
+  /* Dark bands (AXIS strip, next-action card) stay dark in both themes. */
+  --band: #0e141b;
+  --band-line: #2a3542;
+  --band-text: #c9d3dd;
+  --band-accent: #4ff5f5;
+  --on-band-accent: #062226;
+
+  --code-bg: #0e141b;
+  --glow: radial-gradient(ellipse at 70% 0%, rgba(10, 127, 140, 0.08), transparent 60%);
+
+  /* Mock names, mapped onto the tokens above. */
+  --bg: var(--ground);
+  --surface2: var(--surface-muted);
+  --border: var(--line);
+  --muted: var(--text-muted);
+  --accent2: var(--warm-text);
+  --accent2-soft: var(--warm);
+  --bad: var(--danger);
+  --bad-soft: var(--danger-soft);
 
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --accent: #5cc4c0;
-  --accent-strong: #8fdcd9;
-  --accent-soft: #15302f;
-  --accent-line: #2f6462;
-  --on-accent: #06201f;
+  --brand-edge: #0a0d11;
 
-  --ground: #0f1318;
-  --surface: #171c23;
-  --surface-muted: #1d232b;
-  --line: #2a313b;
-  --line-strong: #39424e;
-  --text: #e8ecf1;
-  --text-soft: #c9ced6;
-  --text-muted: #9aa4b1;
+  --accent: #4ff5f5;
+  --accent-strong: #a6fafa;
+  --accent-text: #4ff5f5;
+  --accent-soft: rgba(79, 245, 245, 0.1);
+  --accent-line: rgba(79, 245, 245, 0.45);
+  --on-accent: #062226;
 
-  --warm: #2a2115;
-  --warm-line: #4d3c22;
-  --warm-text: #e7bf85;
-  --danger: #f2a0a0;
-  --danger-soft: #3a1c1e;
+  --ground: #0a0d11;
+  --surface: #11171e;
+  --surface-muted: #18212b;
+  --line: #2a3542;
+  --line-strong: #3a4757;
+  --text: #e8eef4;
+  --text-soft: #c5cfda;
+  --text-muted: #8a97a6;
 
-  --band: #0a0d11;
+  --warm: rgba(255, 181, 71, 0.12);
+  --warm-line: rgba(255, 181, 71, 0.35);
+  --warm-text: #ffb547;
+  --danger: #ff5c6c;
+  --danger-soft: rgba(255, 92, 108, 0.12);
+  --ok: #3ddc84;
+  --ok-soft: rgba(61, 220, 132, 0.12);
+  --info: #8ab4ff;
+  --info-soft: rgba(138, 180, 255, 0.12);
+
+  --band: #07090c;
+  --code-bg: #07090c;
+  --glow: radial-gradient(ellipse at 70% 0%, rgba(79, 245, 245, 0.1), transparent 60%);
 
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --accent: #5cc4c0;
-    --accent-strong: #8fdcd9;
-    --accent-soft: #15302f;
-    --accent-line: #2f6462;
-    --on-accent: #06201f;
+    --brand-edge: #0a0d11;
 
-    --ground: #0f1318;
-    --surface: #171c23;
-    --surface-muted: #1d232b;
-    --line: #2a313b;
-    --line-strong: #39424e;
-    --text: #e8ecf1;
-    --text-soft: #c9ced6;
-    --text-muted: #9aa4b1;
+    --accent: #4ff5f5;
+    --accent-strong: #a6fafa;
+    --accent-text: #4ff5f5;
+    --accent-soft: rgba(79, 245, 245, 0.1);
+    --accent-line: rgba(79, 245, 245, 0.45);
+    --on-accent: #062226;
 
-    --warm: #2a2115;
-    --warm-line: #4d3c22;
-    --warm-text: #e7bf85;
-    --danger: #f2a0a0;
-    --danger-soft: #3a1c1e;
+    --ground: #0a0d11;
+    --surface: #11171e;
+    --surface-muted: #18212b;
+    --line: #2a3542;
+    --line-strong: #3a4757;
+    --text: #e8eef4;
+    --text-soft: #c5cfda;
+    --text-muted: #8a97a6;
 
-    --band: #0a0d11;
+    --warm: rgba(255, 181, 71, 0.12);
+    --warm-line: rgba(255, 181, 71, 0.35);
+    --warm-text: #ffb547;
+    --danger: #ff5c6c;
+    --danger-soft: rgba(255, 92, 108, 0.12);
+    --ok: #3ddc84;
+    --ok-soft: rgba(61, 220, 132, 0.12);
+    --info: #8ab4ff;
+    --info-soft: rgba(138, 180, 255, 0.12);
+
+    --band: #07090c;
+    --code-bg: #07090c;
+    --glow: radial-gradient(ellipse at 70% 0%, rgba(79, 245, 245, 0.1), transparent 60%);
 
     color-scheme: dark;
   }

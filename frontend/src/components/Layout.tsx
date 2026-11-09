@@ -52,6 +52,16 @@ function ThemeToggle() {
   );
 }
 
+/** The Quest & Crossfire cyan diamond, drawn in SVG so it follows the theme tokens. */
+function DiamondMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <polygon points="5.2,3.8 18.8,3.8 23,8.7 12,20.2 1,8.7" fill="var(--brand-cyan)" stroke="var(--brand-edge)" strokeWidth="1" strokeLinejoin="round" />
+      <path d="M1 8.7h22M5.2 3.8 6.8 8.7 12 3.8l5.2 4.9 1.6-4.9M6.8 8.7 12 20.2l5.2-11.5" fill="none" stroke="var(--surface)" strokeWidth="0.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /** Every wait is zero while this shows (ADR-0019 amendment 2026-11-04); off unless the server says so. */
 function TestModeBanner() {
   const features = useQuery({ queryKey: ["features"], queryFn: () => api.features(), staleTime: Infinity });
@@ -68,13 +78,11 @@ export function Layout() {
     <>
       <header className="top-bar">
         <Link to="/" className="wordmark">
-          <span className="wordmark-mark" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 20 12 4l8 16" />
-              <path d="M7.5 13h9" />
-            </svg>
+          <DiamondMark className="wordmark-mark" />
+          <span className="wordmark-text">
+            <span className="wordmark-name">Aethelgard</span>
+            <span className="wordmark-credit">by Quest &amp; Crossfire</span>
           </span>
-          <span className="wordmark-text">Aethelgard</span>
         </Link>
         <nav aria-label="Primary" className="primary-nav">
           <Link to="/courses" activeProps={{ className: "active", "aria-current": "page" }}>
