@@ -13,7 +13,7 @@
     "Fix the README only: leave the code below it as it is."
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Run the README's command and its sample input yourself, and check every install step a fresh computer would need.",
   "hint_approved": false,
   "debug": {

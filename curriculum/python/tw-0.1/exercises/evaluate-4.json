@@ -12,7 +12,7 @@
     "Which statement is true?"
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "material": [
       "README A",

@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/specify-1",
+  "unit_id": "TW-0.1",
+  "activity": "Specify",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "marking what is missing",
+  "prompt_markdown": [
+    "Read this README. Mark **every** checklist point that is missing, or present but not usable by a stranger."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "specify_contract": {
+    "material": [
+      "README - tins.py",
+      "What it does: counts the tins on one shelf.",
+      "How to run it: uv run tins.py"
+    ],
+    "fields": [
+      {
+        "id": "points",
+        "label": "Checklist points missing or not met",
+        "kind": "multi",
+        "options": [
+          {
+            "key": "does",
+            "text": "What it does"
+          },
+          {
+            "key": "need",
+            "text": "What you need first"
+          },
+          {
+            "key": "run",
+            "text": "How to run it (the exact command)"
+          },
+          {
+            "key": "sample",
+            "text": "A sample run (real input and real output)"
+          },
+          {
+            "key": "limits",
+            "text": "Limits"
+          }
+        ]
+      }
+    ]
+  }
+}

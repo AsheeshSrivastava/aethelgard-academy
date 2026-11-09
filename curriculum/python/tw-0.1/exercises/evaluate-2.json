@@ -12,7 +12,7 @@
     "Which checklist point does this README miss?"
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "material": [
       "What it does: adds up the tins counted at two tables.",

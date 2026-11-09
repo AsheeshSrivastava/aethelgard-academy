@@ -10,7 +10,7 @@
     "One sentence in this explanation is wrong. Which one?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Ask who opens the README and what they are trying to do.",
   "hint_approved": false,
   "explain_spot_flaw": {

@@ -1,0 +1,55 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/cold-specify-2",
+  "unit_id": "TW-0.1",
+  "activity": "Specify",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "the five checklist points",
+  "prompt_markdown": [
+    "Read this README. Mark **every** checklist point that is missing, or present but not usable by a stranger."
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Go down the five points one by one and ask: is it here, and could a stranger act on it?",
+  "hint_approved": false,
+  "specify_contract": {
+    "material": [
+      "README - volunteer.py",
+      "Great little script, works well.",
+      "How to run it: uv run volunteer.py",
+      "Sample run:",
+      "  Name: lee",
+      "  Thanks, Lee!"
+    ],
+    "fields": [
+      {
+        "id": "points",
+        "label": "Checklist points missing or not met",
+        "kind": "multi",
+        "options": [
+          {
+            "key": "does",
+            "text": "What it does"
+          },
+          {
+            "key": "need",
+            "text": "What you need first"
+          },
+          {
+            "key": "run",
+            "text": "How to run it (the exact command)"
+          },
+          {
+            "key": "sample",
+            "text": "A sample run (real input and real output)"
+          },
+          {
+            "key": "limits",
+            "text": "Limits"
+          }
+        ]
+      }
+    ]
+  }
+}

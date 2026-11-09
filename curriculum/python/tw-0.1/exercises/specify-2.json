@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/specify-2",
+  "unit_id": "TW-0.1",
+  "activity": "Specify",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "the five checklist points",
+  "prompt_markdown": [
+    "Read this README. Mark **every** checklist point that is missing, or present but not usable by a stranger."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "specify_contract": {
+    "material": [
+      "README - sign.py",
+      "What it does: prints the pantry's closing sign.",
+      "What you need first: Python 3.12 or newer, and uv installed.",
+      "How to run it: open it and run it.",
+      "Sample run:",
+      "  Closing time: 5pm",
+      "  PANTRY CLOSES AT 5PM"
+    ],
+    "fields": [
+      {
+        "id": "points",
+        "label": "Checklist points missing or not met",
+        "kind": "multi",
+        "options": [
+          {
+            "key": "does",
+            "text": "What it does"
+          },
+          {
+            "key": "need",
+            "text": "What you need first"
+          },
+          {
+            "key": "run",
+            "text": "How to run it (the exact command)"
+          },
+          {
+            "key": "sample",
+            "text": "A sample run (real input and real output)"
+          },
+          {
+            "key": "limits",
+            "text": "Limits"
+          }
+        ]
+      }
+    ]
+  }
+}

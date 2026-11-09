@@ -10,7 +10,7 @@
     "One sentence about the sample run is wrong. Which one?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "A sample run is evidence; ask where it should come from.",
   "hint_approved": false,
   "explain_spot_flaw": {

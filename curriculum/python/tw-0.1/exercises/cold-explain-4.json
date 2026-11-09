@@ -12,7 +12,7 @@
     "Which picture of the README is right?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Picture someone who has never seen the code. What do they read first, and why?",
   "hint_approved": false,
   "explain_model_choice": {

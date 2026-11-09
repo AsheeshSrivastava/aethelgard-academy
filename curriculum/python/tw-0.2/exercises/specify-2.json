@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/specify-2",
+  "unit_id": "TW-0.2",
+  "activity": "Specify",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "missing setup steps",
+  "prompt_markdown": [
+    "An AI drafted this README. The real run, done for you, is shown under it.",
+    "Mark **every** checklist point the draft gets wrong or leaves out."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "specify_contract": {
+    "material": [
+      "README (drafted by AI) - door.py",
+      "What it does: prints which door families use today.",
+      "What you need first: Python 3.12 or newer.",
+      "How to run it: uv run door.py",
+      "Sample run:",
+      "  Door: side",
+      "  USE THE SIDE DOOR TODAY",
+      "",
+      "Real run, in the folder that holds door.py:",
+      "  $ uv run door.py",
+      "  Door: side",
+      "  USE THE SIDE DOOR TODAY"
+    ],
+    "fields": [
+      {
+        "id": "points",
+        "label": "Checklist points missing or not met",
+        "kind": "multi",
+        "options": [
+          {
+            "key": "does",
+            "text": "What it does"
+          },
+          {
+            "key": "need",
+            "text": "What you need first"
+          },
+          {
+            "key": "run",
+            "text": "How to run it (the exact command)"
+          },
+          {
+            "key": "sample",
+            "text": "A sample run (real input and real output)"
+          },
+          {
+            "key": "limits",
+            "text": "Limits"
+          }
+        ]
+      }
+    ]
+  }
+}

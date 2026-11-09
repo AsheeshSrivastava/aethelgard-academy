@@ -13,7 +13,7 @@
     "Fix the README only: leave the code below it as it is."
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "debug": {
     "broken_code": [
       "\"\"\"README (drafted by AI) - badge.py",

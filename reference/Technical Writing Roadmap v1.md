@@ -52,8 +52,8 @@ Scaffolding fades: in Stage 0 the learner is told how many mistakes are planted;
 
 | # | Unit | Stage | Targets (goal level) | Methods |
 | --- | --- | --- | --- | --- |
-| 1 | TW-0.1 What a README is for | 0 | CO-4 (Understand), SP-4 (Understand) | Explain → Evaluate |
-| 2 | TW-0.2 Reviewing an AI-drafted README | 0 | VE-2 (Understand), SP-4 (Understand) | Explain → Debug & Validate → Direct |
+| 1 | TW-0.1 What a README is for | 0 | CO-4 (Understand), SP-4 (Understand) | Explain → Evaluate → Specify |
+| 2 | TW-0.2 Reviewing an AI-drafted README | 0 | VE-2 (Understand), SP-4 (Understand) | Explain → Debug & Validate → Specify → Direct |
 | 3 | TW-1.1 Reading an ADR | 1 | CO-4 (Apply), SP-4 (Adapt) | Explain → Evaluate |
 | 4 | TW-1.2 Recording your own decision | 1 | DE-6 (Adapt), DE-1 (Adapt) | Explain → Direct → Evaluate |
 | 5 | TW-2.1 From function spec to spec document | 2 | SP-2 (Adapt), SP-4 (Adapt) | Explain → Specify → Evaluate |
@@ -81,7 +81,7 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **Objective:** Can say what a README must tell a reader and mark which of the five checklist points a README is missing.
 - **The concept (Explain):** A README answers, in order, what this does, what you need first, how to run it, what a run looks like, and where it stops working.
 - **Target skills:** CO-4 to Understand; SP-4 to Understand
-- **Methods:** Explain → Evaluate
+- **Methods:** Explain → Evaluate → Specify
 - **Outcome (measured at unit end):** CO-4: says in one sentence what a given script's README is for and who reads it. SP-4: compares a good and a weak README for the same script and marks each missing checklist point; graded against an exact key.
 - **Topics:** who reads a README and when; the five checklist points; a good README beside a weak one; marking what is missing
 - **Prerequisites:** PY-0.4 | **Importance:** Foundational
@@ -91,8 +91,8 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 - **Objective:** Can find the mistakes in an AI-drafted README by running the script, and direct AXIS to draft a README, then fix it.
 - **The concept (Explain):** An AI draft reads well whether or not it is true; you find out by running what it claims.
 - **Target skills:** VE-2 to Understand; SP-4 to Understand
-- **Methods:** Explain → Debug & Validate → Direct
-- **Outcome (measured at unit end):** VE-2: finds the three planted mistakes (wrong run command, sample output the code cannot produce, missing setup step) by running the script, told there are three; graded against an exact key. SP-4: after asking AXIS to draft a README for a tiny script, fixes it so every checklist point is met; the fixed draft is judged by AXIS against the checklist (ADR-0026 style), with the status always shown.
+- **Methods:** Explain → Debug & Validate → Specify → Direct
+- **Outcome (measured at unit end):** VE-2: finds the three planted mistakes (wrong run command, sample output the code cannot produce, missing setup step) by running the script, told there are three; graded against an exact key. SP-4: marks every checklist point an AI-drafted README gets wrong or leaves out, against a real run; graded against an exact key. After asking AXIS to draft a README for a tiny script, fixes it so every checklist point is met; the fixed draft is judged by AXIS against the checklist (ADR-0026 style), with the status always shown.
 - **Topics:** AI drafts are plausible, not checked; running the command the README gives; comparing the sample run with real output; missing setup steps; asking AXIS for a draft and fixing it
 - **Prerequisites:** TW-0.1 | **Importance:** Core
 
@@ -159,4 +159,5 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 1. **Scope and placement** approved by Asheesh on 2026-11-08: name Technical Writing (TW); three stages of two units; the README stage is recommended, not required (adult learning principles); learners see "Module" (ADR-0027).
 2. **Wording still to review:** target skills, levels, concept and outcome lines.
 3. **Documents and AI:** for documents, AI drafting is expected and the learner's review is the evidence (Learning Method v2 Amendment A2, ADR-0028). Cold Checks still use no AI; exact keys wherever possible. Keys go in the private answers repo (ADR-0021).
-4. **Stage builds:** no separate builds; the documents attach to the Python stage builds named above.
+4. **Specify added (owner, 2026-11-09):** TW-0.1 and TW-0.2 gain Specify, so SP-4 (main activity Specify) can have a Cold Check: the learner marks which checklist points a README is missing (`specify_contract`, multi-select). TW-0.2 now has four methods, as GIT-2.1 does.
+5. **Stage builds:** no separate builds; the documents attach to the Python stage builds named above.

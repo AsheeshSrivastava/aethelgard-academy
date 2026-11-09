@@ -54,8 +54,8 @@ Backend Engineering Roadmap v3 continues the path with the Networking and Databa
 | 1 | PY-0.4 Run a first program | 0 | CO-1 (Understand), VE-4 (Understand) | Explain → Predict → Debug & Validate |
 | 2 | PY-0.1 Python as an executing program | 0 | CO-1 (Understand), CO-2 (Understand), CO-6 (Understand) | Explain → Predict → Trace |
 | 3 | PY-0.3 Tool help versus your own reasoning | 0 | DE-2 (Understand), DE-3 (Understand), DE-4 (Understand) | Explain → Direct |
-| 4 | TW-0.1 What a README is for *(Technical Writing v1)* | TW 0 | CO-4 (Understand), SP-4 (Understand) | Explain → Evaluate |
-| 5 | TW-0.2 Reviewing an AI-drafted README *(Technical Writing v1)* | TW 0 | VE-2 (Understand), SP-4 (Understand) | Explain → Debug & Validate → Direct |
+| 4 | TW-0.1 What a README is for *(Technical Writing v1)* | TW 0 | CO-4 (Understand), SP-4 (Understand) | Explain → Evaluate → Specify |
+| 5 | TW-0.2 Reviewing an AI-drafted README *(Technical Writing v1)* | TW 0 | VE-2 (Understand), SP-4 (Understand) | Explain → Debug & Validate → Specify → Direct |
 | 6 | PY-1.2 Numbers, booleans and None | 1 | CO-1 (Apply), VE-6 (Apply) | Explain → Predict → Debug & Validate → Build |
 | 7 | PY-1.7 Text | 1 | BU-1 (Apply), VE-6 (Apply) | Explain → Modify → Debug & Validate → Build |
 | 8 | PY-1.1 Names, objects and expressions | 1 | CO-1 (Apply), CO-2 (Apply), CO-6 (Apply) | Explain → Predict → Trace |
