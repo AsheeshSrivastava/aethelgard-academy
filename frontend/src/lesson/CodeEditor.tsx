@@ -8,27 +8,27 @@ import { useEffect, useRef } from "react";
 
 const theme = EditorView.theme(
   {
-    "&": { backgroundColor: "#12161C", color: "#E8ECF1", fontSize: "14px" },
-    ".cm-content": { fontFamily: "var(--font-mono)", caretColor: "#E8ECF1", padding: "12px 0" },
-    ".cm-gutters": { backgroundColor: "#12161C", color: "#7A8592", border: "none" },
-    ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "#1D232B" },
-    "&.cm-focused .cm-cursor": { borderLeftColor: "#E8ECF1" },
-    "&.cm-focused": { outline: "2px solid #5CC4C0" },
-    ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": { backgroundColor: "#2F6462 !important" },
+    "&": { backgroundColor: "var(--code-bg)", color: "var(--code-text)", fontSize: "14px" },
+    ".cm-content": { fontFamily: "var(--font-mono)", caretColor: "var(--code-text)", padding: "12px 0" },
+    ".cm-gutters": { backgroundColor: "var(--code-bg)", color: "var(--code-muted)", border: "none" },
+    ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "var(--code-active)" },
+    "&.cm-focused .cm-cursor": { borderLeftColor: "var(--code-text)" },
+    "&.cm-focused": { outline: "2px solid var(--code-focus)" },
+    ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": { backgroundColor: "var(--code-selection) !important" },
   },
   { dark: true },
 );
 
-// The editor is dark in both themes, so its colours are chosen for a dark ground.
+// The editor is dark in both themes; its colours are theme tokens (tokens.css, step 6).
 const highlight = HighlightStyle.define([
-  { tag: tags.keyword, color: "#C9A7F5" },
-  { tag: [tags.string, tags.special(tags.string)], color: "#A5E3C0" },
-  { tag: tags.comment, color: "#9AA4B1", fontStyle: "italic" },
-  { tag: [tags.number, tags.bool, tags.null], color: "#F7C58A" },
-  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "#8FC7FF" },
-  { tag: [tags.definition(tags.variableName), tags.className], color: "#8FC7FF" },
-  { tag: tags.propertyName, color: "#8FDCD9" },
-  { tag: [tags.operator, tags.punctuation], color: "#C9CED6" },
+  { tag: tags.keyword, color: "var(--syn-keyword)" },
+  { tag: [tags.string, tags.special(tags.string)], color: "var(--syn-string)" },
+  { tag: tags.comment, color: "var(--syn-comment)", fontStyle: "italic" },
+  { tag: [tags.number, tags.bool, tags.null], color: "var(--syn-number)" },
+  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "var(--syn-function)" },
+  { tag: [tags.definition(tags.variableName), tags.className], color: "var(--syn-function)" },
+  { tag: tags.propertyName, color: "var(--syn-property)" },
+  { tag: [tags.operator, tags.punctuation], color: "var(--syn-operator)" },
 ]);
 
 /** `value` sets the starting text; remount with a new key to replace it. */

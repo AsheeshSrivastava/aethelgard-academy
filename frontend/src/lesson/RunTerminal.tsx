@@ -4,6 +4,18 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef, useState } from "react";
 
+/** The terminal's colours from the theme tokens (tokens.css); fallbacks keep it dark if a token is missing. */
+export function terminalTheme() {
+  const styles = getComputedStyle(document.documentElement);
+  const token = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
+  return {
+    background: token("--code-bg", "#0e141b"),
+    foreground: token("--code-text", "#e6edf3"),
+    cursor: token("--code-focus", "#4ff5f5"),
+    selectionBackground: token("--code-selection", "rgba(79, 245, 245, 0.22)"),
+  };
+}
+
 type RunEvent =
   | { type: "stdout" | "stderr"; data: string }
   | { type: "awaiting_input" }
@@ -40,8 +52,16 @@ export function RunTerminal({
       rows: 10,
       fontFamily: '"JetBrains Mono", ui-monospace, monospace',
       fontSize: 13,
-      theme: { background: "#0B0E12", foreground: "#E8ECF1", cursor: "#5CC4C0" },
+      theme: terminalTheme(),
     });
+    // xterm draws on a canvas, so it cannot use CSS variables: re-read the tokens on a theme change.
+    const retheme = () => {
+      term.options.theme = terminalTheme();
+    };
+    const watcher = new MutationObserver(retheme);
+    watcher.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    const scheme = window.matchMedia?.("(prefers-color-scheme: dark)");
+    scheme?.addEventListener?.("change", retheme);
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(host.current);
@@ -70,6 +90,8 @@ export function RunTerminal({
     observer.observe(host.current);
     return () => {
       observer.disconnect();
+      watcher.disconnect();
+      scheme?.removeEventListener?.("change", retheme);
       socket.current?.close();
       term.dispose();
     };

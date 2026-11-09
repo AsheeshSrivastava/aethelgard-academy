@@ -607,9 +607,10 @@ a.build-tile {
   font-weight: 700;
 }
 
+/* Met checks are green, as in the mock (step 6). */
 .requirement-met {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--ok);
+  border-color: var(--ok);
   color: var(--surface);
 }
 
@@ -650,10 +651,44 @@ a.build-tile {
   opacity: 1;
 }
 
-/* The build page is wide and led by its editor (SPEC-15 section 7). Other pages keep their width. */
-.lesson-page.build-page {
-  max-width: 1760px;
-  padding-inline: clamp(16px, 2.5vw, 40px);
+/* The build page is led by its editor (SPEC-15 section 7). Since redesign step 6 it uses the
+   shell frame (.lesson-page: 1680px, same gutter) so it lines up with the Back arrow. */
+
+/* Step 6 styling from the approved "Build" mock: the file tabs sit on a dark bar like the editor. */
+.build-page .workspace-head {
+  padding: 4px 8px 4px 4px;
+  border-radius: 12px;
+  background: var(--code-chrome);
+  border: 1px solid var(--code-line);
+}
+
+.build-page .file-tab {
+  color: var(--code-muted);
+  opacity: 1;
+}
+
+.build-page .file-tab:hover {
+  color: var(--code-text);
+}
+
+.build-page .file-tab-open {
+  color: var(--code-text);
+  border-bottom-color: var(--code-focus);
+}
+
+.build-page .code-editor,
+.build-page .run-terminal {
+  border-radius: 12px;
+  border: 1px solid var(--code-line);
+}
+
+.build-page .build-title {
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.build-page .panel .eyebrow {
+  color: var(--accent-text);
 }
 
 .build-page .code-editor .cm-editor {
@@ -1203,14 +1238,14 @@ button:disabled {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 14px;
-  background: #14181f;
+  background: var(--code-chrome);
 }
 
 .video-placeholder {
   padding: 48px 20px;
   border-radius: 14px;
-  background: #14181f;
-  color: #c9ced6;
+  background: var(--code-chrome);
+  color: var(--syn-operator);
   text-align: center;
 }
 
@@ -1252,8 +1287,8 @@ button:disabled {
   margin: 0;
   padding: 12px 14px;
   border-radius: 10px;
-  background: #12161c;
-  color: #e8ecf1;
+  background: var(--code-bg);
+  color: var(--code-text);
   font-size: 13px;
   line-height: 1.55;
   overflow-x: auto;
@@ -1274,10 +1309,10 @@ button:disabled {
   right: 6px;
   min-height: 32px;
   padding: 0 10px;
-  border: 1px solid #39424e;
+  border: 1px solid var(--code-line);
   border-radius: 6px;
-  background: #1d232b;
-  color: #e8ecf1;
+  background: var(--code-active);
+  color: var(--code-text);
   font: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -1291,16 +1326,16 @@ button:disabled {
 /* The same colours as the editor; code blocks are dark in both themes. */
 .tok-keyword,
 .tok-operatorKeyword {
-  color: #c9a7f5;
+  color: var(--syn-keyword);
 }
 
 .tok-string,
 .tok-string2 {
-  color: #a5e3c0;
+  color: var(--syn-string);
 }
 
 .tok-comment {
-  color: #9aa4b1;
+  color: var(--syn-comment);
   font-style: italic;
 }
 
@@ -1308,22 +1343,22 @@ button:disabled {
 .tok-bool,
 .tok-null,
 .tok-atom {
-  color: #f7c58a;
+  color: var(--syn-number);
 }
 
 .tok-variableName.tok-definition,
 .tok-className,
 .tok-macroName {
-  color: #8fc7ff;
+  color: var(--syn-function);
 }
 
 .tok-propertyName {
-  color: #8fdcd9;
+  color: var(--syn-property);
 }
 
 .tok-punctuation,
 .tok-operator {
-  color: #c9ced6;
+  color: var(--syn-operator);
 }
 
 .prose pre code {
@@ -1362,8 +1397,8 @@ button:disabled {
   margin: 0;
   padding: 14px 16px;
   border-radius: 10px;
-  background: #12161c;
-  color: #e8ecf1;
+  background: var(--code-bg);
+  color: var(--code-text);
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.6;
@@ -1381,7 +1416,7 @@ button:disabled {
 .code-number {
   display: inline-block;
   width: 2.2em;
-  color: #7a8592;
+  color: var(--code-muted);
   user-select: none;
 }
 
@@ -1516,17 +1551,17 @@ button:disabled {
   min-width: 0;
   border-radius: 10px;
   overflow: hidden;
-  background: #0b0e12;
+  background: var(--code-bg);
 }
 
 .run-bar {
   padding: 6px 10px;
-  background: #171c23;
+  background: var(--code-chrome);
 }
 
 .run-status {
   font-size: 13px;
-  color: #c9ced6;
+  color: var(--syn-operator);
 }
 
 .terminal-host {
@@ -2118,7 +2153,7 @@ button:disabled {
 .ld-mini-code {
   margin: 0;
   background: var(--code-bg);
-  color: #e6edf3;
+  color: var(--code-text);
   font-family: var(--font-mono);
   border-radius: 14px;
 }
@@ -2139,15 +2174,15 @@ button:disabled {
 }
 
 .ld-kw {
-  color: #c792ea;
+  color: var(--syn-keyword);
 }
 
 .ld-fn {
-  color: #82aaff;
+  color: var(--syn-function);
 }
 
 .ld-cm {
-  color: #9aa7b6;
+  color: var(--syn-comment);
   font-style: italic;
 }
 
@@ -3149,7 +3184,7 @@ button:disabled {
   padding: 8px 10px;
   border-radius: 8px;
   background: var(--code-bg);
-  color: #e6edf3;
+  color: var(--code-text);
   font-family: var(--font-mono);
   font-size: 13px;
   white-space: pre-wrap;
