@@ -11,7 +11,7 @@ import { loadAxisWidth } from "../lesson/axisWidth";
 import { CodeWorkspace, ItemForm, type Answer } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
 import { NextLink, Result } from "../lesson/Result";
-import { nextStep, splitLessonForExplain } from "../lesson/steps";
+import { explainParts, nextStep } from "../lesson/steps";
 import { AiJudgement } from "../components/AiJudgement";
 import { coldCheckMessage, stepName } from "../lib/format";
 import { useInteractionId } from "../lib/interaction";
@@ -117,11 +117,81 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
     },
   });
   const prompt = unit.concept_check_config?.prompt as string | undefined;
+  // Parts come from the lesson's "##" headings; "Say it back" is always last (SPEC-19 section 1).
+  const parts = [...explainParts(unit.lesson_markdown ?? ""), { title: SAY_IT_BACK, body: "" }];
+  const [index, setIndex] = useState(0);
+  const [seen, setSeen] = useState(0);
+  const part = parts[index]!;
+  const sayItBack = index === parts.length - 1;
+  // Parts change without touching the URL or history: the Back arrow still leaves the lesson.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const moved = useRef(false);
+  const go = (to: number) => {
+    moved.current = true;
+    setIndex(to);
+    setSeen((most) => Math.max(most, to));
+  };
+  // After a move, put focus (and the view) on the new part's heading, not on the first load.
+  useEffect(() => {
+    if (!moved.current) return;
+    heading.current?.focus();
+    heading.current?.scrollIntoView?.({ block: "nearest" });
+  }, [index]);
 
   return (
-    <div className="card lesson-card">
-      <h1 className="step-title">{unit.concept_line}</h1>
-      {unit.lesson_markdown && <Prose wikiLinks>{splitLessonForExplain(unit.lesson_markdown)}</Prose>}
+    <div className="explain">
+      <nav className="explain-parts" aria-label="Explain parts">
+        <span className="eyebrow explain-eyebrow">Explain · {parts.length} short parts</span>
+        <ol>
+          {parts.map((item, at) => {
+            const state = at === index ? "current" : at <= seen ? "done" : "todo";
+            return (
+              <li key={item.title + at}>
+                <button type="button" className={`explain-part explain-part-${state}`} aria-current={at === index ? "step" : undefined} onClick={() => go(at)}>
+                  <span className="explain-dot" aria-hidden="true">
+                    {state === "done" ? "✓" : at + 1}
+                  </span>
+                  <span>{item.title}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        {(unit.wiki_links ?? []).length > 0 && (
+          <div className="explain-notes">
+            <span className="small muted">Concept notes</span>
+            <span className="explain-note-links">
+              {(unit.wiki_links ?? []).map((link) => (
+                <Link key={link.wiki_slug} to="/concepts/$slug" params={{ slug: link.wiki_slug }} className="explain-note">
+                  {link.concept_name}
+                </Link>
+              ))}
+            </span>
+          </div>
+        )}
+        {next && (
+          <div className="explain-skip">
+            <span className="explain-skip-title">Already know this?</span>
+            <span className="small muted">Skip ahead and try {stepName(next)}. You can come back any time.</span>
+            <Link to="/units/$unitId/$step" params={{ unitId: unit.unit_id, step: next }} className="button button-small">
+              Try {stepName(next)} now
+            </Link>
+          </div>
+        )}
+      </nav>
+
+      <div className="explain-main">
+        <article className="card lesson-card explain-card" aria-labelledby="explain-part-title">
+          <span className="mono muted small">
+            Part {index + 1} of {parts.length}
+          </span>
+          {index === 0 && <h1 className="step-title">{unit.concept_line}</h1>}
+          <h2 id="explain-part-title" className="explain-part-title" ref={heading} tabIndex={-1}>
+            {part.title}
+          </h2>
+          {!sayItBack && <Prose wikiLinks>{part.body}</Prose>}
+          {sayItBack && (
+            <>
       <form
         className="concept-check"
         onSubmit={(event) => {
@@ -152,9 +222,28 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
           <NextLink unitId={unit.unit_id} step={next} />
         </>
       )}
+            </>
+          )}
+        </article>
+        <div className="explain-nav">
+          {index > 0 && (
+            <button type="button" className="button" onClick={() => go(index - 1)}>
+              <span aria-hidden="true">← </span>Part {index}: {parts[index - 1]!.title}
+            </button>
+          )}
+          {!sayItBack && (
+            <button type="button" className="button button-primary explain-next" onClick={() => go(index + 1)}>
+              Part {index + 2}: {parts[index + 1]!.title}
+              <span aria-hidden="true"> →</span>
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+
+const SAY_IT_BACK = "Say it back";
 
 function useAttempt(exercise: Exercise | undefined, activity: string, onDone: () => void) {
   const client = useQueryClient();
@@ -477,7 +566,21 @@ export function Lesson() {
   return (
     <main className="lesson-page">
       <div className="lesson-top">
+        <div className="lesson-head">
+          <span className="mono muted small">
+            {data.unit_id} · {data.stage_label}
+          </span>
+          <span className="lesson-unit-title">{data.title}</span>
+        </div>
         <StepRail unit={data} step={step} done={doneSteps} cold={cold.data} />
+        <span className="lesson-progress">
+          <span className="cm-bar" aria-hidden="true">
+            <span style={{ width: `${(steps.filter((name) => doneSteps.includes(name)).length / Math.max(steps.length, 1)) * 100}%` }} />
+          </span>
+          <span className="muted small">
+            {steps.filter((name) => doneSteps.includes(name)).length} of {steps.length} steps done
+          </span>
+        </span>
         <ResetUnit unitId={unitId} />
       </div>
 

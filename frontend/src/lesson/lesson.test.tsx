@@ -13,7 +13,7 @@ import {
   saveAxisWidth,
 } from "./axisWidth";
 import { parseSse } from "./axisStream";
-import { activityFor, nextStep, revealText, splitLessonForExplain } from "./steps";
+import { activityFor, explainParts, nextStep, revealText, splitLessonForExplain } from "./steps";
 
 // CodeMirror and xterm need a real browser; the Playwright walk covers them.
 vi.mock("./CodeEditor", () => ({
@@ -129,6 +129,21 @@ describe("lesson helpers", () => {
 
     expect(text).toContain("Keep.");
     expect(text).not.toContain("uv run");
+  });
+
+  it("splits Explain into parts by its ## headings, intro in part 1, other steps' sections left out", () => {
+    const parts = explainParts(
+      "# Unit\n\nA short intro.\n\n## Why it matters\n\nAt the desk.\n\n## Video Walkthrough\n\nHidden.\n\n## In, clean, out\n\nThree steps.\n",
+    );
+
+    expect(parts.map((part) => part.title)).toEqual(["Why it matters", "In, clean, out"]);
+    expect(parts[0]!.body).toBe("A short intro.\n\nAt the desk.");
+    expect(parts[1]!.body).toBe("Three steps.");
+  });
+
+  it("makes one part named Read when a lesson has no ## heading", () => {
+    expect(explainParts("# Unit\n\nJust text.\n")).toEqual([{ title: "Read", body: "Just text." }]);
+    expect(explainParts("")).toEqual([]);
   });
 
   it("parses streamed events, even split across reads", () => {
@@ -251,6 +266,8 @@ describe("explain step", () => {
   async function submit(text: string) {
     const user = userEvent.setup();
     renderAt("/units/PY-0.1/explain");
+    // "Say it back" is the last Explain part (SPEC-19).
+    await user.click(await screen.findByRole("button", { name: "Say it back" }));
     await user.type(await screen.findByLabelText("Your explanation"), text);
     await user.click(screen.getByRole("button", { name: "Check my explanation" }));
     return user;
@@ -261,7 +278,47 @@ describe("explain step", () => {
     renderAt("/units/PY-0.1/explain");
 
     expect(await screen.findByText("Python runs in order.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Say it back" }));
     expect(screen.getByText("Explain it.")).toBeInTheDocument();
+  });
+
+  it("shows one part at a time, with Say it back last, and moves without adding history", async () => {
+    stubApi(explainRoutes("Solid"));
+    const user = userEvent.setup();
+    const router = renderAt("/units/PY-0.1/explain");
+
+    const nav = await screen.findByRole("navigation", { name: "Explain parts" });
+    expect(nav).toHaveTextContent("Explain · 2 short parts");
+    expect(within(nav).getByRole("button", { name: /The idea/ })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByText("Part 1 of 2")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Your explanation")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Part 2: Say it back/ }));
+    expect(screen.getByText("Part 2 of 2")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Say it back" })).toHaveFocus();
+    expect(screen.getByLabelText("Your explanation")).toBeInTheDocument();
+    expect(router.history.canGoBack()).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: /Part 1: The idea/ }));
+    expect(screen.getByText("Python runs in order.")).toBeInTheDocument();
+  });
+
+  it("lists the unit's concept notes beside the parts", async () => {
+    stubApi({
+      ...explainRoutes("Solid"),
+      "GET /api/v1/units/PY-0.1": { ...fullUnit, wiki_links: [{ concept_name: "Variables", wiki_slug: "variables" }] },
+    });
+    renderAt("/units/PY-0.1/explain");
+
+    const nav = await screen.findByRole("navigation", { name: "Explain parts" });
+    expect(within(nav).getByRole("link", { name: "Variables" })).toHaveAttribute("href", "/concepts/variables");
+  });
+
+  it("offers to skip ahead to the next step", async () => {
+    stubApi(explainRoutes("Solid"));
+    renderAt("/units/PY-0.1/explain");
+
+    expect(await screen.findByRole("link", { name: "Try Predict now" })).toHaveAttribute("href", "/units/PY-0.1/predict");
   });
 
   it("shows the verdict, the ideas and who judged", async () => {
@@ -676,6 +733,7 @@ describe("regenerate", () => {
     stubApi({ ...routes("cold_check", ex, passed, available), "POST /api/v1/explain": {} });
     renderAt("/units/PY-0.1/explain");
 
+    await userEvent.click(await screen.findByRole("button", { name: "Say it back" }));
     await screen.findByLabelText("Your explanation");
     expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
   });

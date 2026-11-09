@@ -1089,10 +1089,11 @@ body.resizing {
   user-select: none;
 }
 
+/* Same frame as .container (step 5), so the lesson lines up with the Back arrow. */
 .lesson-page {
-  max-width: 1360px;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 16px 24px 48px;
+  padding: 16px clamp(16px, 4vw, 64px) 48px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2861,4 +2862,213 @@ button:disabled {
   .cm-modules .stage {
     padding: 16px;
   }
+}
+
+/* Lesson page (redesign step 5, owner-approved mock "Lesson", SPEC-19). */
+.lesson-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lesson-unit-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.lesson-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lesson-progress .cm-bar {
+  width: 100px;
+}
+
+/* Explain in parts */
+.explain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.explain-parts {
+  flex: 1 1 220px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.explain-eyebrow {
+  color: var(--accent-text);
+  padding: 0 8px 8px;
+}
+
+.explain-parts ol {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.explain-part {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.explain-part:hover {
+  background: var(--surface-muted);
+}
+
+.explain-part-current {
+  background: var(--accent-soft);
+}
+
+.explain-dot {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+}
+
+.explain-part-current .explain-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.explain-part-done .explain-dot {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.explain-skip {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.explain-skip-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.explain-skip .button {
+  align-self: flex-start;
+}
+
+.explain-main {
+  flex: 999 1 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.explain-card {
+  padding: 24px 28px;
+  gap: 16px;
+}
+
+.explain-part-title {
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.explain-part-title:focus {
+  outline: none;
+}
+
+.explain-part-title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.explain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.explain-next {
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .explain-parts {
+    max-width: none;
+  }
+
+  .explain-card {
+    padding: 18px;
+  }
+
+  .lesson-progress {
+    width: 100%;
+  }
+}
+
+.explain-notes {
+  margin-top: 16px;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.explain-note-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.explain-note {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.explain-note:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
 }

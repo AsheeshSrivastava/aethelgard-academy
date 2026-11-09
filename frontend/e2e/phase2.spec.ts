@@ -55,6 +55,11 @@ test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) =
   await page.getByRole("button", { name: "Mark as watched" }).click();
   await page.getByRole("link", { name: "Next: Explain" }).click();
 
+  // Explain is in parts (SPEC-19); the concept check is the last one, "Say it back".
+  const parts = page.getByRole("navigation", { name: "Explain parts" });
+  await expect(parts).toBeVisible();
+  await parts.getByRole("button", { name: "Say it back" }).click();
+
   // Explain: a Shaky answer never blocks
   await expect(page.getByLabel("Your explanation")).toBeVisible();
   await page.getByLabel("Your explanation").fill("Because it is code.");
@@ -240,7 +245,9 @@ test("a learner finds a concept by search, and by a wiki link in a lesson", asyn
   await expect(page.getByRole("heading", { level: 1, name: "Variables" })).toBeVisible();
 
   // From a lesson's Explain text
+  // The link sits in the lesson's second part (SPEC-19 parts).
   await page.goto("/units/PY-0.1/explain");
+  await page.getByRole("navigation", { name: "Explain parts" }).getByRole("button", { name: /Reference Desk/ }).click();
   await expect(page.locator(".prose")).not.toContainText("[[");
   await page.locator(".prose").getByRole("link", { name: "Comments in Python" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Comments in Python" })).toBeVisible();

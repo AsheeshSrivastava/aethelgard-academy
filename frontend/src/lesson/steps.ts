@@ -33,6 +33,28 @@ export function revealText(correct: unknown): string {
 // The video has its own step, and the app replaces the command-line workflow.
 const SECTIONS_SHOWN_ELSEWHERE = /^## .*(Video Walkthrough|Local (Editor|Workflow) Instructions)/;
 
+export interface ExplainPart {
+  title: string;
+  body: string;
+}
+
+/**
+ * Explain as parts (SPEC-19 section 1): each "## " section is a part named by its heading, and
+ * text before the first heading belongs to part 1. "Say it back" is added by the page, not here.
+ */
+export function explainParts(markdown: string): ExplainPart[] {
+  const text = splitLessonForExplain(markdown);
+  if (!text) return [];
+  const chunks = text.split(/^(?=## )/m);
+  const intro = chunks[0]?.startsWith("## ") ? "" : (chunks.shift() ?? "").trim();
+  if (chunks.length === 0) return [{ title: "Read", body: intro }];
+  return chunks.map((chunk, index) => {
+    const [heading = "", ...rest] = chunk.split("\n");
+    const body = rest.join("\n").trim();
+    return { title: heading.replace(/^##\s+/, "").trim(), body: index === 0 && intro ? `${intro}\n\n${body}` : body };
+  });
+}
+
 /** The lesson text for Explain, without the sections other steps already cover. */
 export function splitLessonForExplain(markdown: string): string {
   const parts = markdown.split(/^(?=## )/m);
