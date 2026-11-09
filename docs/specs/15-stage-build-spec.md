@@ -191,13 +191,76 @@ Route `/courses/:courseId/stages/:stage/build`, loaded only when opened. The cou
 
 ---
 
+## 9. README work (TW step 4, ADR-0028, Amendment A2; added 2026-11-09)
+
+The Stage 0 build's README follows the Technical Writing checklist (Technical Writing Roadmap v1, TW-0.1). AI drafting of the README is expected; the learner's review is the evidence. The code stays the learner's, and AXIS stays Socratic on code.
+
+### 9.1 README starter and requirements (`build.json`)
+
+The README starter has five headings, in order: `What it does`, `What you need first`, `How to run it`, `A sample run`, `Limits`. They replace "What this script does", "How to run it" and "What I checked myself" (the real sample run and the review note now carry what "What I checked myself" did).
+
+| id | Label | Check |
+| :--- | :--- | :--- |
+| `readme-sections` | README answers the five checklist points | `markdown_sections` with all five headings; `min_words` 4 each (8 for `What it does`) |
+| `readme-run` | README gives the exact command for checkin.py | `markdown_sections` on `How to run it`, `any`: `uv run checkin.py`, `python checkin.py`, `python3 checkin.py` |
+| `readme-sample` | README's sample run is real (Verify) | `readme_sample_run` (9.2) |
+| `review` | Review note written | `review_note`, `min_chars` 20 (9.3) |
+
+`readme-sections` and `readme-run` are read without running code. `readme-sample` runs code, so it is checked by Verify only, like `behaviour`.
+
+### 9.2 New check kind `readme_sample_run`
+
+Fields: `path` (the README), `heading` (`A sample run`). Met when:
+
+1. The section holds a fenced code block (the transcript). Otherwise: not met, "Paste one real run inside a code block under 'A sample run'."
+2. The input prompts are read from the entry file: the string literal of every `input("...")` call, in code order (AST, no execution). A transcript line that starts with one of those prompts is a typed line; the text after the prompt is the typed value. Every other non-blank line is expected output.
+3. At least one typed line and one output line. Otherwise: not met, with a plain detail.
+4. The entry file runs in the sandbox with the typed values as stdin, one per line. Each expected output line, trimmed, must appear in the captured stdout in the same order (prompts are printed without a newline when stdin is piped, so stdout is split on prompts as well as newlines). The first missing line is named in the detail: "Your script did not print: `<line>`".
+5. A run error or timeout: not met, "The script stopped before the sample run finished."
+
+This is generic, public logic: it reveals no answer, so it lives in the public code, not in `checks.py`.
+
+### 9.3 Review note
+
+- Request field `review_note` on `build:check` and on build attempts, beside `ownership_note`. Saved in the draft under the key `review-note.txt`.
+- New check kind `review_note` (`min_chars`): the trimmed note has at least `min_chars` characters.
+- Prompt on the page: "What did you change in the README, and why? If AXIS drafted it, say what you fixed after running your script."
+- The note is stored with the build attempt (the evidence entry's `observed_reasoning` keeps the ownership note; the review note is stored beside it as `review_note`).
+
+### 9.4 "Draft my README"
+
+- `POST /api/v1/learners/me/courses/{course_id}/stages/{stage}/build:draft-readme`, body `{files}`, returns `{markdown, status, model}`. Same lock rule as the build (423 until open).
+- The active AXIS provider (ADR-0025) drafts the README from the learner's current entry file and the brief, under the five headings, using the command `uv run <entry>`. It is told it has not run the script, so the sample run must say "(paste a real run here)" unless it can be read straight from the code. No model name is written in code; `model` reports what answered.
+- `MOCK_AI=true`: a fixed draft with the five headings, the real entry file name, and the paste placeholder. No network.
+- **Accounting (ADR-0028 section 2.6):** the request never carries the build's `exercise_id`, so it is never counted as help on the build. It is logged in the interaction log (ADR-0022) as kind `document_draft`, with the course and stage. It does not change `AssistanceLevel` or lower evidence.
+- Failures (quota, timeout, unreadable reply) return a plain error; nothing falls back silently (ADR-0026).
+- Frontend: the button sits with the README tab. If the README differs from its starter, a confirm step ("Replace your README with an AXIS draft?") comes first. The draft goes into the README tab; nothing is submitted.
+
+### 9.5 Build page additions (section 7)
+
+- With the README tab: the line "Stuck on the README? Learn it in TW Module 0", linking to `/units/TW-0.1?back=<this build's path>`. The unit page's back arrow returns to that path when `back` is a build path of this app (`/courses/<id>/stages/<n>/build`); any other value is ignored.
+- A README checklist panel listing the five points. Each shows met, missing or not checked yet, from `readme-sections`, `readme-run` and `readme-sample`.
+- The review note field, below the ownership note.
+- Verify shows each README requirement plainly as met or not met, with its detail.
+- Learner wording follows ADR-0027 (Module, never Stage).
+
+### 9.6 Course map
+
+A stage of a roadmap with no build by design has no build tile: today the Technical Writing stages (TW 0 to TW 2), whose documents attach to the Python builds. `StageView.build` is `null` for them.
+
+### 9.7 Not in this step
+
+AXIS data-based feedback on the README and the review note (work sequence 2d.5; the existing "Ask AXIS about my README" stays until then), a README item type and an AXIS-judged Direct item for TW units.
+
+---
+
 ## 8. Acceptance
 
 1. A stage returns `423` until its build is open (SPEC-16 section 3.4), on the build, on `build:check` and on attempts.
 2. No response holds `check`, `checks.py` or `solution.py` content.
 3. Each check kind is met and not met as specified; a syntax error is reported, not raised.
 4. `sys.exit(0)` and `os._exit(0)` scripts do not pass a behaviour check.
-5. The reference solution meets every requirement, with the hidden and the practice checks. The starter meets none of the code requirements. A script fitted to the practice checks fails the hidden ones.
+5. The reference solution (with a README that meets section 9) meets every requirement, with the hidden and the practice checks. The starter meets none of the code requirements. A script fitted to the practice checks fails the hidden ones.
 6. A passing submit writes one Strong `Build` entry per `proves` item. With no help, it qualifies for Own.
 7. A failed submit writes nothing. `SUPPLIED_REASONING` gives Weak.
 8. A client cannot send a strength or category, or get AXIS out of Socratic mode on a build.
