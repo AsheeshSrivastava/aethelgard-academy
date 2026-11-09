@@ -432,6 +432,7 @@ ul {
 
 .axis-band {
   background: var(--band);
+  border-block: 1px solid var(--line);
   color: #ffffff;
 }
 
@@ -964,6 +965,8 @@ a.build-tile {
   padding: 24px;
   border-radius: 16px;
   background: var(--band);
+  /* The edge keeps the dark band visible on the dark page too (step 7 audit). */
+  border: 1px solid var(--line);
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -1945,8 +1948,9 @@ button:disabled {
   font-weight: 600;
 }
 
-.skill-not-started {
-  opacity: 0.55;
+/* Muted by colour, not opacity: opacity took the text below WCAG AA (step 7 audit). */
+.skill-not-started .skill-entry-head {
+  color: var(--text-muted);
 }
 
 .skill-not-started .skill-level {

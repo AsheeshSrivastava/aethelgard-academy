@@ -53,7 +53,8 @@ function CodeBlock({ children }: { children?: ReactNode }) {
       <button type="button" className="copy-button" onClick={copy} aria-label={copied ? "Copied" : "Copy code"}>
         {copied ? "Copied" : "Copy"}
       </button>
-      <pre>
+      {/* Focusable, so a keyboard can scroll a wide block on a phone (WCAG 2.1.1; step 7 audit). */}
+      <pre tabIndex={0}>
         <code>{isPython ? highlightPython(text) : text}</code>
       </pre>
     </div>
@@ -72,6 +73,8 @@ const components: Components = {
     ),
   // A reply must not be able to load anything from another site.
   img: ({ alt }) => <span>{alt}</span>,
+  // Tables scroll sideways on a phone; focusable so a keyboard can scroll them too.
+  table: ({ children }) => <table tabIndex={0}>{children}</table>,
 };
 
 function ConceptLink({ slug, label }: { slug: string; label?: string }) {

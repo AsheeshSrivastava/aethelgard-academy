@@ -92,7 +92,8 @@ function ProfileCard({ profile, data, onUse }: { profile: ModelProfile; data: Mo
 
 function UsageTable({ title, rows, labels }: { title: string; rows: UsageRow[]; labels: Record<string, string> }) {
   return (
-    <div className="table-scroll">
+    // Focusable, so a keyboard can scroll the table on a narrow screen (WCAG 2.1.1; step 7 audit).
+    <div className="table-scroll" tabIndex={0} role="region" aria-label={`${title}, scrollable`}>
       <table aria-label={title}>
         <caption className="eyebrow">{title}</caption>
         <thead>

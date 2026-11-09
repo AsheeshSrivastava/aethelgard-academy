@@ -118,6 +118,15 @@ describe("quick check (SPEC-19 section 3)", () => {
   });
 });
 
+describe("keyboard access (step 7 audit, WCAG 2.1.1)", () => {
+  it("lets a keyboard reach wide code blocks and tables, which scroll on a phone", () => {
+    show("```\nlong line\n```\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n");
+
+    expect(screen.getByText("long line").closest("pre")).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("table")).toHaveAttribute("tabindex", "0");
+  });
+});
+
 describe("outside a lesson", () => {
   it("never turns an AXIS reply's code into blocks", () => {
     show(fence("quickcheck", QUICK) + fence("steps", STEPS));
