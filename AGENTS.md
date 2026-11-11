@@ -115,7 +115,7 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
 ### Helpers (model split, owner 2026-11-05)
 
 - The user-level helpers `implementer` (Sonnet) and `scout` (Haiku) are used here as the global CLAUDE.md says; the main session (Opus) orchestrates, reviews and commits.
-- Every brief to a helper names this repo's rules: Decision -> ADR -> Spec -> Tests first -> Code; answer material never goes into this repo; commit on the working branch only, no push; never read `.env`.
+- Every brief to a helper names this repo's rules: Decision -> ADR -> Spec -> Tests first -> Code; answer material never goes into this repo; never commit or push (the orchestrator commits); never read `.env`.
 - Helpers never write or move answer material, never approve content, and never decide anything the owner decides. The orchestrator checks their work, runs the suites, then commits.
 
 ### Ownership

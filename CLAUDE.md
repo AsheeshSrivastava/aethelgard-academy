@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Project rules, purpose and workflow live in AGENTS.md. Read it first.
+Project rules, purpose and workflow live in AGENTS.md (loaded below).
 @AGENTS.md
 
 ## Stack
