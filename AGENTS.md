@@ -108,14 +108,14 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
 - One step at a time.
 - Learner-facing term (ADR-0027): stage (code, data, roadmaps, ADRs) = Module (anything a learner reads). Never rename code identifiers; change labels only.
 - Answer material never goes into this repo: answer keys, hidden checks, Make tests, reference and wrong solutions, worked answers and build checks. Review docs holding answers stay git-ignored. Keep the guard test `tests/test_private_seed_answers.py`.
-- Local only: commit locally, never push. Never print keys. No paid run without a printed cost estimate first; the owner runs paid steps himself.
+- Changes reach main only through a GitHub PR (owner decision 2026-11-11). Work on a branch, never commit to main directly. Push the branch and open the PR only when the owner says. CI must pass; the owner merges. After a merge, pull main and push it to Entire (`origin`). Never print keys. No paid run without a printed cost estimate first; the owner runs paid steps himself.
 - After substantive work, state **"Restarting review of the work"** and do a fresh pass against the approved scope, changed files, checks, and governing documents. Record findings and fixes.
 - Commit only approved scope and verify the Git hash. Inspect staged paths first.
 
 ### Helpers (model split, owner 2026-11-05)
 
 - The user-level helpers `implementer` (Sonnet) and `scout` (Haiku) are used here as the global CLAUDE.md says; the main session (Opus) orchestrates, reviews and commits.
-- Every brief to a helper names this repo's rules: Decision -> ADR -> Spec -> Tests first -> Code; answer material never goes into this repo; local commits only, no push; never read `.env`.
+- Every brief to a helper names this repo's rules: Decision -> ADR -> Spec -> Tests first -> Code; answer material never goes into this repo; commit on the working branch only, no push; never read `.env`.
 - Helpers never write or move answer material, never approve content, and never decide anything the owner decides. The orchestrator checks their work, runs the suites, then commits.
 
 ### Ownership
