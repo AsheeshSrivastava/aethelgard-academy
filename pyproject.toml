@@ -1,7 +1,9 @@
 [project]
 name = "lms"
 version = "0.1.0"
-description = "Add your description here"
+description = "Aethelgard Academy: a capability-based learning platform with an append-only evidence ledger and the AXIS Socratic AI companion"
+license = "BUSL-1.1"
+license-files = ["LICENSE"]
 readme = "README.md"
 authors = [
     { name = "Asheesh Ranjan Srivastava", email = "asheeshsrivastava9@gmail.com" }

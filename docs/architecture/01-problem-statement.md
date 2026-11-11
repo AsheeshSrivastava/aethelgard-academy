@@ -17,7 +17,7 @@ This platform is an industry-grade Knowledge Management and Learning Platform (L
 
 ### 1.1 Production-Grade & Dual-Purpose Mandate
 This platform is deliberately architected for **real production deployment**, not as a throwaway tutorial demo:
-- **Production Hardening:** Enforces hardened Docker sandbox execution with network and resource isolation, dual-store persistence (SQLite for development / PostgreSQL for production with atomic migrations), and a strict Two-Stage RAG Provenance Firewall.
+- **Production Hardening (target state; see "Built Today vs Pluggable Seams" in ARCHITECTURE.md for what runs now):** Enforces hardened Docker sandbox execution with network and resource isolation, dual-store persistence (SQLite for development / PostgreSQL for production with atomic migrations), and a strict Two-Stage RAG Provenance Firewall.
 - **Top-Tier Portfolio Asset:** By engineering for real multi-tenant reliability, FinOps token monitoring, and deterministic evidence auditing, the platform demonstrates the highest echelon of systems thinking and AI engineering.
 
 ---

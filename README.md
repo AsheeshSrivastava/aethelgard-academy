@@ -21,7 +21,7 @@
 Aethelgard Academy bridges the gap between **"vibe coding with AI"** and **"production-grade systems engineering"**.
 
 1. **Cumulative Project Spine:** Replaces isolated toy puzzles (`foo()` / `bar()`) with continuous operational workflows (Ingress $\to$ Transformation $\to$ Egress) inspired by real-world triage, intake, and multi-agent pipelines.
-2. **Socratic AI Companion (AXIS):** An AI mentor strictly forbidden from generating direct code solutions. It forces the learner through the "productive struggle" required to build diagnostic composure and debugging instincts.
+2. **Socratic AI Companion (AXIS):** An AI mentor with three modes (Coach, Hybrid, Socratic). In Socratic mode, which builds use, its output is filtered so it never hands over a code solution; Cold Checks run without AXIS at all. This keeps the "productive struggle" that builds diagnostic composure and debugging instincts.
 3. **Deterministic Capability Tracking:** Replaces vanity completion percentages (`completed = true`) with an **immutable, append-only Evidence Ledger**. True mastery is calculated by analyzing historical attempts, assistance levels, and 24-hour Cold Check retention tests.
 
 ---
@@ -36,15 +36,25 @@ flowchart TD
     API --> Core["Core Domain Engine (src/lms/core/)<br/>• Pure Python Business Logic<br/>• Proficiency Engine & Cold Check Timer<br/>• Abstract Ports (interfaces.py)"]
     
     Core --> DB["SQLite Evidence Ledger<br/>(Immutable Event Sourcing)"]
-    Core --> AI["AXIS AI Companion<br/>• Socratic Boundary Guardrails<br/>• Hybrid RAG (BM25 + Vectors + Reranker)"]
-    Core --> Runner["Execution Sandbox<br/>• Ephemeral Docker Containers<br/>• Subprocess Fallback"]
+    Core --> AI["AXIS AI Companion<br/>• Socratic Boundary Guardrails<br/>• Hybrid RAG: BM25 today<br/>(vector + reranker seams)"]
+    Core --> Runner["Code Runner<br/>• Subprocess runner today<br/>• Docker sandbox: seam, not wired yet"]
 ```
 
 ### Architectural Highlights
 - **Zero-Dependency Domain Core:** `src/lms/core/` does not import FastAPI, SQLite, Docker, or AI libraries. All business rules and capability logic can be verified in milliseconds offline.
 - **Assistance Accounting:** Distinguishes between syntax lookups (`SYNTAX_LOOKUP`, encouraged developer practice) and algorithmic shortcuts (`SUPPLIED_REASONING`). If AI supplies the reasoning path, the skill is routed to targeted unassisted practice (`STRENGTHEN`).
-- **Empirical Hybrid Reranked RAG:** Combines Inverted BM25 (for exact keywords, flags, and function identifiers) with dense semantic vectors via Reciprocal Rank Fusion ($k=60$) and `bge-reranker-v2-m3` cross-encoder reranking. Retrieved documentation passages are mathematically verified exact byte-slices (`verify_passage == True`).
-- **Container-Isolated Sandboxing:** Executes untrusted student code inside rootless, network-disabled ephemeral Docker containers (`256MB` RAM, `0.5` CPU), falling back gracefully to a restricted subprocess runner for offline development.
+- **Verified Retrieval (RAG):** An inverted BM25 index (exact keywords, flags and function names) with heading-aware chunking. Every retrieved passage is checked to be an exact byte-slice of its source (`verify_passage == True`). Reciprocal Rank Fusion ($k=60$) and a reranker slot are built in, but no embedding model or cross-encoder is wired yet, so ranking today is lexical.
+- **Code Runner:** Learner code runs in a subprocess with a timeout, in a temporary folder, with API keys and `.env` secrets stripped from its environment. A `DockerRunner` that builds a network-disabled, memory-, CPU- and process-limited container command exists, but it is not wired in yet: today it falls back to the subprocess runner. Until it is, the app is for single-learner local use, not for running strangers' code.
+
+### Built Today vs Pluggable Seams
+
+| Area | Built and tested today | Seam ready, not wired yet |
+| :--- | :--- | :--- |
+| Persistence | SQLite append-only evidence ledger, idempotent attempts, non-destructive resets | PostgreSQL adapter behind `ILearnerRepository` |
+| Code execution | Subprocess runner: timeout, temp folder, secrets stripped | Docker sandbox (`--network none`, memory, CPU and process limits) behind `ICodeRunner` |
+| Retrieval | BM25 index, exact byte-slice verification, RRF fusion code | Dense embeddings and a cross-encoder reranker |
+| AXIS grounding | Upstream-docs index when built locally (`data/index`, not in git; ADR-0003 temporary exception) | Curriculum concept notes as the retrieval source (ADR-0003 target) |
+| AI providers | Offline mock, local OpenAI-compatible model, OpenAI, Gemini, monthly cost cap | Any other provider behind `IAXISCompanion` |
 
 ---
 
@@ -53,27 +63,29 @@ flowchart TD
 The platform is designed to run **100% offline with zero external API keys or cloud accounts** via built-in deterministic mock adapters (`MOCK_AI=true`).
 
 ### Prerequisites
-- Python 3.12+ (or 3.14)
+- Python 3.14
 - [`uv`](https://github.com/astral-sh/uv) (fast Python package manager)
 
 ### 1. Clone & Run the Web Application
 ```bash
 # Clone the repository
-git clone https://github.com/AsheeshSrivastava/lms.git
-cd lms
+git clone https://github.com/AsheeshSrivastava/aethelgard-academy.git
+cd aethelgard-academy
 
 # Launch the unified web platform (serves the pre-built React frontend + FastAPI backend)
 uv run lms serve
 ```
 Open **`http://localhost:8000`** in your browser.  
-Try selecting any unit from Stage 0, execute code in the playground, or open the **AXIS AI** side panel to test the Socratic boundary in action.
+Try selecting any unit from Module 0, execute code in the playground, or open the **AXIS AI** side panel to test the Socratic boundary in action.
+
+Answer keys and hidden checks live in a private repository, so on a fresh clone the graded exercise items are held back ("no exercise yet"). Lessons, the playground and AXIS still work.
 
 ### 2. Run the Automated Test Suite
 To verify the system contracts, sandboxing boundaries, and guardrail invariants:
 ```bash
 uv run pytest
 ```
-Runs **970+ automated tests** in ~48 seconds.
+Runs **1,400+ automated tests** in about a minute. The tests use made-up exercise items with fake answers (`tests/fixtures`), so a fresh clone passes without the private answers.
 
 ---
 
@@ -91,7 +103,7 @@ For a detailed explanation of folder responsibilities and architectural decision
 ├── curriculum/         # Stage lesson packages, stage builds, and exercise seeds
 ├── reference/          # Pinned curriculum roadmaps (Python, AI Engineering, Backend)
 ├── scripts/            # Tooling and reproducible doc fetcher (fetch_upstream.py)
-├── tests/              # 970+ unit, integration, and chaos falsification tests
+├── tests/              # 1,400+ unit, integration, and chaos falsification tests
 ├── ARCHITECTURE.md     # In-depth System Architecture & Repository Topology
 └── LICENSE             # Business Source License (BSL 1.1)
 ```
