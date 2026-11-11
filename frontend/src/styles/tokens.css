@@ -54,7 +54,13 @@
   --code-muted: #8a97a6;
   --code-line: #2a3542;
   --code-active: #18212b;
-  --code-selection: rgba(79, 245, 245, 0.22);
+  /* The active line is painted above CodeMirror's selection layer, so it must be
+     see-through or it hides the selection on the cursor's line. */
+  --code-active-line: rgba(255, 255, 255, 0.045);
+  /* Selection on dark code: main text 7:1, weakest syntax colour 3.5:1. */
+  --code-selection: #264f78;
+  --code-selection-blur: #223447;
+  --code-selection-text: #ffffff;
   --code-focus: #4ff5f5;
   --syn-keyword: #c792ea;
   --syn-string: #c3e88d;
@@ -71,6 +77,10 @@
   --muted: var(--text-muted);
   --accent2: var(--warm-text);
   --accent2-soft: var(--warm);
+
+  /* Text selection on page surfaces (13.9:1 in light; dark below). */
+  --select-bg: #b5ecf0;
+  --select-text: #0e1620;
   --bad: var(--danger);
   --bad-soft: var(--danger-soft);
 
@@ -110,6 +120,8 @@
   --code-bg: #07090c;
   --code-chrome: #0d1218;
   --glow: radial-gradient(ellipse at 70% 0%, rgba(79, 245, 245, 0.1), transparent 60%);
+  --select-bg: #264f78;
+  --select-text: #ffffff;
 
   color-scheme: dark;
 }
@@ -148,6 +160,8 @@
     --code-bg: #07090c;
     --code-chrome: #0d1218;
     --glow: radial-gradient(ellipse at 70% 0%, rgba(79, 245, 245, 0.1), transparent 60%);
+    --select-bg: #264f78;
+    --select-text: #ffffff;
 
     color-scheme: dark;
   }

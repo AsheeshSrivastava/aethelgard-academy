@@ -11,10 +11,15 @@ const theme = EditorView.theme(
     "&": { backgroundColor: "var(--code-bg)", color: "var(--code-text)", fontSize: "14px" },
     ".cm-content": { fontFamily: "var(--font-mono)", caretColor: "var(--code-text)", padding: "12px 0" },
     ".cm-gutters": { backgroundColor: "var(--code-bg)", color: "var(--code-muted)", border: "none" },
-    ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "var(--code-active)" },
+    // Translucent: the active line sits above the selection layer and would hide it.
+    ".cm-activeLine": { backgroundColor: "var(--code-active-line)" },
+    ".cm-activeLineGutter": { backgroundColor: "var(--code-active)" },
     "&.cm-focused .cm-cursor": { borderLeftColor: "var(--code-text)" },
     "&.cm-focused": { outline: "2px solid var(--code-focus)" },
-    ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": { backgroundColor: "var(--code-selection) !important" },
+    // !important beats the base theme's more specific selection rules.
+    ".cm-selectionBackground": { backgroundColor: "var(--code-selection-blur) !important" },
+    "&.cm-focused .cm-selectionBackground": { backgroundColor: "var(--code-selection) !important" },
+    ".cm-selectionMatch": { backgroundColor: "rgba(130, 170, 255, 0.18)" },
   },
   { dark: true },
 );

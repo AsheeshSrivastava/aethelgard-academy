@@ -4,6 +4,32 @@
   box-sizing: border-box;
 }
 
+/* Selection sets both colours, so contrast holds on any surface. */
+::selection {
+  background-color: var(--select-bg);
+  color: var(--select-text);
+}
+
+/* Code and dark bands are dark in both themes. The editor's own lines use
+   CodeMirror's drawn selection (CodeEditor.tsx), which overrides this with !important. */
+.code-editor ::selection,
+.run-terminal ::selection,
+.prose pre ::selection,
+.code-block ::selection,
+.material ::selection,
+.material::selection,
+.ld-plan ::selection,
+.ld-plan::selection,
+.ld-mini-code ::selection,
+.prose .steps-code::selection,
+.prose .steps-result code::selection,
+.axis-band ::selection,
+.next-action ::selection,
+.build-page .workspace-head ::selection {
+  background-color: var(--code-selection);
+  color: var(--code-selection-text);
+}
+
 body {
   margin: 0;
   background: var(--ground);

@@ -12,7 +12,9 @@ export function terminalTheme() {
     background: token("--code-bg", "#0e141b"),
     foreground: token("--code-text", "#e6edf3"),
     cursor: token("--code-focus", "#4ff5f5"),
-    selectionBackground: token("--code-selection", "rgba(79, 245, 245, 0.22)"),
+    selectionBackground: token("--code-selection", "#264f78"),
+    selectionInactiveBackground: token("--code-selection-blur", "#223447"),
+    selectionForeground: token("--code-selection-text", "#ffffff"),
   };
 }
 
