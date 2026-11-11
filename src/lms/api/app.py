@@ -536,9 +536,7 @@ def create_app(
             course_id,
             catalog.get_course_units(course_id),
             catalog.get_stage_titles(course_id),
-            lambda unit_id: cold_check_status(
-                repo.get_cold_check_timer(learner_id, unit_id), now, cold_config
-            ).state,
+            lambda unit_id: unit_cold_status(unit_id, learner_id, now).state,
             lambda unit: unit_decision(unit, ledger, now, config, repo.progress_resets(learner_id)),
             {
                 stage: AuthoredBuild(build.title, build.kind, build.status, build.maturity)
@@ -567,7 +565,7 @@ def create_app(
         pending = [
             u.unit_id
             for u in units
-            if cold_check_status(repo.get_cold_check_timer(learner_id, u.unit_id), now, cold_config).state
+            if unit_cold_status(u.unit_id, learner_id, now).state
             != ColdCheckState.PASSED
         ]
         scope = stage_scope(course_id, stage)
@@ -1192,7 +1190,7 @@ def create_app(
         return build_proficiency_view(
             units,
             ledger,
-            lambda unit_id: cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), now, cold_config),
+            lambda unit_id: unit_cold_status(unit_id, learner_id, now),
             now=now,
             stage=stage,
             config=config,
@@ -1230,7 +1228,7 @@ def create_app(
     def get_my_cold_check(unit_id: str, learner_id: str = Depends(current_learner_id)):
         if not catalog.get_unit(unit_id):
             return problem(404, "Unit not found", f"Unit '{unit_id}' does not exist.")
-        return cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock(), cold_config)
+        return unit_cold_status(unit_id, learner_id, clock())
 
     @app.get("/api/v1/learners/me/ledger", response_model=List[EvidenceEntry])
     def get_my_ledger(
@@ -1245,7 +1243,7 @@ def create_app(
 
     # --- Exercises, Regenerate, Reset, State and Drafts (SPEC-12 section 4) ---
     def cold_check_blocked(unit_id: str, learner_id: str) -> Optional[JSONResponse]:
-        status = cold_check_status(repo.get_cold_check_timer(learner_id, unit_id), clock(), cold_config)
+        status = unit_cold_status(unit_id, learner_id, clock())
         if status.state == ColdCheckState.PASSED:
             return problem(409, "Cold Check passed", f"The Cold Check for {unit_id} is already passed.")
         if status.state != ColdCheckState.AVAILABLE:
@@ -1267,6 +1265,19 @@ def create_app(
     def maybe_start_cold_check_clock(unit: Unit, learner_id: str) -> None:
         if activities_attempted(unit, repo.get_evidence_ledger(learner_id), repo.progress_resets(learner_id).get(unit.unit_id)):
             repo.mark_unit_activities_completed(learner_id, unit.unit_id, clock())
+
+    def unit_cold_status(unit_id: str, learner_id: str, now: Optional[datetime] = None) -> ColdCheckStatus:
+        """The Cold Check status; starts a missing clock when the activities are already done.
+
+        An old reset (before reset markers) could clear the record after every activity was done,
+        and then no new event restarted the clock (owner's PY-0.3, 2026-11-11).
+        """
+        timer = repo.get_cold_check_timer(learner_id, unit_id)
+        unit = catalog.get_unit(unit_id)
+        if timer is None and unit is not None:
+            maybe_start_cold_check_clock(unit, learner_id)
+            timer = repo.get_cold_check_timer(learner_id, unit_id)
+        return cold_check_status(timer, now or clock(), cold_config)
 
     def finish_cold_item(unit: Unit, seed: ExerciseSeed, passed: bool, learner_id: str) -> None:
         now = clock()

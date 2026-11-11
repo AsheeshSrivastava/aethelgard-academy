@@ -158,12 +158,32 @@ def test_test_mode_opens_the_cold_check_straight_after_the_activities(catalog):
 
 def test_after_a_reset_test_mode_opens_the_cold_check_once_the_activities_are_redone(catalog):
     """Owner, 2026-11-11: after a Reset the Cold Check looked locked for 24 hours in test mode."""
-    client, _ = make(catalog, True)
+    from datetime import timedelta
+
+    moments = [T0]
+    repo = SQLiteLearnerRepository(db_path=":memory:")
+    repo.initialize()
+    client = TestClient(create_app(repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(),
+                                   catalog=catalog, clock=lambda: moments[0], test_mode=True))
     finish_activities(client)
+    moments[0] = T0 + timedelta(minutes=5)  # The reset comes after the first round, as in real use.
     client.post(f"{BASE}/units/PY-0.1/reset")
+    moments[0] = T0 + timedelta(minutes=10)
 
     assert client.get(f"{BASE}/units/PY-0.1/cold-check").json()["state"] == "not_ready"
     finish_activities(client)
+    assert client.get(f"{BASE}/units/PY-0.1/cold-check").json()["state"] == "available"
+
+
+def test_a_unit_whose_activities_are_done_gets_its_clock_even_without_a_record(catalog):
+    """Owner's PY-0.3, 2026-11-11: an old reset (before markers) cleared the Cold Check record, and
+    with every activity already done no new event ever restarted the clock."""
+    client, repo = make(catalog, True)
+    finish_activities(client)
+    conn = repo._get_conn()
+    with conn:
+        conn.execute("DELETE FROM unit_cold_check WHERE unit_id = 'PY-0.1'")
+
     assert client.get(f"{BASE}/units/PY-0.1/cold-check").json()["state"] == "available"
 
 
