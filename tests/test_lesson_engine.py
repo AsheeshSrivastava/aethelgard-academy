@@ -1,7 +1,6 @@
 """Tests for the interactive lesson engine, overlay loader, and learner workflow (SPEC-06)."""
 import json
 from pathlib import Path
-import pytest
 
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.loader import load_roadmap_from_file, overlay_curriculum_packages
@@ -11,7 +10,6 @@ from lms.core.models import (
     ActivityType,
     EvidenceCategory,
     EvidenceStrength,
-    ProficiencyLevel,
 )
 
 
@@ -28,7 +26,7 @@ def test_overlay_curriculum_packages():
     assert unit.starter_code is not None
     assert "input(" in unit.starter_code
     assert unit.test_code is not None
-    assert "test_intake_registration" in unit.test_code
+    assert "test_shout" in unit.test_code  # the made-up practice check (tests/fixtures)
     assert len(unit.media) >= 1
     assert unit.media[0].kind == "video"
     assert "Running Your First Program" in unit.media[0].title
@@ -93,15 +91,7 @@ def test_cli_verify_authored_lesson(tmp_path):
     assert fail_res["success"] is False
 
     # 2. Correct implementation passes
-    correct_code = (
-        'raw_name = input("Applicant Name: ")\n'
-        'raw_zone = input("Pickup Zone: ")\n'
-        'clean_name = raw_name.strip().title()\n'
-        'clean_zone = raw_zone.strip().upper()\n'
-        'queue_number = 7\n'
-        'ticket = "TICKET-" + str(queue_number)\n'
-        'print(f"REGISTRATION CONFIRMED: {clean_name} [ZONE-{clean_zone}] {ticket}")\n'
-    )
+    correct_code = "def shout(word):\n    return word.upper()\n"  # made-up task (tests/fixtures)
     solution_file.write_text(correct_code, encoding="utf-8")
     pass_res = handle_verify_command("PY-0.4", workspace, learner_id="learner_001", repo=repo)
     assert pass_res["success"] is True
@@ -141,7 +131,7 @@ def test_cli_concept_check_soft_gate(tmp_path):
     # Solid explanation
     res_solid = handle_explain_command(
         unit_id="PY-0.4",
-        explanation="The input function always gives back text, a string. Doing math on that text without converting it to a number stops with an error.",
+        explanation="It names apples and rivers, the two made-up ideas in the test rubric.",
         learner_id="learner_001",
         repo=repo,
         companion=MockAxisCompanion(),

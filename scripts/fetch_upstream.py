@@ -19,7 +19,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from lms.core.rag.files import MIN_CHARS, snapshot_hash
 from lms.adapters.ai.inspect_sources import inspect_folder

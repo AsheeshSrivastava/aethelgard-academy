@@ -1,4 +1,3 @@
-import pytest
 from lms.core.models import (
     ProficiencyLevel,
     EvidenceCategory,

@@ -6,6 +6,7 @@ from typing import List
 
 import pytest
 
+from conftest import real_content
 from lms.adapters.curriculum.loader import (
     CurriculumCatalog,
     load_all_roadmaps,
@@ -185,6 +186,7 @@ KNOWN_FINDINGS = {
 
 @pytest.mark.parametrize("code, limit", KNOWN_FINDINGS.items())
 def test_real_roadmaps_add_no_new_findings(code, limit):
-    catalog = load_all_roadmaps(Path("reference"))
+    with real_content():
+        catalog = load_all_roadmaps(Path("reference"))
 
     assert len([f for f in catalog.findings if f.code == code]) <= limit

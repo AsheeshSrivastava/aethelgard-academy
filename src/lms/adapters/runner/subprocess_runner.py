@@ -5,7 +5,6 @@ with strict timeout boundaries and error handling.
 """
 
 from pathlib import Path
-import re
 import subprocess
 import sys
 import tempfile

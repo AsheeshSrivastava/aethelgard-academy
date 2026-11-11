@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from conftest import real_content
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
@@ -131,8 +132,9 @@ def test_an_unapproved_make_item_still_leaves_the_warning():
     assert (Severity.WARNING, "make-seed-missing") in findings(make_unit(), [seed])
 
 
-def test_the_real_curriculum_has_no_make_errors(catalog):
-    codes = [f.code for f in catalog.findings]
+def test_the_real_curriculum_has_no_make_errors():
+    with real_content():
+        codes = [f.code for f in load_all_roadmaps(Path("reference")).findings]
 
     assert "make-starter-not-blank" not in codes
     assert "make-seed-unexpected" not in codes

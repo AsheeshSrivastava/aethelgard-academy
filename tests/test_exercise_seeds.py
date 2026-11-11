@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+from conftest import real_content
 from lms.adapters.curriculum.loader import load_all_roadmaps, load_seeds
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.curriculum_checks import Severity, check_curriculum
@@ -193,7 +194,8 @@ def test_bad_seed_is_reported_and_skipped(tmp_path):
 
 
 def test_all_stage_0_seeds_load_cleanly():
-    catalog = load_all_roadmaps(Path("reference"))
+    with real_content():
+        catalog = load_all_roadmaps(Path("reference"))
 
     assert {u: len(s) for u, s in catalog.seeds.items()} == {"PY-0.1": 9, "PY-0.2": 8, "PY-0.3": 9, "PY-0.4": 10, "PY-1.2": 1, "TW-0.1": 14, "TW-0.2": 16}
     assert [f for f in catalog.findings if f.code.startswith("seed-")] == []
@@ -247,7 +249,8 @@ def test_seed_must_fit_its_unit():
 
 
 def test_real_stage_0_skills_all_have_a_cold_check_seed():
-    catalog = load_all_roadmaps(Path("reference"))
+    with real_content():
+        catalog = load_all_roadmaps(Path("reference"))
     stage_0 = {"PY-0.4", "PY-0.1", "PY-0.3"}
 
     # Volume is known to be short until Stage 0 is topped up (work sequence 4.3).
@@ -324,7 +327,8 @@ def run_python(code, stdin):
 
 
 def all_variants():
-    catalog = load_all_roadmaps(Path("reference"))
+    with real_content():
+        catalog = load_all_roadmaps(Path("reference"))
     return [
         (variant.seed_id, n, variant)
         for seeds in catalog.seeds.values()

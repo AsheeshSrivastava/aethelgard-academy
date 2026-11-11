@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from made_up import right
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
@@ -144,7 +145,7 @@ def test_the_app_reads_the_environment_when_not_told(catalog, monkeypatch):
 
 def finish_activities(client):
     client.post("/api/v1/explain", json={"unit_id": "PY-0.1", "explanation": "statement order sequential return"})
-    for activity, answer in (("predict", {"choice": "A"}), ("trace", {"trace_answers": ["waiting", "checked in"]})):
+    for activity, answer in (("predict", {"choice": "A"}), ("trace", right("PY-0.1/trace-1"))):
         current = client.get(f"{BASE}/units/PY-0.1/activities/{activity}/exercise").json()
         client.post(f"{BASE}/attempts", json={"exercise_id": current["exercise_id"], "activity": activity, **answer})
 

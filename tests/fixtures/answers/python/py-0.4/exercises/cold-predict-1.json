@@ -1,0 +1,9 @@
+{
+  "seed_id": "PY-0.4/cold-predict-1",
+  "predict": {
+    "answer_key": "B",
+    "why": [
+      "Made-up: print shows its argument."
+    ]
+  }
+}

@@ -80,7 +80,6 @@ class ConceptStore:
         # Find paragraphs separated by double newlines
         current_headings: Tuple[str, ...] = ()
 
-        lines = text.split("\n")
         start = 0
 
         for para in re.split(r"\n\s*\n", text):

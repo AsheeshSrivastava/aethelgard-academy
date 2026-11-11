@@ -108,6 +108,7 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
 - One step at a time.
 - Learner-facing term (ADR-0027): stage (code, data, roadmaps, ADRs) = Module (anything a learner reads). Never rename code identifiers; change labels only.
 - Answer material never goes into this repo: answer keys, hidden checks, Make tests, reference and wrong solutions, worked answers and build checks. Review docs holding answers stay git-ignored. Keep the guard test `tests/test_private_seed_answers.py`.
+- Exception (owner, 2026-11-11): `tests/fixtures/answers/` holds fake answers for the made-up test items in `tests/fixtures/curriculum/` only, so CI runs without the private answers. Never put a real answer there; regenerate with `scripts/make_test_fixtures.py`. The guard test `test_the_test_fixtures_hold_only_made_up_items` enforces it.
 - Changes reach main only through a GitHub PR (owner decision 2026-11-11). Work on a branch, never commit to main directly. Push the branch and open the PR only when the owner says. CI must pass; the owner merges. After a merge, pull main and push it to Entire (`origin`). Never print keys. No paid run without a printed cost estimate first; the owner runs paid steps himself.
 - After substantive work, state **"Restarting review of the work"** and do a fresh pass against the approved scope, changed files, checks, and governing documents. Record findings and fixes.
 - Commit only approved scope and verify the Git hash. Inspect staged paths first.

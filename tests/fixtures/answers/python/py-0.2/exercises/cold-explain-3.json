@@ -1,0 +1,9 @@
+{
+  "seed_id": "PY-0.2/cold-explain-3",
+  "explain_model_choice": {
+    "answer_key": "B",
+    "why": [
+      "Made-up reason."
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-debug-validate-2",
+  "unit_id": "PY-0.4",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-4",
+  "level": "Understand",
+  "topic": "reading a first error: type, message, line number",
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "hint_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.4/cold-debug-validate-2. It is not real course content."
+  ],
+  "hint": "Made-up hint for tests.",
+  "debug_locate": {
+    "broken_code": [
+      "total = 1",
+      "print(totl)"
+    ],
+    "stdin": "",
+    "error_types": [
+      {
+        "key": "name",
+        "text": "NameError: a name Python does not know"
+      },
+      {
+        "key": "syntax",
+        "text": "SyntaxError: the code is not written correctly"
+      },
+      {
+        "key": "type",
+        "text": "TypeError: an operation on the wrong kind of value"
+      }
+    ]
+  }
+}

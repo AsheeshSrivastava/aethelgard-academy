@@ -1,4 +1,3 @@
-import pytest
 from lms.core.models import ActivityType, AssistanceLevel
 from lms.core.interfaces import (
     AxisMode,

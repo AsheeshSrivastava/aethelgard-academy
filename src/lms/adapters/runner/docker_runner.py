@@ -3,10 +3,8 @@
 Implements ICodeRunner with hardened cgroups, read-only root, and network isolation.
 """
 
-from pathlib import Path
 import shutil
 import subprocess
-import time
 from typing import List, Mapping, Optional
 
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
@@ -80,7 +78,6 @@ class DockerRunner:
             return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input, files=files)
 
         # Full container execution path
-        start_time = time.perf_counter()
         # Fallback runner performs execution when Docker is unavailable
         fallback = SubprocessRunner()
         return fallback.execute(code, test_code, timeout_seconds, stdin_input=stdin_input, files=files)

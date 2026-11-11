@@ -17,6 +17,7 @@ from lms.core.builds import StageBuildSpec
 from lms.core.curriculum_checks import Finding, Severity
 
 ANSWERS_ENV = "LMS_ANSWERS_DIR"
+CURRICULUM_ENV = "LMS_CURRICULUM_DIR"
 PRACTICE_CHECKS = "practice_checks.py"
 ANSWER_FILES = ("checks.py", "solution.py")
 
@@ -35,6 +36,16 @@ def answers_dir_from_env() -> Optional[Path]:
     if value:
         return Path(value)
     return SIBLING_ANSWERS if SIBLING_ANSWERS.is_dir() else None
+
+
+def curriculum_dir_from_env(default: Path) -> Path:
+    """LMS_CURRICULUM_DIR if set; otherwise the default.
+
+    Tests point it at made-up items (tests/conftest.py). When set, it wins over the folder
+    beside the reference folder, so a test with its own curriculum folder unsets it.
+    """
+    value = os.environ.get(CURRICULUM_ENV, "").strip()
+    return Path(value) if value else default
 
 
 def _checks_file(folder: Path, answers_dir: Optional[Path]) -> Path:

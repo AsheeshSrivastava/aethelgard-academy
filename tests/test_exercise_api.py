@@ -108,7 +108,7 @@ def test_first_exercise_is_the_first_seed(client):
     assert body["origin"] == "authored"
     assert body["variant_no"] == 1
     assert body["item_type"] == "predict"
-    assert "Amara Okafor" in body["prompt_markdown"]
+    assert "alpha" in body["prompt_markdown"]  # the made-up item's first slot value
     assert len(body["predict"]["options"]) == 4
 
 
@@ -468,5 +468,5 @@ def test_oversized_draft_is_refused(client):
 def test_new_routes_appear_in_openapi(client):
     paths = client.get("/openapi.json").json()["paths"]
 
-    assert f"/api/v1/learners/me/units/{{unit_id}}/activities/{{activity}}/exercise" in paths
-    assert f"/api/v1/learners/me/units/{{unit_id}}/activities/{{activity}}/exercises:regenerate" in paths
+    assert "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercise" in paths
+    assert "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercises:regenerate" in paths

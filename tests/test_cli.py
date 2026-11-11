@@ -1,8 +1,5 @@
-from pathlib import Path
-import pytest
 from lms.cli import (
     handle_ask_command,
-    handle_explain_command,
     handle_list_command,
     handle_pull_command,
     handle_verify_command,
@@ -28,15 +25,7 @@ def test_cli_pull_and_verify_command(tmp_path):
 
     # Write working code to solution.py
     solution_file = workspace_dir / unit_id / "solution.py"
-    working_code = (
-        'raw_name = input("Applicant Name: ")\n'
-        'raw_zone = input("Pickup Zone: ")\n'
-        'clean_name = raw_name.strip().title()\n'
-        'clean_zone = raw_zone.strip().upper()\n'
-        'queue_number = 7\n'
-        'ticket = "TICKET-" + str(queue_number)\n'
-        'print(f"REGISTRATION CONFIRMED: {clean_name} [ZONE-{clean_zone}] {ticket}")\n'
-    )
+    working_code = "def shout(word):\n    return word.upper()\n"  # made-up task (tests/fixtures)
     solution_file.write_text(working_code, encoding="utf-8")
 
     # Run verify command

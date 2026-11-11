@@ -1,0 +1,9 @@
+{
+  "seed_id": "TW-0.1/cold-explain-2",
+  "explain_spot_flaw": {
+    "answer_key": "B",
+    "why": [
+      "Made-up reason."
+    ]
+  }
+}

@@ -1,11 +1,9 @@
-import pytest
 from datetime import datetime
 from lms.core.models import (
     ProficiencyLevel,
     EvidenceCategory,
     EvidenceStrength,
     AssistanceLevel,
-    ProgressionDecision,
     ActivityType,
     TargetSkill,
     ConceptCheck,

@@ -1,6 +1,6 @@
 """Tests for AXIS streaming (SPEC-12 section 8) and the Cold Check block (section 4.1)."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -172,7 +172,7 @@ def test_stream_logs_assistance_against_the_exercise(repo, catalog):
     events = stream(client, exercise_id="PY-0.1/predict-1/v1")
 
     levels = repo.get_assistance_levels(LOCAL_LEARNER_ID, "PY-0.1/predict-1/v1", T0)
-    assert [l.value for l in levels] == [events[-1][1]["assistance_level"]]
+    assert [level.value for level in levels] == [events[-1][1]["assistance_level"]]
 
 
 def test_body_learner_id_is_ignored(repo, catalog):

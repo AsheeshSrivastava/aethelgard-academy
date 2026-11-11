@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 
-import pytest
 
 from lms.adapters.curriculum.builds import answers_dir_from_env
 from lms.adapters.curriculum.loader import load_seeds
@@ -189,3 +188,18 @@ def test_no_public_lesson_holds_a_quick_check_answer():
         leaks += [f"{path.relative_to(REPO)}: {check.id} {field}" for check in checks for field in check.leaked]
 
     assert leaks == []
+
+
+# --- The made-up test items (A0, 2026-11-11) ---
+
+
+def test_the_test_fixtures_hold_only_made_up_items():
+    """Answer-shaped files under tests/fixtures are allowed only for made-up items, never real ones."""
+    fixtures = REPO / "tests" / "fixtures"
+    public = sorted((fixtures / "curriculum").glob("*/*/exercises/*.json"))
+    assert public
+    for seed_file in public:
+        seed = json.loads(seed_file.read_text(encoding="utf-8"))
+        assert seed["prompt_markdown"][0].startswith("Made-up test item"), seed_file
+    private = {p.relative_to(fixtures / "answers") for p in (fixtures / "answers").glob("*/*/exercises/*.json")}
+    assert private == {p.relative_to(fixtures / "curriculum") for p in public}

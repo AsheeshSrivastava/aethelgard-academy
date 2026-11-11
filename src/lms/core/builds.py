@@ -9,7 +9,7 @@ import io
 import re
 import secrets
 import tokenize
-from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 

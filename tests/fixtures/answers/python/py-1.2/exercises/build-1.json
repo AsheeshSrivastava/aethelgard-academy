@@ -1,0 +1,17 @@
+{
+  "seed_id": "PY-1.2/build-1",
+  "playground": {
+    "reference_solution": [
+      "def shout(word):",
+      "    return word.upper()"
+    ],
+    "hidden_checks": [
+      "def test_shout():",
+      "    assert shout('hi') == 'HI'"
+    ],
+    "wrong_solution": [
+      "def shout(word):",
+      "    return word"
+    ]
+  }
+}

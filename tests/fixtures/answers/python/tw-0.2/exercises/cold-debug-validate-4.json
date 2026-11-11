@@ -1,0 +1,17 @@
+{
+  "seed_id": "TW-0.2/cold-debug-validate-4",
+  "debug": {
+    "reference_solution": [
+      "def add(a, b):",
+      "    return a + b"
+    ],
+    "hidden_checks": [
+      "def test_add():",
+      "    assert add(2, 3) == 5"
+    ],
+    "wrong_solution": [
+      "def add(a, b):",
+      "    return a * b"
+    ]
+  }
+}

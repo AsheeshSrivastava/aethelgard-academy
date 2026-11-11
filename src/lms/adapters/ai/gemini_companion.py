@@ -7,7 +7,7 @@ reported and never falls back to another provider.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Iterator, List, Optional, Tuple
 
 from google.genai import types
 

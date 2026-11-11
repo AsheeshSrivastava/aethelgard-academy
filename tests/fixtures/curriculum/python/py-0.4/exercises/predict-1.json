@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/predict-1",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "comments",
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.4/predict-1. It is not real course content.",
+    "The word is {{word}}."
+  ],
+  "template": {
+    "slots": {
+      "word": {
+        "kind": "word",
+        "values": [
+          "alpha",
+          "beta",
+          "gamma"
+        ]
+      }
+    }
+  },
+  "predict": {
+    "code": [
+      "print('{{word}}')"
+    ],
+    "stdin": "",
+    "options": [
+      {
+        "key": "A",
+        "text": "{{word}}"
+      },
+      {
+        "key": "B",
+        "text": "{{word}} b"
+      },
+      {
+        "key": "C",
+        "text": "{{word}} c"
+      },
+      {
+        "key": "D",
+        "text": "{{word}} d"
+      }
+    ]
+  }
+}

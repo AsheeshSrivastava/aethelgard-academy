@@ -8,9 +8,9 @@ from pathlib import Path
 import json
 import logging
 import re
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from lms.adapters.curriculum.builds import answers_dir_from_env, load_builds
+from lms.adapters.curriculum.builds import answers_dir_from_env, curriculum_dir_from_env, load_builds
 from lms.adapters.curriculum.rubric import check_concept_checks
 from lms.adapters.curriculum.quick_checks import check_explain_blocks
 from lms.adapters.curriculum.concepts import load_concepts
@@ -370,11 +370,12 @@ def load_all_roadmaps(reference_dir: Path) -> CurriculumCatalog:
     for unit in catalog.list_all_units():
         for skill in unit.target_skills:
             skill.skill_name = skill_names.get(skill.skill_id, skill.skill_id)
-    catalog.seeds, seed_problems = load_seeds(reference_dir.parent / "curriculum")
-    concepts, concept_problems = load_concepts(reference_dir.parent / "curriculum" / "concepts")
-    catalog.builds, build_problems = load_builds(reference_dir.parent / "curriculum", answers_dir_from_env())
-    rubric_problems = check_concept_checks(reference_dir.parent / "curriculum", answers_dir_from_env())
-    rubric_problems += check_explain_blocks(reference_dir.parent / "curriculum", answers_dir_from_env())
+    curriculum = curriculum_dir_from_env(reference_dir.parent / "curriculum")
+    catalog.seeds, seed_problems = load_seeds(curriculum)
+    concepts, concept_problems = load_concepts(curriculum / "concepts")
+    catalog.builds, build_problems = load_builds(curriculum, answers_dir_from_env())
+    rubric_problems = check_concept_checks(curriculum, answers_dir_from_env())
+    rubric_problems += check_explain_blocks(curriculum, answers_dir_from_env())
     catalog.findings = (
         seed_problems
         + check_curriculum(
@@ -404,7 +405,6 @@ def load_roadmap_from_file(
     content = file_path.read_text(encoding="utf-8")
     catalog = catalog if catalog is not None else CurriculumCatalog()
 
-    current_stage = 0
     # Split content by markdown headers; a stage may appear more than once
     stage_sections = re.split(r"\n###\s+Stage\s+(\d+)([^\n]*)", content)
 
@@ -423,7 +423,7 @@ def load_roadmap_from_file(
                 if stage_title:
                     catalog.set_stage_title(course_of(unit.unit_id), unit.stage, stage_title)
 
-    curriculum_path = Path("curriculum")
+    curriculum_path = curriculum_dir_from_env(Path("curriculum"))
     if curriculum_path.exists():
         overlay_curriculum_packages(catalog, curriculum_path)
 

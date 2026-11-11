@@ -1,0 +1,12 @@
+{
+  "seed_id": "PY-0.4/cold-debug-validate-1",
+  "debug_locate": {
+    "answer_key": {
+      "error_type": "name",
+      "line": 2
+    },
+    "why": [
+      "Made-up: the name is misspelt."
+    ]
+  }
+}

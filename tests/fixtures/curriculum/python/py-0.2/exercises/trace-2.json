@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/trace-2",
+  "unit_id": "PY-0.2",
+  "activity": "Trace",
+  "skill_id": "CO-5",
+  "level": "Apply",
+  "topic": "configuration",
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.2/trace-2. It is not real course content."
+  ],
+  "trace": {
+    "code": [
+      "print('py-0.2-trace-2')",
+      "print('done')"
+    ],
+    "input": ""
+  }
+}

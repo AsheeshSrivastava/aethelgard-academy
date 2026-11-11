@@ -12,7 +12,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lms.adapters.ai.mock_axis import MockAxisCompanion
-from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_roadmap_from_file
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
@@ -68,7 +67,7 @@ def test_explain_endpoint_solid(test_client):
     client, repo = test_client
     payload = {
         "unit_id": "PY-0.1",
-        "explanation": "Python runs statements in order; a variable keeps the value input() returns; print shows an empty line.",
+        "explanation": "It names apples and rivers, the two made-up ideas in the test rubric.",
     }
     res = client.post("/api/v1/explain", json=payload)
     assert res.status_code == 200

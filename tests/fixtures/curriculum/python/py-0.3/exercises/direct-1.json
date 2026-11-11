@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-1",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-2",
+  "level": "Understand",
+  "topic": "code comprehension",
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.3/direct-1. It is not real course content."
+  ],
+  "choice": {
+    "material": [
+      "Made-up material for tests."
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "Made-up option a"
+      },
+      {
+        "key": "B",
+        "text": "Made-up option b"
+      },
+      {
+        "key": "C",
+        "text": "Made-up option c"
+      },
+      {
+        "key": "D",
+        "text": "Made-up option d"
+      }
+    ]
+  }
+}

@@ -1,8 +1,6 @@
 from pathlib import Path
-import pytest
-from lms.core.models import ActivityType, ProficiencyLevel, TargetSkill, Unit
+from lms.core.models import ActivityType, ProficiencyLevel
 from lms.adapters.curriculum.loader import (
-    CurriculumCatalog,
     load_roadmap_from_file,
     parse_methods_string,
     parse_prerequisites_string,
