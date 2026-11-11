@@ -156,6 +156,17 @@ def test_test_mode_opens_the_cold_check_straight_after_the_activities(catalog):
     assert client.get(f"{BASE}/units/PY-0.1/cold-check").json()["state"] == "available"
 
 
+def test_after_a_reset_test_mode_opens_the_cold_check_once_the_activities_are_redone(catalog):
+    """Owner, 2026-11-11: after a Reset the Cold Check looked locked for 24 hours in test mode."""
+    client, _ = make(catalog, True)
+    finish_activities(client)
+    client.post(f"{BASE}/units/PY-0.1/reset")
+
+    assert client.get(f"{BASE}/units/PY-0.1/cold-check").json()["state"] == "not_ready"
+    finish_activities(client)
+    assert client.get(f"{BASE}/units/PY-0.1/cold-check").json()["state"] == "available"
+
+
 def test_real_mode_still_waits(catalog):
     client, _ = make(catalog, False)
     finish_activities(client)

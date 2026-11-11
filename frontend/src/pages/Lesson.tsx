@@ -16,6 +16,7 @@ import { AiJudgement } from "../components/AiJudgement";
 import { coldCheckMessage, stepName } from "../lib/format";
 import { useInteractionId } from "../lib/interaction";
 import { useNow } from "../lib/useNow";
+import { useTestMode } from "../lib/useTestMode";
 
 function useLessonState(unitId: string) {
   const client = useQueryClient();
@@ -471,6 +472,7 @@ function ColdCheckItem({ unit }: { unit: Unit }) {
 
 function ColdCheckStep({ unit, cold }: { unit: Unit; cold?: ColdCheckStatus }) {
   const now = useNow(30_000);
+  const testMode = useTestMode();
   const client = useQueryClient();
   const opensAt = cold?.available_at ? new Date(cold.available_at).getTime() : 0;
   const waiting = cold?.state === "waiting" || cold?.state === "failed_waiting";
@@ -484,7 +486,7 @@ function ColdCheckStep({ unit, cold }: { unit: Unit; cold?: ColdCheckStatus }) {
     <div className="card lesson-card">
       <h1 className="step-title">Cold Check</h1>
       {!cold && <Loading what="the Cold Check" />}
-      {cold && cold.state !== "available" && <p className="cold-message">{coldCheckMessage(cold, now)}</p>}
+      {cold && cold.state !== "available" && <p className="cold-message">{coldCheckMessage(cold, now, testMode)}</p>}
       {cold?.state === "available" && (
         <>
           <p className="cold-notice" role="note">

@@ -118,7 +118,8 @@ export function reviewMessage(status: StageReviewStatus, now: Date): string {
   }
 }
 
-export function coldCheckMessage(status: ColdCheckStatus, now: Date): string {
+/** `testMode`: every wait is zero (ADR-0019 amendment), so the message must not promise 24 hours. */
+export function coldCheckMessage(status: ColdCheckStatus, now: Date, testMode = false): string {
   const wait = status.available_at ? countdown(status.available_at, now) : "";
   switch (status.state) {
     case "waiting":
@@ -130,7 +131,9 @@ export function coldCheckMessage(status: ColdCheckStatus, now: Date): string {
     case "passed":
       return "Passed.";
     default:
-      return "Finish the activities to start the 24-hour wait.";
+      return testMode
+        ? "Finish every activity of this unit; in test mode the Cold Check then opens straight away. After a reset, do the activities again."
+        : "Finish every activity of this unit to start the 24-hour wait. After a reset, do the activities again.";
   }
 }
 

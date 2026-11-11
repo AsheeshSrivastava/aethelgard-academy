@@ -80,6 +80,16 @@ describe("coldCheckMessage", () => {
     expect(coldCheckMessage(status("not_ready"), NOW)).toMatch(/finish/i);
   });
 
+  it("names the real wait only outside test mode, and says a reset means redoing the activities", () => {
+    const real = coldCheckMessage(status("not_ready"), NOW);
+    const test = coldCheckMessage(status("not_ready"), NOW, true);
+
+    expect(real).toMatch(/24-hour wait/);
+    expect(test).not.toMatch(/24/);
+    expect(test).toMatch(/opens straight away/i);
+    for (const message of [real, test]) expect(message).toMatch(/after a reset/i);
+  });
+
   it("counts down while waiting", () => {
     expect(coldCheckMessage(status("waiting", "2026-06-01T10:00:00Z"), NOW)).toContain("1 h");
   });

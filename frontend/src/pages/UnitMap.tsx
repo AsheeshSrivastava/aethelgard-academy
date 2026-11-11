@@ -7,9 +7,11 @@ import { ErrorNote, Loading, Panel } from "../components/common";
 import { ResetUnit } from "../components/ResetUnit";
 import { coldCheckMessage, courseName as nameOfCourse, courseOfUnit, stepDescription, stepName } from "../lib/format";
 import { useNow } from "../lib/useNow";
+import { useTestMode } from "../lib/useTestMode";
 
 function LessonPath({ unit, done, current, cold }: { unit: Unit; done: string[]; current: string | null; cold?: ColdCheckStatus }) {
   const now = useNow(60_000);
+  const testMode = useTestMode();
   return (
     <ol className="lesson-path" aria-label="Lesson path">
       {(unit.activities ?? []).map((step, index) => {
@@ -24,7 +26,7 @@ function LessonPath({ unit, done, current, cold }: { unit: Unit; done: string[];
             <span className="path-text">
               <span className="path-name">{stepName(step)}</span>
               <span className="small muted">
-                {step === "cold_check" && cold ? coldCheckMessage(cold, now) : stepDescription(step)}
+                {step === "cold_check" && cold ? coldCheckMessage(cold, now, testMode) : stepDescription(step)}
               </span>
             </span>
             {isDone && <span className="path-state">Done</span>}
