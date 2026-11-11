@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/cold-debug-validate-3",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "running the command the README gives",
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "hint_approved": true,
+  "prompt_markdown": [
+    "Made-up test item TW-0.2/cold-debug-validate-3. It is not real course content."
+  ],
+  "hint": "Made-up hint for tests.",
+  "debug": {
+    "broken_code": [
+      "def add(a, b):",
+      "    return a - b"
+    ],
+    "stdin": ""
+  }
+}

@@ -11,6 +11,7 @@ from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.api.app import LOCAL_LEARNER_ID, create_app
+from made_up import SHOUT, SOLID, right
 from lms.core.models import ActivityType, AssistanceLevel, EvidenceCategory, EvidenceStrength
 
 T0 = datetime(2026, 6, 1, 9, 0, tzinfo=timezone.utc)
@@ -80,12 +81,12 @@ def status(client, unit="PY-0.1"):
     return client.get(f"{BASE}/units/{unit}/cold-check").json()["state"]
 
 
-TRACE_1 = ["waiting", "checked in"]
+TRACE_1 = right("PY-0.1/trace-1")["trace_answers"]
 
 
 def finish_activities(client):
     """Attempt every activity of PY-0.1, including the concept check."""
-    client.post("/api/v1/explain", json={"unit_id": "PY-0.1", "explanation": "Python runs statements in order; a variable keeps the value input() returns; print shows an empty line."})
+    client.post("/api/v1/explain", json={"unit_id": "PY-0.1", "explanation": SOLID})
     assert attempt(client, choice="A").status_code == 200
     assert attempt(client, "trace", trace_answers=TRACE_1).status_code == 200
 
@@ -246,17 +247,7 @@ def test_consult_logs_assistance_against_the_exercise(client, repo, clock):
 # --- Ungraded playground ---
 
 
-SOLUTION = "\n".join(
-    [
-        "raw_name = input('Applicant Name: ')",
-        "raw_zone = input('Pickup Zone: ')",
-        "clean_name = raw_name.strip().title()",
-        "clean_zone = raw_zone.strip().upper()",
-        "queue_number = 7",
-        "ticket = 'TICKET-' + str(queue_number)",
-        "print(f'REGISTRATION CONFIRMED: {clean_name} [ZONE-{clean_zone}] {ticket}')",
-    ]
-)
+SOLUTION = SHOUT  # passes the made-up practice check (tests/fixtures)
 
 
 def test_ungraded_playground_writes_nothing(client, repo):
@@ -326,9 +317,9 @@ def open_cold_check(client, clock):
     clock.advance(DAY)
 
 
-CO1 = {"choice": "B"}
-CO2 = {"trace_answers": ["B A"]}
-CO6 = {"choice": "C"}
+CO1 = right("PY-0.1/cold-predict-1")
+CO2 = right("PY-0.1/cold-trace-1")
+CO6 = right("PY-0.1/cold-explain-1")
 
 
 def cold(client, **fields):
@@ -426,7 +417,7 @@ def test_failed_cold_check_reveals_nothing(client, clock):
 def test_passed_cold_check_item_may_reveal(client, clock):
     open_cold_check(client, clock)
 
-    assert cold(client, **CO1).json()["reveal"]["correct"] == "B"
+    assert cold(client, **CO1).json()["reveal"]["correct"] == CO1["choice"]
 
 
 def test_a_passed_unit_refuses_more_attempts(client, clock):

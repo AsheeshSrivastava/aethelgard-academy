@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.1/cold-specify-1",
+  "unit_id": "TW-0.1",
+  "activity": "Specify",
+  "skill_id": "SP-4",
+  "level": "Understand",
+  "topic": "marking what is missing",
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "hint_approved": true,
+  "prompt_markdown": [
+    "Made-up test item TW-0.1/cold-specify-1. It is not real course content."
+  ],
+  "hint": "Made-up hint for tests.",
+  "specify_contract": {
+    "material": [
+      "Made-up material for tests."
+    ],
+    "fields": [
+      {
+        "id": "points",
+        "label": "Made-up field points",
+        "kind": "multi",
+        "options": [
+          {
+            "key": "does",
+            "text": "Made-up choice does"
+          },
+          {
+            "key": "need",
+            "text": "Made-up choice need"
+          },
+          {
+            "key": "run",
+            "text": "Made-up choice run"
+          },
+          {
+            "key": "sample",
+            "text": "Made-up choice sample"
+          },
+          {
+            "key": "limits",
+            "text": "Made-up choice limits"
+          }
+        ]
+      }
+    ]
+  }
+}

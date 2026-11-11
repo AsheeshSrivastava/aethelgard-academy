@@ -1,0 +1,9 @@
+{
+  "seed_id": "PY-0.1/cold-explain-1",
+  "explain_spot_flaw": {
+    "answer_key": "B",
+    "why": [
+      "Made-up reason."
+    ]
+  }
+}

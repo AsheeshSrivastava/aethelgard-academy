@@ -108,7 +108,7 @@ def test_first_exercise_is_the_first_seed(client):
     assert body["origin"] == "authored"
     assert body["variant_no"] == 1
     assert body["item_type"] == "predict"
-    assert "Amara Okafor" in body["prompt_markdown"]
+    assert "alpha" in body["prompt_markdown"]  # the made-up item's first slot value
     assert len(body["predict"]["options"]) == 4
 
 

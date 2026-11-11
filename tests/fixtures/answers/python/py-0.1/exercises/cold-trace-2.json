@@ -1,0 +1,9 @@
+{
+  "seed_id": "PY-0.1/cold-trace-2",
+  "trace": {
+    "expected_output": [
+      "item-5",
+      "done"
+    ]
+  }
+}

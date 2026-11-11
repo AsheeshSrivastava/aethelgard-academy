@@ -1,0 +1,13 @@
+{
+  "seed_id": "TW-0.2/specify-2",
+  "specify_contract": {
+    "answer_key": {
+      "points": [
+        "does"
+      ]
+    },
+    "why": [
+      "Made-up reason."
+    ]
+  }
+}

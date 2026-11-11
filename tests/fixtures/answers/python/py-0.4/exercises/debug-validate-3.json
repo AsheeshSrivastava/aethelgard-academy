@@ -1,0 +1,17 @@
+{
+  "seed_id": "PY-0.4/debug-validate-3",
+  "debug": {
+    "reference_solution": [
+      "def add(a, b):",
+      "    return a + b"
+    ],
+    "hidden_checks": [
+      "def test_add():",
+      "    assert add(2, 3) == 5"
+    ],
+    "wrong_solution": [
+      "def add(a, b):",
+      "    return a * b"
+    ]
+  }
+}

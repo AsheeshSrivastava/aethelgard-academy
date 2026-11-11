@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.2/cold-explain-1",
+  "unit_id": "PY-0.2",
+  "activity": "Explain",
+  "skill_id": "CO-4",
+  "level": "Apply",
+  "topic": "application responsibility map",
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "hint_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.2/cold-explain-1. It is not real course content."
+  ],
+  "hint": "Made-up hint for tests.",
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "Made-up sentence a"
+      },
+      {
+        "key": "B",
+        "text": "Made-up sentence b"
+      },
+      {
+        "key": "C",
+        "text": "Made-up sentence c"
+      },
+      {
+        "key": "D",
+        "text": "Made-up sentence d"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "seed_id": "TW-0.2/debug-validate-3",
+  "unit_id": "TW-0.2",
+  "activity": "Debug & Validate",
+  "skill_id": "VE-2",
+  "level": "Understand",
+  "topic": "missing setup steps",
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "prompt_markdown": [
+    "Made-up test item TW-0.2/debug-validate-3. It is not real course content."
+  ],
+  "debug": {
+    "broken_code": [
+      "def add(a, b):",
+      "    return a - b"
+    ],
+    "stdin": ""
+  }
+}

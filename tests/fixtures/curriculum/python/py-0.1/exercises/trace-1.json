@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/trace-1",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "topic": "state changes",
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.1/trace-1. It is not real course content."
+  ],
+  "trace": {
+    "code": [
+      "print('item-8')",
+      "print('done')"
+    ],
+    "input": ""
+  }
+}

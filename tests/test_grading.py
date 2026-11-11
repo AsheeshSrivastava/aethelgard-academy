@@ -1,12 +1,14 @@
 """Tests for the deterministic grader (SPEC-13 section 4), using SPEC-13's own examples."""
 
 import json
+import os
 from pathlib import Path
 import re
 
 import pytest
 
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
+from lms.adapters.curriculum.builds import CURRICULUM_ENV
 from lms.adapters.curriculum.loader import load_seeds
 from lms.core.exercises import parse_seed
 from lms.core.grading import Attempt, grade, spec_test_gate, structure_failures
@@ -252,9 +254,9 @@ def test_structure_check_never_runs_the_code(tmp_path):
 
 
 def test_hidden_checks_grade_a_debug_fix():
-    fixed = ["visitor = input()", "print('Registering', visitor)"]
-    broken = ["visitor = input()", "print('Registering', citizn)"]
-    seeds, _ = load_seeds(Path("curriculum"))  # joins the private answers (ADR-0021 amendment)
+    fixed = ["def add(a, b):", "    return a + b"]  # the made-up item in tests/fixtures
+    broken = ["def add(a, b):", "    return a - b"]
+    seeds, _ = load_seeds(Path(os.environ[CURRICULUM_ENV]))  # joins the answers (ADR-0021 amendment)
     seed = next(s for s in seeds["PY-0.4"] if s.seed_id == "PY-0.4/debug-validate-1")
 
     assert grade(seed, attempt(seed, files=code(fixed)), RUNNER).passed is True

@@ -316,7 +316,8 @@ def test_stage_0_lessons_link_to_the_notes_with_nothing_broken():
     assert {"comments-in-python", "print-function", "variables", "expressions"} <= linked
 
 
-def test_a_bad_note_reaches_the_catalog_findings(tmp_path):
+def test_a_bad_note_reaches_the_catalog_findings(tmp_path, monkeypatch):
+    monkeypatch.delenv("LMS_CURRICULUM_DIR")  # this test brings its own curriculum folder
     (tmp_path / "curriculum" / "concepts").mkdir(parents=True)
     write(tmp_path / "curriculum" / "concepts", "bad", "No frontmatter.")
     (tmp_path / "reference").mkdir()

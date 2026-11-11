@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-predict-1",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "execution order",
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "hint_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-0.1/cold-predict-1. It is not real course content."
+  ],
+  "hint": "Made-up hint for tests.",
+  "predict": {
+    "code": [
+      "print('item-2')"
+    ],
+    "stdin": "",
+    "options": [
+      {
+        "key": "A",
+        "text": "item-2 a"
+      },
+      {
+        "key": "B",
+        "text": "item-2"
+      },
+      {
+        "key": "C",
+        "text": "item-2 c"
+      },
+      {
+        "key": "D",
+        "text": "item-2 d"
+      }
+    ]
+  }
+}

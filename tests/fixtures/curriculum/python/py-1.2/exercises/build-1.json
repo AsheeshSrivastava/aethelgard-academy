@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-1.2/build-1",
+  "unit_id": "PY-1.2",
+  "activity": "Build",
+  "skill_id": "VE-6",
+  "level": "Apply",
+  "topic": "writing a small program from a blank file (Make)",
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "prompt_markdown": [
+    "Made-up test item PY-1.2/build-1. It is not real course content."
+  ],
+  "playground": {
+    "starter": [
+      "# Made-up task: write shout(word) that returns the word in capitals.",
+      ""
+    ],
+    "tasks": [
+      {
+        "id": "ask",
+        "label": "Made-up task ask"
+      },
+      {
+        "id": "convert",
+        "label": "Made-up task convert"
+      },
+      {
+        "id": "round",
+        "label": "Made-up task round"
+      },
+      {
+        "id": "print",
+        "label": "Made-up task print"
+      }
+    ],
+    "make": true
+  }
+}
