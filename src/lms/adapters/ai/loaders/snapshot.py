@@ -7,12 +7,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from lms.core.rag_contracts import Source, normalize_text
 from lms.core.rag.errors import LoadError, LoadRefused, SkipShareExceeded
 from lms.core.rag.files import MAX_FILE_BYTES, classify_file, raw_problem
-from lms.adapters.ai.loaders.plain import PLAIN_READERS, PLAIN_VERSION, Reader
+from lms.adapters.ai.loaders.plain import Reader
 from lms.adapters.ai.loaders.registry import DEFAULT_READERS
 
 LOADABLE_STATUSES = ("approved", "limited")

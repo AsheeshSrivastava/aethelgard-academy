@@ -108,7 +108,7 @@ def test_bad_input_is_named():
 
 def test_a_markdown_fence_in_a_markdown_cell_is_untouched():
     text = f"Example:\n\n{TICKS}html\n<div>keep me</div>\n{TICKS}"
-    assert f"<div>keep me</div>" in read(nb([md(text)]))
+    assert "<div>keep me</div>" in read(nb([md(text)]))
 
 
 def test_unknown_cell_types_are_ignored():

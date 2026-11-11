@@ -468,5 +468,5 @@ def test_oversized_draft_is_refused(client):
 def test_new_routes_appear_in_openapi(client):
     paths = client.get("/openapi.json").json()["paths"]
 
-    assert f"/api/v1/learners/me/units/{{unit_id}}/activities/{{activity}}/exercise" in paths
-    assert f"/api/v1/learners/me/units/{{unit_id}}/activities/{{activity}}/exercises:regenerate" in paths
+    assert "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercise" in paths
+    assert "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercises:regenerate" in paths

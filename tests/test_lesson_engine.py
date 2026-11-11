@@ -1,7 +1,6 @@
 """Tests for the interactive lesson engine, overlay loader, and learner workflow (SPEC-06)."""
 import json
 from pathlib import Path
-import pytest
 
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.loader import load_roadmap_from_file, overlay_curriculum_packages
@@ -11,7 +10,6 @@ from lms.core.models import (
     ActivityType,
     EvidenceCategory,
     EvidenceStrength,
-    ProficiencyLevel,
 )
 
 

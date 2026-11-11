@@ -1,7 +1,6 @@
 import sqlite3
 
 import pytest
-from datetime import datetime, timezone
 from lms.core.models import (
     ActivityType,
     AssistanceLevel,

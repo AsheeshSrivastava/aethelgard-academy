@@ -254,8 +254,8 @@ def estimate_skill(
         level=level,
         confidence=Confidence.SUPPORTED if supported_at(level) else Confidence.PROVISIONAL,
         qualifying_entry_ids=[e.entry_id for e in backing],
-        supported_levels=[l for l in LEVEL_ORDER[: level_index + 1] if supported_at(l)],
-        support_gaps={l: gaps_at(l) for l in LEVEL_ORDER[: level_index + 1] if not supported_at(l)},
+        supported_levels=[lv for lv in LEVEL_ORDER[: level_index + 1] if supported_at(lv)],
+        support_gaps={lv: gaps_at(lv) for lv in LEVEL_ORDER[: level_index + 1] if not supported_at(lv)},
         weak_streak=weak_streak,
         weak_count=weak_count,
     )

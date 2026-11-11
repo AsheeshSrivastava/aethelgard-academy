@@ -5,7 +5,7 @@ from lms.core.curriculum_checks import Severity, check_curriculum
 from lms.core.exercises import parse_seed
 from lms.core.models import ActivityType, MakeStep, ProficiencyLevel, TargetSkill, Unit, UnitTopic
 
-U, A, D, O = ProficiencyLevel.UNDERSTAND, ProficiencyLevel.APPLY, ProficiencyLevel.ADAPT, ProficiencyLevel.OWN
+U, A, D, OWN = ProficiencyLevel.UNDERSTAND, ProficiencyLevel.APPLY, ProficiencyLevel.ADAPT, ProficiencyLevel.OWN
 
 
 def unit(unit_id="PY-1.2", targets=None, stage=1, topics=(), make=None) -> Unit:
@@ -95,7 +95,7 @@ def test_one_rung_at_a_time_and_going_down_are_fine():
         unit("PY-1.8", {"CO-1": U}),
         unit("PY-2.1", {"CO-1": A}),
         unit("PY-2.2", {"CO-1": D}),
-        unit("PY-2.3", {"CO-1": O}),
+        unit("PY-2.3", {"CO-1": OWN}),
     ]
 
     assert codes(check_curriculum(path), "skill-enters-above-apply", "skill-skips-a-rung") == []

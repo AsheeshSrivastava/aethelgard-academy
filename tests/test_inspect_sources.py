@@ -1,9 +1,6 @@
 """Spec 05: inspection script test suite for LMS RAG."""
 import json
-import unicodedata
-from dataclasses import replace
 
-import pytest
 
 from lms.core.rag.files import snapshot_hash
 from lms.core.rag.errors import LoadError

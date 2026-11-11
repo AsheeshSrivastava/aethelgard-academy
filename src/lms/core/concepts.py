@@ -4,7 +4,7 @@ Governed by SPEC-14. Deterministic and pure: concepts and units in, results out.
 """
 
 import re
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence
 
 from lms.core.course_map import course_of
 from lms.core.curriculum_checks import Finding, Severity

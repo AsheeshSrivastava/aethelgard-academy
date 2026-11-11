@@ -1,5 +1,4 @@
 from pathlib import Path
-import pytest
 from lms.adapters.ai.concept_store import ConceptStore
 from lms.core.rag_contracts import verify_passage
 

@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 
-import pytest
 
 from lms.adapters.curriculum.builds import answers_dir_from_env
 from lms.adapters.curriculum.loader import load_seeds

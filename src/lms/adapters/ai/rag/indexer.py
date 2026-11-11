@@ -90,7 +90,7 @@ class CorpusIndexer:
 
                 source_count += 1
                 passage_count += len(passages)
-            except Exception as exc:
+            except Exception:
                 # Log or handle unreadable files
                 continue
 

@@ -6,7 +6,6 @@ Governed by:
 """
 
 import re
-from typing import Optional
 from lms.core.interfaces import AxisMode
 from lms.core.models import AssistanceLevel
 

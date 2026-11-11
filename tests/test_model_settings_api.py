@@ -9,7 +9,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lms.adapters.ai.mock_axis import MockAxisCompanion
-from lms.adapters.ai.providers.metering import BudgetExceeded, UsageMeter
 from lms.adapters.ai.providers.profiles import parse_profiles
 from lms.adapters.ai.providers.router import (
     BUDGET_MESSAGE,

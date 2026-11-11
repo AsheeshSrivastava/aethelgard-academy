@@ -5,7 +5,6 @@ Governed by:
 - SPEC-09: RAG Indexing & Hybrid Reranked Retriever
 """
 
-import pytest
 from lms.adapters.ai.rag.chunker import HeadingSentenceSplitter
 from lms.adapters.ai.rag.bm25 import InvertedBM25Index
 from lms.adapters.ai.rag.fusion import reciprocal_rank_fusion
@@ -46,6 +45,7 @@ def test_heading_sentence_splitter_exact_slices():
         licence_basis="declared",
     )
 
+    assert source.text == norm_text
     assert len(spans) >= 2
     for s in spans:
         # Every slice must be exact

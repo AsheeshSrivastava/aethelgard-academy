@@ -1,8 +1,5 @@
-from pathlib import Path
-import pytest
 from lms.cli import (
     handle_ask_command,
-    handle_explain_command,
     handle_list_command,
     handle_pull_command,
     handle_verify_command,

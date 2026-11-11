@@ -6,7 +6,6 @@ pulling exercises, running local verification, and recording Evidence Ledger ent
 """
 
 from pathlib import Path
-import sys
 from typing import Any, Dict, Optional
 
 from lms.adapters.curriculum.loader import load_all_roadmaps
@@ -15,7 +14,6 @@ from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.core.models import (
     GRADED_PLAYGROUND_ACTIVITIES,
     AssistanceLevel,
-    ConceptCheck,
     EvidenceCategory,
     EvidenceEntry,
     EvidenceStrength,

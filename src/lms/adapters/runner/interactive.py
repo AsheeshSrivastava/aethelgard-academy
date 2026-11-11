@@ -20,7 +20,7 @@ import sys
 import tempfile
 import threading
 import time
-from typing import Any, ClassVar, Dict, List, Optional, Set
+from typing import Any, ClassVar, Dict, Optional, Set
 
 MAX_SOURCE_CHARS = 512_000
 _FILE_NAME = re.compile(r"^[A-Za-z0-9_-]+\.py$")

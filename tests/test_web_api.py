@@ -12,7 +12,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lms.adapters.ai.mock_axis import MockAxisCompanion
-from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.loader import CurriculumCatalog, load_roadmap_from_file
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner

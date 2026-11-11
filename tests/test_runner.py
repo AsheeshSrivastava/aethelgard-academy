@@ -1,7 +1,6 @@
 import pytest
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.adapters.runner.docker_runner import DockerRunner, get_code_runner
-from lms.core.interfaces import ExecutionResult, ICodeRunner
 
 
 def test_subprocess_runner_happy_path():

@@ -8,7 +8,6 @@ import json
 import re
 from typing import Any, Iterator, List, Tuple
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
-from lms.core.models import AssistanceLevel
 from lms.adapters.ai.providers.judging import judge_with
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.ai_judgement import AiJudgement, Rubric

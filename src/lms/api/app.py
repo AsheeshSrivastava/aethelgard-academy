@@ -24,7 +24,6 @@ from pydantic import BaseModel, ConfigDict
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
 from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
 from lms.api.model_settings import model_settings_routes
-from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.adapters.curriculum.concepts import ConceptCatalog
 from lms.adapters.curriculum.builds import answers_dir_from_env

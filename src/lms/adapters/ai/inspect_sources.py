@@ -18,9 +18,6 @@ from dataclasses import dataclass, field
 from lms.core.rag_contracts import NORMALIZER_VERSION, normalize_text
 from lms.core.rag.errors import LoadError
 from lms.core.rag.files import (
-    CODE_CONFIG_EXTS,
-    CODE_CONFIG_NAMES,
-    IGNORED_EXTS,
     MAX_FILE_BYTES,
     MIN_CHARS,
     NOTEBOOK_EXT,

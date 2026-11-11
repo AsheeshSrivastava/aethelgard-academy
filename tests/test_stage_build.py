@@ -443,7 +443,8 @@ def test_a_syntax_error_is_reported_not_raised():
 def test_starter_comments_do_not_count_as_a_plan():
     build = spec()
     starter = "\n".join(build.files[0].starter)
-    plan = lambda code: met(check_requirements(build, {"checkin.py": code}, "", FakeRunner(), False))["plan"]
+    def plan(code):
+        return met(check_requirements(build, {"checkin.py": code}, "", FakeRunner(), False))["plan"]
 
     assert plan(starter + "\n# one\n# two\n") is False
     assert plan(starter + "\n# one\n# two\n# three\n") is True

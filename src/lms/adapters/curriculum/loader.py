@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 import logging
 import re
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from lms.adapters.curriculum.builds import answers_dir_from_env, load_builds
 from lms.adapters.curriculum.rubric import check_concept_checks
@@ -404,7 +404,6 @@ def load_roadmap_from_file(
     content = file_path.read_text(encoding="utf-8")
     catalog = catalog if catalog is not None else CurriculumCatalog()
 
-    current_stage = 0
     # Split content by markdown headers; a stage may appear more than once
     stage_sections = re.split(r"\n###\s+Stage\s+(\d+)([^\n]*)", content)
 

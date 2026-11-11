@@ -17,7 +17,6 @@ from lms.core.models import (
     EvidenceCategory,
     EvidenceEntry,
     EvidenceStrength,
-    ProficiencyLevel,
     TargetSkill,
     Unit,
 )

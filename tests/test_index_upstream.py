@@ -5,13 +5,11 @@ Governed by:
 - SPEC-10: Persistent Upstream Indexer & Warm Retriever Loader
 """
 
-import json
 from pathlib import Path
-import pytest
 
 from lms.adapters.ai.rag.indexer import CorpusIndexer
 from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
-from lms.core.rag_contracts import Source, content_sha256, normalize_text, verify_passage
+from lms.core.rag_contracts import verify_passage
 
 
 SAMPLE_MD = """# FastAPI Guide

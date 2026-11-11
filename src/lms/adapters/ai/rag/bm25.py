@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Tuple
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9_\-\.:]+")
 
