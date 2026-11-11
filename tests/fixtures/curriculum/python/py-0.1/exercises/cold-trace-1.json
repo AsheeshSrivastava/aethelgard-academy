@@ -15,7 +15,7 @@
   "hint": "Made-up hint for tests.",
   "trace": {
     "code": [
-      "print('item-4')",
+      "print('py-0.1-cold-trace-1')",
       "print('done')"
     ],
     "input": ""

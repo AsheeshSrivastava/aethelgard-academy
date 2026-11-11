@@ -13,25 +13,25 @@
   ],
   "predict": {
     "code": [
-      "print('item-36')"
+      "print('py-0.4-predict-2')"
     ],
     "stdin": "",
     "options": [
       {
         "key": "A",
-        "text": "item-36"
+        "text": "py-0.4-predict-2"
       },
       {
         "key": "B",
-        "text": "item-36 b"
+        "text": "py-0.4-predict-2 b"
       },
       {
         "key": "C",
-        "text": "item-36 c"
+        "text": "py-0.4-predict-2 c"
       },
       {
         "key": "D",
-        "text": "item-36 d"
+        "text": "py-0.4-predict-2 d"
       }
     ]
   }

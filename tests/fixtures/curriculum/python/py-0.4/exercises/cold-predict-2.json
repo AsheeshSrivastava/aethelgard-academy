@@ -15,25 +15,25 @@
   "hint": "Made-up hint for tests.",
   "predict": {
     "code": [
-      "print('item-31')"
+      "print('py-0.4-cold-predict-2')"
     ],
     "stdin": "",
     "options": [
       {
         "key": "A",
-        "text": "item-31 a"
+        "text": "py-0.4-cold-predict-2 a"
       },
       {
         "key": "B",
-        "text": "item-31"
+        "text": "py-0.4-cold-predict-2"
       },
       {
         "key": "C",
-        "text": "item-31 c"
+        "text": "py-0.4-cold-predict-2 c"
       },
       {
         "key": "D",
-        "text": "item-31 d"
+        "text": "py-0.4-cold-predict-2 d"
       }
     ]
   }

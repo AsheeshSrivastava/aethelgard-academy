@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from conftest import REAL_ANSWERS
+from conftest import REAL_ANSWERS, REPO, real_content
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.curriculum.builds import load_builds
 from lms.adapters.curriculum.loader import load_all_roadmaps
@@ -64,12 +64,7 @@ needs_answers = pytest.mark.skipif(ANSWERS is None, reason="no real answers fold
 @pytest.fixture(scope="module", autouse=True)
 def real_curriculum_when_answers_are_here():
     """With real answers, the app here loads the real curriculum and answers, not the made-up ones."""
-    if ANSWERS is None:
-        yield
-        return
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setenv("LMS_ANSWERS_DIR", str(ANSWERS))
-        patch.setenv("LMS_CURRICULUM_DIR", str(Path("curriculum").resolve()))
+    with real_content():
         yield
 
 # Has the shape of an answer (plan, two inputs, two f-strings) but cleans nothing, so it is not one.
@@ -329,7 +324,7 @@ def test_a_build_that_is_not_json_is_reported(tmp_path):
 def test_the_real_build_has_no_curriculum_findings(monkeypatch):
     if ANSWERS is None:  # the real curriculum with no answers folder at all, as on a clean checkout
         monkeypatch.delenv("LMS_ANSWERS_DIR")
-        monkeypatch.setenv("LMS_CURRICULUM_DIR", str(Path("curriculum").resolve()))
+        monkeypatch.setenv("LMS_CURRICULUM_DIR", str(REPO / "curriculum"))
     catalog = load_all_roadmaps(Path("reference"))
 
     found = [f.code for f in catalog.findings if f.code.startswith("build-")]

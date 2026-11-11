@@ -13,7 +13,7 @@
   ],
   "trace": {
     "code": [
-      "print('item-17')",
+      "print('py-0.2-trace-2')",
       "print('done')"
     ],
     "input": ""

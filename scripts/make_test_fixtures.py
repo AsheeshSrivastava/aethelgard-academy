@@ -10,13 +10,16 @@ end up here. Re-run after adding seeds, then fix any test that counted the old i
 import json
 import re
 import shutil
+import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-OUT_PUB = REPO / "tests/fixtures/curriculum"
-OUT_ANS = REPO / "tests/fixtures/answers"
-for d in (OUT_PUB, OUT_ANS):
-    shutil.rmtree(d, ignore_errors=True)
+FIXTURES = REPO / "tests" / "fixtures"
+# Written to a scratch folder first and swapped in at the end, so a failure leaves the old fixtures.
+SCRATCH = Path(tempfile.mkdtemp(prefix="lms-fixtures-"))
+OUT_PUB = SCRATCH / "curriculum"
+OUT_ANS = SCRATCH / "answers"
+QUICKCHECK_IDS = re.compile(r"^```quickcheck[ \t]*\r?\n.*?^id:[ \t]*(\S+)", re.M | re.S)
 
 BLOCKS = ["predict","trace","playground","debug","debug_locate","choice","specify_by_tests",
           "specify_contract","decompose_plan","decompose_code","explain_spot_flaw","explain_model_choice"]
@@ -26,7 +29,8 @@ KEEP = ["schema_version","seed_id","unit_id","activity","skill_id","level","topi
 def opts(options, word):
     return [{"key": o["key"], "text": f"{word} {o['key'].lower()}"} for o in options]
 
-def made_up(raw, n):
+def made_up(raw):
+    n = raw["seed_id"].lower().replace("/", "-")  # stable: adding a seed changes no other item
     t = next(b for b in BLOCKS if isinstance(raw.get(b), dict))
     pub = {k: raw[k] for k in KEEP if k in raw}
     pub["prompt_markdown"] = [f"Made-up test item {raw['seed_id']}. It is not real course content."]
@@ -43,13 +47,13 @@ def made_up(raw, n):
     # Practice items: the first option is right. Cold Check items: the second, so "A" is a wrong answer there.
     k = 1 if raw.get("cold_check_eligible") else 0
     if t == "predict":
-        word = slot or f"item-{n}"
+        word = slot or n
         options = [{"key": o["key"], "text": word if i == k else f"{word} {o['key'].lower()}"} for i, o in enumerate(b["options"])]
         pub[t] = {"code": [f"print('{word}')"], "stdin": "", "options": options}
         priv = {"answer_key": options[k]["key"], "why": ["Made-up: print shows its argument."]}
     elif t == "trace":
-        pub[t] = {"code": [f"print('item-{n}')", "print('done')"], "input": ""}
-        priv = {"expected_output": [f"item-{n}", "done"]}
+        pub[t] = {"code": [f"print('{n}')", "print('done')"], "input": ""}
+        priv = {"expected_output": [n, "done"]}
     elif t in ("choice", "explain_model_choice"):
         options = opts(b["options"], "Made-up option")
         pub[t] = {"material": ["Made-up material for tests."], "options": options}
@@ -79,42 +83,46 @@ def made_up(raw, n):
         fields = [{"id": f["id"], "label": f"Made-up field {f['id']}", "kind": f["kind"],
                    "options": opts(f["options"], "Made-up choice")} for f in b["fields"]]
         pub[t] = {"material": ["Made-up material for tests."], "fields": fields}
-        priv = {"answer_key": {f["id"]: ([f["options"][0]["key"]] if f["kind"] == "multi" else f["options"][0]["key"]) for f in fields},
+        priv = {"answer_key": {f["id"]: ([f["options"][k]["key"]] if f["kind"] == "multi" else f["options"][k]["key"]) for f in fields},
                 "why": ["Made-up reason."]}
     else:
         raise SystemExit(f"no made-up form for {t}")
     return pub, {"seed_id": raw["seed_id"], t: priv}
 
-n = 0
+count = 0
 for f in sorted((REPO / "curriculum").glob("*/*/exercises/*.json")):
-    n += 1
+    count += 1
     rel = f.relative_to(REPO / "curriculum")
-    pub, priv = made_up(json.loads(f.read_text()), n)
+    pub, priv = made_up(json.loads(f.read_text(encoding="utf-8")))
     for root, data in ((OUT_PUB, pub), (OUT_ANS, priv)):
         p = root / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(data, indent=2) + "\n")
-print(n, "seeds")
+        p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+print(count, "seeds")
 
 for pkg in sorted((REPO / "curriculum").glob("*/*")):
     if not pkg.is_dir() or pkg.name == "builds":
         continue
     ans = OUT_ANS / pkg.parent.name / pkg.name
     meta = pkg / "meta.json"
-    if meta.exists() and isinstance(json.loads(meta.read_text()).get("concept_check"), dict):
+    if meta.exists() and isinstance(json.loads(meta.read_text(encoding="utf-8")).get("concept_check"), dict):
         ans.mkdir(parents=True, exist_ok=True)
         (ans / "concept_check.json").write_text(json.dumps({"ideas": [
             {"id": "made-up-1", "text": "apples"},
-            {"id": "made-up-2", "text": "rivers"}]}, indent=2) + "\n")
+            {"id": "made-up-2", "text": "rivers"}]}, indent=2) + "\n", encoding="utf-8")
     if (pkg / "starter.py").exists():
         ans.mkdir(parents=True, exist_ok=True)
         (ans / "test_solution.py").write_text(
             '"""Made-up practice check for tests: the learner writes shout(word)."""\n\n\n'
-            "def test_shout():\n    assert shout('hi') == 'HI'  # noqa: F821\n")
+            "def test_shout():\n    assert shout('hi') == 'HI'  # noqa: F821\n", encoding="utf-8")
     lesson = pkg / "lesson.md"
-    ids = re.findall(r"```quickcheck\nid: (\S+)", lesson.read_text()) if lesson.exists() else []
+    ids = QUICKCHECK_IDS.findall(lesson.read_text(encoding="utf-8")) if lesson.exists() else []
     if ids:
         ans.mkdir(parents=True, exist_ok=True)
         (ans / "quick_checks.json").write_text(json.dumps(
-            {i: {"answer": "B", "why": "Made-up reason for tests."} for i in ids}, indent=2) + "\n")
-print("extras done")
+            {i: {"answer": "B", "why": "Made-up reason for tests."} for i in ids}, indent=2) + "\n", encoding="utf-8")
+for name in ("curriculum", "answers"):
+    shutil.rmtree(FIXTURES / name, ignore_errors=True)
+    shutil.move(str(SCRATCH / name), str(FIXTURES / name))
+shutil.rmtree(SCRATCH, ignore_errors=True)
+print("fixtures written to", FIXTURES)

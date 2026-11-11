@@ -39,7 +39,11 @@ def answers_dir_from_env() -> Optional[Path]:
 
 
 def curriculum_dir_from_env(default: Path) -> Path:
-    """LMS_CURRICULUM_DIR if set; otherwise the default. Tests point it at made-up items."""
+    """LMS_CURRICULUM_DIR if set; otherwise the default.
+
+    Tests point it at made-up items (tests/conftest.py). When set, it wins over the folder
+    beside the reference folder, so a test with its own curriculum folder unsets it.
+    """
     value = os.environ.get(CURRICULUM_ENV, "").strip()
     return Path(value) if value else default
 

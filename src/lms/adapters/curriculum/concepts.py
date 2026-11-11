@@ -10,11 +10,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import ValidationError
 import yaml
 
+from lms.adapters.curriculum.builds import curriculum_dir_from_env
 from lms.core.concepts import SLUG, rank_concepts
 from lms.core.curriculum_checks import Finding, Severity
 from lms.core.models import ConceptItem
 
-DEFAULT_CONCEPTS_DIR = Path("curriculum/concepts")
 
 _REQUIRED = ("id", "title", "category", "summary", "status")
 _LISTS = ("units", "related", "aliases")
@@ -100,7 +100,7 @@ class ConceptCatalog:
     """In-memory searchable registry of concept notes."""
 
     def __init__(self, concepts_dir: Optional[Path] = None):
-        items, self.findings = load_concepts(concepts_dir or DEFAULT_CONCEPTS_DIR)
+        items, self.findings = load_concepts(concepts_dir or curriculum_dir_from_env(Path("curriculum")) / "concepts")
         self._concepts = sorted(items, key=lambda c: c.name.lower())
 
     def list_all(self) -> List[ConceptItem]:

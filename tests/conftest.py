@@ -25,8 +25,15 @@ from lms.adapters.curriculum.builds import ANSWERS_ENV, CURRICULUM_ENV, answers_
 REPO = Path(__file__).resolve().parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 REAL_ANSWERS = answers_dir_from_env()
-_QUICKCHECK = re.compile(r"```quickcheck\nid: (\S+)\n.*?```", re.S)
+# The same block shape the app reads (quick_checks._BLOCK), so no real question is left behind.
+_QUICKCHECK = re.compile(r"^```quickcheck[ \t]*\r?\n(.*?)\r?\n```[ \t]*$", re.M | re.S)
+_QUICKCHECK_ID = re.compile(r"^id:[ \t]*(\S+)", re.M)
 MADE_UP_QUICKCHECK = "```quickcheck\nid: {id}\nquestion: Made-up question for tests?\nA: one\nB: two\nC: three\n```"
+
+
+def _made_up_quickcheck(block: re.Match) -> str:
+    found = _QUICKCHECK_ID.search(block.group(1))
+    return MADE_UP_QUICKCHECK.format(id=found.group(1) if found else "no-id")
 
 
 def _build_test_tree() -> Path:
@@ -37,7 +44,7 @@ def _build_test_tree() -> Path:
     shutil.copytree(FIXTURES / "curriculum", curriculum, dirs_exist_ok=True)
     for lesson in curriculum.glob("*/*/lesson.md"):
         text = lesson.read_text(encoding="utf-8")
-        lesson.write_text(_QUICKCHECK.sub(lambda m: MADE_UP_QUICKCHECK.format(id=m.group(1)), text), encoding="utf-8")
+        lesson.write_text(_QUICKCHECK.sub(_made_up_quickcheck, text), encoding="utf-8")
     shutil.copytree(FIXTURES / "answers", answers)
     for practice in curriculum.glob("*/builds/*/practice_checks.py"):
         target = answers / practice.parent.parent.parent.name / "builds" / practice.parent.name / "checks.py"
@@ -69,7 +76,10 @@ def real_content():
         yield
     finally:
         for name, value in saved.items():
-            os.environ[name] = value
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
 
 
 @pytest.fixture(autouse=True)

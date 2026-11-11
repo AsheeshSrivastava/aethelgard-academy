@@ -2,7 +2,7 @@
   "seed_id": "PY-0.2/trace-2",
   "trace": {
     "expected_output": [
-      "item-17",
+      "py-0.2-trace-2",
       "done"
     ]
   }
