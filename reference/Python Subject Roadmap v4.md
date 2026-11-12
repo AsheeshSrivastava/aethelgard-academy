@@ -283,12 +283,13 @@ The CO-6 concept check runs in every unit as part of Explain and is a target onl
 #### PY-0.3 Tool help versus your own reasoning
 
 - **Objective:** Can distinguish professional tool assistance from technical reasoning and verification the developer must retain.
-- **The concept (Explain):** A tool can write code, but the developer still owns the intent, the checking and the decision.
+- **The concept (Explain):** A tool can help with code, but the developer still owns the intent, the checking and the decision.
 - **Target skills:** DE-2 to Understand; DE-3 to Understand; DE-4 to Understand
 - **Methods:** Explain → Direct
 - **Outcome (measured at unit end):** DE-3: sorts an AI session's contributions into 'fine to delegate' and 'must own'. DE-2: says what to ask a tool to explain rather than do. DE-4: names which source would settle a question. The three always-on habits are introduced here.
 - **Topics:** AI-generated syntax/code; documentation lookup; IDE assistance; developer intent; assumptions; code comprehension; validation; debugging; technical responsibility; uncertainty identification
 - **Prerequisites:** PY-0.4 | **Importance:** Core | **Integration link:** Entire roadmap; future cross-cutting AI-assisted engineering ownership
+- **Changed 2026-11-12 (owner):** concept line "A tool can write code" became "A tool can help with code": in this course learners write their own code, and tools help with lookups, boilerplate and documents (Amendment A2, ADR-0028).
 
 
 ### Stage 1

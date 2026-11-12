@@ -29,6 +29,6 @@
     }
   ],
   "concept_check": {
-    "prompt": "Explain in your own words why an AI tool can draft code, but the human developer must always retain ownership of intent, verification, and the final decision."
+    "prompt": "Explain in your own words what you can hand to an AI tool, and why the intent, the checking and the final decision stay with you."
   }
 }

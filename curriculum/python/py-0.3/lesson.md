@@ -1,6 +1,6 @@
 # PY-0.3: Tool Help versus Your Own Reasoning
 
-> **The Concept:** A tool can write code, but the developer still owns the intent, the checking and the decision.
+> **The Concept:** A tool can help with code, but the developer still owns the intent, the checking and the decision.
 
 ---
 
@@ -49,35 +49,37 @@ A queue number is unique, has no spaces, and says nothing about the person. The 
 
 ## 2. The Three Always-On Habits
 
-As an aspiring AI Systems Architect, you must adopt three non-negotiable habits whenever working with AI tools:
+Use these three habits every time you work with an AI tool:
 
-1. **Own the Intent (Before prompting):**
-   Define the exact Ingress $\rightarrow$ Transformation $\rightarrow$ Egress contract *before* asking an AI to generate code. Never ask: *"Write my intake script."* Instead ask: *"Show me the string method that removes leading and trailing whitespace in Python."*
-2. **Own the Checking (After generation):**
-   Never accept AI-generated code without checking its hidden assumptions. Ask:
-   - *What happens if input is empty?*
-   - *What happens if input has spaces?*
-   - *What happens if input contains unexpected punctuation?*
-3. **Own the Decision (At shipment):**
-   If a bug crashes the intake desk, you cannot tell the pantry coordinator: *"The AI wrote it."* You are the engineer; you sign off on the commit.
+1. **Own the intent (before you ask).**
+   Write down what goes in, what the program does with it, and what comes out, before you ask a tool anything. Then ask for one specific piece of help, such as: *"Show me the string method that removes spaces at both ends of text."*
+
+   In this course you write your own code. A tool can remind you of syntax, look up a method, draft boilerplate for a function you have already designed, or draft a document such as a README. The logic of your program stays yours. When a tool's code confuses you, ask it to explain, not to rewrite.
+2. **Own the checking (after the tool answers).**
+   Never keep a tool's code until you have checked what it assumes. Ask:
+   - *What happens if the input is empty?*
+   - *What happens if the input has spaces?*
+   - *What happens if the input has unexpected punctuation?*
+3. **Own the decision (before it ships).**
+   If a bug stops the intake desk, you cannot tell the pantry coordinator, *"The AI wrote it."* You sign off on the change.
 
 ---
 
 ## 3. The Ownership Matrix (DE-3)
 
-| Engineering Task | Category | Rationale |
+| Task | Category | Why |
 | :--- | :--- | :--- |
-| **Looking up syntax or method names** | **`DELEGATE_OK`** | Looking up how `str.strip()` works or boilerplate syntax is routine tool assistance. |
-| **Defining system requirements & privacy** | **`MUST_OWN`** | Only the human developer understands the policy, legal, and operational boundaries. |
-| **Verifying edge cases against tests** | **`MUST_OWN`** | Tests and assertions prove the code satisfies reality; AI assertions are often circular. |
+| **Looking up syntax or a method name, or drafting boilerplate for a function you designed** | **`DELEGATE_OK`** | Routine help. You still read and check what comes back. |
+| **Deciding requirements and privacy rules** | **`MUST_OWN`** | Only you know the policy, legal and people limits. |
+| **Deciding what counts as correct, and which cases matter** | **`MUST_OWN`** | A tool can run checks or suggest cases, but you decide what the right answer is. If a tool writes both the code and its checks, the checks can repeat the code's own mistakes. |
 
 ---
 
 ## 4. The Source of Truth (DE-4)
 
-When an AI chatbot and official documentation disagree:
-- **The Chatbot** is a statistical language model capable of hallucinating plausible-sounding methods that do not exist.
-- **The Official Python Documentation & Test Suite** is the deterministic, authoritative source of truth.
+When an AI chatbot and the official documentation disagree:
+- **The chatbot** predicts likely text. It can describe a method that does not exist, and sound sure about it.
+- **Running the code and reading the official Python documentation** settle the question.
 
 ---
 
@@ -99,5 +101,5 @@ When an AI chatbot and official documentation disagree:
    ```
 5. **Submit Concept Check (`CO-6`):**
    ```bash
-   uv run lms explain PY-0.3 "A tool can generate syntax, but the developer must own the intent, verify edge cases against tests, and make the final decision."
+   uv run lms explain PY-0.3 "I can hand a tool lookups, boilerplate and document drafts. I own the intent, I decide what counts as correct and check the tool's assumptions, and I make the final decision."
    ```
