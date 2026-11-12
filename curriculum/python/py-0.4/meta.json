@@ -40,6 +40,10 @@
     }
   ],
   "concept_check": {
-    "prompt": "Explain in your own words why input() always returns text, and what happens if you try to do math with it directly."
+    "prompt": "Explain in your own words why input() always returns text, and what happens if you try to do math with it directly.",
+    "more_prompts": [
+      "Explain in your own words how you read a first error message: where you look first, and what the type, the message and the line number each tell you.",
+      "A script prints `Desk open`, then asks for a name, then stops with an error on line 3. Explain in your own words why `Desk open` still appeared, and what that tells you about how Python runs a file."
+    ]
   }
 }

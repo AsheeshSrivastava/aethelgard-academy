@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/predict-4",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "`print()`",
+  "prompt_markdown": [
+    "At a clinic, a patient types `  ravi kumar ` with spaces at both ends.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "predict": {
+    "code": [
+      "name = input()",
+      "print(\"Patient:\", name.strip().title())",
+      "print(\"Room 2\")"
+    ],
+    "stdin": "  ravi kumar ",
+    "options": [
+      {
+        "key": "A",
+        "text": "Patient: Ravi Kumar\nRoom 2"
+      },
+      {
+        "key": "B",
+        "text": "Patient:   ravi kumar \nRoom 2"
+      },
+      {
+        "key": "C",
+        "text": "Patient: RAVI KUMAR\nRoom 2"
+      },
+      {
+        "key": "D",
+        "text": "Patient: Ravi kumar\nRoom 2"
+      }
+    ]
+  }
+}

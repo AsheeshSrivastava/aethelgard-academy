@@ -8,5 +8,31 @@
       "id": "made-up-2",
       "text": "rivers"
     }
-  ]
+  ],
+  "variants": {
+    "v2": {
+      "ideas": [
+        {
+          "id": "made-up-1",
+          "text": "apples"
+        },
+        {
+          "id": "made-up-2",
+          "text": "rivers"
+        }
+      ]
+    },
+    "v3": {
+      "ideas": [
+        {
+          "id": "made-up-1",
+          "text": "apples"
+        },
+        {
+          "id": "made-up-2",
+          "text": "rivers"
+        }
+      ]
+    }
+  }
 }
