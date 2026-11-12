@@ -52,7 +52,8 @@ def check_messy_input():
 
 
 def check_ticket_counter():
-    source = Path("solution.py").read_text(encoding="utf-8")
+    # Code only: a counter line inside a comment does not count.
+    source = "\n".join(line.split("#")[0] for line in Path("solution.py").read_text(encoding="utf-8").splitlines())
     assert "ticket = ticket + 1" in source or "ticket += 1" in source, (
         "Keep the counter line that adds 1 to ticket. Fix the bug; do not print the numbers by hand."
     )
