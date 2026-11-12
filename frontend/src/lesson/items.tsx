@@ -8,6 +8,7 @@ import { RunTerminal } from "./RunTerminal";
 export type Answer = {
   choice?: string;
   trace_answers?: string[];
+  trace_states?: { line: number; state: Record<string, string> }[];
   locate?: { line: number; error_type: string };
   files?: Record<string, string>;
   tests?: string;
@@ -117,13 +118,24 @@ function PredictItem(props: ItemProps) {
 
 function TraceItem(props: ItemProps) {
   const block = props.exercise.trace!;
+  const stateRows = block.state_rows ?? [];
   const [text, setText] = useState("");
+  const [cells, setCells] = useState<Record<string, string>>({});
+  const cellKey = (line: number, name: string) => `${line}:${name}`;
+  const allCellsFilled = stateRows.every((row) => row.names.every((name) => (cells[cellKey(row.line, name)] ?? "").trim()));
   return (
     <form
       className="item-form"
       onSubmit={(event) => {
         event.preventDefault();
-        props.onSubmit({ trace_answers: text.split("\n").filter((line) => line.trim()) });
+        const answer: Answer = { trace_answers: text.split("\n").filter((line) => line.trim()) };
+        if (stateRows.length) {
+          answer.trace_states = stateRows.map((row) => ({
+            line: row.line,
+            state: Object.fromEntries(row.names.map((name) => [name, cells[cellKey(row.line, name)] ?? ""])),
+          }));
+        }
+        props.onSubmit(answer);
       }}
     >
       <CodeBlock lines={block.code} />
@@ -132,7 +144,32 @@ function TraceItem(props: ItemProps) {
         <span>What the terminal shows, one line each</span>
         <textarea rows={4} value={text} onChange={(event) => setText(event.target.value)} />
       </label>
-      <Submit disabled={!text.trim()} busy={props.busy} label={props.submitLabel} />
+      {stateRows.length > 0 && (
+        <table className="state-table">
+          <caption className="small muted">Fill in what each name holds after the line.</caption>
+          <tbody>
+            {stateRows.map((row) => (
+              <tr key={row.line}>
+                <th scope="row">After line {row.line}</th>
+                {row.names.map((name) => (
+                  <td key={name}>
+                    <label className="field">
+                      <span>{name}</span>
+                      <input
+                        type="text"
+                        aria-label={`${name} after line ${row.line}`}
+                        value={cells[cellKey(row.line, name)] ?? ""}
+                        onChange={(event) => setCells({ ...cells, [cellKey(row.line, name)]: event.target.value })}
+                      />
+                    </label>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <Submit disabled={!text.trim() || !allCellsFilled} busy={props.busy} label={props.submitLabel} />
     </form>
   );
 }

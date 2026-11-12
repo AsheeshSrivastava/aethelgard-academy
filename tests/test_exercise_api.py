@@ -112,6 +112,17 @@ def test_first_exercise_is_the_first_seed(client):
     assert len(body["predict"]["options"]) == 4
 
 
+def test_practice_trace_serves_state_rows_without_values(client):
+    body = get_exercise(client, "PY-0.1", "trace")
+
+    assert body["trace"]["state_rows"] == [
+        {"line": 1, "names": ["shown"]},
+        {"line": 2, "names": ["count", "shown"]},
+    ]
+    assert "line_states" not in body["trace"]
+    assert "py-0.1-trace-1" not in str(body["trace"]["state_rows"])
+
+
 def test_slots_are_filled_in(client):
     assert "{{" not in json.dumps(get_exercise(client))
 
@@ -470,3 +481,14 @@ def test_new_routes_appear_in_openapi(client):
 
     assert "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercise" in paths
     assert "/api/v1/learners/me/units/{unit_id}/activities/{activity}/exercises:regenerate" in paths
+
+
+def test_cold_trace_never_serves_state_rows():
+    cold = next(s for s in spec_seeds() if s.seed_id == "PY-0.1/cold-trace-1")
+    practice = next(s for s in spec_seeds() if s.seed_id == "PY-0.1/trace-1")
+
+    assert to_exercise(cold, 1).trace.state_rows is None
+    assert [r.model_dump() for r in to_exercise(practice, 1).trace.state_rows] == [
+        {"line": 1, "names": ["status"]},
+        {"line": 3, "names": ["status"]},
+    ]

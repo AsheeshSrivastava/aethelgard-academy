@@ -25,6 +25,11 @@ class Locate(BaseModel):
     error_type: str
 
 
+class TraceState(BaseModel):
+    line: int
+    state: Dict[str, str]
+
+
 class Attempt(BaseModel):
     # Unknown fields are refused, so a client cannot send strength or assistance.
     model_config = ConfigDict(extra="forbid")
@@ -33,6 +38,7 @@ class Attempt(BaseModel):
     activity: str
     choice: Optional[str] = None
     trace_answers: Optional[List[str]] = None
+    trace_states: Optional[List[TraceState]] = None  # The state table of a practice trace (ADR-0031)
     locate: Optional[Locate] = None
     files: Optional[Dict[str, str]] = None
     tests: Optional[str] = None
@@ -93,10 +99,46 @@ def _grade_key(seed: ExerciseSeed, attempt: Attempt) -> GradeResult:
     return _verdict(attempt.choice == key, Reveal(correct=key, why=seed.body.get("why", [])))
 
 
+def _cell_text(value: object) -> str:
+    return " ".join(str(value).split())
+
+
+def _learner_cell(value: str) -> str:
+    """Trim, strip one matching pair of quotes, read runs of spaces as one (ADR-0031)."""
+    text = value.strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
+        text = text[1:-1]
+    return _cell_text(text)
+
+
 def _grade_trace(seed: ExerciseSeed, attempt: Attempt) -> GradeResult:
     expected = seed.body["expected_output"]
     given = [line.strip() for line in attempt.trace_answers or []]
-    return _verdict(given == [line.strip() for line in expected], Reveal(correct=expected))
+    output_ok = given == [line.strip() for line in expected]
+    rows = seed.body.get("line_states")
+    if seed.cold_check_eligible or not rows:
+        return _verdict(output_ok, Reveal(correct=expected))
+
+    # A practice item with line_states also grades the state table (ADR-0031).
+    learner = {row.line: row.state for row in attempt.trace_states or []}
+    total = right = 0
+    for row in rows:
+        picked = learner.get(row["line"], {})
+        for name, value in row["state"].items():
+            total += 1
+            if name in picked and _learner_cell(picked[name]) == _cell_text(value):
+                right += 1
+    passed = output_ok and right == total
+    if passed:
+        feedback = "Correct."
+    else:
+        feedback = f"{right} of {total} cells are right." + ("" if output_ok else " The printed lines are not right.")
+    return GradeResult(
+        passed=passed,
+        feedback=feedback,
+        score=Score(passed=right, total=total),
+        reveal=Reveal(correct={"output": expected, "states": rows}),
+    )
 
 
 def _grade_locate(seed: ExerciseSeed, attempt: Attempt) -> GradeResult:

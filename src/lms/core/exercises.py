@@ -67,9 +67,15 @@ class PredictBlock(BaseModel):
     options: List[Choice]
 
 
+class StateRow(BaseModel):
+    line: int
+    names: List[str]
+
+
 class TraceBlock(BaseModel):
     code: List[str]
     input: str
+    state_rows: Optional[List[StateRow]] = None  # Practice items with line_states only (ADR-0031)
 
 
 class PlaygroundBlock(BaseModel):
@@ -421,6 +427,10 @@ def to_exercise(seed: ExerciseSeed, variant_no: int) -> Exercise:
             body["steps"],
             key=lambda s: hashlib.sha256(f"{seed.seed_id}:{s['id']}".encode()).hexdigest(),
         )
+    rows = body.get("line_states")
+    if seed.item_type == "trace" and rows and not seed.cold_check_eligible:
+        # Line numbers and names only; the values stay private (ADR-0031).
+        body["state_rows"] = [{"line": r["line"], "names": sorted(r["state"])} for r in rows]
     return Exercise(
         exercise_id=f"{seed.seed_id}/v{variant_no}",
         unit_id=seed.unit_id,

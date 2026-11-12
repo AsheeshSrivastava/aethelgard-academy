@@ -4,6 +4,21 @@
     "expected_output": [
       "py-0.1-trace-1",
       "done"
+    ],
+    "line_states": [
+      {
+        "line": 1,
+        "state": {
+          "shown": "py-0.1-trace-1"
+        }
+      },
+      {
+        "line": 2,
+        "state": {
+          "shown": "done",
+          "count": 2
+        }
+      }
     ]
   }
 }

@@ -801,6 +801,8 @@ export interface components {
             choice?: string | null;
             /** Trace Answers */
             trace_answers?: string[] | null;
+            /** Trace States */
+            trace_states?: components["schemas"]["TraceState"][] | null;
             locate?: components["schemas"]["Locate"] | null;
             /** Files */
             files?: {
@@ -1845,6 +1847,13 @@ export interface components {
             units: components["schemas"]["UnitSummary"][];
             build?: components["schemas"]["BuildSummary"] | null;
         };
+        /** StateRow */
+        StateRow: {
+            /** Line */
+            line: number;
+            /** Names */
+            names: string[];
+        };
         /** Structure */
         Structure: {
             /** Min Helpers */
@@ -1873,6 +1882,17 @@ export interface components {
             code: string[];
             /** Input */
             input: string;
+            /** State Rows */
+            state_rows?: components["schemas"]["StateRow"][] | null;
+        };
+        /** TraceState */
+        TraceState: {
+            /** Line */
+            line: number;
+            /** State */
+            state: {
+                [key: string]: string;
+            };
         };
         /** Unit */
         Unit: {

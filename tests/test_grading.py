@@ -31,6 +31,13 @@ def spec_seeds():
 SEEDS = spec_seeds()
 
 
+def spec_raw(seed_id):
+    text = Path("docs/specs/13-exercise-seed-format-spec.md").read_text(encoding="utf-8")
+    worked = text.split("## 10. Worked example")[1].split("## 12. Acceptance")[0]
+    blocks = re.findall(r"```json\n(.*?)```", worked, re.S)
+    return next(r for r in map(json.loads, blocks) if r["seed_id"] == seed_id)
+
+
 def attempt(seed, **fields):
     return Attempt(exercise_id=f"{seed.seed_id}/v1", activity=seed.activity.slug, **fields)
 
@@ -71,10 +78,93 @@ def test_missing_answer_fails_cleanly():
     assert run("PY-0.1/predict-1").passed is False
 
 
+OUT = ["waiting", "checked in"]
+
+
+def states(first="waiting", second="checked in"):
+    return [{"line": 1, "state": {"status": first}}, {"line": 3, "state": {"status": second}}]
+
+
 def test_trace_compares_trimmed_lines():
-    assert run("PY-0.1/trace-1", trace_answers=[" waiting ", "checked in"]).passed is True
-    assert run("PY-0.1/trace-1", trace_answers=["waiting", "waiting"]).passed is False
-    assert run("PY-0.1/trace-1", trace_answers=["waiting"]).passed is False
+    # The cold item grades the output only (ADR-0031), even when the key has line_states.
+    assert run("PY-0.1/cold-trace-1", trace_answers=[" B A "]).passed is True
+    assert run("PY-0.1/cold-trace-1", trace_answers=["A B"]).passed is False
+    assert run("PY-0.1/cold-trace-1", trace_answers=[]).passed is False
+
+
+def test_practice_trace_passes_when_output_and_every_cell_are_right():
+    result = run("PY-0.1/trace-1", trace_answers=[" waiting ", "checked in"], trace_states=states())
+
+    assert result.passed is True
+    assert result.score.passed == 2 and result.score.total == 2
+    assert result.reveal.correct == {
+        "output": OUT,
+        "states": [
+            {"line": 1, "state": {"status": "waiting"}},
+            {"line": 3, "state": {"status": "checked in"}},
+        ],
+    }
+
+
+def test_practice_trace_with_one_wrong_cell_fails_with_a_score():
+    result = run("PY-0.1/trace-1", trace_answers=OUT, trace_states=states(second="waiting"))
+
+    assert result.passed is False
+    assert (result.score.passed, result.score.total) == (1, 2)
+    assert result.feedback == "1 of 2 cells are right."
+
+
+def test_practice_trace_with_wrong_output_fails_even_if_cells_are_right():
+    result = run("PY-0.1/trace-1", trace_answers=["waiting"], trace_states=states())
+
+    assert result.passed is False
+    assert result.score.passed == 2
+
+
+def test_practice_trace_cells_forgive_quotes_and_spaces():
+    given = states('"waiting"', "  'checked    in' ")
+
+    assert run("PY-0.1/trace-1", trace_answers=OUT, trace_states=given).passed is True
+
+
+def test_practice_trace_cells_strip_only_one_matching_pair_of_quotes():
+    assert run("PY-0.1/trace-1", trace_answers=OUT, trace_states=states("\"'waiting'\"")).passed is False
+    assert run("PY-0.1/trace-1", trace_answers=OUT, trace_states=states("\"waiting'")).passed is False
+
+
+def test_practice_trace_missing_table_row_or_name_is_wrong():
+    no_row = states()[:1]
+    no_name = [{"line": 1, "state": {"status": "waiting"}}, {"line": 3, "state": {}}]
+
+    assert run("PY-0.1/trace-1", trace_answers=OUT).passed is False
+    assert run("PY-0.1/trace-1", trace_answers=OUT, trace_states=no_row).score.passed == 1
+    assert run("PY-0.1/trace-1", trace_answers=OUT, trace_states=no_name).passed is False
+
+
+def test_a_number_in_the_key_matches_its_text():
+    raw = dict(spec_raw("PY-0.1/trace-1"))
+    raw["trace"] = {**raw["trace"], "line_states": [{"line": 1, "state": {"count": 1}}]}
+    seed = parse_seed(raw, "trace-1", "PY-0.1")
+    attempt_ = attempt(seed, trace_answers=OUT, trace_states=[{"line": 1, "state": {"count": " 1 "}}])
+
+    assert grade(seed, attempt_, RUNNER).passed is True
+
+
+def test_trace_without_line_states_ignores_trace_states():
+    raw = dict(spec_raw("PY-0.1/trace-1"))
+    raw["trace"] = {k: v for k, v in raw["trace"].items() if k != "line_states"}
+    seed = parse_seed(raw, "trace-1", "PY-0.1")
+    result = grade(seed, attempt(seed, trace_answers=OUT, trace_states=states("x", "y")), RUNNER)
+
+    assert result.passed is True and result.score is None
+    assert result.reveal.correct == OUT
+
+
+def test_cold_trace_ignores_trace_states():
+    result = run("PY-0.1/cold-trace-1", trace_answers=["B A"], trace_states=[{"line": 2, "state": {"desk": "zz"}}])
+
+    assert result.passed is True and result.score is None
+    assert result.reveal.correct == ["B A"]
 
 
 def test_debug_locate_needs_both_line_and_type():
