@@ -97,9 +97,16 @@ Fields marked **hidden** never leave the server before an attempt (SPEC-12 secti
 | `code` | [str] | The program shown |
 | `input` | str | Input the program receives; empty string for none |
 | `expected_output` | [str] | **Hidden.** Output lines |
-| `line_states` | [{line, state}] | **Hidden, optional.** Variable values after a line, for `trace_answers` |
+| `line_states` | [{line, state}] | **Hidden, optional.** Variable values after a line. Graded on practice items (ADR-0031) |
 
 **Pass:** the learner's output lines equal `expected_output`, after trimming each line.
+
+**State table (ADR-0031, 2026-11-12).** A practice trace item (`cold_check_eligible: false`) with `line_states` also asks for the state table:
+- **Served:** `trace.state_rows: [{line, names}]`, one row per `line_states` entry, with the names sorted. Values are never served.
+- **Attempt:** `trace_states: [{line, state: {name: text}}]`.
+- **Compared:** each cell, as text, trimmed, with runs of spaces or tabs read as one, and one pair of matching quotes (`'` or `"`) around the whole value removed. The key's value is compared as `str(value)`, so `1` and `"1"` match at this level.
+- **Pass:** the output passes (above) and every cell is right. `score` is `{passed: right cells, total: cells}`; the feedback names how many cells are right. The reveal holds the output lines and the state table.
+- A Cold Check trace item keeps the output-only rule. An item with no `line_states` keeps it too.
 
 ### `playground` (Modify, Build)
 | Field | Type | Meaning |
@@ -305,7 +312,7 @@ Rules for the unit (ADR-0016 amendment C):
 | `origin`, `variant_no` | `authored`, `1` for a seed |
 | `prompt_markdown` | Lines joined with newlines |
 | `predict` | `code`, `options` |
-| `trace` | `code`, `input` |
+| `trace` | `code`, `input`; a practice item with `line_states` also serves `state_rows` (ADR-0031) |
 | `playground` | `starter`, `tasks`; a `debug` block serves `broken_code` as `starter`; `decompose_code` serves `starter` and `structure` |
 
 SPEC-12 section 4 lists the Exercise blocks served for every item type. It still needs these additions when attempts are built (step 5):

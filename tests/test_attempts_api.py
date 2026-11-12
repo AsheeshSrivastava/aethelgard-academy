@@ -81,14 +81,14 @@ def status(client, unit="PY-0.1"):
     return client.get(f"{BASE}/units/{unit}/cold-check").json()["state"]
 
 
-TRACE_1 = right("PY-0.1/trace-1")["trace_answers"]
+TRACE_1 = right("PY-0.1/trace-1")  # output lines and the state table
 
 
 def finish_activities(client):
     """Attempt every activity of PY-0.1, including the concept check."""
     client.post("/api/v1/explain", json={"unit_id": "PY-0.1", "explanation": SOLID})
     assert attempt(client, choice="A").status_code == 200
-    assert attempt(client, "trace", trace_answers=TRACE_1).status_code == 200
+    assert attempt(client, "trace", **TRACE_1).status_code == 200
 
 
 # --- Grading and evidence ---
@@ -135,8 +135,17 @@ def test_name_variants_share_a_seed_for_retry_counting(client, repo):
     assert ledger(repo)[1].evidence_strength == EvidenceStrength.MODERATE
 
 
+def test_trace_table_is_graded_on_practice(client):
+    wrong_cells = {**TRACE_1, "trace_states": [{"line": 1, "state": {"shown": "nope"}}, *TRACE_1["trace_states"][1:]]}
+
+    body = attempt(client, "trace", **wrong_cells).json()
+
+    assert body["outcome"] == "failed"
+    assert body["score"] == {"passed": 2, "total": 3}
+
+
 def test_trace_is_moderate_when_correct(client, repo):
-    attempt(client, "trace", trace_answers=TRACE_1)
+    attempt(client, "trace", **TRACE_1)
 
     assert ledger(repo)[0].evidence_strength == EvidenceStrength.MODERATE
 

@@ -115,6 +115,9 @@ describe("lesson helpers", () => {
     expect(revealText("A")).toBe("A");
     expect(revealText(["waiting", "done"])).toBe("waiting / done");
     expect(revealText({ line: 3, error_type: "name" })).toBe("Line 3, name");
+    expect(
+      revealText({ output: ["waiting", "done"], states: [{ line: 3, state: { status: "checked in" } }] }),
+    ).toBe("waiting / done. line 3: status = checked in");
   });
 
   it("keeps the lesson text but drops sections that belong elsewhere", () => {
@@ -482,6 +485,62 @@ describe("item types", () => {
     const body = await answerAndSubmit("trace", ex, (u) => u.type(screen.getByLabelText(/terminal shows/i), "1{enter}2"));
 
     expect(body.trace_answers).toEqual(["1", "2"]);
+  });
+
+  describe("trace state table (ADR-0031)", () => {
+    const rows = [
+      { line: 1, names: ["status"] },
+      { line: 3, names: ["count", "status"] },
+    ];
+    const ex = () => exercise("trace", "trace", { code: ["print(1)"], input: "", state_rows: rows });
+
+    it("shows one input per name under the output box", async () => {
+      stubApi(routes("trace", ex()));
+      renderAt("/units/PY-0.1/trace");
+
+      expect(await screen.findByLabelText("status after line 1")).toBeInTheDocument();
+      expect(screen.getByLabelText("count after line 3")).toBeInTheDocument();
+      expect(screen.getByLabelText("status after line 3")).toBeInTheDocument();
+    });
+
+    it("keeps Submit disabled until the output and every cell are filled", async () => {
+      stubApi(routes("trace", ex()));
+      const user = userEvent.setup();
+      renderAt("/units/PY-0.1/trace");
+      await user.type(await screen.findByLabelText(/terminal shows/i), "1");
+      await user.type(screen.getByLabelText("status after line 1"), "waiting");
+      await user.type(screen.getByLabelText("count after line 3"), "2");
+
+      expect(screen.getByRole("button", { name: /^Submit/ })).toBeDisabled();
+
+      await user.type(screen.getByLabelText("status after line 3"), "checked in");
+
+      expect(screen.getByRole("button", { name: /^Submit/ })).toBeEnabled();
+    });
+
+    it("sends trace_states with the output lines", async () => {
+      const body = await answerAndSubmit("trace", ex(), async (u) => {
+        await u.type(screen.getByLabelText(/terminal shows/i), "1");
+        await u.type(screen.getByLabelText("status after line 1"), "waiting");
+        await u.type(screen.getByLabelText("count after line 3"), "2");
+        await u.type(screen.getByLabelText("status after line 3"), "checked in");
+      });
+
+      expect(body.trace_answers).toEqual(["1"]);
+      expect(body.trace_states).toEqual([
+        { line: 1, state: { status: "waiting" } },
+        { line: 3, state: { count: "2", status: "checked in" } },
+      ]);
+    });
+
+    it("shows no table and sends no trace_states without state_rows", async () => {
+      const plain = exercise("trace", "trace", { code: ["print(1)"], input: "" });
+
+      const body = await answerAndSubmit("trace", plain, (u) => u.type(screen.getByLabelText(/terminal shows/i), "1"));
+
+      expect(screen.queryByLabelText(/after line/)).not.toBeInTheDocument();
+      expect(body).not.toHaveProperty("trace_states");
+    });
   });
 
   it("debug sends the fixed code", async () => {

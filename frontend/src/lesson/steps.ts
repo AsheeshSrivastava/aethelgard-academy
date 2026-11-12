@@ -23,6 +23,14 @@ export function nextStep(steps: string[], step: string): string | null {
 
 export function revealText(correct: unknown): string {
   if (Array.isArray(correct)) return correct.join(" / ");
+  if (correct && typeof correct === "object" && "output" in correct) {
+    // A practice trace: the printed lines, then the state table (ADR-0031).
+    const full = correct as { output: string[]; states?: { line: number; state: Record<string, unknown> }[] };
+    const cells = (full.states ?? []).flatMap((row) =>
+      Object.entries(row.state).map(([name, value]) => `line ${row.line}: ${name} = ${String(value)}`),
+    );
+    return [full.output.join(" / "), ...cells].join(". ");
+  }
   if (correct && typeof correct === "object") {
     const key = correct as { line?: number; error_type?: string };
     return `Line ${key.line}, ${key.error_type}`;

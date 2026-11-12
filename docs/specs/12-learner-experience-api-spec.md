@@ -96,7 +96,7 @@ Every lesson shows the interactive playground.
 Exercise { exercise_id, unit_id, activity, origin: "authored" | "generated", variant_no,
            item_type, prompt_markdown,
            predict?:          { code, stdin, options: [{key, text}] },
-           trace?:            { code: [str], input: str },
+           trace?:            { code: [str], input: str, state_rows?: [{line: int, names: [str]}] },  // state_rows: practice items with line_states only (ADR-0031)
            playground?:       { starter, tasks: [{id, label}] },
            debug?:            { broken_code, stdin },
            debug_locate?:     { broken_code, stdin, error_types: [{key, text}] },
@@ -156,6 +156,7 @@ ColdCheckStatus { state: "not_ready" | "waiting" | "available" | "passed" | "fai
 Attempt       { exercise_id, activity,
                 choice?: str,                       // predict, choice, explain items
                 trace_answers?: [str],              // trace: the output lines
+                trace_states?: [{line: int, state: {name: str}}],  // trace: the state table, graded on practice items (ADR-0031)
                 locate?: {line, error_type},        // debug_locate
                 files?: {path: content},            // playground, debug, decompose_code
                 tests?: str,                        // specify_by_tests
@@ -166,7 +167,7 @@ Attempt       { exercise_id, activity,
 AttemptResult { outcome: "passed" | "failed" | "recorded",
                 feedback, checks?: [{label, passed, detail}],
                 score?: {passed, total},            // partial feedback, SPEC-13 section 4
-                reveal?: {correct, why},            // after commit
+                reveal?: {correct, why},            // after commit; a table-graded trace's correct is {output, states} (ADR-0031)
                 evidence_entry_id: str | null, unit_decision: Decision }
 ```
 

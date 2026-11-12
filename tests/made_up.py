@@ -22,7 +22,12 @@ def right(seed_id: str) -> Dict[str, Any]:
     """Fields of an attempt that passes the made-up item (an exercise id works too)."""
     item_type, block = _private(seed_id)
     if item_type == "trace":
-        return {"trace_answers": block["expected_output"]}
+        fields = {"trace_answers": block["expected_output"]}
+        if block.get("line_states"):  # a Cold Check item ignores the table (ADR-0031), so sending it is safe
+            fields["trace_states"] = [
+                {"line": r["line"], "state": {k: str(v) for k, v in r["state"].items()}} for r in block["line_states"]
+            ]
+        return fields
     if item_type == "debug_locate":
         return {"locate": block["answer_key"]}
     if item_type == "specify_contract":

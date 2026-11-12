@@ -2049,6 +2049,20 @@
             ],
             "title": "Trace Answers"
           },
+          "trace_states": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TraceState"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace States"
+          },
           "locate": {
             "anyOf": [
               {
@@ -5053,6 +5067,27 @@
         ],
         "title": "StageView"
       },
+      "StateRow": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "names"
+        ],
+        "title": "StateRow"
+      },
       "Structure": {
         "properties": {
           "min_helpers": {
@@ -5123,6 +5158,20 @@
           "input": {
             "type": "string",
             "title": "Input"
+          },
+          "state_rows": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StateRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Rows"
           }
         },
         "type": "object",
@@ -5131,6 +5180,27 @@
           "input"
         ],
         "title": "TraceBlock"
+      },
+      "TraceState": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "state": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "state"
+        ],
+        "title": "TraceState"
       },
       "Unit": {
         "properties": {
