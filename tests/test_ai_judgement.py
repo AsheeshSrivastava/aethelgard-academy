@@ -359,6 +359,13 @@ def test_a_solid_verdict_is_strong_evidence(answers, repo):
     assert ledger(repo)[0].evidence_strength.value == "Strong"
 
 
+def test_a_concept_check_entry_carries_its_exercise_id(answers, repo):
+    """ADR-0016 amendment G: the id lets a repeated concept check count once."""
+    explain(make_client(repo, Judge(judged_solid())))
+
+    assert ledger(repo)[0].exercise_id == "PY-0.4/explain/v1"
+
+
 def test_with_the_switch_off_a_verdict_writes_nothing(answers, repo, monkeypatch):
     monkeypatch.setattr(ai_judgement, "CONCEPT_CHECK_WRITES_EVIDENCE", False)
 

@@ -137,3 +137,13 @@ ADR-0019 changes section 2.6. A stage build no longer opens because every unit p
 3. **Lifetime levels are unchanged.** Anything not tied to one unit (the ledger list, rechecks, a future skills page) still reads the whole ledger.
 4. **Stage review.** "Restart stage review" clears that stage's review rounds and result and writes a marker for the stage. The build closes again until the review is passed (ADR-0019). Rechecks already earned are kept.
 5. **My skills (approved 2026-11-04).** A "My skills" page shows each of the framework's 27 skills once, grouped by its five areas, with its level from the whole ledger across every course. Skills belong to the framework, not to a course, so the page is never grouped by stage. The decision labels stay on My progress, explained there (SPEC-12 section 6.1).
+
+## Amendment 2026-11-12: a repeated concept check counts once (owner)
+
+### G. Every concept check is an exercise with its own id (changes section 2.2 and amendment E)
+The CO-6 concept check was recorded with no exercise or seed id, so section 2.2's "repeating the same exercise counts once" never applied to it. The same answer submitted twice counted as two qualifying exercises, which proves memory, not understanding.
+
+1. **Id.** A concept check's evidence carries the id of the prompt that was answered: `<unit>/explain/v<n>`, for example `PY-0.1/explain/v1`. Today each unit has one prompt (`v1`); more prompts get `v2`, `v3` and so on.
+2. **Repeats count once.** As in amendment E, repeats of one concept-check prompt count once, and the newest result is the one kept. The second piece of support for a level must come from a different exercise: another activity of the unit, another prompt, or the Cold Check.
+3. **Older rows.** The ledger is append-only, so rows written before this amendment are not changed. When a concept check (section `is_concept_check`) has no exercise or seed id, the estimator reads it as `<unit>/explain/v1`. This corrects existing learner history without rewriting it.
+4. **Rebuild is unchanged.** "Two or more consecutive Shaky concept checks" (section 2.5) still counts every attempt, because a run of Shaky answers is a warning sign even when the prompt repeats.

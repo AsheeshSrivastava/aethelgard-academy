@@ -126,7 +126,7 @@ from lms.core.models import (
     ProgressionDecision,
     Unit,
 )
-from lms.core.proficiency import EstimatorConfig
+from lms.core.proficiency import EstimatorConfig, concept_check_id
 from lms.core.skills_view import SkillsOverview, build_skills_overview
 from lms.core.proficiency_view import (
     ProficiencyView,
@@ -1088,6 +1088,7 @@ def create_app(
                     skill_id="CO-6",
                     evidence_category=EvidenceCategory.EXPLAIN_REASON,
                     evidence_strength=EvidenceStrength.STRONG if judgement.verdict == "Solid" else EvidenceStrength.WEAK,
+                    exercise_id=concept_check_id(clean_unit),
                     assistance_level=AssistanceLevel.NONE,
                     demonstration_context=f"CO-6 Concept Check for {clean_unit}, judged by {judgement.model}",
                     observed_reasoning=(

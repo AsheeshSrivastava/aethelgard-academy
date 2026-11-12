@@ -239,20 +239,33 @@ def _next_action(
             continue  # A Cold Check wait never blocks learning (ADR-0016 2.6).
         weakest = min(decisions, key=lambda d: DECISION_ORDER.index(d.decision))
         locked = status.state == ColdCheckState.FAILED_WAITING
+        unit_ledger = _after(ledger, resets.get(unit.unit_id))
         activity = (
             _fresh_activity(unit, weakest.skill_id, unseen_activities(unit), config)
             if locked
-            else _next_activity(unit, weakest.decision, status.state, _after(ledger, resets.get(unit.unit_id)))
+            else _next_activity(unit, weakest.decision, status.state, unit_ledger)
         )
+        message = weakest.reason
+        if weakest.needs_cold_check and status.state == ColdCheckState.NOT_READY:
+            message += _opens_cold_check(unit, unit_ledger)
         return NextAction(
             unit_id=unit.unit_id,
             skill_id=weakest.skill_id,
             activity=activity,
             decision=weakest.decision,
-            message=weakest.reason,
+            message=message,
             retry_at=status.available_at if locked else None,
         )
     return None
+
+
+def _opens_cold_check(unit: Unit, unit_ledger: List[EvidenceEntry]) -> str:
+    """What opens a closed Cold Check: the activities with no entry since the last reset (SPEC-12 section 6)."""
+    tried = _tried_activities(unit, unit_ledger)
+    left = sum(1 for activity in unit.methods if activity not in tried)
+    if not left:
+        return ""
+    return f" Do this unit's {left} remaining activit{'y' if left == 1 else 'ies'} to open its Cold Check."
 
 
 def _fresh_activity(unit: Unit, skill_id: str, unseen: List[str], config: EstimatorConfig) -> str:

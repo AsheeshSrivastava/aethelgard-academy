@@ -49,6 +49,11 @@ DEFAULT_CONFIG = EstimatorConfig()
 
 CONCEPT_CHECK_SKILL = "CO-6"
 
+
+def concept_check_id(unit_id: str, variant: int = 1) -> str:
+    """The exercise id of a unit's concept-check prompt (ADR-0016 amendment G)."""
+    return f"{unit_id}/explain/v{variant}"
+
 LEVEL_ORDER: List[ProficiencyLevel] = [
     ProficiencyLevel.UNDERSTAND,
     ProficiencyLevel.APPLY,
@@ -64,6 +69,8 @@ DECISION_ORDER: List[ProgressionDecision] = [
     ProgressionDecision.PROGRESS,
     ProgressionDecision.ACCELERATE,
 ]
+
+COLD_CHECK_GAP = "a passed Cold Check"
 
 _GOOD = (EvidenceStrength.MODERATE, EvidenceStrength.STRONG)
 _UP_TO_SMALL_HINT = (AssistanceLevel.NONE, AssistanceLevel.SYNTAX_LOOKUP, AssistanceLevel.SMALL_HINT)
@@ -88,6 +95,7 @@ class SkillDecision(BaseModel):
     decision: ProgressionDecision
     reason: str
     entry_ids: List[str] = Field(default_factory=list)
+    needs_cold_check: bool = False  # the target level still lacks a passed Cold Check
 
 
 def qualifies(
@@ -146,6 +154,8 @@ def _window(
     unique: List[EvidenceEntry] = []
     for e in reversed(relevant):  # Newest first, so the latest result for a seed is kept
         exercise = e.seed_id or e.exercise_id
+        if exercise is None and is_concept_check(e):
+            exercise = concept_check_id(e.unit_id)  # Rows from before amendment G
         if exercise is not None:
             if exercise in seen:
                 continue
@@ -238,10 +248,17 @@ def estimate_skill(
         entries = [e for e in window if qualifies(e, candidate, config)]
         gaps = []
         short = config.supported_min_entries - len(entries)
+        no_cold_check = not any(e.cold_check for e in entries)
+        # The Cold Check is one of the missing exercises, not an extra task (SPEC-12 section 6).
         if short > 0:
-            gaps.append(f"{short} more exercise{'s' if short > 1 else ''} at {candidate.value}")
-        if not any(e.cold_check for e in entries):
-            gaps.append("a passed Cold Check")
+            exercises = f"{short} more exercise{'s' if short > 1 else ''} at {candidate.value}"
+            if no_cold_check:
+                exercises += (
+                    ", and it must be a passed Cold Check" if short == 1 else "; one must be a passed Cold Check"
+                )
+            gaps.append(exercises)
+        elif no_cold_check:
+            gaps.append(COLD_CHECK_GAP)
         if weak_streak:
             gaps.append("a strong attempt after your last weak one")
         return gaps
@@ -313,11 +330,13 @@ def decide_skill(
             f"Evidence shows {est.level.value}; the target is {target_level.value}.",
         )
     if target_level not in est.supported_levels:
-        return result(
+        gaps = est.support_gaps.get(target_level, [])
+        decided = result(
             ProgressionDecision.STRENGTHEN,
-            f"{target_level.value} is provisional: it needs "
-            f"{' and '.join(est.support_gaps.get(target_level, []))}.",
+            f"{target_level.value} is provisional: it needs {', and '.join(gaps)}.",
         )
+        decided.needs_cold_check = any(COLD_CHECK_GAP in gap for gap in gaps)
+        return decided
     if current > target and est.confidence == Confidence.SUPPORTED:
         return result(
             ProgressionDecision.ACCELERATE,
