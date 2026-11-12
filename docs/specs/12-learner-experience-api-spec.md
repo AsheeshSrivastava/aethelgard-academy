@@ -167,7 +167,7 @@ Attempt       { exercise_id, activity,
 AttemptResult { outcome: "passed" | "failed" | "recorded",
                 feedback, checks?: [{label, passed, detail}],
                 score?: {passed, total},            // partial feedback, SPEC-13 section 4
-                reveal?: {correct, why},            // after commit
+                reveal?: {correct, why},            // after commit; a table-graded trace's correct is {output, states} (ADR-0031)
                 evidence_entry_id: str | null, unit_decision: Decision }
 ```
 

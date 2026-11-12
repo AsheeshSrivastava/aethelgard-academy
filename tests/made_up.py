@@ -23,7 +23,7 @@ def right(seed_id: str) -> Dict[str, Any]:
     item_type, block = _private(seed_id)
     if item_type == "trace":
         fields = {"trace_answers": block["expected_output"]}
-        if block.get("line_states") and "cold" not in seed_id:
+        if block.get("line_states"):  # a Cold Check item ignores the table (ADR-0031), so sending it is safe
             fields["trace_states"] = [
                 {"line": r["line"], "state": {k: str(v) for k, v in r["state"].items()}} for r in block["line_states"]
             ]
