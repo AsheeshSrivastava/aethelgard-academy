@@ -98,4 +98,27 @@ def check_concept_checks(curriculum_dir: Path, answers_dir: Optional[Path]) -> L
                         unit_id=unit_id, course_id=course,
                     )
                 )
+        findings.extend(_stray_variants(answers_dir, unit_id, course, 1 + len(more)))
     return findings
+
+
+def _stray_variants(answers_dir: Optional[Path], unit_id: str, course: str, prompt_count: int) -> List[Finding]:
+    """`concept-check-rubric-stray` (warning): a private rubric variant with no prompt to judge."""
+    if answers_dir is None:
+        return []
+    path = Path(answers_dir) / course / unit_id.lower() / RUBRIC_FILE
+    try:
+        variants = json.loads(path.read_text(encoding="utf-8")).get("variants")
+    except (OSError, ValueError, AttributeError):
+        return []
+    if not isinstance(variants, dict):
+        return []
+    known = {f"v{n}" for n in range(2, prompt_count + 1)}
+    return [
+        Finding(
+            severity=Severity.WARNING, code="concept-check-rubric-stray",
+            message=f"{unit_id} has a rubric for {name}, but no concept check prompt {name}.",
+            unit_id=unit_id, course_id=course,
+        )
+        for name in sorted(set(variants) - known)
+    ]

@@ -1068,7 +1068,7 @@ def create_app(
         unit = catalog.get_unit(clean_unit)
         prompts = concept_prompts(unit.concept_check_config) if unit else []
         prompt_ids = [concept_check_id(clean_unit, n) for n in range(1, max(len(prompts), 1) + 1)]
-        prompt_id = payload.exercise_id or prompt_ids[0]
+        prompt_id = (payload.exercise_id or prompt_ids[0]).upper().replace("/EXPLAIN/V", "/explain/v")
         if prompt_id not in prompt_ids:
             return problem(
                 422, "Not a concept check prompt",

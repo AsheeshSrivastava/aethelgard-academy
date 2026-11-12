@@ -121,6 +121,8 @@ function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; 
     onSuccess: (result) => {
       // The step stays open until a judgement exists (ADR-0026): an unjudged answer writes nothing.
       if (result.status === "judged") onDone();
+      // The next visit serves a prompt not yet answered (ADR-0032), so drop the cached one.
+      void client.invalidateQueries({ queryKey: ["exercise", unit.unit_id, "explain"] });
       return client.invalidateQueries({ queryKey: ["coldCheck", unit.unit_id] });
     },
   });

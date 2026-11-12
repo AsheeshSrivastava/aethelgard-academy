@@ -213,6 +213,13 @@ def test_an_answer_to_v2_is_judged_with_the_v2_prompt_and_rubric(client, repo, j
     assert entry.exercise_id == f"{UNIT}/explain/v2"
 
 
+def test_a_lower_case_id_names_the_same_prompt(client, repo, judge):
+    res = explain(client, f"{UNIT.lower()}/explain/v2")
+
+    assert res.status_code == 200
+    assert repo.get_evidence_ledger(LOCAL_LEARNER_ID)[0].exercise_id == f"{UNIT}/explain/v2"
+
+
 def test_a_missing_id_means_v1(client, repo, judge):
     explain(client)
 
@@ -316,6 +323,15 @@ def test_all_prompts_with_rubrics_have_no_findings(tmp_path):
     write_answers(tmp_path / "a")
 
     assert check_concept_checks(tmp_path / "c", tmp_path / "a") == []
+
+
+def test_a_rubric_variant_with_no_prompt_is_flagged(tmp_path):
+    write_meta(tmp_path / "c", {"prompt": "One.", "more_prompts": ["Two."]})
+    write_answers(tmp_path / "a")  # holds v2 and v3
+
+    found = [f for f in check_concept_checks(tmp_path / "c", tmp_path / "a") if f.code == "concept-check-rubric-stray"]
+
+    assert [(f.severity, "v3" in f.message) for f in found] == [(Severity.WARNING, True)]
 
 
 def test_more_than_three_prompts_is_an_error(tmp_path):

@@ -28,7 +28,7 @@ The stage review already avoids this: "each failed item is replaced by the next 
 ### 2.2 Unit Cold Check items the learner has not passed
 1. **The round prefers fresh items.** For each target skill, the round takes the approved items in this order: items the learner has never answered, then items they failed, then items they passed. The 3-to-5 size and skill order (SPEC-16 section 2) are unchanged.
 2. **A retry replaces a failed item.** After a failed round, each failed item is replaced by the next item for its skill in that order. The item just failed comes back only when the skill has no other approved item outside the round. The round keeps its size, and each skill keeps its number of slots.
-3. **After a reset**, items the learner passed before the reset are taken last. History comes from the learner's own Cold Check answers, which are already stored per item. The ledger stays append-only.
+3. **After a reset**, items the learner passed before the reset are taken last. History comes from the learner's Cold Check evidence in the ledger (the newest answer per item decides passed or failed). Nothing is written or changed to read it. Items answered in the current round keep their place, so a round can always finish. Cold Check feedback shows the round the learner last answered.
 4. A unit with one approved item per skill behaves exactly as today.
 
 ## 3. Alternatives considered
