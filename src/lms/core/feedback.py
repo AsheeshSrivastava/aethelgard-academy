@@ -5,11 +5,12 @@ come in; one row per item of the unit's round comes out. Nothing here grades, an
 plays no part.
 """
 
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from pydantic import BaseModel
 
-from lms.core.exercises import ExerciseSeed, cold_round
+from lms.core.exercises import ExerciseSeed, shown_cold_round
 from lms.core.grading import Reveal, worked_answer
 from lms.core.models import ActivityType, EvidenceEntry, EvidenceStrength, Unit
 
@@ -62,8 +63,9 @@ def cold_check_feedback(
     ledger: Sequence[EvidenceEntry],
     answers: Mapping[str, Dict[str, Any]],
     main_activities: Mapping[str, ActivityType],
+    reset_at: Optional[datetime] = None,
 ) -> ColdCheckFeedback:
-    """One row per item of the unit's round, from its newest unit Cold Check entry.
+    """One row per item of the round the learner answered last (ADR-0032), from its newest unit Cold Check entry.
 
     `answers` maps an exercise id to the newest answer the learner submitted for it.
     """
@@ -74,7 +76,7 @@ def cold_check_feedback(
             newest[entry.seed_id] = entry  # The ledger comes oldest first.
 
     items: List[FeedbackItem] = []
-    for seed in cold_round(unit, seeds):
+    for seed in shown_cold_round(unit, seeds, ledger, reset_at):
         entry = newest.get(seed.seed_id)
         passed = None if entry is None else entry.evidence_strength == EvidenceStrength.STRONG
         items.append(

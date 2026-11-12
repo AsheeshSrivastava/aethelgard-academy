@@ -3790,6 +3790,17 @@
           "explanation": {
             "type": "string",
             "title": "Explanation"
+          },
+          "exercise_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercise Id"
           }
         },
         "type": "object",

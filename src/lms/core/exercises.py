@@ -9,21 +9,22 @@ Deterministic and pure: no LLM, no I/O. An Exercise is built from models listing
 only the fields a learner may see, so a hidden field can never leak by default.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 from itertools import islice, zip_longest
 import re
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Collection, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from pydantic import BaseModel, ValidationError
 
-from lms.core.models import ActivityType, ProficiencyLevel, Unit
-from lms.core.proficiency import concept_check_id
+from lms.core.models import ActivityType, EvidenceEntry, EvidenceStrength, ProficiencyLevel, Unit
+from lms.core.proficiency import concept_check_id, is_concept_check
 
 SCHEMA_VERSION = 2
 COLD_CHECK = "cold_check"
 COLD_ITEMS_MIN = 3
 COLD_ITEMS_MAX = 5
+MAX_CONCEPT_PROMPTS = 3  # ADR-0032: `prompt` is v1, `more_prompts` are v2 and v3
 MAX_HINT_CHARS = 300
 _SLOT = re.compile(r"\{\{(\w+)\}\}")
 
@@ -389,16 +390,100 @@ def find_variant(seeds: Sequence[ExerciseSeed], exercise_id: str) -> Optional[Ex
     return to_exercise(*found) if found else None
 
 
-def cold_round(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[ExerciseSeed]:
-    """The unit Cold Check's items: skills first, then round again to 3, at most 5 (SPEC-16 section 2)."""
+def _aware(moment: datetime) -> datetime:
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def cold_history(ledger: Iterable[EvidenceEntry], unit_id: str) -> Dict[str, bool]:
+    """seed id -> did the learner's newest unit Cold Check answer pass? A seed never answered is absent.
+
+    Read from the evidence ledger (ADR-0032), which a reset never clears. Stage reviews
+    and rechecks are not unit Cold Check answers.
+    """
+    answers = sorted(
+        (e for e in ledger if e.unit_id == unit_id and e.cold_check and e.review_kind is None and e.seed_id),
+        key=lambda e: _aware(e.recorded_at),
+    )
+    return {e.seed_id: e.evidence_strength == EvidenceStrength.STRONG for e in answers}
+
+
+def cold_round(
+    unit: Unit,
+    seeds: Sequence[ExerciseSeed],
+    history: Optional[Mapping[str, bool]] = None,
+    in_round: Collection[str] = (),
+) -> List[ExerciseSeed]:
+    """The unit Cold Check's items: skills first, then round again to 3, at most 5 (SPEC-16 section 2).
+
+    Within a skill the items go in this order (ADR-0032): ones already answered in this round
+    (`in_round`), never answered, failed, passed; each group in seed order. `history` is
+    `cold_history`; empty gives the round of a learner who has answered nothing. How many items
+    each skill gives does not depend on the history, so the round keeps its size and can complete.
+    """
+    history = history or {}
+
+    def rank(seed: ExerciseSeed) -> int:
+        if seed.seed_id in in_round:
+            return -1
+        answered = history.get(seed.seed_id)
+        return 0 if answered is None else (2 if answered else 1)
+
     by_skill = [
-        [s for s in seeds if s.skill_id == skill.skill_id and s.cold_check_eligible and s.curator_approved]
+        sorted(
+            (s for s in seeds if s.skill_id == skill.skill_id and s.cold_check_eligible and s.curator_approved),
+            key=rank,
+        )
         for skill in unit.target_skills
     ]
     by_skill = [group for group in by_skill if group]
     size = min(COLD_ITEMS_MAX, max(COLD_ITEMS_MIN, len(by_skill)))
     in_turn = (s for row in zip_longest(*by_skill) for s in row if s is not None)
     return list(islice(in_turn, size))
+
+
+def shown_cold_round(
+    unit: Unit,
+    seeds: Sequence[ExerciseSeed],
+    ledger: Iterable[EvidenceEntry],
+    reset_at: Optional[datetime] = None,
+) -> List[ExerciseSeed]:
+    """The round the Cold Check feedback shows: the one the learner answered last.
+
+    After a failed round the next round holds replacements, but the learner still needs to see
+    which items failed. Replaying the unit's Cold Check answers in order finds that round
+    (ADR-0032). With no answers since a reset, it is the current round.
+    """
+    approved = {s.seed_id for s in seeds if s.cold_check_eligible and s.curator_approved}
+    answers = sorted(
+        (
+            e for e in ledger
+            if e.unit_id == unit.unit_id and e.cold_check and e.review_kind is None and e.seed_id in approved
+        ),
+        key=lambda e: _aware(e.recorded_at),
+    )
+    history: Dict[str, bool] = {}
+    kept: Dict[str, bool] = {}
+    last_done: Optional[List[ExerciseSeed]] = None
+    in_wave = crossed = False
+    for entry in answers:
+        if reset_at is not None and not crossed and _aware(entry.recorded_at) >= _aware(reset_at):
+            kept.clear()
+            last_done, in_wave, crossed = None, False, True
+        passed = entry.evidence_strength == EvidenceStrength.STRONG
+        if entry.seed_id not in {s.seed_id for s in cold_round(unit, seeds, history, kept)}:
+            history[entry.seed_id] = passed  # Not in the round in force: history only
+            continue
+        history[entry.seed_id] = kept[entry.seed_id] = passed
+        in_wave = True
+        round_now = cold_round(unit, seeds, history, kept)
+        if all(s.seed_id in kept for s in round_now):
+            last_done, in_wave = round_now, False
+            kept = {seed_id: ok for seed_id, ok in kept.items() if ok}  # A failed item leaves the round
+    if reset_at is not None and not crossed:
+        return cold_round(unit, seeds, history)
+    if in_wave or last_done is None:
+        return cold_round(unit, seeds, history, kept)
+    return last_done
 
 
 def spare_cold_items(unit: Unit, seeds: Sequence[ExerciseSeed]) -> int:
@@ -443,17 +528,48 @@ def to_exercise(seed: ExerciseSeed, variant_no: int) -> Exercise:
     )
 
 
-def explain_exercise(unit: Unit) -> Optional[Exercise]:
-    """The free-text concept check; its rubric and keywords stay on the server."""
-    prompt = (unit.concept_check_config or {}).get("prompt")
-    if not prompt:
+def concept_prompts(config: Optional[Mapping[str, Any]]) -> List[str]:
+    """A unit's concept-check prompts in order: `prompt` is v1, then `more_prompts` (ADR-0032), at most 3."""
+    config = config or {}
+    first = config.get("prompt")
+    if not isinstance(first, str) or not first:
+        return []
+    more = config.get("more_prompts")
+    extra = [p for p in more if isinstance(p, str) and p] if isinstance(more, list) else []
+    return [first, *extra][:MAX_CONCEPT_PROMPTS]
+
+
+def explain_exercise(
+    unit: Unit,
+    evidence: Iterable[EvidenceEntry] = (),
+    reset_at: Optional[datetime] = None,
+) -> Optional[Exercise]:
+    """The free-text concept check; its rubric and keywords stay on the server.
+
+    With several prompts it serves the lowest-numbered one not answered since the learner's last
+    reset of the unit, else the one answered longest ago (ADR-0032). No history serves v1.
+    """
+    prompts = concept_prompts(unit.concept_check_config)
+    if not prompts:
         return None
+    answered: Dict[str, datetime] = {}
+    for e in evidence:
+        if e.unit_id != unit.unit_id or not is_concept_check(e):
+            continue
+        at = _aware(e.recorded_at)
+        if reset_at is not None and at < _aware(reset_at):
+            continue
+        key = e.exercise_id or concept_check_id(unit.unit_id)  # Rows from before amendment G are v1
+        answered[key] = max(answered.get(key, at), at)
+    ids = [concept_check_id(unit.unit_id, n) for n in range(1, len(prompts) + 1)]
+    unanswered = [n for n, key in enumerate(ids) if key not in answered]
+    chosen = unanswered[0] if unanswered else min(range(len(ids)), key=lambda n: answered[ids[n]])
     return Exercise(
-        exercise_id=concept_check_id(unit.unit_id),
+        exercise_id=ids[chosen],
         unit_id=unit.unit_id,
         activity=ActivityType.EXPLAIN.slug,
         item_type="concept_check",
-        prompt_markdown=prompt,
+        prompt_markdown=prompts[chosen],
     )
 
 

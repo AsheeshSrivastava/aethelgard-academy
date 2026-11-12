@@ -411,8 +411,9 @@ def test_retry_covers_only_the_failed_skills(client, clock):
     cold(client, **CO6)
     clock.advance(DAY)
 
-    assert exercise(client, "cold_check")["exercise_id"] == "PY-0.1/cold-predict-1/v1"
-    cold(client, **CO1)
+    # ADR-0032: the failed item is replaced by the next unseen item of its skill.
+    assert exercise(client, "cold_check")["exercise_id"] == "PY-0.1/cold-predict-2/v1"
+    cold(client, **right("PY-0.1/cold-predict-2"))
 
     assert status(client) == "passed"
 
@@ -472,7 +473,8 @@ def test_reset_clears_the_cold_check_round(client, clock):
     finish_activities(client)
     clock.advance(DAY)
 
-    assert exercise(client, "cold_check")["exercise_id"] == "PY-0.1/cold-predict-1/v1"
+    # ADR-0032: an item passed before the reset comes last, so the unseen one is served first.
+    assert exercise(client, "cold_check")["exercise_id"] == "PY-0.1/cold-predict-2/v1"
 
 
 # --- Closing the learner_id holes and hidden fields ---

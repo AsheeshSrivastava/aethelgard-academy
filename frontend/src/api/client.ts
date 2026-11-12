@@ -85,8 +85,9 @@ export const api = {
   regenerate: (unitId: string, activity: string) =>
     request<Exercise>(`/learners/me/units/${unitId}/activities/${activity}/exercises:regenerate`, { method: "POST" }),
   attempt: (attempt: Schemas["Attempt"]) => request<AttemptResult>("/learners/me/attempts", json("POST", attempt)),
-  explain: (unitId: string, explanation: string) =>
-    request<ExplainResponse>("/explain", json("POST", { unit_id: unitId, explanation })),
+  /** `exerciseId` is the served prompt's id (`<unit>/explain/v<n>`); left out, the server means v1. */
+  explain: (unitId: string, explanation: string, exerciseId?: string) =>
+    request<ExplainResponse>("/explain", json("POST", { unit_id: unitId, explanation, exercise_id: exerciseId })),
   /** SPEC-19 section 4: practice only; the why comes back only for a right choice. */
   quickCheck: (unitId: string, checkId: string, choice: string) =>
     request<Schemas["QuickCheckResult"]>(

@@ -20,6 +20,7 @@
 - 2 or 3 ideas. `id` is a short slug, unique in the file. `text` is what the idea is, in plain words; it is shown to the learner **after** they answer, beside met or missed.
 - The public `meta.json` `concept_check` keeps only `prompt`. A public `concept_check` holding `rubric`, `solid_keywords` or `ideas` is a `concept-check-answers-public` error, and a guard test scans every public `meta.json`.
 - A unit with a prompt but no private rubric gets the warning `concept-check-rubric-missing`.
+- **Several prompts (ADR-0032, 2026-11-12).** `meta.json` `concept_check` may add `more_prompts: [str]` after `prompt`; `prompt` is `v1`, the others `v2`, `v3` (at most 3 in total). Their rubrics sit in the same `concept_check.json` under `variants: {"v2": {"ideas": [...]}, ...}`, with the same idea rules. A prompt with no rubric is not judged, and `concept-check-rubric-missing` names the prompt (for example `PY-0.1/explain/v2`). `POST /api/v1/explain` takes an optional `exercise_id` naming the prompt answered; missing means `v1`; an id that is not a prompt of the unit is `422`. The Explain step serves the lowest-numbered prompt not answered since the learner's last unit reset, or, when all are answered, the one answered longest ago.
 
 ## 2. The verdict (shared)
 
