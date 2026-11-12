@@ -1390,6 +1390,8 @@ export interface components {
             unit_id: string;
             /** Explanation */
             explanation: string;
+            /** Exercise Id */
+            exercise_id?: string | null;
         };
         /**
          * ExplainResponse

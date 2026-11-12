@@ -15,6 +15,8 @@ A unit Cold Check finds a gap within a day. A stage review mixes the units of a 
 
 A round is 3 to 5 items. It takes one approved item per target skill in unit order, then goes round the skills again until it holds 3 items, and stops at 5. A unit with fewer approved seeds runs what it has. Everything else stays as in SPEC-12 section 5, except that round progress is tracked per item, not per skill.
 
+**Fresh items first (ADR-0032, 2026-11-12).** Within each skill, the round takes approved items in this order: never answered by the learner, then failed, then passed (each group in seed order). After a failed round, each failed item is replaced by the next item for its skill in that order, so the item just failed returns only when its skill has no other approved item outside the round (the round keeps its size and each skill its slots). Items already answered in the current round keep their place, so a round can finish. Cold Check feedback shows the round the learner last answered. History is read from the learner's Cold Check evidence (newest answer per seed); the ledger is not changed. After a unit reset, items passed before the reset come last. A unit with one approved item per skill runs as before.
+
 ## 3. Stage review
 
 ### 3.1 The round

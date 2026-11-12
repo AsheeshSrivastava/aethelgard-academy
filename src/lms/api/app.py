@@ -14,7 +14,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Collection, Dict, Iterator, List, Optional, Tuple, Union
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
@@ -88,7 +88,9 @@ from lms.core.exercises import (
     Exercise,
     ExerciseSeed,
     choose_next,
+    cold_history,
     cold_round,
+    concept_prompts,
     explain_exercise,
     find_seed_variant,
     find_variant,
@@ -277,6 +279,7 @@ class ProgressUpdateRequest(BaseModel):
 class ExplainRequest(BaseModel):
     unit_id: str
     explanation: str
+    exercise_id: Optional[str] = None  # `<unit>/explain/v<n>`; missing means v1 (ADR-0032)
 
 
 class QuickCheckRequest(BaseModel):
@@ -1063,15 +1066,22 @@ def create_app(
     ):
         clean_unit = payload.unit_id.upper()
         unit = catalog.get_unit(clean_unit)
-        rubric = load_rubric(answers_dir_from_env(), clean_unit)
+        prompts = concept_prompts(unit.concept_check_config) if unit else []
+        prompt_ids = [concept_check_id(clean_unit, n) for n in range(1, max(len(prompts), 1) + 1)]
+        prompt_id = payload.exercise_id or prompt_ids[0]
+        if prompt_id not in prompt_ids:
+            return problem(
+                422, "Not a concept check prompt",
+                f"'{prompt_id}' is not a concept check prompt of {clean_unit}. Choose one of {', '.join(prompt_ids)}.",
+            )
+        prompt_no = prompt_ids.index(prompt_id) + 1
+        rubric = load_rubric(answers_dir_from_env(), clean_unit, prompt_no)
         if rubric is None:
             judgement = not_judged("no_rubric")
         elif not hasattr(axis, "judge_explanation"):
             judgement = not_judged("ai_off")
         else:
-            prompt = ((unit.concept_check_config or {}).get("prompt") if unit else None) or (
-                unit.concept_line if unit else clean_unit
-            )
+            prompt = prompts[prompt_no - 1] if prompts else (unit.concept_line if unit else clean_unit)
             judgement = axis.judge_explanation(clean_unit, prompt, payload.explanation, rubric)
 
         interaction_id = new_ulid(now_ms())
@@ -1088,7 +1098,7 @@ def create_app(
                     skill_id="CO-6",
                     evidence_category=EvidenceCategory.EXPLAIN_REASON,
                     evidence_strength=EvidenceStrength.STRONG if judgement.verdict == "Solid" else EvidenceStrength.WEAK,
-                    exercise_id=concept_check_id(clean_unit),
+                    exercise_id=prompt_id,
                     assistance_level=AssistanceLevel.NONE,
                     demonstration_context=f"CO-6 Concept Check for {clean_unit}, judged by {judgement.model}",
                     observed_reasoning=(
@@ -1105,6 +1115,7 @@ def create_app(
             learner_id, "concept_check",
             {
                 "explanation": payload.explanation,
+                "exercise_id": prompt_id,
                 "status": judgement.verdict or "not_judged",
                 "judged": is_judged,
                 "reason": judgement.reason,
@@ -1221,7 +1232,8 @@ def create_app(
                 if event.item_id and "outcome" in event.payload:
                     answers.setdefault(event.item_id, event.payload.get("answer") or {})
         return cold_check_feedback(
-            unit, catalog.seeds.get(unit_id, []), repo.get_evidence_ledger(learner_id), answers, catalog.main_activities
+            unit, catalog.seeds.get(unit_id, []), repo.get_evidence_ledger(learner_id), answers, catalog.main_activities,
+            repo.progress_resets(learner_id).get(unit_id),
         )
 
     @app.get("/api/v1/learners/me/units/{unit_id}/cold-check", response_model=ColdCheckStatus)
@@ -1259,8 +1271,13 @@ def create_app(
         if activity != COLD_CHECK:
             return pool_for(seeds, activity)
         finished = repo.get_cold_items(learner_id, unit.unit_id)
-        pending = [s for s in cold_round(unit, seeds) if s.seed_id not in finished]
+        pending = [s for s in learner_cold_round(unit, learner_id, finished) if s.seed_id not in finished]
         return pool_for(pending[:1], COLD_CHECK)
+
+    def learner_cold_round(unit: Unit, learner_id: str, kept: Collection[str]) -> List[ExerciseSeed]:
+        """The unit's Cold Check round for this learner: unseen items first, then failed, then passed (ADR-0032)."""
+        history = cold_history(repo.get_evidence_ledger(learner_id), unit.unit_id)
+        return cold_round(unit, catalog.seeds.get(unit.unit_id, []), history, kept)
 
     def maybe_start_cold_check_clock(unit: Unit, learner_id: str) -> None:
         if activities_attempted(unit, repo.get_evidence_ledger(learner_id), repo.progress_resets(learner_id).get(unit.unit_id)):
@@ -1284,7 +1301,7 @@ def create_app(
         repo.record_cold_item(learner_id, unit.unit_id, seed.seed_id, passed, now)
         repo.clear_current_exercise(learner_id, unit.unit_id, COLD_CHECK)
         items = repo.get_cold_items(learner_id, unit.unit_id)
-        required = [s.seed_id for s in cold_round(unit, catalog.seeds.get(unit.unit_id, []))]
+        required = [s.seed_id for s in learner_cold_round(unit, learner_id, items)]
         if all(seed_id in items for seed_id in required):
             round_passed = all(items[seed_id] for seed_id in required)
             repo.record_cold_check_attempt(learner_id, unit.unit_id, round_passed, now)
@@ -1293,7 +1310,7 @@ def create_app(
 
     def current_exercise(unit: Unit, activity: str, learner_id: str) -> Optional[Exercise]:
         if activity == ActivityType.EXPLAIN.slug:
-            return explain_exercise(unit)
+            return explain_exercise(unit, repo.get_evidence_ledger(learner_id), repo.progress_resets(learner_id).get(unit.unit_id))
         if activity == "playground":
             return playground_exercise(unit)
         seeds = catalog.seeds.get(unit.unit_id, [])
@@ -1332,7 +1349,9 @@ def create_app(
         unit = catalog.get_unit(exercise_id.split("/")[0])
         if not unit:
             return None
-        built_in = {f"{unit.unit_id}/explain/v1", f"{unit.unit_id}/playground/v1"}
+        prompt_count = max(len(concept_prompts(unit.concept_check_config)), 1)
+        built_in = {concept_check_id(unit.unit_id, n) for n in range(1, prompt_count + 1)}
+        built_in.add(f"{unit.unit_id}/playground/v1")
         seeds = catalog.seeds.get(unit.unit_id, [])
         return unit.unit_id if exercise_id in built_in or find_variant(seeds, exercise_id) else None
 

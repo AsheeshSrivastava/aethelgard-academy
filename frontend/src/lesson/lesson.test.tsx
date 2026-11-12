@@ -263,7 +263,15 @@ describe("explain step", () => {
           reason: "no_answer", message: "The AI provider did not answer. This was not judged; try again in a moment.",
           interaction_id: "01J9ZK3Y4D8Q2W6X0ANSWER002", evidence_logged: false,
         };
-    return { ...routes("predict", {}), "POST /api/v1/explain": result, ...extra };
+    return {
+      ...routes("predict", {}),
+      [`GET ${BASE}/units/PY-0.1/activities/explain/exercise`]: {
+        exercise_id: "PY-0.1/explain/v2", unit_id: "PY-0.1", activity: "explain", item_type: "concept_check",
+        prompt_markdown: "A second way to ask.", variant_no: 1, origin: "authored",
+      },
+      "POST /api/v1/explain": result,
+      ...extra,
+    };
   }
 
   async function submit(text: string) {
@@ -276,13 +284,34 @@ describe("explain step", () => {
     return user;
   }
 
-  it("shows the lesson and the concept check", async () => {
+  it("shows the lesson and the prompt the server served", async () => {
     stubApi(explainRoutes("Solid"));
     renderAt("/units/PY-0.1/explain");
 
     expect(await screen.findByText("Python runs in order.")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Say it back" }));
-    expect(screen.getByText("Explain it.")).toBeInTheDocument();
+    expect(await screen.findByText("A second way to ask.")).toBeInTheDocument();
+  });
+
+  it("falls back to the unit's own prompt when no exercise is served", async () => {
+    stubApi({ ...explainRoutes("Solid"), [`GET ${BASE}/units/PY-0.1/activities/explain/exercise`]: () => new Response("{}", { status: 404 }) });
+    renderAt("/units/PY-0.1/explain");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Say it back" }));
+    expect(await screen.findByText("Explain it.")).toBeInTheDocument();
+  });
+
+  it("sends the id of the prompt it was served (ADR-0032)", async () => {
+    const calls = stubApi(explainRoutes("Solid"));
+    await submit("It runs in order.");
+
+    await screen.findByText("Solid");
+    const posted = calls.find((c) => c.method === "POST" && c.url === "/api/v1/explain");
+    expect(JSON.parse(posted?.body ?? "{}")).toEqual({
+      unit_id: "PY-0.1",
+      explanation: "It runs in order.",
+      exercise_id: "PY-0.1/explain/v2",
+    });
   });
 
   it("shows one part at a time, with Say it back last, and moves without adding history", async () => {

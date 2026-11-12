@@ -50,9 +50,9 @@ DEFAULT_CONFIG = EstimatorConfig()
 CONCEPT_CHECK_SKILL = "CO-6"
 
 
-def concept_check_id(unit_id: str) -> str:
-    """The exercise id of a unit's concept-check prompt (ADR-0016 amendment G); one prompt per unit today."""
-    return f"{unit_id}/explain/v1"
+def concept_check_id(unit_id: str, prompt_no: int = 1) -> str:
+    """The exercise id of a unit's concept-check prompt: `<unit>/explain/v<n>` (ADR-0016 amendment G, ADR-0032)."""
+    return f"{unit_id}/explain/v{prompt_no}"
 
 LEVEL_ORDER: List[ProficiencyLevel] = [
     ProficiencyLevel.UNDERSTAND,

@@ -109,15 +109,22 @@ function VideoStep({ unit, next, onDone, done }: { unit: Unit; next: string | nu
 function ExplainStep({ unit, next, onDone }: { unit: Unit; next: string | null; onDone: () => void }) {
   const [text, setText] = useState("");
   const client = useQueryClient();
+  // The server picks which prompt to serve (ADR-0032); its id goes back with the answer.
+  const served = useQuery({
+    queryKey: ["exercise", unit.unit_id, "explain"],
+    queryFn: () => api.exercise(unit.unit_id, "explain"),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
   const check = useMutation({
-    mutationFn: () => api.explain(unit.unit_id, text),
+    mutationFn: () => api.explain(unit.unit_id, text, served.data?.exercise_id),
     onSuccess: (result) => {
       // The step stays open until a judgement exists (ADR-0026): an unjudged answer writes nothing.
       if (result.status === "judged") onDone();
       return client.invalidateQueries({ queryKey: ["coldCheck", unit.unit_id] });
     },
   });
-  const prompt = unit.concept_check_config?.prompt as string | undefined;
+  const prompt = served.data?.prompt_markdown ?? (unit.concept_check_config?.prompt as string | undefined);
   // Parts come from the lesson's "##" headings; "Say it back" is always last (SPEC-19 section 1).
   const parts = [...explainParts(unit.lesson_markdown ?? ""), { title: SAY_IT_BACK, body: "" }];
   const [index, setIndex] = useState(0);
