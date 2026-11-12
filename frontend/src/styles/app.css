@@ -3140,6 +3140,7 @@ button:disabled {
 
 /* Lesson blocks (SPEC-19 sections 2 and 3, step 5b). */
 .steps-figure {
+  container-type: inline-size;
   margin: 8px 0;
   padding: 20px;
   border-radius: 16px;
@@ -3331,7 +3332,8 @@ button:disabled {
   color: var(--ok);
 }
 
-@media (max-width: 760px) {
+/* Stack the boxes when the figure itself is narrow (the Explain column sits beside the AXIS panel). */
+@container (max-width: 620px) {
   .steps-row {
     flex-direction: column;
   }
