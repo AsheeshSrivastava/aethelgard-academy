@@ -99,21 +99,32 @@ Lina Ravi
 
 Line 2 points `backup` at the value `lead` points at, which is `"Ravi"`. Line 3 moves only `lead`. `backup` still points at `"Ravi"`.
 
-**Python is not a spreadsheet.** In a spreadsheet, changing one cell updates every cell that uses it. Python works a line out once, then moves on:
+---
 
-```python
-price = 50
-tax = 5
-total = price + tax
-price = 60
-print(total)
+## Python is not a spreadsheet
+
+In a spreadsheet, changing one cell updates every cell that uses it. Python works a line out once, then moves on.
+
+```steps
+caption: Picture to remember: a receipt. Once it is printed, a later price change does not rewrite it.
+
+title: Work out total
+code: total = price + tax
+result: total -> 55
+note: Line 3 uses price 50 and tax 5, and the answer is kept.
+
+title: Move price
+code: price = 60
+result: price -> 60
+note: Only the name price moves. total is not worked out again.
+
+title: Print total
+code: print(total)
+result: 55
+note: total still points at 55.
 ```
 
-```text
-55
-```
-
-`total` was worked out on line 3, when `price` was `50`. Moving `price` on line 4 does not redo line 3.
+> **Key idea:** a name keeps the value it was given until a later line gives it a new one. Changing `price` does not redo line 3.
 
 ```quickcheck
 id: py-0.1-spreadsheet

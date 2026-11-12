@@ -54,19 +54,19 @@ A queue number is unique, has no spaces, and says nothing about the person. The 
 A tool can hand you code that runs. Only you can say what it does on real input. So read it, predict it, then test your prediction.
 
 ```steps
-caption: Picture to remember: a proofreader. Read it, guess it, then test the guess.
+caption: Picture to remember: a proofreader. Read it, guess, then run it and compare.
 
 title: Read
 code: x = "5"
 result: x holds "5"
 note: Say what each line holds.
 
-title: Predict
+title: Guess
 code: print(x + x)
 result: 55 or 10?
 note: Write your guess before you run anything.
 
-title: Run and compare
+title: Compare
 code: print(x + x)
 result: 55
 note: Text joins, it does not add. If your guess was wrong, find the line where your picture slipped.
