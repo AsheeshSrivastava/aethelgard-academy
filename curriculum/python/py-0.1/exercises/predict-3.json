@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/predict-3",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "names/bindings",
+  "prompt_markdown": [
+    "A bakery script runs.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "predict": {
+    "code": [
+      "price = \"3\"",
+      "label = price",
+      "price = \"4\"",
+      "print(label, price)"
+    ],
+    "stdin": "",
+    "options": [
+      {
+        "key": "A",
+        "text": "3 4"
+      },
+      {
+        "key": "B",
+        "text": "4 4"
+      },
+      {
+        "key": "C",
+        "text": "3 3"
+      },
+      {
+        "key": "D",
+        "text": "label price"
+      }
+    ]
+  }
+}

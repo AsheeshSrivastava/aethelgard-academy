@@ -2,6 +2,10 @@
   "unit_id": "PY-0.1",
   "title": "Python as an executing program",
   "concept_check": {
-    "prompt": "Explain in your own words: a script runs three lines, shift = \"morning\", then logged = shift, then shift = \"evening\". Say what each name points at after each line, and why logged does not change on the last line."
+    "prompt": "Explain in your own words: a script runs three lines, shift = \"morning\", then logged = shift, then shift = \"evening\". Say what each name points at after each line, and why logged does not change on the last line.",
+    "more_prompts": [
+      "Explain in your own words the difference between a statement and an expression, using `total = total + 1` as your example.",
+      "You predicted a script would print `5`, but it printed `8`. Explain in your own words how a state table helps you find where your prediction went wrong."
+    ]
   }
 }

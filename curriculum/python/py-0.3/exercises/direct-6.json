@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-6",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-4",
+  "level": "Understand",
+  "topic": "documentation lookup",
+  "prompt_markdown": [
+    "Two AI tools disagree about whether `print(\"a\", \"b\")` puts a space between the values.",
+    "",
+    "What settles it?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Ask both tools again and keep the answer they agree on."
+      },
+      {
+        "key": "B",
+        "text": "Run the line, and check `print` in the Python docs."
+      },
+      {
+        "key": "C",
+        "text": "Go with the tool that gives the longer explanation."
+      },
+      {
+        "key": "D",
+        "text": "Search for a forum post that matches one of them."
+      }
+    ]
+  }
+}

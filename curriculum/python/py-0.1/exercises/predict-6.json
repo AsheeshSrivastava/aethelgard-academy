@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/predict-6",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "values and objects",
+  "prompt_markdown": [
+    "At a clinic, a patient types `3`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "predict": {
+    "code": [
+      "count = input()",
+      "count = count + \"1\"",
+      "print(count)"
+    ],
+    "stdin": "3",
+    "options": [
+      {
+        "key": "A",
+        "text": "4"
+      },
+      {
+        "key": "B",
+        "text": "31"
+      },
+      {
+        "key": "C",
+        "text": "3 1"
+      },
+      {
+        "key": "D",
+        "text": "An error"
+      }
+    ]
+  }
+}

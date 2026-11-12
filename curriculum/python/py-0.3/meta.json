@@ -29,6 +29,10 @@
     }
   ],
   "concept_check": {
-    "prompt": "Explain in your own words what you can hand to an AI tool, and why the intent, the checking and the final decision stay with you."
+    "prompt": "Explain in your own words what you can hand to an AI tool, and why the intent, the checking and the final decision stay with you.",
+    "more_prompts": [
+      "An AI tool gives you a working script for the intake desk. Explain in your own words what you check before you keep it, and why the tool cannot do that checking for you.",
+      "Explain in your own words how you decide what settles a question when an AI tool and a colleague disagree."
+    ]
   }
 }

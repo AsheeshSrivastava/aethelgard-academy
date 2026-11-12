@@ -13,7 +13,7 @@ from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.subprocess_runner import SubprocessRunner
 from lms.api.app import LOCAL_LEARNER_ID, create_app
-from lms.core.exercises import HIDDEN_REQUIRED, cold_round, parse_seed, seed_variants, to_exercise
+from lms.core.exercises import HIDDEN_REQUIRED, cold_round, parse_seed, pool_for, seed_variants, to_exercise
 from lms.core.models import (
     AssistanceLevel,
     EvidenceCategory,
@@ -204,7 +204,7 @@ def walk_everything(client, repo, clock, catalog):
                     assert res.status_code == 200, (unit_id, activity, res.text)
                     served.append(res)
                 continue
-            for _ in range(8):
+            for _ in range(len(pool_for(catalog.seeds[unit_id], activity)) + 1):  # the whole pool, then one repeat
                 res = client.post(regenerate_url(unit_id, activity))
                 assert res.status_code == 200, (unit_id, activity, res.text)
                 served.append(res)
@@ -311,10 +311,15 @@ def test_regenerate_walks_every_variant_before_repeating(client):
 
 def test_exhausted_pool_reuses_the_oldest_seen(client):
     first = get_exercise(client)["exercise_id"]
-    for _ in range(5):
-        regenerate(client)
+    seen = [first]
+    for _ in range(100):  # every other item once, then the oldest comes back
+        nxt = regenerate(client)["exercise_id"]
+        if nxt == first:
+            break
+        assert nxt not in seen
+        seen.append(nxt)
 
-    assert regenerate(client)["exercise_id"] == first
+    assert nxt == first and len(seen) > 1
 
 
 def test_explain_cannot_be_regenerated(client):

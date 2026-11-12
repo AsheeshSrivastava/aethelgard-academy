@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/predict-4",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "execution order",
+  "prompt_markdown": [
+    "A bus display runs this script.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "predict": {
+    "code": [
+      "print(\"Doors close\")",
+      "stop = \"Park Road\"",
+      "print(\"Next:\", stop)",
+      "stop = \"Market\""
+    ],
+    "stdin": "",
+    "options": [
+      {
+        "key": "A",
+        "text": "Doors close\nNext: Park Road"
+      },
+      {
+        "key": "B",
+        "text": "Doors close\nNext: Market"
+      },
+      {
+        "key": "C",
+        "text": "Doors close\nNext: Park Road\nMarket"
+      },
+      {
+        "key": "D",
+        "text": "Next: Park Road\nDoors close"
+      }
+    ]
+  }
+}

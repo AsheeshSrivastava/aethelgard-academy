@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/predict-5",
+  "unit_id": "PY-0.1",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "statements and expressions",
+  "prompt_markdown": [
+    "A library counter runs this script.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "predict": {
+    "code": [
+      "books = 4",
+      "books + 1",
+      "print(books)"
+    ],
+    "stdin": "",
+    "options": [
+      {
+        "key": "A",
+        "text": "4"
+      },
+      {
+        "key": "B",
+        "text": "5"
+      },
+      {
+        "key": "C",
+        "text": "books + 1"
+      },
+      {
+        "key": "D",
+        "text": "An error"
+      }
+    ]
+  }
+}
