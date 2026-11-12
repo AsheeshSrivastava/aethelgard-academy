@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/trace-3",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "topic": "state changes",
+  "prompt_markdown": [
+    "A garden watering script.",
+    "",
+    "Write each name's value after the lines shown, then what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "trace": {
+    "code": [
+      "water = 2",
+      "water = water + 3",
+      "print(water)",
+      "water = water + 5",
+      "print(water)"
+    ],
+    "input": ""
+  }
+}

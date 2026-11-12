@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/trace-5",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "topic": "names/bindings",
+  "prompt_markdown": [
+    "Two cooks swap their kitchen shifts.",
+    "",
+    "Write each name's value after the lines shown, then what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "trace": {
+    "code": [
+      "first = \"Ana\"",
+      "second = \"Bo\"",
+      "spare = first",
+      "first = second",
+      "second = spare",
+      "print(first, second)"
+    ],
+    "input": ""
+  }
+}

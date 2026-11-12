@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/trace-6",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "topic": "state changes",
+  "prompt_markdown": [
+    "At a gym, a member types `  lee `.",
+    "",
+    "Write each name's value after the lines shown, then what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "trace": {
+    "code": [
+      "name = input()",
+      "name = name.strip().title()",
+      "greeting = \"Hi \" + name",
+      "print(greeting)"
+    ],
+    "input": "  lee "
+  }
+}

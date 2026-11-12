@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-4",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-3",
+  "level": "Understand",
+  "topic": "technical responsibility",
+  "prompt_markdown": [
+    "> **You:** Write a script that books a member into the 6 pm class.",
+    "> **Tool:** Here you go:",
+    "> ```python",
+    "> name = input()",
+    "> print(\"Booked:\", name.title(), \"for 6 pm\")",
+    "> ```",
+    "> **Tool:** This handles everything you need.",
+    "",
+    "Which part of this session should have stayed with you, not the tool?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Recalling what `.title()` does to each word."
+      },
+      {
+        "key": "B",
+        "text": "Deciding what must be true before anyone is booked."
+      },
+      {
+        "key": "C",
+        "text": "Typing the input and print lines you already planned."
+      },
+      {
+        "key": "D",
+        "text": "Looking up how to print two values on one line."
+      }
+    ]
+  }
+}

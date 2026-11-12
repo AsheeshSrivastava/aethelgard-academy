@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/cold-explain-2",
+  "unit_id": "PY-0.1",
+  "activity": "Explain",
+  "skill_id": "CO-6",
+  "level": "Understand",
+  "topic": "names/bindings",
+  "prompt_markdown": [
+    "A colleague explains this script: `a = \"red\"`, then `b = a`, then `a = \"blue\"`.",
+    "",
+    "One sentence is wrong. Which one?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": true,
+  "hint": "Ask what line 3 changes, and what it leaves alone.",
+  "hint_approved": true,
+  "explain_spot_flaw": {
+    "sentences": [
+      {
+        "key": "A",
+        "text": "Line 1 points the name `a` at the text `red`."
+      },
+      {
+        "key": "B",
+        "text": "Line 2 points `b` at the same value `a` points at."
+      },
+      {
+        "key": "C",
+        "text": "Line 3 moves `a` to `blue`, and `b` moves with it."
+      },
+      {
+        "key": "D",
+        "text": "After line 3, printing `b` shows `red`."
+      }
+    ]
+  }
+}

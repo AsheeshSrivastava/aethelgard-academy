@@ -1,0 +1,9 @@
+{
+  "seed_id": "PY-0.1/trace-4",
+  "trace": {
+    "expected_output": [
+      "py-0.1-trace-4",
+      "done"
+    ]
+  }
+}

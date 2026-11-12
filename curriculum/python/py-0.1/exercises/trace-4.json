@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.1/trace-4",
+  "unit_id": "PY-0.1",
+  "activity": "Trace",
+  "skill_id": "CO-2",
+  "level": "Understand",
+  "topic": "names/bindings",
+  "prompt_markdown": [
+    "A cinema seat script.",
+    "",
+    "Write each name's value after the lines shown, then what the terminal shows."
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "trace": {
+    "code": [
+      "seat = \"A1\"",
+      "saved = seat",
+      "seat = \"B4\"",
+      "print(saved)",
+      "print(seat)"
+    ],
+    "input": ""
+  }
+}

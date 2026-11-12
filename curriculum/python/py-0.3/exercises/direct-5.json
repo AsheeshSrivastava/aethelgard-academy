@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-5",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-2",
+  "level": "Understand",
+  "topic": "assumptions",
+  "prompt_markdown": [
+    "> **You:** Write a script that books a member into the 6 pm class.",
+    "> **Tool:** Here you go:",
+    "> ```python",
+    "> name = input()",
+    "> print(\"Booked:\", name.title(), \"for 6 pm\")",
+    "> ```",
+    "> **Tool:** This handles everything you need.",
+    "",
+    "The tool says this handles everything. What should you ask it next?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Can you make the booking message sound friendlier?"
+      },
+      {
+        "key": "B",
+        "text": "What does this script do if the 6 pm class is full?"
+      },
+      {
+        "key": "C",
+        "text": "Can you write the rest of the booking system too?"
+      },
+      {
+        "key": "D",
+        "text": "Is this the shortest way to write these two lines?"
+      }
+    ]
+  }
+}
