@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 from pydantic import BaseModel, ValidationError
 
 from lms.core.models import ActivityType, ProficiencyLevel, Unit
+from lms.core.proficiency import concept_check_id
 
 SCHEMA_VERSION = 2
 COLD_CHECK = "cold_check"
@@ -448,7 +449,7 @@ def explain_exercise(unit: Unit) -> Optional[Exercise]:
     if not prompt:
         return None
     return Exercise(
-        exercise_id=f"{unit.unit_id}/explain/v1",
+        exercise_id=concept_check_id(unit.unit_id),
         unit_id=unit.unit_id,
         activity=ActivityType.EXPLAIN.slug,
         item_type="concept_check",
