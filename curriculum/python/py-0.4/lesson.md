@@ -4,7 +4,44 @@
 
 At the PantryFlow intake desk, people type their name as `" meera "` or `"MEERA"`. The desk officer needs a clean slip to read aloud. By the end of this lesson you can turn messy typing into that slip.
 
-Most work you already know follows the same three steps: something comes in, you tidy it, and something goes out. A first program does the same.
+Most work you already know follows the same three steps: something comes in, you tidy it, and something goes out. A first program does the same. At the end you will also write a short README for it, so a stranger can run it.
+
+---
+
+## Run a script
+
+A program is a text file that Python reads and runs from top to bottom. Three steps run any program.
+
+```steps
+caption: Picture to remember: a recipe card. Write it, save it, follow it.
+
+title: Check Python
+code: python --version
+result: Python 3.12.4
+note: If the command is not found, Python is not installed, or your computer cannot find it.
+
+title: Save the file
+code: welcome.py
+result: a text file that ends in .py
+note: Save before you run. Python reads what is saved on disk, not what is only on your screen.
+
+title: Run it
+code: uv run welcome.py
+result: Name:
+note: Python runs the file from the top and stops at the end.
+```
+
+On some computers the command is `python3`, not `python`. In this course we run files with `uv run`.
+
+You can also try one line at a time at the **interactive prompt**, called the REPL. Type `python` in the terminal and press Enter. It shows `>>>` when it is ready, and you do not type the `>>>`. The app's playground also lets you try a line without setting anything up.
+
+| | Interactive prompt (REPL) | Script file |
+| --- | --- | --- |
+| You type | one line, then Enter | a whole file, then run it |
+| Shows results | `2 + 3` shows `5` straight away | only what `print()` shows |
+| Good for | trying a small idea | a program you will run again |
+
+> **Key idea:** a script runs the same way each time. Only what people type changes.
 
 ---
 
@@ -37,7 +74,30 @@ note: Shows the result on the screen.
 
 > **Key idea:** `input()` *always* hands you text, even when someone types a number. `"7"` is not `7`.
 
+Run the same program twice with different typing. The three steps stay the same. Only the slip changes: `" meera "` gives `Name: Meera`, and `"JOSEPH"` gives `Name: Joseph`.
+
 Want more on any of these? Read the concept notes: [[built-in-input]], [[variables]], [[expressions]], [[formatted-strings]], [[print-function]] and [[standard-streams]].
+
+---
+
+## Comments
+
+A **comment** starts with `#`. Python skips it. It is a note for the next reader, who may be you in a month.
+
+```python
+# Ask for the name, then print the slip
+name = input("Name: ")  # the desk officer reads this aloud
+```
+
+A good comment says *why*, not what the line already says. A `#` inside quotes, as in `"Room #4"`, is ordinary text, not a comment. See [[comments-in-python]].
+
+```quickcheck
+id: py-0.4-comments
+question: Which line does Python skip when it runs the file?
+A: `name = input("Name: ")`
+B: `# Ask for the name`
+C: `print("Room #4")`
+```
 
 ---
 
@@ -116,6 +176,28 @@ Three error types you will meet first:
 | `SyntaxError` | The line is not written as Python expects. Python checks the whole file first, so no line runs at all. | `print("Zone:" zone)` (missing comma) |
 
 When you meet an error, say three things before you change any code: the type, the line, and what the message means in plain words.
+
+---
+
+## Your first README
+
+A README is a short file beside your script. It is for someone who has never seen the script, including you in a month. Five points cover it. Here they are for the slip program:
+
+| Point | The slip program's answer |
+| --- | --- |
+| What it does | Prints a slip with a clean name and service. |
+| What you need first | Python 3.12 or newer, and uv. |
+| How to run it | `uv run checkin.py` |
+| A sample run | One real run, pasted in. |
+| Limits | One person per run; it does not save anything. |
+
+> **Key idea:** copy the sample run from a real run, never from memory. TW-0.1 and TW-0.2 go deeper on READMEs.
+
+---
+
+## Verify in the Official Docs
+
+Open the [`input()` entry](https://docs.python.org/3/library/functions.html#input) in the Python docs. Find the sentence that says what type `input()` returns. Then read what it strips from the end of the line, and what it leaves alone.
 
 ---
 

@@ -2,5 +2,9 @@
   "py-0.4-strip-upper": {
     "answer": "B",
     "why": "Made-up reason for tests."
+  },
+  "py-0.4-comments": {
+    "answer": "B",
+    "why": "Made-up reason for tests."
   }
 }
