@@ -44,8 +44,8 @@ The loader takes `checks.py` from `LMS_ANSWERS_DIR`. With the variable unset, it
 | `sample_run` | Lines of what a correct run looks like |
 | `entry` | The `.py` file that runs. Must be in `files` |
 | `files` | `[{path, starter: [lines]}]`. Plain file names |
-| `requirements` | `[{id, label, unit_id, check}]`, ids unique, at least one `behaviour` |
-| `proves` | `[{skill_id, unit_id, label}]`. Each skill must be a target skill of that unit. One evidence entry is written per item |
+| `requirements` | `[{id, label, unit_id, skills?, check}]`, ids unique, at least one `behaviour`. `skills` (ADR-0030, 2026-11-12) lists the `proves` skills this requirement earns; it defaults to empty |
+| `proves` | `[{skill_id, unit_id, label}]`. Each skill must be a target skill of that unit, and named in the `skills` of at least one requirement (ADR-0030). One evidence entry is written per item |
 
 Unknown fields are refused. A bad build is skipped with a finding and never stops the app.
 
@@ -154,6 +154,8 @@ A request carrying a build's `exercise_id` always runs in Socratic mode, on `/ax
 | `build-invalid` | error | The build could not be loaded; the message says why |
 | `build-unit-unknown` | error | A requirement or `proves` item names a unit that is not in the stage |
 | `build-skill-unknown` | error | A `proves` skill is not a target skill of its unit |
+| `build-proof-unearned` | error | A `proves` skill is not named in any requirement's `skills` (ADR-0030) |
+| `build-skill-unproved` | error | A requirement's `skills` names a skill that is not in `proves` (ADR-0030) |
 | `build-practice-checks` | warning | `LMS_ANSWERS_DIR` is not set, so the build grades with its public practice checks |
 | `build-answers-public` | error | A `checks.py` or `solution.py` is in the public build folder (ADR-0021) |
 

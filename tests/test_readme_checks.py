@@ -83,7 +83,7 @@ def test_a_markdown_check_must_name_a_file_of_the_build():
 
 def stage_0():
     raw = json.loads((FOLDER / "build.json").read_text(encoding="utf-8"))
-    return StageBuildSpec.model_validate({**raw, "checks_source": CHECKS + "def check_messy_input():\n    pass\n"})
+    return StageBuildSpec.model_validate({**raw, "checks_source": CHECKS + "def check_messy_input():\n    pass\n\ndef check_ticket_counter():\n    pass\n"})
 
 
 def readme_results(text):
