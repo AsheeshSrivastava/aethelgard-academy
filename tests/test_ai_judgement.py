@@ -36,6 +36,7 @@ from lms.core.ai_judgement import (
 )
 from lms.core.curriculum_checks import Severity
 from lms.core.interaction_log import InteractionEvent, new_ulid
+from lms.core.proficiency import estimate_skill
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 IDEAS = [
@@ -364,6 +365,15 @@ def test_a_concept_check_entry_carries_its_exercise_id(answers, repo):
     explain(make_client(repo, Judge(judged_solid())))
 
     assert ledger(repo)[0].exercise_id == "PY-0.4/explain/v1"
+
+
+def test_the_same_concept_check_posted_twice_counts_once(answers, repo):
+    client = make_client(repo, Judge(judged_solid()))
+    explain(client)
+    explain(client)
+
+    assert len(ledger(repo)) == 2  # the ledger keeps both
+    assert len(estimate_skill(ledger(repo), "CO-6").qualifying_entry_ids) == 1
 
 
 def test_with_the_switch_off_a_verdict_writes_nothing(answers, repo, monkeypatch):

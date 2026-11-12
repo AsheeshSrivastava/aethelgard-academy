@@ -50,9 +50,9 @@ DEFAULT_CONFIG = EstimatorConfig()
 CONCEPT_CHECK_SKILL = "CO-6"
 
 
-def concept_check_id(unit_id: str, variant: int = 1) -> str:
-    """The exercise id of a unit's concept-check prompt (ADR-0016 amendment G)."""
-    return f"{unit_id}/explain/v{variant}"
+def concept_check_id(unit_id: str) -> str:
+    """The exercise id of a unit's concept-check prompt (ADR-0016 amendment G); one prompt per unit today."""
+    return f"{unit_id}/explain/v1"
 
 LEVEL_ORDER: List[ProficiencyLevel] = [
     ProficiencyLevel.UNDERSTAND,
@@ -70,8 +70,6 @@ DECISION_ORDER: List[ProgressionDecision] = [
     ProgressionDecision.ACCELERATE,
 ]
 
-COLD_CHECK_GAP = "a passed Cold Check"
-
 _GOOD = (EvidenceStrength.MODERATE, EvidenceStrength.STRONG)
 _UP_TO_SMALL_HINT = (AssistanceLevel.NONE, AssistanceLevel.SYNTAX_LOOKUP, AssistanceLevel.SMALL_HINT)
 _UP_TO_SYNTAX = (AssistanceLevel.NONE, AssistanceLevel.SYNTAX_LOOKUP)
@@ -84,6 +82,7 @@ class SkillEstimate(BaseModel):
     qualifying_entry_ids: List[str] = Field(default_factory=list)  # entries backing `level`
     supported_levels: List[ProficiencyLevel] = Field(default_factory=list)  # every level with full support
     support_gaps: Dict[ProficiencyLevel, List[str]] = Field(default_factory=dict)  # what each reached level still lacks
+    no_cold_check: List[ProficiencyLevel] = Field(default_factory=list)  # reached levels with no passed Cold Check
     weak_streak: int = 0                                            # newest consecutive weak entries
     weak_count: int = 0                                             # weak entries in the window
 
@@ -258,7 +257,7 @@ def estimate_skill(
                 )
             gaps.append(exercises)
         elif no_cold_check:
-            gaps.append(COLD_CHECK_GAP)
+            gaps.append("a passed Cold Check")
         if weak_streak:
             gaps.append("a strong attempt after your last weak one")
         return gaps
@@ -273,6 +272,10 @@ def estimate_skill(
         qualifying_entry_ids=[e.entry_id for e in backing],
         supported_levels=[lv for lv in LEVEL_ORDER[: level_index + 1] if supported_at(lv)],
         support_gaps={lv: gaps_at(lv) for lv in LEVEL_ORDER[: level_index + 1] if not supported_at(lv)},
+        no_cold_check=[
+            lv for lv in LEVEL_ORDER[: level_index + 1]
+            if not any(e.cold_check for e in window if qualifies(e, lv, config))
+        ],
         weak_streak=weak_streak,
         weak_count=weak_count,
     )
@@ -289,7 +292,7 @@ def decide_skill(
     """Progression decision for one skill against the unit's target level (ADR-0016 2.5)."""
     est = estimate_skill(entries, skill_id, now=now, config=config)
 
-    def result(decision: ProgressionDecision, reason: str) -> SkillDecision:
+    def result(decision: ProgressionDecision, reason: str, needs_cold_check: bool = False) -> SkillDecision:
         return SkillDecision(
             skill_id=est.skill_id,
             target_level=target_level,
@@ -297,6 +300,7 @@ def decide_skill(
             decision=decision,
             reason=reason,
             entry_ids=est.qualifying_entry_ids,
+            needs_cold_check=needs_cold_check,
         )
 
     if consecutive_shaky >= config.rebuild_shaky_checks:
@@ -330,13 +334,11 @@ def decide_skill(
             f"Evidence shows {est.level.value}; the target is {target_level.value}.",
         )
     if target_level not in est.supported_levels:
-        gaps = est.support_gaps.get(target_level, [])
-        decided = result(
+        return result(
             ProgressionDecision.STRENGTHEN,
-            f"{target_level.value} is provisional: it needs {', and '.join(gaps)}.",
+            f"{target_level.value} is provisional: it needs {', and '.join(est.support_gaps.get(target_level, []))}.",
+            needs_cold_check=target_level in est.no_cold_check,
         )
-        decided.needs_cold_check = any(COLD_CHECK_GAP in gap for gap in gaps)
-        return decided
     if current > target and est.confidence == Confidence.SUPPORTED:
         return result(
             ProgressionDecision.ACCELERATE,

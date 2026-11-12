@@ -145,5 +145,5 @@ The CO-6 concept check was recorded with no exercise or seed id, so section 2.2'
 
 1. **Id.** A concept check's evidence carries the id of the prompt that was answered: `<unit>/explain/v<n>`, for example `PY-0.1/explain/v1`. Today each unit has one prompt (`v1`); more prompts get `v2`, `v3` and so on.
 2. **Repeats count once.** As in amendment E, repeats of one concept-check prompt count once, and the newest result is the one kept. The second piece of support for a level must come from a different exercise: another activity of the unit, another prompt, or the Cold Check.
-3. **Older rows.** The ledger is append-only, so rows written before this amendment are not changed. When a concept check (section `is_concept_check`) has no exercise or seed id, the estimator reads it as `<unit>/explain/v1`. This corrects existing learner history without rewriting it.
+3. **Older rows.** The ledger is append-only, so rows written before this amendment are not changed. When a concept check (a CO-6 Explain entry) has no exercise or seed id, the estimator reads it as `<unit>/explain/v1`. This corrects existing learner history without rewriting it.
 4. **Rebuild is unchanged.** "Two or more consecutive Shaky concept checks" (section 2.5) still counts every attempt, because a run of Shaky answers is a warning sign even when the prompt repeats.
