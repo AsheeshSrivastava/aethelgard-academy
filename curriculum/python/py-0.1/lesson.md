@@ -68,7 +68,7 @@ A **statement** is a whole instruction that Python carries out, such as `queue =
 
 Most statements hold expressions. Python works out the expressions first, then does what the statement says. See [[expressions]].
 
-Every value has a kind. The kind decides what you can do with it: you can add 1 to `0`, but not to `"0"`.
+Python keeps each value in memory as an **object**. An object has a value and a kind. The kind decides what you can do with it: you can add 1 to `0`, but not to `"0"`.
 
 | Value | Kind | What you can do |
 | --- | --- | --- |
@@ -104,6 +104,16 @@ Line 2 points `backup` at the value `lead` points at, which is `"Ravi"`. Line 3 
 ## Python is not a spreadsheet
 
 In a spreadsheet, changing one cell updates every cell that uses it. Python works a line out once, then moves on.
+
+```python
+price = 50
+tax = 5
+total = price + tax
+price = 60
+print(total)
+```
+
+What does it print? Follow it in three moves:
 
 ```steps
 caption: Picture to remember: a receipt. Once it is printed, a later price change does not rewrite it.
