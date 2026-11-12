@@ -197,7 +197,7 @@ def test_all_stage_0_seeds_load_cleanly():
     with real_content():
         catalog = load_all_roadmaps(Path("reference"))
 
-    assert {u: len(s) for u, s in catalog.seeds.items()} == {"PY-0.1": 9, "PY-0.2": 8, "PY-0.3": 9, "PY-0.4": 10, "PY-1.2": 1, "TW-0.1": 14, "TW-0.2": 16}
+    assert {u: len(s) for u, s in catalog.seeds.items()} == {"PY-0.1": 9, "PY-0.2": 8, "PY-0.3": 9, "PY-0.4": 17, "PY-1.2": 1, "TW-0.1": 14, "TW-0.2": 16}
     assert [f for f in catalog.findings if f.code.startswith("seed-")] == []
 
 

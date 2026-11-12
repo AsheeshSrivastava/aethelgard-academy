@@ -5,7 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
-  "topic": "comments",
+  "topic": "running the same program with different input",
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint_approved": true,

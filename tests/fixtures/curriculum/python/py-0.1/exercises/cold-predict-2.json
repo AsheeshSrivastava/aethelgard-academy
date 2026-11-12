@@ -5,7 +5,7 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
-  "topic": "execution order",
+  "topic": "state changes",
   "cold_check_eligible": true,
   "curator_approved": true,
   "hint_approved": true,

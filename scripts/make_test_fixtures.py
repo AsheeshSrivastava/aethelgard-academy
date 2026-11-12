@@ -105,11 +105,15 @@ for pkg in sorted((REPO / "curriculum").glob("*/*")):
         continue
     ans = OUT_ANS / pkg.parent.name / pkg.name
     meta = pkg / "meta.json"
-    if meta.exists() and isinstance(json.loads(meta.read_text(encoding="utf-8")).get("concept_check"), dict):
+    check = json.loads(meta.read_text(encoding="utf-8")).get("concept_check") if meta.exists() else None
+    if isinstance(check, dict):
         ans.mkdir(parents=True, exist_ok=True)
-        (ans / "concept_check.json").write_text(json.dumps({"ideas": [
-            {"id": "made-up-1", "text": "apples"},
-            {"id": "made-up-2", "text": "rivers"}]}, indent=2) + "\n", encoding="utf-8")
+        ideas = [{"id": "made-up-1", "text": "apples"}, {"id": "made-up-2", "text": "rivers"}]
+        rubric = {"ideas": ideas}
+        more = check.get("more_prompts") or []
+        if more:  # one made-up rubric per extra prompt (ADR-0032)
+            rubric["variants"] = {f"v{n}": {"ideas": ideas} for n in range(2, len(more) + 2)}
+        (ans / "concept_check.json").write_text(json.dumps(rubric, indent=2) + "\n", encoding="utf-8")
     if (pkg / "starter.py").exists():
         ans.mkdir(parents=True, exist_ok=True)
         (ans / "test_solution.py").write_text(

@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/predict-6",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "running the same program with different input",
+  "prompt_markdown": [
+    "Yesterday this script ran with `Sam`. Today a member types `Priya`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": true,
+  "predict": {
+    "code": [
+      "print(\"Gym check-in\")",
+      "member = input()",
+      "print(\"Welcome,\", member)"
+    ],
+    "stdin": "Priya",
+    "options": [
+      {
+        "key": "A",
+        "text": "Gym check-in\nWelcome, Priya"
+      },
+      {
+        "key": "B",
+        "text": "Gym check-in\nWelcome, Sam"
+      },
+      {
+        "key": "C",
+        "text": "Gym check-in\nWelcome, Sam\nWelcome, Priya"
+      },
+      {
+        "key": "D",
+        "text": "Gym check-in\nWelcome, member"
+      }
+    ]
+  }
+}
