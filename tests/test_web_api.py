@@ -60,7 +60,7 @@ def test_unit_full_metadata(test_client):
     assert data["unit_id"] == "PY-0.1"
     # Should have lesson_markdown loaded from curriculum package
     assert data.get("lesson_markdown") is not None
-    assert "Pantry Intake Counter" in data["lesson_markdown"]
+    assert "State and the state table" in data["lesson_markdown"]
 
 
 def test_explain_endpoint_solid(test_client):

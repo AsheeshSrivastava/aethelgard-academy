@@ -4,57 +4,113 @@
 
 ---
 
-## 1. Operational Context: The Pantry Intake Counter
+## Why it matters
 
-Welcome to your first backend assignment on the **Intake Desk Spine**.
+In PY-0.4 you ran a program that took a name in and printed a slip. This unit looks inside that run.
 
-Imagine you are deploying the counter terminal for a community food pantry. When a visitor arrives at the desk:
-1. The terminal pauses and prompts for their name (**Ingress** via `input()`).
-2. The program captures the entered text into computer memory (**State** via a `variable`).
-3. The program formats and outputs their verification record to the screen (**Egress** via `print()`).
+When a script gives the wrong answer, the fix starts with one question: what did each name hold at each line? By the end of this unit you can follow a short script line by line and write down what it holds.
 
 ---
 
-## 2. Operational Reference Desk (Official Anchors)
+## One statement at a time
 
-In professional software development, consulting documentation is an engineer's everyday workbench tool. Below are the official documentation anchors for the tools you are using today:
+A Python file is a list of statements. Python runs them one at a time, from top to bottom. A line cannot use something that a later line creates. Lines that start with `#` are [[comments-in-python|comments]], which Python skips. See [[sequential-execution]].
 
-| Term | Role in the System | Official Documentation |
-| :--- | :--- | :--- |
-| **Comments (`#`)** | Human-readable notes ignored by Python; used as pseudocode blueprints. | [Python Comments Syntax](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/introduction.md) |
-| **`input()`** | Built-in function that pauses execution and **returns** whatever text the user types as a string (`str`). | [Python Built-in input()](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/introduction.md) |
-| **Variables (`=`)** | A labeled reference in memory that captures and holds a value. | [Python Execution Model & Names](file:///d:/01-Project/lms/reference/upstream/python-docs/reference/executionmodel.md) |
-| **`print()`** | Built-in function that outputs data to the terminal console. | [Python Formatted Output](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/inputoutput.md) |
-| **f-strings (`f"..."`)** | Modern string formatting that dynamically injects variables into text inside `{curly_braces}`. | [Python Formatted String Literals](file:///d:/01-Project/lms/reference/upstream/python-docs/tutorial/inputoutput.md) |
-
-Want more on any of these? Read the concept notes: [[comments-in-python]], [[built-in-input]], [[variables]], [[print-function]] and [[formatted-strings]].
-
----
-
-## 3. Key Mental Models to Master
-
-### A. Execution Order: Statement by Statement
-Python reads your script strictly from **top to bottom**. Line 1 runs before Line 2. A variable does not exist in memory until the line that creates it has executed. See [[sequential-execution]].
-
-### B. Functions and Return Values
-When you call `input("Enter name: ")`:
-- Python displays the prompt.
-- The user types their name and presses `Enter`.
-- The function finishes and **returns** the text.
-- The `=` operator catches that returned text and stores it in your [[variables|variable]]:
-  ```python
-  applicant_name = input("Enter name: ")
-  ```
-
-### C. Screen Output vs. Code Layout
-Leaving a blank line in your Python file does **not** create a blank line on the terminal. To print a blank line on the terminal, you must explicitly call the [[print-function|output function]] with no arguments:
 ```python
+print("Desk open")
 print()
+queue = 3
+print("Waiting:", queue)
 ```
 
+```text
+Desk open
+
+Waiting: 3
+```
+
+`print()` with nothing inside shows an empty line. A blank line in your file shows nothing at all.
+
 ---
 
-## 4. Local Workflow Instructions
+## Statements and expressions
+
+An **expression** is a piece of code that works out to a value: `3`, `"desk"`, `queue + 1`, `input()`.
+
+A **statement** is a whole instruction that Python carries out, such as `queue = queue + 1` or `print(queue)`.
+
+Most statements hold expressions. Python works out the expressions first, then does what the statement says. See [[expressions]].
+
+Every value has a kind. `"waiting"` is text (`str`). `0` is a whole number (`int`). The kind decides what you can do with it: you can add 1 to `0`, but not to `"0"`.
+
+---
+
+## Names point at values
+
+`=` gives a name to a value. In `queue = 3`, Python works out the right side, gets the value `3`, and points the name `queue` at it. See [[variables]].
+
+Think of a name as a label tied to a value, not a box that holds it. If a later line says `queue = 4`, the label moves to the new value. Nothing else changes.
+
+This matters when two names share a value:
+
+```python
+lead = "Ravi"
+backup = lead
+lead = "Lina"
+print(lead, backup)
+```
+
+```text
+Lina Ravi
+```
+
+Line 2 points `backup` at the value `lead` points at, which is `"Ravi"`. Line 3 moves only `lead`. `backup` still points at `"Ravi"`.
+
+---
+
+## State and the state table
+
+A program's **state** is what each name holds at a given moment. Each assignment can change it.
+
+To follow a script, write a **state table**: one row per line, with each name's value after that line runs.
+
+```python
+status = "waiting"
+seen = 0
+seen = seen + 1
+status = "seen"
+print(status, seen)
+```
+
+| After line | `status` | `seen` | Terminal shows |
+| --- | --- | --- | --- |
+| 1 | `"waiting"` | (no value yet) | |
+| 2 | `"waiting"` | `0` | |
+| 3 | `"waiting"` | `1` | |
+| 4 | `"seen"` | `1` | |
+| 5 | `"seen"` | `1` | `seen 1` |
+
+Line 3 reads the old value of `seen`, adds 1, and points `seen` at the result. Line 5 changes nothing. `print()` only shows the state.
+
+If the real output differs from what you predicted, find the first row where your table goes wrong. That row shows where your picture of the program slipped.
+
+---
+
+## Official docs
+
+| Term | Official documentation |
+| :--- | :--- |
+| Names and binding | [Naming and binding](https://docs.python.org/3/reference/executionmodel.html#naming-and-binding) |
+| Assignment (`=`) | [Assignment statements](https://docs.python.org/3/reference/simple_stmts.html#assignment-statements) |
+| Expressions | [Expressions](https://docs.python.org/3/reference/expressions.html) |
+| `input()` | [input()](https://docs.python.org/3/library/functions.html#input) |
+| `print()` | [print()](https://docs.python.org/3/library/functions.html#print) |
+
+Want more? Read the concept notes: [[sequential-execution]], [[expressions]], [[variables]] and [[assignment-evaluation]].
+
+---
+
+## Local Workflow Instructions
 
 1. **Pull the Exercise:**
    ```bash
@@ -63,7 +119,7 @@ print()
 2. **Open in Zed or VS Code:**
    Open `workspace/PY-0.1/solution.py`.
 3. **Follow the Numbered Steps:**
-   Complete Steps 1 through 6 under the pseudocode comments.
+   Complete Steps 2 to 6 under the comments.
 4. **Test Interactively:**
    ```bash
    uv run python workspace/PY-0.1/solution.py
@@ -74,5 +130,5 @@ print()
    ```
 6. **Submit Concept Check:**
    ```bash
-   uv run lms explain PY-0.1 "Python executes statements top-to-bottom in order, input() returns text that a variable stores, and calling print() with no arguments outputs a blank line."
+   uv run lms explain PY-0.1 "Python runs each statement in order. An assignment works out the right side, then points the name at that value. Pointing one name at a new value does not move any other name."
    ```
