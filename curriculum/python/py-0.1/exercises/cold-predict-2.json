@@ -12,9 +12,9 @@
     "What appears on the terminal?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "A print shows the value a name holds at that moment, not the value it ends with.",
-  "hint_approved": false,
+  "hint_approved": true,
   "predict": {
     "code": [
       "status = \"waiting\"",

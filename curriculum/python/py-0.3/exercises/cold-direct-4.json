@@ -13,9 +13,9 @@
     "What should you ask next?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Which question leaves you able to explain the change yourself?",
-  "hint_approved": false,
+  "hint_approved": true,
   "choice": {
     "options": [
       {

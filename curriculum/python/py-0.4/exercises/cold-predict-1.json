@@ -12,9 +12,9 @@
     "What appears on the terminal?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Only what comes from input() changes between runs. Text in quotes stays as it was written.",
-  "hint_approved": false,
+  "hint_approved": true,
   "predict": {
     "code": [
       "print(\"Terminal ready\")",
