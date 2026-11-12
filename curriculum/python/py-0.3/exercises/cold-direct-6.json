@@ -12,9 +12,9 @@
     "What settles it?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Is this a question about Python, or about the pantry's own rules?",
-  "hint_approved": false,
+  "hint_approved": true,
   "choice": {
     "options": [
       {
