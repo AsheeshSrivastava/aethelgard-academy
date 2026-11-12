@@ -40,13 +40,13 @@ official_ticket = ...
 # Classify each engineering task as either "DELEGATE_OK" or "MUST_OWN".
 # ==============================================================================
 
-# Task A: Writing initial syntax boilerplate or looking up standard library method names
+# Task A: Looking up a method name, or drafting boilerplate for a function you have already designed
 task_a_classification = ...  # Choose: "DELEGATE_OK" or "MUST_OWN"
 
 # Task B: Deciding system requirements, privacy guardrails, and data retention rules
 task_b_classification = ...  # Choose: "DELEGATE_OK" or "MUST_OWN"
 
-# Task C: Verifying that code actually passes tests on messy edge cases before deployment
+# Task C: Deciding which messy inputs the code must handle, and what the right result is for each
 task_c_classification = ...  # Choose: "DELEGATE_OK" or "MUST_OWN"
 
 

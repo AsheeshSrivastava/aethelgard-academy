@@ -115,7 +115,7 @@ Unit ids, titles, order and the invariant (each unit's concept line) come from `
 | :---: | :---: | :--- | :--- | :--- |
 | **1** | **PY-0.4** | Run a first program | **The Intake Counter Terminal:** A family arrives at the community pantry. The clerk runs a first script that asks for the family name with `input()`, prints a confirmation receipt with `print()`, and reads a first error message. | *A program is text that the Python interpreter reads and runs from top to bottom.* |
 | **2** | **PY-0.1** | Python as an executing program | **Tracing the Intake Life-Cycle:** Tracking, line by line in an execution table, how a family's details are bound to names and change from top to bottom. | *Python runs statements in order, and each statement can change the program's state.* |
-| **3** | **PY-0.3** | Tool help versus your own reasoning | **The Allotment Automation Boundary:** An AI assistant suggests code to work out ration allowances. The clerk checks it against the pantry's allowance rule and names the assumptions nobody verified. | *A tool can write code, but the developer still owns the intent, the checking and the decision.* |
+| **3** | **PY-0.3** | Tool help versus your own reasoning | **The Allotment Automation Boundary:** An AI assistant suggests code to work out ration allowances. The clerk checks it against the pantry's allowance rule and names the assumptions nobody verified. | *A tool can help with code, but the developer still owns the intent, the checking and the decision.* |
 
 ---
 
