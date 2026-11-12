@@ -41,8 +41,8 @@ To guarantee that the platform remains modular, decoupled, and testable offline 
         │                   │                   │
 ┌───────▼────────┐  ┌───────▼────────┐  ┌───────▼────────┐
 │  adapters/db/  │  │  adapters/ai/  │  │adapters/runner/│
-│  SQLite Event  │  │ Socratic Gate  │  │ Ephemeral      │
-│     Ledger     │  │  & Hybrid RAG  │  │ Docker Sandbox │
+│  SQLite Event  │  │ Socratic Gate  │  │ Subprocess run │
+│     Ledger     │  │  & BM25 RAG    │  │ (Docker: seam) │
 └────────────────┘  └────────────────┘  └────────────────┘
 ```
 
@@ -64,7 +64,7 @@ To guarantee that the platform remains modular, decoupled, and testable offline 
 | **`frontend/`** | **User Interface** | Modern React + TypeScript + Vite learner workspace featuring the code editor, execution terminal, and collapsible AXIS AI panel. |
 | **`curriculum/`** | **Course Artifacts** | Concrete lesson packages, stage builds, and deterministic exercise seeds used by the platform to evaluate learner capability. |
 | **`reference/`** | **Curriculum Roadmaps** | Pinned roadmap specifications (Python, AI Engineering, Backend) defining the sequential capability terrain. |
-| **`tests/`** | **Automated Suite** | Over 970 unit, integration, and chaos falsification tests proving system contracts, sandboxing boundaries, and state transitions. |
+| **`tests/`** | **Automated Suite** | Over 1,400 unit, integration, and chaos falsification tests proving system contracts, runner boundaries, and state transitions. They run on made-up exercise items (`tests/fixtures`), never the private answers. |
 | **`docs/`** | **Architecture & ADRs** | Formal Architecture Decision Records (ADRs) and technical specifications recording every trade-off made during development. |
 | **`scripts/`** | **Tooling & Data** | Automation utilities, including `fetch_upstream.py` to reproducibly download reference documentation. |
 
@@ -75,7 +75,7 @@ To guarantee that the platform remains modular, decoupled, and testable offline 
 ### 4.1. The Append-Only Evidence Ledger (`src/lms/adapters/db/`)
 
 - **The Problem:** Naive learning platforms store progress as a mutable flag (`UPDATE users SET completed = true`). Overwriting state destroys historical context: you cannot know whether a learner succeeded on attempt 1 or attempt 10, or whether they had answers spoon-fed to them by an AI.
-- **The Solution:** We adopt an **Append-Only Event Ledger (Event Sourcing)**. Every interaction—test attempt, hint request, Cold Check, or code execution—is appended as an immutable `EvidenceEvent`.
+- **The Solution:** We adopt an **Append-Only Event Ledger (Event Sourcing)**. Every graded attempt (practice item, concept check, Cold Check, stage build) is appended as an immutable evidence entry. AXIS help is logged separately and changes how the attempt is credited; other learner actions go to an interaction log (ADR-0022). Ungraded playground runs write no evidence. A reset adds a marker and never deletes entries.
 - **Capability Estimation:** The proficiency engine (`src/lms/core/proficiency.py`) analyzes the entire event trail to estimate real-world competence across the 27-skill framework.
 
 ### 4.2. Socratic Boundary Guardrail & Assistance Accounting (`src/lms/adapters/ai/`)
@@ -88,14 +88,15 @@ To guarantee that the platform remains modular, decoupled, and testable offline 
 
 - **Why Vector Search Alone Fails:** Dense vector embeddings excel at semantic similarity, synonyms, and natural language questions, but frequently fail on exact syntax matches, rare function names, CLI flags, and error codes.
 - **BM25 Lexical Index:** Inverted index with 2x weighted heading paths to ensure exact-token and keyword recall.
-- **Reciprocal Rank Fusion (RRF) & Cross-Encoder Reranking:** Merges dense candidates and lexical BM25 candidates ($k=60$) without arbitrary weighting, then passes candidates through `bge-reranker-v2-m3` to guarantee that only high-precision, exact-slice documentation reaches the LLM context.
+- **Reciprocal Rank Fusion (RRF) & Reranking (seams):** The retriever can merge dense and BM25 candidates ($k=60$) and pass them to a cross-encoder such as `bge-reranker-v2-m3`, but no embedding model or reranker is wired yet. Without them it falls back to token overlap, and saved indexes do not store vectors. Ranking today is lexical.
 - **Provenance Firewall:** Enforces exact byte-slice verification (`verify_passage(source, passage) == True`) against authoritative documentation.
+- **What AXIS retrieves from today:** the upstream-docs index when it has been built locally (`data/index`, not in git), under ADR-0003's temporary exception. Curriculum concept notes are not yet passed to AXIS, and a fresh clone has no index, so a live model gets no grounding passages there. Moving AXIS onto the curriculum is planned (work sequence 2d.7, audit step A7).
 
 ### 4.4. Containerized Code Execution Sandbox (`src/lms/adapters/runner/`)
 
 - **The Danger:** Executing untrusted learner code directly on the host operating system risks server compromise, malicious file deletion, or socket abuse.
-- **Isolation Boundary:** `DockerRunner` encapsulates execution in ephemeral, rootless Docker containers configured with `--network none`, restricted memory (`256MB`), and CPU throttling (`0.5`).
-- **Resilient Fallback:** If Docker is unavailable in local developer environments, the system falls back gracefully to a restricted `SubprocessRunner` with timeout and process-tree termination safeguards.
+- **Today:** `SubprocessRunner` runs learner code in a temporary folder with a timeout, and strips API keys and `.env` secrets from the child's environment. It is not an isolation boundary, so the app is for single-learner local use.
+- **Seam, not wired yet:** `DockerRunner` builds an ephemeral container command with `--network none`, `128m` memory, `1.0` CPU and a 64-process limit, but its `execute()` still calls the subprocess runner. Wiring it in (and running as a non-root user) is planned before anyone else uses the platform (work sequence 6.1, audit step A6).
 
 ---
 
@@ -110,7 +111,18 @@ Engineering maturity means acknowledging both what is built today and what is re
 3. **Structured Module Logging:** Standard logging across API routes, curriculum ingestion, and runner processes.
 4. **Zero-Key Offline Development:** Complete test suite and mock companions run offline with `MOCK_AI=true`.
 
+### Built Today vs Pluggable Seams
+
+| Area | Built and tested today | Seam ready, not wired yet |
+| :--- | :--- | :--- |
+| Persistence | SQLite append-only ledger | PostgreSQL behind `ILearnerRepository` |
+| Code execution | Subprocess runner (timeout, secrets stripped) | Docker sandbox behind `ICodeRunner` |
+| Retrieval | BM25 + byte-slice verification + RRF code | Dense embeddings, cross-encoder reranker |
+| AXIS grounding | Upstream-docs index if built locally | Curriculum concept notes (ADR-0003) |
+
 ### Planned Hardening (Production Roadmap):
+
+0. **Audit fixes in progress (2026-11):** close SQLite connections and enable WAL with a busy timeout; batch the course-map queries; cap concurrent code runs; stop building the app at import time; wire the Docker sandbox; ground AXIS in the curriculum.
 
 1. **Distributed Tracing & OpenTelemetry:** Adding correlation IDs across HTTP requests, sandbox execution, and LLM generation to monitor exact latency breakdowns (BM25 vs Vector search vs Reranker vs Model generation).
 2. **Semantic Response Caching:** Implementing a semantic cache layer for recurring student conceptual queries to reduce local/cloud LLM inference load by 25–35%.
