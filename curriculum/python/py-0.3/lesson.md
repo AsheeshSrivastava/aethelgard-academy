@@ -12,16 +12,38 @@ Here is the operational reality of AI tools:
 - **What AI is great at:** Emitting syntax boilerplate in seconds, translating common idioms, and looking up standard library patterns.
 - **Where AI fails:** AI has no real-world accountability. It doesn't know your users, it doesn't face compliance audits, and it routinely makes invisible, dangerous assumptions about data cleanliness.
 
-At our Intake Desk, an intern asked an AI tool: *"Write code to generate a ticket ID for an applicant."*
-The AI emitted:
+At the intake desk, an intern asked an AI tool: *"Write code to make a ticket ID for an applicant."*
+The tool gave back:
 ```python
-f"INTAKE-2026-{raw_name.upper()}"
+ticket = f"INTAKE-2026-{raw_name.upper()}"
 ```
-The code ran with zero syntax errors. But when real families arrived and entered `"   amara okafor   "`, the output was:
+It ran with no errors. Then a visitor typed `"   amara okafor   "`, and the ticket came out as:
 ```text
 INTAKE-2026-   AMARA OKAFOR   
 ```
-The desk's barcode scanner rejected every ticket because of the embedded spaces! The AI assumed clean data; operational reality gave it messy input.
+The desk's barcode scanner rejected it because of the spaces. The tool assumed clean typing. Real people do not type cleanly.
+
+### The first fix is not the last
+
+The obvious fix is to strip the spaces first:
+```python
+ticket = f"INTAKE-2026-{raw_name.strip().upper()}"
+```
+```text
+INTAKE-2026-AMARA OKAFOR
+```
+Run it once and it looks fixed. Check it, and three problems remain:
+- **A space is still inside the ID,** between `AMARA` and `OKAFOR`. The scanner rejects that too.
+- **Two visitors called Amara Okafor get the same ticket.** An ID must be unique.
+- **The ticket puts a person's name on a barcode** that anyone at the desk can read. That is personal data where it is not needed.
+
+None of these is an error message, so nothing warns you. You find them only by asking what the code assumes.
+
+The better design gives each visitor a queue number, as PY-0.4 does with `TICKET-7`:
+```python
+ticket = f"INTAKE-2026-{queue_number}"
+```
+A queue number is unique, has no spaces, and says nothing about the person. The real fix was not a better method call. It was a better decision about what an ID should be, and that decision is yours, not the tool's.
 
 ---
 
@@ -68,7 +90,7 @@ When an AI chatbot and official documentation disagree:
 2. **Open in Zed or VS Code:**
    Open `workspace/PY-0.3/solution.py`.
 3. **Fix the AI Flaw and Fill in the Matrices:**
-   - Strip whitespace and uppercase the name in Part 1.
+   - Clean the queue number and build the ticket in Part 1.
    - Fill in `"DELEGATE_OK"` or `"MUST_OWN"` in Part 2.
    - Identify `"OFFICIAL_DOCS_AND_TESTS"` in Part 3.
 4. **Verify Locally:**
