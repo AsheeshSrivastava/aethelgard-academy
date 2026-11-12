@@ -19,19 +19,19 @@
     "options": [
       {
         "key": "A",
-        "text": "Choosing variable names."
+        "text": "Choosing clear names for the variables in the script."
       },
       {
         "key": "B",
-        "text": "Deciding the rule for how many parcels a family of each size receives."
+        "text": "Deciding how many parcels each family size receives."
       },
       {
         "key": "C",
-        "text": "Formatting the printed slip."
+        "text": "Laying out the printed slip so it is easy to read."
       },
       {
         "key": "D",
-        "text": "Writing the first draft of the input lines."
+        "text": "Writing a first draft of the lines that read input."
       }
     ]
   }

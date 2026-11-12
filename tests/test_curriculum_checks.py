@@ -190,3 +190,51 @@ def test_real_roadmaps_add_no_new_findings(code, limit):
         catalog = load_all_roadmaps(Path("reference"))
 
     assert len([f for f in catalog.findings if f.code == code]) <= limit
+
+
+# --- Fix 8 (2026-11-12): a choice key that is the longest option can be picked without understanding ---
+
+
+def _choice_seed(n: int, key: str, texts: dict):
+    from lms.core.exercises import ExerciseSeed
+
+    return ExerciseSeed(
+        seed_id=f"PY-1.1/direct-{n}", unit_id="PY-1.1", activity=ActivityType.DIRECT, skill_id="CO-1",
+        level=ProficiencyLevel.UNDERSTAND, prompt_markdown=["Which?"], cold_check_eligible=False,
+        curator_approved=True, item_type="choice",
+        body={"options": [{"key": k, "text": t} for k, t in texts.items()], "answer_key": key},
+    )
+
+
+SHORT = {"A": "Ask the team.", "B": "Run it twice.", "C": "Read the docs."}
+
+
+def _codes(seeds):
+    found = check_curriculum([unit(methods=[ActivityType.DIRECT])], seeds={"PY-1.1": seeds})
+    return [f for f in found if f.code.startswith("choice-key")]
+
+
+def test_a_key_far_longer_than_every_other_option_is_flagged():
+    seed = _choice_seed(1, "D", {**SHORT, "D": "Run the code on two other inputs and compare with the docs first."})
+
+    found = _codes([seed])
+
+    assert [(f.code, f.severity) for f in found] == [("choice-key-longest", Severity.WARNING)]
+    assert "PY-1.1/direct-1" in found[0].message
+
+
+def test_a_key_about_as_long_as_the_others_is_fine():
+    seed = _choice_seed(1, "B", SHORT)
+
+    assert _codes([seed]) == []
+
+
+def test_a_unit_whose_keys_are_usually_the_longest_is_flagged_once():
+    seeds = [
+        _choice_seed(n, "D", {**SHORT, "D": "Read the docs again."}) for n in range(1, 4)
+    ]
+
+    found = _codes(seeds)
+
+    assert [f.code for f in found] == ["choice-key-often-longest"]
+    assert "3 of 3" in found[0].message

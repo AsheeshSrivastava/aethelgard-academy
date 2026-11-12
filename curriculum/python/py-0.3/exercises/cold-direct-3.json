@@ -22,19 +22,19 @@
     "options": [
       {
         "key": "A",
-        "text": "Ask the tool whether it is sure."
+        "text": "Ask the tool to explain how `.strip()` works, step by step."
       },
       {
         "key": "B",
-        "text": "Run the line, and read the official documentation for `str.strip`."
+        "text": "Run the line, and check the docs for `str.strip`."
       },
       {
         "key": "C",
-        "text": "Go with the colleague, because they are a person."
+        "text": "Search a forum for an answer with many upvotes."
       },
       {
         "key": "D",
-        "text": "Vote among the team."
+        "text": "Ask a second AI tool and go with the majority."
       }
     ]
   }

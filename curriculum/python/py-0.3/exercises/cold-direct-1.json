@@ -19,19 +19,19 @@
     "options": [
       {
         "key": "A",
-        "text": "Keep it, because it runs."
+        "text": "Keep it, and add a comment saying the AI fixed it."
       },
       {
         "key": "B",
-        "text": "Ask the tool to explain why the old code failed and what the change does, then check you can say it yourself."
+        "text": "Ask the tool why the old code failed, then explain the fix back yourself."
       },
       {
         "key": "C",
-        "text": "Ask the tool to fix any other problems as well."
+        "text": "Ask the tool to add tests for its fix, then keep it if they pass."
       },
       {
         "key": "D",
-        "text": "Paste the same code into a different AI tool."
+        "text": "Run it with two other names, and keep it if the output looks right."
       }
     ]
   }

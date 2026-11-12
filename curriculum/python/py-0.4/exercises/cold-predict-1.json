@@ -5,41 +5,40 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
-  "topic": "comments",
+  "topic": "running the same program with different input",
   "prompt_markdown": [
-    "A visitor types `north-01` at the terminal.",
+    "This script ran earlier with `north-01`. Now a visitor types `east-04`.",
     "",
     "What appears on the terminal?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": true,
-  "hint": "Lines starting with # never run; trace only the lines Python executes.",
-  "hint_approved": true,
+  "curator_approved": false,
+  "hint": "Only what comes from input() changes between runs. Text in quotes stays as it was written.",
+  "hint_approved": false,
   "predict": {
     "code": [
       "print(\"Terminal ready\")",
       "zone = input()",
-      "# print(\"Zone checked\")",
       "print(\"Zone:\", zone)",
-      "print(\"Next visitor\")"
+      "print(\"Last zone: north-01\")"
     ],
-    "stdin": "north-01",
+    "stdin": "east-04",
     "options": [
       {
         "key": "A",
-        "text": "Terminal ready\nZone checked\nZone: north-01\nNext visitor"
+        "text": "Terminal ready\nZone: east-04\nLast zone: east-04"
       },
       {
         "key": "B",
-        "text": "Terminal ready\nZone: zone\nNext visitor"
+        "text": "Terminal ready\nZone: north-01\nLast zone: north-01"
       },
       {
         "key": "C",
-        "text": "Terminal ready\nZone: north-01\nNext visitor"
+        "text": "Terminal ready\nZone: east-04\nLast zone: north-01"
       },
       {
         "key": "D",
-        "text": "Terminal ready\nNext visitor\nZone: north-01"
+        "text": "Terminal ready\nZone: zone\nLast zone: north-01"
       }
     ]
   }

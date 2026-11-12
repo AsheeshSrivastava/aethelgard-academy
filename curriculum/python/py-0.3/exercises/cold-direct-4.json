@@ -5,33 +5,34 @@
   "activity": "Direct",
   "skill_id": "DE-2",
   "level": "Understand",
-  "topic": "documentation lookup",
+  "topic": "code comprehension",
   "prompt_markdown": [
-    "An AI tool wrote the pantry's ticket script. It runs, but one line uses a function you have never seen.",
+    "You asked an AI tool why your slip prints `Name: meera` in lower case.",
+    "It replied with a corrected script and no explanation.",
     "",
-    "What is the best next step?"
+    "What should you ask next?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": true,
-  "hint": "An unfamiliar line needs an explanation you can check, not a guess or a delete.",
-  "hint_approved": true,
+  "curator_approved": false,
+  "hint": "Which question leaves you able to explain the change yourself?",
+  "hint_approved": false,
   "choice": {
     "options": [
       {
         "key": "A",
-        "text": "Keep it, because the script runs."
+        "text": "Is this new version definitely correct now?"
       },
       {
         "key": "B",
-        "text": "Delete the line and hope nothing breaks."
+        "text": "Can you also make the script shorter and tidier?"
       },
       {
         "key": "C",
-        "text": "Ask the tool what that line does and why it is needed, then check its answer in the official documentation."
+        "text": "Which line changed, and why did the old one print lower case?"
       },
       {
         "key": "D",
-        "text": "Ask the tool to rewrite the whole script without explaining."
+        "text": "Thanks. Now add a check for empty names as well."
       }
     ]
   }
