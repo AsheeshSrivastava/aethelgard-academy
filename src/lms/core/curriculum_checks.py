@@ -69,6 +69,7 @@ def check_curriculum(
         if seeds is not None:
             findings.extend(_check_seeds(unit, seeds.get(unit.unit_id, ()), main_activities))
             findings.extend(_check_make_items(unit, seeds.get(unit.unit_id, ())))
+            findings.extend(_check_choice_keys(unit, seeds.get(unit.unit_id, ())))
     findings.extend(_check_stage_coverage(units))
     findings.extend(_check_level_steps(units))
     if seeds is not None:
@@ -261,6 +262,46 @@ def _check_seeds(
     for skill_id in goals:
         if skill_id not in covered:
             report(Severity.WARNING, "cold-check-seed-missing", f"{unit.unit_id}: {skill_id} has no approved Cold Check seed.", skill_id)
+    return findings
+
+
+CHOICE_ITEM_TYPES = ("choice", "explain_model_choice")
+KEY_FAR_LONGER = 1.5       # a key this many times the longest wrong option stands out on its own
+OFTEN_LONGEST_SHARE = 2 / 3  # more than this share of a unit's choice keys being longest is a pattern
+OFTEN_LONGEST_MIN_ITEMS = 3
+
+
+def _key_lengths(seed: ExerciseSeed) -> Optional[Tuple[int, int]]:
+    """(key text length, longest other option length) for a keyed choice item, else None."""
+    options = seed.body.get("options") or []
+    key = seed.body.get("answer_key")
+    texts = {o.get("key"): len(o.get("text", "").strip()) for o in options}
+    if key not in texts or len(texts) < 2:
+        return None
+    return texts[key], max(length for k, length in texts.items() if k != key)
+
+
+def _check_choice_keys(unit: Unit, seeds: Sequence[ExerciseSeed]) -> List[Finding]:
+    """Stage 0 round 2 fix 8: a key that is clearly the longest option can be picked without understanding.
+
+    Runs only on seeds whose private half is loaded, so in CI it checks the made-up items.
+    """
+    findings: List[Finding] = []
+
+    def report(code: str, message: str, skill_id: Optional[str] = None) -> None:
+        findings.append(Finding(
+            severity=Severity.WARNING, code=code, message=message, unit_id=unit.unit_id, skill_id=skill_id,
+            course_id=course_of(unit.unit_id), stage=unit.stage,
+        ))
+
+    keyed = [(seed, _key_lengths(seed)) for seed in seeds if seed.item_type in CHOICE_ITEM_TYPES]
+    keyed = [(seed, lengths) for seed, lengths in keyed if lengths]
+    for seed, (key_len, other_len) in keyed:
+        if key_len >= KEY_FAR_LONGER * other_len:
+            report("choice-key-longest", f"{seed.seed_id}: the key ({key_len} characters) is far longer than every other option (at most {other_len}).", seed.skill_id)
+    longest = sum(1 for _, (key_len, other_len) in keyed if key_len > other_len)
+    if len(keyed) >= OFTEN_LONGEST_MIN_ITEMS and longest > OFTEN_LONGEST_SHARE * len(keyed):
+        report("choice-key-often-longest", f"{unit.unit_id}: the key is the longest option in {longest} of {len(keyed)} choice items.")
     return findings
 
 

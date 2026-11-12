@@ -167,6 +167,14 @@ def test_cold_trace_ignores_trace_states():
     assert result.reveal.correct == ["B A"]
 
 
+def test_trace_treats_runs_of_spaces_inside_a_line_as_one():
+    """Fix 8 (2026-11-12): a doubled space is a typing slip, not a wrong model. Punctuation still counts."""
+    assert run("PY-0.1/cold-trace-1", trace_answers=["B   A"]).passed is True
+    assert run("PY-0.1/cold-trace-1", trace_answers=["B\tA"]).passed is True
+    assert run("PY-0.1/cold-trace-1", trace_answers=["B, A"]).passed is False
+    assert run("PY-0.1/cold-trace-1", trace_answers=["BA"]).passed is False
+
+
 def test_debug_locate_needs_both_line_and_type():
     seed_id = "PY-0.4/cold-debug-validate-1"
 

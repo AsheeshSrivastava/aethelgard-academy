@@ -100,6 +100,7 @@ def _grade_key(seed: ExerciseSeed, attempt: Attempt) -> GradeResult:
 
 
 def _cell_text(value: object) -> str:
+    """Text as compared: ends trimmed, and any run of spaces or tabs inside read as one space."""
     return " ".join(str(value).split())
 
 
@@ -113,8 +114,8 @@ def _learner_cell(value: str) -> str:
 
 def _grade_trace(seed: ExerciseSeed, attempt: Attempt) -> GradeResult:
     expected = seed.body["expected_output"]
-    given = [line.strip() for line in attempt.trace_answers or []]
-    output_ok = given == [line.strip() for line in expected]
+    given = [_cell_text(line) for line in attempt.trace_answers or []]
+    output_ok = given == [_cell_text(line) for line in expected]  # a doubled space is a slip (fix 8)
     rows = seed.body.get("line_states")
     if seed.cold_check_eligible or not rows:
         return _verdict(output_ok, Reveal(correct=expected))

@@ -19,7 +19,7 @@
     "options": [
       {
         "key": "A",
-        "text": "Deciding how long family records are kept."
+        "text": "Choosing how long the script keeps family records."
       },
       {
         "key": "B",
@@ -27,11 +27,11 @@
       },
       {
         "key": "C",
-        "text": "Deciding the script is ready to ship."
+        "text": "Signing off that the script is ready to go live."
       },
       {
         "key": "D",
-        "text": "Drafting the boilerplate for a function you have already designed."
+        "text": "Drafting boilerplate for a function you already designed."
       }
     ]
   }

@@ -17,19 +17,19 @@
     "options": [
       {
         "key": "A",
-        "text": "Write the rest of the intake script for me."
+        "text": "Write the rest of the intake script so I can compare."
       },
       {
         "key": "B",
-        "text": "Explain what each part does, and what would change if the order were swapped."
+        "text": "Explain each part, and what happens if I swap the order."
       },
       {
         "key": "C",
-        "text": "Is this code correct?"
+        "text": "Is there a shorter way to write this same line in Python?"
       },
       {
         "key": "D",
-        "text": "Rewrite it so it looks more professional."
+        "text": "Rewrite it in a way that a beginner could read more easily."
       }
     ]
   }

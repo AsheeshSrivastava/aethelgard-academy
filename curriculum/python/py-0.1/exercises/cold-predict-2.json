@@ -5,40 +5,41 @@
   "activity": "Predict",
   "skill_id": "CO-1",
   "level": "Understand",
-  "topic": "execution order",
+  "topic": "state changes",
   "prompt_markdown": [
     "The intake counter runs this program, and a visitor types `Meera Das`.",
     "",
     "What appears on the terminal?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": true,
-  "hint": "Run each line in order, and remember what print() with nothing inside does.",
-  "hint_approved": true,
+  "curator_approved": false,
+  "hint": "A print shows the value a name holds at that moment, not the value it ends with.",
+  "hint_approved": false,
   "predict": {
     "code": [
-      "print(\"Intake open\")",
-      "visitor = input()",
-      "print()",
-      "print(f\"Parcel for {visitor}\")"
+      "status = \"waiting\"",
+      "print(\"Status:\", status)",
+      "status = \"called\"",
+      "name = input()",
+      "print(name, status)"
     ],
     "stdin": "Meera Das",
     "options": [
       {
         "key": "A",
-        "text": "Intake open\nParcel for Meera Das"
+        "text": "Status: called\nMeera Das called"
       },
       {
         "key": "B",
-        "text": "Intake open\n\nParcel for Meera Das"
+        "text": "Status: waiting\nMeera Das waiting"
       },
       {
         "key": "C",
-        "text": "Intake open\n\nParcel for {visitor}"
+        "text": "Status: waiting\nMeera Das called"
       },
       {
         "key": "D",
-        "text": "Meera Das\nIntake open\n\nParcel for Meera Das"
+        "text": "Status: waiting\nname status"
       }
     ]
   }

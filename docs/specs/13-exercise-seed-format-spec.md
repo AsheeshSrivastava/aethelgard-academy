@@ -99,7 +99,7 @@ Fields marked **hidden** never leave the server before an attempt (SPEC-12 secti
 | `expected_output` | [str] | **Hidden.** Output lines |
 | `line_states` | [{line, state}] | **Hidden, optional.** Variable values after a line. Graded on practice items (ADR-0031) |
 
-**Pass:** the learner's output lines equal `expected_output`, after trimming each line.
+**Pass:** the learner's output lines equal `expected_output`, after trimming each line and reading any run of spaces or tabs inside a line as one space (2026-11-12, Stage 0 round 2 fix 8: `B  A` is a typing slip, not a wrong model). Punctuation still counts: `B, A` is not `B A`.
 
 **State table (ADR-0031, 2026-11-12).** A practice trace item (`cold_check_eligible: false`) with `line_states` also asks for the state table:
 - **Served:** `trace.state_rows: [{line, names}]`, one row per `line_states` entry, with the names sorted. Values are never served.

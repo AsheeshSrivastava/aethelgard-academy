@@ -17,19 +17,19 @@
     "options": [
       {
         "key": "A",
-        "text": "The answer given most confidently."
+        "text": "The answer AXIS gives when you ask a second time."
       },
       {
         "key": "B",
-        "text": "The most recent blog post."
+        "text": "The blog post with the most comments and upvotes."
       },
       {
         "key": "C",
-        "text": "Asking the AI tool again until it agrees."
+        "text": "A third source, so that two of the three sources agree."
       },
       {
         "key": "D",
-        "text": "The official documentation, and running the code yourself."
+        "text": "The official docs, and running the code yourself."
       }
     ]
   }
