@@ -1,32 +1,30 @@
 """Unit PY-0.3: Tool help versus your own reasoning
 
-Operational Context:
-At the intake desk, an intern used an AI coding assistant to generate a quick snippet
-for formatting ticket IDs. The AI output looked clean and ran without errors, but
-on the first morning of live intake, the desk's barcode scanner rejected every ticket!
-
-Why? The AI code assumed user input is always clean and forgot to strip whitespace:
+At the intake desk, an intern asked an AI tool for code to make ticket IDs:
     AI snippet: f"INTAKE-2026-{raw_name.upper()}"
-    Failing input: "   amara okafor   " -> produced "INTAKE-2026-   AMARA OKAFOR   "
+    Messy input: "   amara okafor   " -> "INTAKE-2026-   AMARA OKAFOR   "
 
-As the systems engineer, your job is not to avoid AI tools, but to OWN THE DECISION.
-Complete the steps below to fix the code and establish the developer ownership boundary.
+Stripping the spaces gives "INTAKE-2026-AMARA OKAFOR", which still has a space
+inside, is not unique, and prints a person's name on a barcode.
+The better design builds the ID from the visitor's queue number instead.
+
+Your job is not to avoid AI tools. It is to own the decision.
 """
 
 # ==============================================================================
-# PART 1: FIXING THE AI ASSUMPTION (BU-1 / VE-4)
+# PART 1: A BETTER TICKET ID
 # ==============================================================================
 
-# Step 1: Simulate the applicant typing their name with messy spaces
-raw_applicant_name = "   amara okafor   "
+# Step 1 (done for you): the kiosk gives the queue number as text, with stray spaces.
+raw_queue_number = "  7 "
 
-# Step 2: Fix the AI flaw. Strip the whitespace and make it uppercase.
-# Store the clean name in 'verified_name'.
+# Step 2: Remove the spaces at both ends.
+# Store the clean number in 'verified_number'.
 # (Your code here)
-verified_name = ...
+verified_number = ...
 
-# Step 3: Generate the official ticket ID formatted as:
-# "INTAKE-2026-<verified_name>"
+# Step 3: Build the official ticket ID formatted as:
+# "INTAKE-2026-<verified_number>"
 # Store the ticket in 'official_ticket'.
 # (Your code here)
 official_ticket = ...
