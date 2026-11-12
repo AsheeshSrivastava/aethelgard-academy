@@ -74,6 +74,7 @@ class Requirement(_Strict):
     id: str
     label: str
     unit_id: str
+    skills: List[str] = Field(default_factory=list)  # the proves skills this requirement earns (ADR-0030)
     check: RequirementCheck
 
 
@@ -482,4 +483,16 @@ def check_builds(builds: Mapping[Tuple[str, int], StageBuildSpec], units: Sequen
             unit = in_stage.get(proof.unit_id)
             if unit and proof.skill_id not in {s.skill_id for s in unit.target_skills}:
                 report("build-skill-unknown", f"{proof.skill_id} is not a target skill of {proof.unit_id}.")
+
+        # ADR-0030: a proved skill must be earned by a requirement, and a requirement may only earn proved skills.
+        proved = {p.skill_id for p in build.proves}
+        earned = {skill for r in build.requirements for skill in r.skills}
+        for skill_id in sorted(proved - earned):
+            report("build-proof-unearned", f"The build proves {skill_id}, but no requirement earns it.")
+        for requirement in build.requirements:
+            for skill_id in sorted(set(requirement.skills) - proved):
+                report(
+                    "build-skill-unproved",
+                    f"Requirement {requirement.id} names {skill_id}, which the build does not prove.",
+                )
     return findings

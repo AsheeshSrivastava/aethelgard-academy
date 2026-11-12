@@ -49,8 +49,11 @@ README = (
     "## What you need first\n\nYou need Python and this file on your computer.\n\n"
     "## How to run it\n\nRun `uv run checkin.py` in a terminal.\n\n"
     "## A sample run\n\n```\nName: meera\nService needed: food parcel\n\n--- CHECK-IN SLIP ---\n"
-    "Name: Meera\nService: Food Parcel\nPlease wait for the Food Parcel desk.\n```\n\n"
-    "## Limits\n\nIt serves one visitor per run and saves nothing.\n"
+    "Name: Meera\nService: Food Parcel\nPlease wait for the Food Parcel desk.\nYour ticket: 41\n"
+    "Desk counter now at: 42\n```\n\n"
+    "## Limits\n\nIt serves one visitor per run and saves nothing.\n\n"
+    "## The error I fixed\n\nPython showed a TypeError on the line that joins text and the ticket number. "
+    "I turned the number into text with str().\n"
 )
 PRACTICE = (FOLDER / "practice_checks.py").read_text(encoding="utf-8")
 
@@ -139,7 +142,7 @@ def test_the_stage_0_build_loads_clean_and_approved():
     assert "check_sample_run" in build.checks_source
 
 
-CHECKS = "def check_sample_run():\n    pass\n\ndef check_messy_input():\n    pass\n"
+CHECKS = "def check_sample_run():\n    pass\n\ndef check_messy_input():\n    pass\n\ndef check_ticket_counter():\n    pass\n"
 
 
 def copy_build(tmp_path, change=None, checks=CHECKS):
@@ -237,6 +240,10 @@ print("--- CHECK-IN SLIP ---")
 print(f"Name: {name}")
 print(f"Service: {service}")
 print(f"Please wait for the {service} desk.")
+ticket = 41
+print("Your ticket: " + str(ticket))
+ticket = ticket + 1
+print("Desk counter now at:", ticket)
 """
 
 
@@ -283,7 +290,8 @@ def set_field(name, value):
         (lambda d: d["requirements"][3]["check"].update(function="check_gone"), "check_gone"),
         (lambda d: d["requirements"][5]["check"].update(path="GONE.md"), "GONE.md"),
         (lambda d: d["requirements"][0]["check"].update(kind="vibes"), "kind"),
-        (lambda d: d["requirements"].__delitem__(slice(3, 5)), "behaviour"),
+        (lambda d: d.__setitem__("requirements", [r for r in d["requirements"] if r["check"]["kind"] != "behaviour"]),
+         "behaviour"),
     ],
 )
 def test_a_bad_build_is_reported_and_skipped(tmp_path, change, words):
@@ -341,7 +349,40 @@ def test_a_build_naming_a_unit_outside_its_stage_is_reported():
     data["proves"][0]["skill_id"] = "XX-9"
     found = check_builds({("python", 0): StageBuildSpec.model_validate(data)}, catalog.list_all_units())
 
-    assert {f.code for f in found} == {"build-unit-unknown", "build-skill-unknown"}
+    assert {"build-unit-unknown", "build-skill-unknown"} <= {f.code for f in found}
+
+
+def test_a_proved_skill_no_requirement_earns_is_reported():
+    """ADR-0030: every proves skill is named by at least one requirement."""
+    from lms.core.builds import check_builds
+
+    catalog = load_all_roadmaps(Path("reference"))
+    data = spec().model_dump()
+    proved = data["proves"][0]["skill_id"]
+    for requirement in data["requirements"]:
+        requirement["skills"] = [s for s in requirement.get("skills", []) if s != proved]
+    found = check_builds({("python", 0): StageBuildSpec.model_validate(data)}, catalog.list_all_units())
+
+    assert [(f.code, proved in f.message) for f in found] == [("build-proof-unearned", True)]
+
+
+def test_a_requirement_naming_a_skill_the_build_does_not_prove_is_reported():
+    """ADR-0030: a typo in skills cannot stand in for a proof."""
+    from lms.core.builds import check_builds
+
+    catalog = load_all_roadmaps(Path("reference"))
+    data = spec().model_dump()
+    data["requirements"][0]["skills"] = ["XX-9"]
+    found = check_builds({("python", 0): StageBuildSpec.model_validate(data)}, catalog.list_all_units())
+
+    assert "build-skill-unproved" in {f.code for f in found}
+
+
+def test_the_real_build_earns_every_skill_it_proves():
+    build = spec()
+    earned = {skill for r in build.requirements for skill in r.skills}
+
+    assert {p.skill_id for p in build.proves} <= earned
 
 
 def test_an_authored_build_counts_for_own():
@@ -702,7 +743,7 @@ def test_a_failed_submit_writes_nothing(client, repo):
     res = submit(client, note="short")
 
     assert res.json()["outcome"] == "failed"
-    assert {c["label"]: c["passed"] for c in res.json()["checks"]}["Ownership note written"] is False
+    assert {c["label"]: c["passed"] for c in res.json()["checks"]}["Ownership note: what you wrote, what a tool helped with, what you checked"] is False
     assert res.json().get("evidence_entry_id") is None
     assert repo.get_evidence_ledger(LOCAL_LEARNER_ID) == []
 

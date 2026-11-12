@@ -194,7 +194,7 @@ def test_the_build_loads_with_the_five_readme_headings_and_no_findings():
     build = builds[("python", 0)]
     starter = next(f for f in build.files if f.path == "README.md").starter
     headings = [line[3:] for line in starter if line.startswith("## ")]
-    assert headings == ["What it does", "What you need first", "How to run it", "A sample run", "Limits"]
+    assert headings == ["What it does", "What you need first", "How to run it", "A sample run", "Limits", "The error I fixed"]
     kinds = {r.id: r.check.kind for r in build.requirements}
     assert kinds["readme-sections"] == "markdown_sections"
     assert kinds["readme-run"] == "markdown_sections"

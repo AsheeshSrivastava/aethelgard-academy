@@ -6,7 +6,7 @@
   "kind": "script",
   "maturity": "P1",
   "status": "approved",
-  "brief_markdown": "The community food pantry has one intake desk and a long queue. People arrive tired, and they type in messy ways.\n\nWrite one script for the desk. It asks for a person's name, then the service they need, then prints a slip the desk officer can read aloud. Clean both answers first, so the slip looks right however they were typed. The last line sends them to the desk for the service they asked for.",
+  "brief_markdown": "The community food pantry has one intake desk and a long queue. People arrive tired, and they type in messy ways.\n\nWrite one script for the desk. It asks for a person's name, then the service they need, then prints a slip the desk officer can read aloud. Clean both answers first, so the slip looks right however they were typed. The slip's last line sends them to the desk for the service they asked for.\n\nThe desk also hands out ticket numbers. A volunteer started the ticket counter for you at the end of `checkin.py`, but it has one bug. Run the script, read the error, and fix the bug without removing the counter. Then add a section to your README, \"The error I fixed\", that names the error type, the line it pointed to, and what you changed.\n\nWhen you submit, write a short ownership note in three parts: what you wrote yourself, what a tool or AXIS helped with, and one thing you checked yourself and how.",
   "sample_run": [
     "Name:    meera ",
     "Service needed: food parcel",
@@ -15,6 +15,8 @@
     "Name: Meera",
     "Service: Food Parcel",
     "Please wait for the Food Parcel desk.",
+    "Your ticket: 41",
+    "Desk counter now at: 42",
     "",
     "Name: Joseph",
     "Service needed: shelter",
@@ -22,7 +24,9 @@
     "--- CHECK-IN SLIP ---",
     "Name: Joseph",
     "Service: Shelter",
-    "Please wait for the Shelter desk."
+    "Please wait for the Shelter desk.",
+    "Your ticket: 41",
+    "Desk counter now at: 42"
   ],
   "entry": "checkin.py",
   "files": [
@@ -31,7 +35,14 @@
       "starter": [
         "# Module 0 build: pantry intake check-in",
         "# Plan your steps as comments first, then write the code under each one.",
-        ""
+        "",
+        "",
+        "# Ticket counter, started by a volunteer. Keep it at the end of the script.",
+        "# It has one bug. Run the script, read the error, then fix it.",
+        "ticket = 41",
+        "print(\"Your ticket: \" + ticket)",
+        "ticket = ticket + 1",
+        "print(\"Desk counter now at:\", ticket)"
       ]
     },
     {
@@ -52,6 +63,9 @@
         "",
         "",
         "## Limits",
+        "",
+        "",
+        "## The error I fixed",
         ""
       ]
     }
@@ -88,6 +102,9 @@
       "id": "sample",
       "label": "Output matches the sample run (Verify)",
       "unit_id": "PY-0.4",
+      "skills": [
+        "CO-1"
+      ],
       "check": {
         "kind": "behaviour",
         "function": "check_sample_run"
@@ -97,6 +114,9 @@
       "id": "messy",
       "label": "Messy input is cleaned (Verify)",
       "unit_id": "PY-0.4",
+      "skills": [
+        "CO-1"
+      ],
       "check": {
         "kind": "behaviour",
         "function": "check_messy_input"
@@ -170,12 +190,50 @@
       }
     },
     {
+      "id": "counter-fixed",
+      "label": "Ticket counter bug fixed, and the counter still moves on (Verify)",
+      "unit_id": "PY-0.4",
+      "skills": [
+        "VE-4",
+        "CO-2"
+      ],
+      "check": {
+        "kind": "behaviour",
+        "function": "check_ticket_counter"
+      }
+    },
+    {
+      "id": "readme-error",
+      "label": "README names the error you fixed: its type, its line and your change",
+      "unit_id": "PY-0.4",
+      "skills": [
+        "VE-4"
+      ],
+      "check": {
+        "kind": "markdown_sections",
+        "path": "README.md",
+        "sections": [
+          {
+            "heading": "The error I fixed",
+            "min_words": 12,
+            "any": [
+              "TypeError"
+            ],
+            "hint": "Under 'The error I fixed', name the error type Python showed, the line it pointed to, and what you changed."
+          }
+        ]
+      }
+    },
+    {
       "id": "note",
-      "label": "Ownership note written",
+      "label": "Ownership note: what you wrote, what a tool helped with, what you checked",
       "unit_id": "PY-0.3",
+      "skills": [
+        "DE-3"
+      ],
       "check": {
         "kind": "ownership_note",
-        "min_chars": 20
+        "min_chars": 60
       }
     },
     {

@@ -32,15 +32,35 @@ def _compare(lines, expected):
     assert len(lines) == len(expected), f"The output should have {len(expected)} lines, but it has {len(lines)}."
 
 
+TICKET_LINES = ["Your ticket: 41", "Desk counter now at: 42"]
+
+
 def check_sample_run():
     _compare(
         _slip("Meera", "food parcel"),
-        ["", "--- CHECK-IN SLIP ---", "Name: Meera", "Service: Food Parcel", "Please wait for the Food Parcel desk."],
+        ["", "--- CHECK-IN SLIP ---", "Name: Meera", "Service: Food Parcel", "Please wait for the Food Parcel desk."]
+        + TICKET_LINES,
     )
 
 
 def check_messy_input():
     _compare(
         _slip("   farah KHAN ", "  baby supplies "),
-        ["", "--- CHECK-IN SLIP ---", "Name: Farah Khan", "Service: Baby Supplies", "Please wait for the Baby Supplies desk."],
+        ["", "--- CHECK-IN SLIP ---", "Name: Farah Khan", "Service: Baby Supplies", "Please wait for the Baby Supplies desk."]
+        + TICKET_LINES,
+    )
+
+
+def check_ticket_counter():
+    # Code only: a counter line inside a comment does not count.
+    source = "\n".join(line.split("#")[0] for line in Path("solution.py").read_text(encoding="utf-8").splitlines())
+    assert "ticket = ticket + 1" in source or "ticket += 1" in source, (
+        "Keep the counter line that adds 1 to ticket. Fix the bug; do not print the numbers by hand."
+    )
+    try:
+        lines = _slip("Meera", "food parcel")
+    except TypeError:
+        raise AssertionError("The script stops with a TypeError. Read the error's last line and the line it points to.")
+    assert lines[-2:] == TICKET_LINES, (
+        f"The last two lines should be '{TICKET_LINES[0]}' and '{TICKET_LINES[1]}', but they were {lines[-2:]}."
     )
