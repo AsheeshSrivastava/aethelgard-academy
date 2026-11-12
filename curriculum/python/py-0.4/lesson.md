@@ -4,10 +4,7 @@
 
 At the PantryFlow intake desk, people type their name as `" meera "` or `"MEERA"`. The desk officer needs a clean slip to read aloud. By the end of this lesson you can turn messy typing into that slip.
 
-In operations, logistics, and policy systems, every process follows a disciplined communication cycle:
-1. **Ingress (Intake):** External actors provide raw data across the system boundary.
-2. **Transformation (Processing):** The system validates, normalizes, and structures the state.
-3. **Egress (Output):** The system delivers a deterministic, confirmed response.
+Most work you already know follows the same three steps: something comes in, you tidy it, and something goes out. A first program does the same.
 
 ---
 
@@ -15,9 +12,9 @@ In operations, logistics, and policy systems, every process follows a discipline
 
 Python reads your file top to bottom. Most small programs follow the same three-step shape, and three built-in tools cover each step:
 
-- `input()`: Pauses program execution and reads text entered across the system boundary.
-- String formatting: Packaging clean, normalized records (such as f-strings: `f"REGISTRATION: {name}"`).
-- `print()`: Transmits the packaged message to the standard output stream (`stdout`).
+- `input()`: pauses the program and reads the text someone types.
+- An f-string such as `f"Name: {name}"`: puts a value into a line of text.
+- `print()`: shows the result on the screen.
 
 ```steps
 caption: Picture to remember: a desk. Paper comes in, you tidy it, a slip goes out.
@@ -78,6 +75,47 @@ A: `code.upper()`
 B: `code.strip().upper()`
 C: `code.title()`
 ```
+
+---
+
+## When Python stops: reading an error
+
+Sooner or later a program stops with an error message. It is not a telling-off. It is Python saying where it got stuck and why.
+
+Here is a two-line script with a typo in the second line:
+
+```python
+name = input("Name: ")
+print("Welcome,", nmae)
+```
+
+Python runs line 1, waits for a name, then stops and shows this:
+
+```text
+Traceback (most recent call last):
+  File "welcome.py", line 2, in <module>
+    print("Welcome,", nmae)
+                      ^^^^
+NameError: name 'nmae' is not defined
+```
+
+Read it from the bottom up:
+
+1. **The last line gives the type and the message.** `NameError` is the type. `name 'nmae' is not defined` says what went wrong.
+2. **Above it is the line Python was running.** The `^^^^` marks the part it could not handle.
+3. **Above that is the line number.** `line 2` tells you where to look.
+
+Python stops at the first line it cannot run. Every line before it has already run, which is why `Name:` still appeared.
+
+Three error types you will meet first:
+
+| Type | What it means | A line that causes it |
+| --- | --- | --- |
+| `NameError` | Python does not know this name. It is misspelled, or used before the line that gives it a value. | `print(nmae)` |
+| `TypeError` | An operation got the wrong kind of value, such as text joined to a number. Remember: `input()` always gives text. | `"TICKET-" + 7` |
+| `SyntaxError` | The line is not written as Python expects. Python checks the whole file first, so no line runs at all. | `print("Zone:" zone)` (missing comma) |
+
+When you meet an error, say three things before you change any code: the type, the line, and what the message means in plain words.
 
 ---
 
