@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-9",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-4",
+  "level": "Understand",
+  "topic": "documentation lookup",
+  "prompt_markdown": [
+    "A tool says `input()` gives back a number when someone types `7`. Your colleague says it gives text.",
+    "",
+    "What settles it?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Ask the tool to explain again, and keep the version that sounds more sure."
+      },
+      {
+        "key": "B",
+        "text": "Run a line that shows the type, and read the `input()` entry in the docs."
+      },
+      {
+        "key": "C",
+        "text": "Go with your colleague, who has used Python for longer."
+      },
+      {
+        "key": "D",
+        "text": "Search for a forum answer and keep whichever has more votes."
+      }
+    ]
+  }
+}

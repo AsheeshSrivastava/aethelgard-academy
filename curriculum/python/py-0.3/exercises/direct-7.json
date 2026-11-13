@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-7",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-2",
+  "level": "Understand",
+  "topic": "debugging",
+  "prompt_markdown": [
+    "Your script prints `Total: 0` and you cannot see why. You ask a tool for help.",
+    "",
+    "Which request keeps the reasoning with you?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "Fix this script so it prints the right total."
+      },
+      {
+        "key": "B",
+        "text": "Explain what each line holds when I type 3 and 4."
+      },
+      {
+        "key": "C",
+        "text": "Rewrite the loop so I do not have to think about it."
+      },
+      {
+        "key": "D",
+        "text": "Find every bug in my script and correct them all."
+      }
+    ]
+  }
+}
