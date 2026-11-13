@@ -97,7 +97,24 @@ print(lead, backup)
 Lina Ravi
 ```
 
-Line 2 points `backup` at the value `lead` points at, which is `"Ravi"`. Line 3 moves only `lead`. `backup` still points at `"Ravi"`.
+```steps
+caption: Picture to remember: sticky notes. A name is a note stuck on a value, not a box that holds it.
+
+title: Stick a note
+code: lead = "Ravi"
+result: lead -> "Ravi"
+note: The note lead is stuck on the value "Ravi".
+
+title: Add a second note
+code: backup = lead
+result: backup -> "Ravi"
+note: backup goes on the same value that lead points at.
+
+title: Move one note
+code: lead = "Lina"
+result: lead -> "Lina"
+note: Only lead moves. backup still points at "Ravi".
+```
 
 ---
 
