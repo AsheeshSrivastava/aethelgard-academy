@@ -7,7 +7,7 @@
   "level": "Understand",
   "topic": "debugging",
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "prompt_markdown": [
     "Made-up test item PY-0.3/direct-7. It is not real course content."
   ],

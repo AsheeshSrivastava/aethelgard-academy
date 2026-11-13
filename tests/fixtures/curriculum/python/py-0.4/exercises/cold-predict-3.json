@@ -7,8 +7,8 @@
   "level": "Understand",
   "topic": "`print()`",
   "cold_check_eligible": true,
-  "curator_approved": false,
-  "hint_approved": false,
+  "curator_approved": true,
+  "hint_approved": true,
   "prompt_markdown": [
     "Made-up test item PY-0.4/cold-predict-3. It is not real course content."
   ],
