@@ -57,6 +57,8 @@ A stage build is open when the review is `passed` or `unavailable`. This replace
 
 `unavailable` opens the build because missing content must never lock a learner out. The curriculum check `stage-review-short` warns when a stage's approved items, after its unit rounds, leave a unit with no spare item. Stages where the warning stands have no stage review, by design, until seeds are written.
 
+**Spare items and retries (note, 2026-11-13; follows ADR-0032 and PR #13).** The warning counts spare items as approved Cold Check items minus the size of the unit round. That count holds for a learner who passes every unit round on the first try. A failed round swaps each failed item for another item of the same skill (section 2), and the review takes only items the learner has not seen (section 3.1). So each swap uses up one spare item. A unit with exactly one spare item can lose it to a single retry, and the review then has nothing unseen to take from that unit. The review runs on the units that still have unseen items. If no unit has any, the state is `unavailable` and the build opens, as above. Nothing locks the learner out. A margin of two or more spare items per unit keeps the review whole after a retry; the warning stays at zero, so this is guidance for the curator, not a rule.
+
 `BuildSummary` gains `review_state`. `locked` is true unless the build is open.
 
 ## 4. Rechecks
