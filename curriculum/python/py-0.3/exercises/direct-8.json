@@ -12,7 +12,7 @@
     "Who decides that a repeated number is wrong?"
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "options": [
       {
