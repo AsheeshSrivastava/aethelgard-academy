@@ -23,7 +23,9 @@ INTAKE-2026-   AMARA OKAFOR
 ```
 The desk's barcode scanner rejected it because of the spaces. The tool assumed clean typing. Real people do not type cleanly.
 
-### The first fix is not the last
+---
+
+## 2. Check, don't trust
 
 The obvious fix is to strip the spaces first:
 ```python
@@ -47,7 +49,48 @@ A queue number is unique, has no spaces, and says nothing about the person. The 
 
 ---
 
-## 2. The Three Always-On Habits
+## 3. Read before you run
+
+A tool can hand you code that runs. Only you can say what it does on real input. So read it, predict it, then test your prediction.
+
+```steps
+caption: Picture to remember: a proofreader. Read it, guess, then run it and compare.
+
+title: Read
+code: x = "5"
+result: x holds "5"
+note: Say what each line holds.
+
+title: Guess
+code: print(x + x)
+result: 55 or 10?
+note: Write your guess before you run anything.
+
+title: Compare
+code: print(x + x)
+result: 55
+note: Text joins, it does not add. If your guess was wrong, find the line where your picture slipped.
+```
+
+When a tool's code confuses you, ask it to **explain**, not to rewrite:
+
+| Ask the tool this | Not this |
+| --- | --- |
+| "Explain what line 4 does." | "Rewrite this so it works." |
+| "What does `.strip()` return?" | "Fix my script." |
+| "Why does `"5" + "5"` give `"55"`?" | "Make the error go away." |
+
+```quickcheck
+id: py-0.3-explain-not-fix
+question: A tool's script gives the wrong total and you do not see why. Which request is best?
+A: "Fix my script. The total is wrong."
+B: "Explain each line, using my input `12`."
+C: "Rewrite the whole script so it works."
+```
+
+---
+
+## 4. The Three Always-On Habits
 
 Use these three habits every time you work with an AI tool:
 
@@ -65,7 +108,7 @@ Use these three habits every time you work with an AI tool:
 
 ---
 
-## 3. The Ownership Matrix (DE-3)
+## 5. The Ownership Matrix (DE-3)
 
 | Task | Category | Why |
 | :--- | :--- | :--- |
@@ -75,15 +118,31 @@ Use these three habits every time you work with an AI tool:
 
 ---
 
-## 4. The Source of Truth (DE-4)
+## 6. Where tools stop
+
+Your editor and your tools help, and each has a limit.
+
+| Help | What it catches | What it does not catch |
+| --- | --- | --- |
+| Editor underlines | typos, names Python does not know | a wrong answer, such as `-` where you meant `+` |
+| Autocomplete | method names and syntax | whether the logic fits your problem |
+| A tool when you debug | an explanation of an error | which change fixed it, unless you change one thing at a time and test |
+
+When something breaks, read the error yourself first. Change one thing. Run it again. If you change five things at once, you will not know which one mattered.
+
+---
+
+## 7. The Source of Truth (DE-4)
 
 When an AI chatbot and the official documentation disagree:
 - **The chatbot** predicts likely text. It can describe a method that does not exist, and sound sure about it.
 - **Running the code and reading the official Python documentation** settle the question.
 
+**Try it.** Open the [`print()` entry](https://docs.python.org/3/library/functions.html#print) in the docs. Find the default for `sep`, then run `print("a", "b")` and see that the docs and the run agree.
+
 ---
 
-## 5. Local Workflow Instructions
+## 8. Local Workflow Instructions
 
 1. **Pull the Exercise:**
    ```bash

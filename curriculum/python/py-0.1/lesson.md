@@ -12,6 +12,33 @@ When a script gives the wrong answer, the fix starts with one question: what did
 
 ---
 
+## How Python runs your file
+
+The Python **interpreter** is the program that reads your file and carries out what it says. It works in two passes.
+
+```steps
+caption: Picture to remember: a reader with a checklist. It checks first, then does.
+
+title: Read the whole file
+code: python demo.py
+result: grammar check
+note: A SyntaxError stops everything here. Not one line has run.
+
+title: Run line 1
+code: price = 50
+result: price -> 50
+note: One statement at a time, top to bottom.
+
+title: Run the next line
+code: print(price)
+result: 50
+note: An error on line 10 only happens after lines 1 to 9 have run.
+```
+
+> **Key idea:** Python checks the whole file for grammar first, then runs one line at a time.
+
+---
+
 ## One statement at a time
 
 A Python file is a list of statements. Python runs them one at a time, from top to bottom. A line cannot use something that a later line creates. Lines that start with `#` are [[comments-in-python|comments]], which Python skips. See [[sequential-execution]].
@@ -41,7 +68,13 @@ A **statement** is a whole instruction that Python carries out, such as `queue =
 
 Most statements hold expressions. Python works out the expressions first, then does what the statement says. See [[expressions]].
 
-Every value has a kind. `"waiting"` is text (`str`). `0` is a whole number (`int`). The kind decides what you can do with it: you can add 1 to `0`, but not to `"0"`.
+Python keeps each value in memory as an **object**. An object has a value and a kind. The kind decides what you can do with it: you can add 1 to `0`, but not to `"0"`.
+
+| Value | Kind | What you can do |
+| --- | --- | --- |
+| `42` | `int` (whole number) | add, subtract, multiply |
+| `3.14` | `float` (decimal) | add, subtract, multiply |
+| `"hello"` | `str` (text) | join with other text |
 
 ---
 
@@ -65,6 +98,51 @@ Lina Ravi
 ```
 
 Line 2 points `backup` at the value `lead` points at, which is `"Ravi"`. Line 3 moves only `lead`. `backup` still points at `"Ravi"`.
+
+---
+
+## Python is not a spreadsheet
+
+In a spreadsheet, changing one cell updates every cell that uses it. Python works a line out once, then moves on.
+
+```python
+price = 50
+tax = 5
+total = price + tax
+price = 60
+print(total)
+```
+
+What does it print? Follow it in three moves:
+
+```steps
+caption: Picture to remember: a receipt. Once it is printed, a later price change does not rewrite it.
+
+title: Work out total
+code: total = price + tax
+result: total -> 55
+note: Line 3 uses price 50 and tax 5, and the answer is kept.
+
+title: Move price
+code: price = 60
+result: price -> 60
+note: Only the name price moves. total is not worked out again.
+
+title: Print total
+code: print(total)
+result: 55
+note: total still points at 55.
+```
+
+> **Key idea:** a name keeps the value it was given until a later line gives it a new one. Changing `price` does not redo line 3.
+
+```quickcheck
+id: py-0.1-spreadsheet
+question: These lines run in order: `fee = 80`, `tip = 8`, `total = fee + tip`, `fee = 10`. What does `print(total)` show?
+A: `88`
+B: `18`
+C: `10`
+```
 
 ---
 
