@@ -12,9 +12,9 @@
     "What appears on the terminal?"
   ],
   "cold_check_eligible": true,
-  "curator_approved": false,
+  "curator_approved": true,
   "hint": "Which `#` starts a comment, and which one sits inside quotes?",
-  "hint_approved": false,
+  "hint_approved": true,
   "predict": {
     "code": [
       "print(\"Counter open\")",

@@ -183,13 +183,14 @@ def test_a_passed_item_shows_its_worked_answer(client, repo, catalog):
 
 def test_a_retry_shows_the_newest_result(client, repo, catalog, clock):
     open_cold_check(repo)
-    answered = take_round(client, catalog, right_first=False)
+    take_round(client, catalog, right_first=False)
     assert client.get(FEEDBACK).json()["items"][0]["passed"] is False
 
     clock.now = T0 + timedelta(days=1, hours=1)
     current = client.get(f"{BASE}/units/{UNIT}/activities/cold_check/exercise").json()
     seed = next(s for s in catalog.seeds[UNIT] if current["exercise_id"].startswith(f"{s.seed_id}/"))
-    assert seed.seed_id == answered[0][0].seed_id
+    # With a spare item for the skill (ADR-0032) the failed item is swapped for a fresh one,
+    # so the retry may serve a different seed; the feedback must show the newest result either way.
     client.post(f"{BASE}/attempts", json={"exercise_id": current["exercise_id"], "activity": "cold_check", **answer_for(seed, True)})
 
     first = client.get(FEEDBACK).json()["items"][0]

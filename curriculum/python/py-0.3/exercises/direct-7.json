@@ -12,7 +12,7 @@
     "Which request keeps the reasoning with you?"
   ],
   "cold_check_eligible": false,
-  "curator_approved": false,
+  "curator_approved": true,
   "choice": {
     "options": [
       {
