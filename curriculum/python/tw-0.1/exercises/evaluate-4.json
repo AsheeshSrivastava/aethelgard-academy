@@ -30,7 +30,7 @@
     "options": [
       {
         "key": "A",
-        "text": "Both meet all five points."
+        "text": "Both meet all five points, so neither one needs more work."
       },
       {
         "key": "B",
@@ -38,11 +38,11 @@
       },
       {
         "key": "C",
-        "text": "B is better because it is shorter."
+        "text": "B is better because it is shorter and quicker to read."
       },
       {
         "key": "D",
-        "text": "A misses the limits; B misses nothing."
+        "text": "A misses the limits; B misses nothing a reader needs."
       }
     ]
   }
