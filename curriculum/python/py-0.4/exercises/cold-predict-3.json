@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.4/cold-predict-3",
+  "unit_id": "PY-0.4",
+  "activity": "Predict",
+  "skill_id": "CO-1",
+  "level": "Understand",
+  "topic": "comments",
+  "prompt_markdown": [
+    "The pantry counter runs this script, and a visitor types `Meera Das`.",
+    "",
+    "What appears on the terminal?"
+  ],
+  "cold_check_eligible": true,
+  "curator_approved": false,
+  "hint": "Which `#` starts a comment, and which one sits inside quotes?",
+  "hint_approved": false,
+  "predict": {
+    "code": [
+      "print(\"Counter open\")",
+      "visitor = input()  # read the name",
+      "print(\"Room #4 for\", visitor)",
+      "# print(\"Closed\")"
+    ],
+    "stdin": "Meera Das",
+    "options": [
+      {
+        "key": "A",
+        "text": "Counter open\nRoom #4 for Meera Das"
+      },
+      {
+        "key": "B",
+        "text": "Counter open\nRoom for Meera Das"
+      },
+      {
+        "key": "C",
+        "text": "Counter open\nRoom #4 for visitor"
+      },
+      {
+        "key": "D",
+        "text": "Counter open\nRoom #4 for Meera Das\nClosed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "seed_id": "PY-0.3/direct-8",
+  "unit_id": "PY-0.3",
+  "activity": "Direct",
+  "skill_id": "DE-3",
+  "level": "Understand",
+  "topic": "technical responsibility",
+  "prompt_markdown": [
+    "The desk's ticket numbers must never repeat. An AI tool drafted the ticket code, and your editor shows no warnings.",
+    "",
+    "Who decides that a repeated number is wrong?"
+  ],
+  "cold_check_eligible": false,
+  "curator_approved": false,
+  "choice": {
+    "options": [
+      {
+        "key": "A",
+        "text": "The AI tool you used, because it wrote the code that makes the numbers."
+      },
+      {
+        "key": "B",
+        "text": "You do. It is a requirement, and only you know how the desk really works."
+      },
+      {
+        "key": "C",
+        "text": "The editor, which would warn you if two tickets ever came out the same."
+      },
+      {
+        "key": "D",
+        "text": "Python, which refuses to run a script that gives out the same number twice."
+      }
+    ]
+  }
+}
