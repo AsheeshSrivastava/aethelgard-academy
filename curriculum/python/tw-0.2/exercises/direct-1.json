@@ -17,7 +17,7 @@
     "options": [
       {
         "key": "A",
-        "text": "Write a README."
+        "text": "Write a README for label.py. Make it short and friendly for new users, and put whatever you think a reader needs to know about what the script does and how it works."
       },
       {
         "key": "B",
@@ -25,11 +25,11 @@
       },
       {
         "key": "C",
-        "text": "Write a long, professional README that will impress reviewers."
+        "text": "Write a long, professional README for label.py that will impress reviewers: badges, a table of contents, installation notes for every system, and a section on future plans, all in your own words."
       },
       {
         "key": "D",
-        "text": "Fix my README."
+        "text": "Here is my old README for label.py. Fix it up and make it better. I am not sure what is wrong with it, so look at everything and change whatever you like, then give me the finished version."
       }
     ]
   }

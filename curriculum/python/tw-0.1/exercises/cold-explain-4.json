@@ -23,15 +23,15 @@
       },
       {
         "key": "B",
-        "text": "They should read the code first; a README only repeats it."
+        "text": "They should read the code first, because a README only repeats what the code already says."
       },
       {
         "key": "C",
-        "text": "The README is only useful to the person who wrote the script."
+        "text": "The README is only useful to the person who wrote the script, as a reminder of what it does."
       },
       {
         "key": "D",
-        "text": "The README is a formality that tools require."
+        "text": "The README is a formality that tools require, so most readers skip it and go straight to the code."
       }
     ]
   }

@@ -21,15 +21,15 @@
       },
       {
         "key": "B",
-        "text": "Change the code so it prints what the README says."
+        "text": "Change the code so it prints exactly what the README says, because the README is what readers will see first."
       },
       {
         "key": "C",
-        "text": "Leave it; small differences in capitals do not matter."
+        "text": "Leave it as it is; the difference is only in the capitals, and small differences like that do not matter to a reader."
       },
       {
         "key": "D",
-        "text": "Remove the sample run so nothing can be wrong."
+        "text": "Remove the sample run so nothing in the README can be wrong, and add it back later once the script is finished."
       }
     ]
   }

@@ -17,7 +17,7 @@
     "options": [
       {
         "key": "A",
-        "text": "Keep it; AXIS knows more about Python than you do."
+        "text": "Keep it as written; AXIS knows more about Python than you do, and a draft this confident is probably right about how it is run."
       },
       {
         "key": "B",
@@ -25,11 +25,11 @@
       },
       {
         "key": "C",
-        "text": "Delete the How to run it point, since it might be wrong."
+        "text": "Delete the How to run it point, since AXIS and you disagree and a missing command is safer than a command that might be wrong."
       },
       {
         "key": "D",
-        "text": "Ask AXIS again until it gives a different answer."
+        "text": "Ask AXIS the same question again until two drafts give the same command, then keep the one they agree on without trying it."
       }
     ]
   }
