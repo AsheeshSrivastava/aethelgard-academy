@@ -13,13 +13,13 @@ export function UnitCard({ unit, skills, shownStage }: { unit: Unit; skills: Ski
   const needsWork = unitStateLabel(unit.decision) === "Needs work";
   return (
     <article className={`unit-card${needsWork ? " unit-card-attention" : ""}`} aria-labelledby={titleId}>
-      <header className="unit-card-head">
-        <Link to="/units/$unitId" params={{ unitId: unit.unit_id }} className="unit-decision" id={titleId}>
+      <h3 id={titleId} className="unit-card-head">
+        <Link to="/units/$unitId" params={{ unitId: unit.unit_id }} className="unit-decision">
           <span className="mono">{unit.unit_id}</span>
           <span className="unit-state">{unitStateLabel(unit.decision)}</span>
         </Link>
-        <p className="unit-card-title">{unit.title}</p>
-      </header>
+        <span className="unit-card-title">{unit.title}</span>
+      </h3>
       {unit.reset_at && (
         <p className="small muted">{resetNote(unit.reset_at, unit.activities_done, unit.activities_total)}</p>
       )}

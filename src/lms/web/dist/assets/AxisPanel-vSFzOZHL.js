@@ -1,4 +1,4 @@
-import{S as e,T as t,x as n}from"./index-Asn58Sn7.js";import{t as r}from"./Prose-BTO3J2FN.js";var i=t(e(),1);function a(e){let t=e.replaceAll(`\r
+import{S as e,T as t,x as n}from"./index-BxiXeexr.js";import{t as r}from"./Prose-8gtIk5hW.js";var i=t(e(),1);function a(e){let t=e.replaceAll(`\r
 `,`
 `).split(`
 

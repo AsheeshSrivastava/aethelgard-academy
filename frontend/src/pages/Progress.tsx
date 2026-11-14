@@ -100,8 +100,9 @@ function WhereYouAre({ units }: { units: Schemas["UnitView"][] }) {
         Where you are
       </h2>
       <p className="where-summary">
-        {done} of {units.length} units done for now.
-        {done < units.length && " The rest need work before this module is finished."}
+        {done} of {units.length} {units.length === 1 ? "unit" : "units"} done for now.
+        {units.some((unit) => unitStateLabel(unit.decision) === "Needs work") &&
+          " Units marked Needs work come before this module is finished."}
       </p>
       <ul className="plain-list progress-tiles">
         {units.map((unit) => (

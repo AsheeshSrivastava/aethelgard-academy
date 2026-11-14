@@ -155,6 +155,7 @@ export function unitStateLabel(decision: Decision): string {
 /** Where a skill's proof came from. Levels are overall, not per stage, so say so when it is another module. */
 export function proofNote(proofStages: Record<string, number[]>, shownStage: number | null | undefined): string | null {
   const all = [...new Set(Object.values(proofStages).flat())].sort((a, b) => a - b);
+  if (shownStage == null) return null;
   const others = all.filter((stage) => stage !== shownStage);
   if (!others.length) return null;
   const names = others.map((stage) => `Module ${stage}`).join(", ");
@@ -163,5 +164,8 @@ export function proofNote(proofStages: Record<string, number[]>, shownStage: num
 
 /** The note on a reset unit: when, and how much of it is redone. */
 export function resetNote(resetAt: string, done: number, total: number): string {
-  return `You reset this unit on ${formatDate(resetAt)}. ${done} of ${total} activities redone; the Cold Check opens when all are done.`;
+  const noun = total === 1 ? "activity" : "activities";
+  const since = `You reset this unit on ${formatDate(resetAt)}.`;
+  if (done >= total) return `${since} All ${total} ${noun} redone.`;
+  return `${since} ${done} of ${total} ${noun} redone; the Cold Check opens when all are done.`;
 }

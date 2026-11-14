@@ -10,6 +10,9 @@ import {
   formatDateTime,
   formatTime,
   maturityLabel,
+  proofNote,
+  resetNote,
+  unitStateLabel,
   nextActionMessage,
   skillReason,
   stepName,
@@ -172,5 +175,28 @@ describe("newInteractionId", () => {
     const ids = Array.from({ length: 50 }, () => newInteractionId());
     expect(new Set(ids).size).toBe(50);
     expect(newInteractionId(Date.UTC(2026, 0, 1)) < newInteractionId(Date.UTC(2027, 0, 1))).toBe(true);
+  });
+});
+
+describe("My progress helpers (2026-11-14)", () => {
+  it("names a unit's state in plain words", () => {
+    expect(unitStateLabel("Progress")).toBe("Done for now");
+    expect(unitStateLabel("Accelerate")).toBe("Done for now");
+    expect(unitStateLabel("Strengthen")).toBe("Needs work");
+    expect(unitStateLabel("Rebuild")).toBe("Needs work");
+    expect(unitStateLabel("Undecided")).toBe("Not started");
+  });
+
+  it("says where proof came from only when it is another module", () => {
+    expect(proofNote({ Understand: [0] }, 0)).toBeNull();
+    expect(proofNote({ Understand: [0] }, 1)).toBe("Proven in Module 0.");
+    expect(proofNote({ Understand: [0, 1], Apply: [1] }, 1)).toBe("Includes proof from Module 0.");
+    expect(proofNote({ Understand: [0] }, undefined)).toBeNull();
+  });
+
+  it("says how much of a reset unit is redone", () => {
+    expect(resetNote("2026-11-09T10:00:00Z", 1, 3)).toMatch(/1 of 3 activities redone; the Cold Check opens/);
+    expect(resetNote("2026-11-09T10:00:00Z", 3, 3)).toMatch(/All 3 activities redone\.$/);
+    expect(resetNote("2026-11-09T10:00:00Z", 1, 1)).toMatch(/All 1 activity redone\.$/);
   });
 });
