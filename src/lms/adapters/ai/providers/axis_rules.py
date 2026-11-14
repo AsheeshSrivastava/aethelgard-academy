@@ -275,7 +275,9 @@ def feedback_summary_prompts(points: Sequence[Any], readme: str, note: str, scri
         "Reply with at most 120 words."
     )
     lines = "\n".join(
-        f"- [{p.status}] {p.where}: {p.found} (checklist: {p.why}; the rule: {p.looked_for})" for p in points
+        f"- [{p.status}] {p.where}: {p.found[:300].replace('<', '').replace('>', '')} "
+        f"(checklist: {p.why}; the rule: {p.looked_for})"
+        for p in points
     )
     user = (
         f"<points>\n{lines}\n</points>\n"

@@ -22,7 +22,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
-from lms.core.build_feedback import FeedbackPoint, build_feedback_points, strip_code_blocks
 from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
 from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -43,6 +42,7 @@ from lms.adapters.runner.run_slots import (
 )
 from lms.core import ai_judgement
 from lms.core.ai_judgement import AiJudgement, not_judged
+from lms.core.build_feedback import FeedbackPoint, build_feedback_points, strip_code_blocks
 from lms.core.builds import (
     RequirementResult,
     StageBuild,
