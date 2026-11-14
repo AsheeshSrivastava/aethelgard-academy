@@ -96,7 +96,7 @@ To guarantee that the platform remains modular, decoupled, and testable offline 
 
 - **The Danger:** Executing untrusted learner code directly on the host operating system risks server compromise, malicious file deletion, or socket abuse.
 - **Today:** `SubprocessRunner` runs learner code in a temporary folder with a timeout, and strips API keys and `.env` secrets from the child's environment. It is not an isolation boundary, so the app is for single-learner local use.
-- **Seam, not wired yet:** `DockerRunner` builds an ephemeral container command with `--network none`, `128m` memory, `1.0` CPU and a 64-process limit, but its `execute()` still calls the subprocess runner. Wiring it in (and running as a non-root user) is planned before anyone else uses the platform (work sequence 6.1, audit step A6).
+- **Docker runner (audit step A6, ADR-0036):** `DockerRunner` runs every learner program in its own container: `--network none`, `--read-only`, a 16 MB `noexec` tmpfs, `--user 65534`, `--cap-drop ALL`, `no-new-privileges`, 256 MB memory with the same swap limit, 0.5 CPU, 64 processes, file-count and file-size ulimits, 64 KB of output, and `docker kill` at the time limit. Interactive runs (`DockerInteractiveRun`) use the same profile and the same `input()` token protocol. `LMS_RUNNER` picks the runner: `docker` (default, fails closed), `subprocess` (explicit dev/CI opt-in, not a sandbox) or `auto`.
 
 ---
 

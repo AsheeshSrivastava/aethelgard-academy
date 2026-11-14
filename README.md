@@ -39,21 +39,21 @@ flowchart TD
     
     Core --> DB["SQLite Evidence Ledger<br/>(Immutable Event Sourcing)"]
     Core --> AI["AXIS AI Companion<br/>• Socratic Boundary Guardrails<br/>• Hybrid RAG: BM25 today<br/>(vector + reranker seams)"]
-    Core --> Runner["Code Runner<br/>• Subprocess runner today<br/>• Docker sandbox: seam, not wired yet"]
+    Core --> Runner["Code Runner<br/>• Docker sandbox by default (fails closed)<br/>• Subprocess runner: explicit dev/CI opt-in"]
 ```
 
 ### Architectural Highlights
 - **Zero-Dependency Domain Core:** `src/lms/core/` does not import FastAPI, SQLite, Docker, or AI libraries. All business rules and capability logic can be verified in milliseconds offline.
 - **Assistance Accounting:** Distinguishes between syntax lookups (`SYNTAX_LOOKUP`, encouraged developer practice) and algorithmic shortcuts (`SUPPLIED_REASONING`). If AI supplies the reasoning path, the skill is routed to targeted unassisted practice (`STRENGTHEN`).
 - **Verified Retrieval (RAG):** An inverted BM25 index (exact keywords, flags and function names) with heading-aware chunking. Every retrieved passage is checked to be an exact byte-slice of its source (`verify_passage == True`). Reciprocal Rank Fusion ($k=60$) and a reranker slot are built in, but no embedding model or cross-encoder is wired yet, so ranking today is lexical.
-- **Code Runner:** Learner code runs in a subprocess with a timeout, in a temporary folder, with API keys and `.env` secrets stripped from its environment. A `DockerRunner` that builds a network-disabled, memory-, CPU- and process-limited container command exists, but it is not wired in yet: today it falls back to the subprocess runner. Until it is, the app is for single-learner local use, not for running strangers' code.
+- **Code Runner:** Learner code runs in its own throw-away Docker container: no network, a read-only root, a non-root user with every Linux capability dropped, 256 MB memory (no swap), 0.5 CPU, 64 processes, a 16 MB `noexec` scratch folder and 64 KB of output, killed at the time limit (ADR-0036, SPEC-03). The app **fails closed**: if Docker is not running, code is not run at all (HTTP 503), never run another way. `LMS_RUNNER=subprocess` is an explicit opt-in for development and CI; it is **not** a sandbox. `LMS_RUNNER=auto` uses Docker when it answers, else the subprocess runner with a warning. Pull the image once: `docker pull python:3.14-slim`.
 
 ### Built Today vs Pluggable Seams
 
 | Area | Built and tested today | Seam ready, not wired yet |
 | :--- | :--- | :--- |
 | Persistence | SQLite append-only evidence ledger, idempotent attempts, non-destructive resets | PostgreSQL adapter behind `ILearnerRepository` |
-| Code execution | Subprocess runner: timeout, temp folder, secrets stripped | Docker sandbox (`--network none`, memory, CPU and process limits) behind `ICodeRunner` |
+| Code execution | Docker sandbox by default (no network, read-only root, non-root, memory, CPU, process and output limits), fail closed; subprocess runner as an explicit dev/CI opt-in | Rootless Docker or gVisor for a stronger boundary |
 | Retrieval | BM25 index, exact byte-slice verification, RRF fusion code | Dense embeddings and a cross-encoder reranker |
 | AXIS grounding | Upstream-docs index when built locally (`data/index`, not in git; ADR-0003 temporary exception) | Curriculum concept notes as the retrieval source (ADR-0003 target) |
 | AI providers | Offline mock, local OpenAI-compatible model, OpenAI, Gemini, monthly cost cap | Any other provider behind `IAXISCompanion` |
@@ -78,6 +78,7 @@ cd aethelgard-academy
 uv run lms serve
 ```
 Open **`http://localhost:8000`** in your browser.  
+Running code needs Docker (`docker pull python:3.14-slim` once). Without Docker the app refuses to run code; on your own machine you can opt in to the unsandboxed runner with `LMS_RUNNER=subprocess uv run lms serve`.  
 Try selecting any unit from Module 0, execute code in the playground, or open the **AXIS AI** side panel to test the Socratic boundary in action.
 
 Answer keys and hidden checks live in a private repository, so on a fresh clone the graded exercise items are held back ("no exercise yet"). Lessons, the playground and AXIS still work.

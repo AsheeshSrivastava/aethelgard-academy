@@ -26,6 +26,7 @@ lms = "lms:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["docker: needs a reachable Docker daemon and the python:3.14-slim image (skipped otherwise)"]
 
 [tool.ruff.lint]
 # Start with real-error rules only; widen later, one rule group per PR.

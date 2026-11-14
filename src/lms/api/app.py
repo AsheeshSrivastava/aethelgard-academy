@@ -31,6 +31,7 @@ from lms.adapters.curriculum.loader import CurriculumCatalog, load_all_roadmaps
 from lms.adapters.curriculum.rubric import load_rubric
 from lms.adapters.curriculum.quick_checks import load_quick_check_key, parse_quick_checks
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
+from lms.adapters.runner.docker_cli import RunnerUnavailable
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
 from lms.adapters.runner.run_slots import (
@@ -186,6 +187,7 @@ def current_learner_id() -> str:
 
 
 BUSY_MESSAGE = "The server is busy running other code. Wait a moment and try again."
+RUNNER_DOWN_MESSAGE = "Code cannot be run right now: the secure code runner is not available. Try again later."
 
 
 def problem(status: int, title: str, detail: str) -> JSONResponse:
@@ -956,6 +958,12 @@ def create_app(
         response.headers["Retry-After"] = str(RETRY_AFTER_SECONDS)
         return response
 
+    @app.exception_handler(RunnerUnavailable)
+    async def runner_unavailable_handler(_request, exc: RunnerUnavailable) -> JSONResponse:
+        # Fail closed (ADR-0036): the code was not run. The cause goes to the log, not to the learner.
+        logging.getLogger("lms.runner").error("Code run refused: %s", exc)
+        return problem(503, "Code runner unavailable", RUNNER_DOWN_MESSAGE)
+
     @app.post("/api/v1/execute", response_model=ExecutionResult)
     def execute_code(payload: ExecuteCodeRequest):
         return runner.execute(
@@ -987,7 +995,14 @@ def create_app(
             await websocket.close()
             return
         try:
-            interactive = InteractiveRun(files, entry, run_limits or RunLimits())
+            start_run = getattr(runner, "start_interactive", None) or InteractiveRun
+            try:
+                interactive = await asyncio.to_thread(start_run, files, entry, run_limits or RunLimits())
+            except RunnerUnavailable as exc:
+                logging.getLogger("lms.runner").error("Code run refused: %s", exc)
+                await websocket.send_json({"type": "error", "message": RUNNER_DOWN_MESSAGE})
+                await websocket.close()
+                return
 
             async def send_events() -> None:
                 while True:
@@ -1018,7 +1033,7 @@ def create_app(
             finally:
                 sender.cancel()
                 receiver.cancel()
-                interactive.stop()
+                await asyncio.to_thread(interactive.stop)
             if sender.done() and not sender.cancelled():
                 await websocket.close()
         finally:

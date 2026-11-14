@@ -39,3 +39,7 @@ If and when the platform reaches multi-node scale ($\ge 50,000$ active concurren
 
 ### Trade-offs / Mitigations
 - Single-node compute boundary. Mitigated by the fact that learner scripts are ephemeral (running for $< 500$ms on average), yielding high concurrent density per machine.
+
+---
+
+**Amendment (2026-11-14, ADR-0036).** The limits became 256 MB memory (no swap), 0.5 CPU and 64 processes, and the runner now fails closed instead of falling back to a subprocess. See ADR-0036 and SPEC-03.
