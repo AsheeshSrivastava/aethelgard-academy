@@ -29,6 +29,7 @@ describe("SkillLadder", () => {
     expect(screen.getByText("Understand")).toHaveClass("rung-supported");
     expect(screen.getByText("Apply")).toHaveClass("rung-supported");
     expect(screen.getByText("Adapt")).toHaveClass("rung-provisional");
-    expect(screen.getByText("Own")).not.toHaveClass("rung-supported", "rung-provisional");
+    expect(screen.getByText("Own")).not.toHaveClass("rung-supported");
+    expect(screen.getByText("Own")).not.toHaveClass("rung-provisional");
   });
 });

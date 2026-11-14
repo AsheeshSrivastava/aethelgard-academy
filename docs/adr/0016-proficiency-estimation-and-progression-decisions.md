@@ -148,11 +148,12 @@ The CO-6 concept check was recorded with no exercise or seed id, so section 2.2'
 3. **Older rows.** The ledger is append-only, so rows written before this amendment are not changed. When a concept check (a CO-6 Explain entry) has no exercise or seed id, the estimator reads it as `<unit>/explain/v1`. This corrects existing learner history without rewriting it.
 4. **Rebuild is unchanged.** "Two or more consecutive Shaky concept checks" (section 2.5) still counts every attempt, because a run of Shaky answers is a warning sign even when the prompt repeats.
 
-## Amendment 2026-11-14: Accelerate when any rung above the goal is proven (owner, amendment F, rule A)
+## Amendment 2026-11-14: Accelerate when any rung above the goal is proven (owner, 2026-11-14, rule A of the open question from the amendment-F discussion)
 
 ### H. Accelerate looks at every rung above the goal (changes section 2.5)
 Accelerate used to need the skill's top rung to be supported. A skill proven up to Adapt against an Understand goal, with Own seen once, decided Progress, because the unproven top rung made the whole estimate provisional.
 
 1. **Rule.** A skill decides Accelerate when its goal level is supported and any level above the goal is in `supported_levels`. The unproven top rung does not block it; the ladder shows it as "seen once".
-2. **Unchanged.** A skill whose goal level is not supported still decides Strengthen. A skill supported exactly at its goal still decides Progress.
-3. **Open (owner question, 2026-11-14).** Skill levels are read from the whole ledger, so proof from an earlier stage counts toward a later, harder stage's goal. Whether it should is undecided; this amendment does not change it.
+2. **Supersedes** amendment F's sentence "Accelerate still needs support at the higher level": the higher level that matters is any rung above the goal, not only the top rung. Amendment F's other rules and the section 2.5 table row for Accelerate are read with this change.
+3. **Unchanged.** A skill whose goal level is not supported still decides Strengthen. A skill supported exactly at its goal still decides Progress.
+4. **Open (owner question, 2026-11-14).** Skill levels are read from the whole ledger, so proof from an earlier stage counts toward a later, harder stage's goal. Whether it should is undecided; this amendment does not change it.
