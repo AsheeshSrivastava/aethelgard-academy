@@ -111,12 +111,14 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
       "## How to run it\n\nRun uv run checkin.py in a terminal.\n\n" +
       "## A sample run\n\n```\nName:    meera \nService needed: food parcel\n\n--- CHECK-IN SLIP ---\n" +
       "Name: Meera\nService: Food Parcel\nPlease wait for the Food Parcel desk.\n```\n\n" +
-      "## Limits\n\nIt serves one person per run and saves nothing.\n",
+      "## Limits\n\nIt serves one person per run and saves nothing.\n\n" +
+      "## The error I fixed\n\nPython showed a TypeError on the line that joins text and the ticket number. " +
+      "I turned the number into text with str().\n",
   );
   await page.getByLabel("Code ownership note").fill("I planned and wrote it myself, then ran it with messy input.");
   await page.getByLabel("README review note").fill("AXIS drafted it; I fixed the sample run after running my script.");
   await page.getByRole("button", { name: "Verify" }).click();
-  await expect(requirements(page)).toContainText("10 of 10 met");
+  await expect(requirements(page)).toContainText("12 of 12 met");
   const checklist = page.getByRole("region", { name: "README checklist" });
   await expect(checklist.getByText("Met")).toHaveCount(5);
   await expect(submit(page)).toBeEnabled();
@@ -130,7 +132,7 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await expect(page.getByLabel("README review note")).toHaveValue(/fixed the sample run/);
   await expect(submit(page)).toBeDisabled();
   await page.getByRole("button", { name: "Verify" }).click();
-  await expect(requirements(page)).toContainText("10 of 10 met");
+  await expect(requirements(page)).toContainText("12 of 12 met");
 
   // AXIS answers, and stays Socratic
   const axis = page.getByRole("complementary", { name: "AXIS facilitator" });
@@ -161,7 +163,7 @@ test("a learner finishes the Stage 0 build", async ({ page, request }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.reload();
   await expect(page.locator(".cm-content")).toBeVisible();
-  await expect(requirements(page)).toContainText("7 of 10 met");
+  await expect(requirements(page)).toContainText("8 of 12 met");
   await expectNoSideScroll(page);
   const lastInPanel = (await axis.locator(".axis-note").boundingBox())!;
   const proves = (await page.getByRole("region", { name: "What this build proves" }).boundingBox())!;
