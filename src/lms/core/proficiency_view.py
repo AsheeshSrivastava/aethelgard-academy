@@ -252,7 +252,7 @@ def _skill_view(
     ledger: List[EvidenceEntry],
     now: datetime,
     config: EstimatorConfig,
-    stage_of: Callable[[str], Optional[int]] = lambda unit_id: None,
+    stage_of: Callable[[str], Optional[int]],
 ) -> SkillView:
     decided = decide_skill(target, ledger, skill_id, now=now, consecutive_shaky=shaky, config=config)
     counts = evidence_counts(ledger, skill_id, now=now, config=config)

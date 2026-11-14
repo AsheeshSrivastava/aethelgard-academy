@@ -238,11 +238,24 @@ def test_proof_stages_name_the_stage_each_supported_level_was_proven_in():
     assert row.proof_stages == {ProficiencyLevel.UNDERSTAND: [0, 1], ProficiencyLevel.APPLY: [0, 1]}
 
 
-def test_proof_stages_leave_out_unsupported_levels_and_unknown_stages():
+def test_proof_stages_leave_out_unsupported_levels():
     entries = [make(days_ago=3), make(days_ago=2)]  # no Cold Check, so only provisional
-    result = build_proficiency_view([unit()], entries, statuses(), now=NOW)
+    stages = {"PY-1.1": 1}
+    result = build_proficiency_view(
+        [unit()], entries, statuses(), now=NOW, stage_of=lambda unit_id: stages.get(unit_id)
+    )
 
     assert result.skills[0].proof_stages == {}
+
+
+def test_proof_stages_skip_units_with_no_known_stage():
+    entries = [make(unit_id="PY-9.9", days_ago=3), make(unit_id="PY-1.1", days_ago=2, cold_check=True)]
+    stages = {"PY-1.1": 1}
+    result = build_proficiency_view(
+        [unit()], entries, statuses(), now=NOW, stage_of=lambda unit_id: stages.get(unit_id)
+    )
+
+    assert result.skills[0].proof_stages[ProficiencyLevel.APPLY] == [1]
 
 
 def test_unit_rows_carry_title_goals_and_activity_progress():

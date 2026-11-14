@@ -277,6 +277,22 @@ def test_unit_rows_report_title_goals_and_activity_progress(client):
     assert unit_row["activities_total"] >= 1
 
 
+def test_proof_from_another_stage_is_named_when_viewing_a_later_stage(repo, clock):
+    # Levels are overall (owner option A): Stage 0 proof backs the skill row seen from Stage 1.
+    catalog = CurriculumCatalog()
+    catalog.add_unit(make_unit("PY-0.1", 0, "CO-1"))
+    catalog.add_unit(make_unit("PY-1.1", 1, "CO-1"))
+    app = create_app(
+        repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=clock
+    )
+    repo.record_evidence(make_entry(unit_id="PY-0.1", days_ago=3))
+    repo.record_evidence(make_entry(unit_id="PY-0.1", days_ago=2, cold_check=True))
+
+    row = proficiency(TestClient(app), "course_id=python&stage=1")["skills"][0]
+
+    assert row["proof_stages"] == {"Understand": [0], "Apply": [0]}
+
+
 def test_main_activity_evidence_reaches_the_target(repo, clock):
     catalog = CurriculumCatalog()
     catalog.add_unit(make_unit("PY-1.1", 1, "CO-1"))
