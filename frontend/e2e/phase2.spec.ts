@@ -49,7 +49,7 @@ test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) =
   await page.goto(`${UNIT}/video`);
 
   // Video
-  await expect(page.getByRole("heading", { name: /How Python Executes/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Python as an executing program/i })).toBeVisible();
   await expect(page.getByText(/video for this unit is not ready/i)).toBeVisible();
   await shot(page, "lesson-video");
   await page.getByRole("button", { name: "Mark as watched" }).click();
@@ -248,9 +248,9 @@ test("a learner finds a concept by search, and by a wiki link in a lesson", asyn
   // From a lesson's Explain text
   // The link sits in the lesson's second part (SPEC-19 parts).
   await page.goto("/units/PY-0.1/explain");
-  await page.getByRole("navigation", { name: "Explain parts" }).getByRole("button", { name: /Reference Desk/ }).click();
+  await page.getByRole("navigation", { name: "Explain parts" }).getByRole("button", { name: /One statement at a time/ }).click();
   await expect(page.locator(".prose")).not.toContainText("[[");
-  await page.locator(".prose").getByRole("link", { name: "Comments in Python" }).click();
+  await page.locator(".prose").getByRole("link", { name: "comments", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Comments in Python" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Used in units" }).getByRole("link", { name: /PY-0\.1/ })).toBeVisible();
 
