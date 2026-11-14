@@ -10,6 +10,12 @@ function ladderLabel(skill: Skill): string {
   return `${start}, current ${skill.current_level}, ${skill.confidence}`;
 }
 
+/** Each rung by its own support, so a provisional top rung never repaints proven rungs (SPEC-12 section 6). */
+function rungClass(skill: Skill, level: Skill["target_level"], reached: boolean): string {
+  if (skill.supported_levels.includes(level)) return "rung-supported";
+  return reached ? "rung-provisional" : "";
+}
+
 export function SkillLadder({ skill }: { skill: Skill }) {
   const current = skill.current_level ? LEVELS.indexOf(skill.current_level) : -1;
   const target = LEVELS.indexOf(skill.target_level);
@@ -29,7 +35,7 @@ export function SkillLadder({ skill }: { skill: Skill }) {
             key={level}
             className={[
               "rung",
-              index <= current ? `rung-${skill.confidence}` : "",
+              rungClass(skill, level, index <= current),
               index === target ? "rung-target" : "",
             ].join(" ")}
           >

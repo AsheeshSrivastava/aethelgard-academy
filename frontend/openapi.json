@@ -4776,6 +4776,14 @@
               }
             ]
           },
+          "supported_levels": {
+            "items": {
+              "$ref": "#/components/schemas/ProficiencyLevel"
+            },
+            "type": "array",
+            "title": "Supported Levels",
+            "default": []
+          },
           "evidence_counts": {
             "$ref": "#/components/schemas/EvidenceCounts"
           },

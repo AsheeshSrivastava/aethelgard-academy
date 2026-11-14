@@ -12,7 +12,7 @@ row is decided against the highest target among the units in scope.
 from datetime import datetime
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lms.core.cold_check import ColdCheckState, ColdCheckStatus
 from lms.core.models import (
@@ -57,7 +57,8 @@ class SkillView(BaseModel):
     skill_name: str
     target_level: ProficiencyLevel
     current_level: Optional[ProficiencyLevel] = None
-    confidence: Optional[Confidence] = None
+    confidence: Optional[Confidence] = None             # of current_level only
+    supported_levels: List[ProficiencyLevel] = Field(default_factory=list)  # each fully supported rung (SPEC-12 section 6)
     evidence_counts: EvidenceCounts
     decision: ProgressionDecision
     reason: str
@@ -211,6 +212,7 @@ def _skill_view(
         target_level=target,
         current_level=decided.estimate.level,
         confidence=decided.estimate.confidence,
+        supported_levels=decided.estimate.supported_levels,
         evidence_counts=EvidenceCounts(
             explain=counts[EvidenceCategory.EXPLAIN_REASON],
             perform=counts[EvidenceCategory.PERFORM_SOLVE],

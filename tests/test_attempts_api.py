@@ -460,7 +460,8 @@ def test_full_unit_ends_supported_at_its_target(client, clock):
     assert decision == "Progress"
     body = client.get(f"{BASE}/proficiency?course_id=python&stage=0").json()
     row = next(s for s in body["skills"] if s["skill_id"] == "CO-2")
-    assert row["decision"] == "Progress"
+    # ADR-0016 amendment H: CO-2 is proven above its goal here, so its row says Accelerate.
+    assert row["decision"] == "Accelerate"
     unit = next(u for u in body["units"] if u["unit_id"] == "PY-0.1")
     assert unit["decision"] == "Progress"
 

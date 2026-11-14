@@ -180,6 +180,48 @@ def test_two_entries_with_a_cold_check_are_supported_and_progress():
     assert row.reason
 
 
+def _proven_apply_seen_adapt() -> List[EvidenceEntry]:
+    """Apply proven (2 entries, one a Cold Check); Adapt seen once, with no Cold Check."""
+    return supported_apply() + [make(category=EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER, days_ago=1)]
+
+
+def test_supported_levels_colour_each_rung_on_its_own():
+    # SPEC-12 section 6, 2026-11-14: a provisional top rung never repaints the proven rungs below it.
+    row = view([unit(targets={"CO-1": ProficiencyLevel.UNDERSTAND})], _proven_apply_seen_adapt()).skills[0]
+
+    assert row.current_level == ProficiencyLevel.ADAPT
+    assert row.confidence == Confidence.PROVISIONAL
+    assert row.supported_levels == [ProficiencyLevel.UNDERSTAND, ProficiencyLevel.APPLY]
+
+
+def test_supported_levels_are_empty_with_no_evidence():
+    assert view([unit()], []).skills[0].supported_levels == []
+
+
+def test_progress_reason_counts_the_target_levels_entries():
+    # SPEC-12 section 6, 2026-11-14: 2 entries qualify at Apply (the goal); only 1 qualifies at Adapt (the top rung).
+    row = view([unit()], _proven_apply_seen_adapt()).skills[0]
+
+    assert row.current_level == ProficiencyLevel.ADAPT
+    assert row.decision == ProgressionDecision.PROGRESS
+    assert row.reason == "Sufficient evidence for Apply: supported by 2 entries including a Cold Check."
+
+
+def test_proven_above_the_goal_accelerates_even_when_the_top_rung_is_unproven():
+    # ADR-0016 amendment H: any proven rung above the goal is enough.
+    entries = supported_apply() + [make(category=EvidenceCategory.DIAGNOSE_JUDGE_TRANSFER, days_ago=1)]
+    row = view([unit(targets={"CO-1": ProficiencyLevel.UNDERSTAND})], entries).skills[0]
+
+    assert row.current_level == ProficiencyLevel.ADAPT
+    assert row.decision == ProgressionDecision.ACCELERATE
+
+
+def test_supported_exactly_at_the_goal_still_decides_progress():
+    row = view([unit()], supported_apply()).skills[0]
+
+    assert row.decision == ProgressionDecision.PROGRESS
+
+
 def test_two_entries_without_a_cold_check_stay_provisional():
     result = view([unit()], [make(days_ago=3), make(days_ago=2)])
 
