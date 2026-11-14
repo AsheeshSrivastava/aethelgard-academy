@@ -14,7 +14,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Collection, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Collection, Dict, Iterator, List, Optional, Set, Tuple, Union
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
@@ -73,6 +73,7 @@ from lms.core.review import (
     STAGE_REVIEW,
     DueReview,
     ReviewItem,
+    ReviewResult,
     ReviewState,
     StageReviewStatus,
     build_is_open,
@@ -533,20 +534,46 @@ def create_app(
             return problem(404, "Course not found", f"Course '{course_id}' does not exist.")
         now = clock()
         ledger = repo.get_evidence_ledger(learner_id)
+        resets = repo.progress_resets(learner_id)
+        timers = repo.get_cold_check_timers(learner_id)
+        review_items = repo.get_review_items_by_scope(learner_id, STAGE_REVIEW)
+        review_results = repo.get_review_results_by_scope(learner_id, STAGE_REVIEW)
+        seen = repo.get_all_seen_exercises(learner_id)
         config = EstimatorConfig(main_activities=catalog.main_activities)
+
+        def cold_state(unit_id: str) -> ColdCheckState:
+            """unit_cold_status from the data loaded above (A3: no query per unit)."""
+            timer = timers.get(unit_id)
+            unit = catalog.get_unit(unit_id)
+            if timer is None and unit is not None:
+                if activities_attempted(unit, ledger, resets.get(unit.unit_id)):
+                    repo.mark_unit_activities_completed(learner_id, unit.unit_id, clock())
+                    timer = repo.get_cold_check_timer(learner_id, unit_id)
+                    if timer is not None:
+                        timers[unit_id] = timer
+            return cold_check_status(timer, now, cold_config).state
+
         return build_course_map(
             course_id,
             catalog.get_course_units(course_id),
             catalog.get_stage_titles(course_id),
-            lambda unit_id: unit_cold_status(unit_id, learner_id, now).state,
-            lambda unit: unit_decision(unit, ledger, now, config, repo.progress_resets(learner_id)),
+            cold_state,
+            lambda unit: unit_decision(unit, ledger, now, config, resets),
             {
                 stage: AuthoredBuild(build.title, build.kind, build.status, build.maturity)
                 for (course, stage), build in catalog.builds.items()
                 if course == course_id
             },
             {
-                stage: review_status(course_id, stage, learner_id).state
+                stage: review_status(
+                    course_id,
+                    stage,
+                    learner_id,
+                    cold_state=cold_state,
+                    stored_items=review_items,
+                    stored_results=review_results,
+                    seen=seen,
+                ).state
                 for stage in {u.stage for u in catalog.get_course_units(course_id)}
             },
             {
@@ -561,22 +588,40 @@ def create_app(
         return [u for u in catalog.get_course_units(course_id) if u.stage == stage]
 
     # --- Stage Review and Rechecks (SPEC-16) ---
-    def review_status(course_id: str, stage: int, learner_id: str) -> StageReviewStatus:
+    def review_status(
+        course_id: str,
+        stage: int,
+        learner_id: str,
+        *,
+        cold_state: Optional[Callable[[str], ColdCheckState]] = None,
+        stored_items: Optional[Dict[str, List[ReviewItem]]] = None,
+        stored_results: Optional[Dict[str, ReviewResult]] = None,
+        seen: Optional[Set[str]] = None,
+    ) -> StageReviewStatus:
+        """The stage review status. The course map passes data it loaded once for every stage."""
         units = stage_units(course_id, stage)
         now = clock()
-        pending = [
-            u.unit_id
-            for u in units
-            if unit_cold_status(u.unit_id, learner_id, now).state
-            != ColdCheckState.PASSED
-        ]
+        state_of = cold_state or (lambda unit_id: unit_cold_status(unit_id, learner_id, now).state)
+        pending = [u.unit_id for u in units if state_of(u.unit_id) != ColdCheckState.PASSED]
         scope = stage_scope(course_id, stage)
-        items = repo.get_review_items(learner_id, STAGE_REVIEW, scope)
+        items = (
+            stored_items.get(scope, [])
+            if stored_items is not None
+            else repo.get_review_items(learner_id, STAGE_REVIEW, scope)
+        )
         has_items = bool(items) or (
             not pending
-            and bool(plan_stage_review(units, catalog.seeds, repo.get_all_seen_exercises(learner_id)))
+            and bool(
+                plan_stage_review(
+                    units, catalog.seeds, seen if seen is not None else repo.get_all_seen_exercises(learner_id)
+                )
+            )
         )
-        result = repo.get_review_result(learner_id, STAGE_REVIEW, scope)
+        result = (
+            stored_results.get(scope)
+            if stored_results is not None
+            else repo.get_review_result(learner_id, STAGE_REVIEW, scope)
+        )
         return stage_review_status(pending, has_items, result, items, now, cold_config)
 
     def open_stage_round(course_id: str, stage: int, learner_id: str) -> List[ReviewItem]:

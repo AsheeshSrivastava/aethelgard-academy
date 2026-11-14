@@ -310,24 +310,34 @@ class SQLiteLearnerRepository:
                     (learner_id, unit_id, status),
                 )
 
+    @staticmethod
+    def _cold_timer(row: sqlite3.Row) -> ColdCheckTimer:
+        passed = row["last_attempt_passed"]
+        return ColdCheckTimer(
+            learner_id=row["learner_id"],
+            unit_id=row["unit_id"],
+            completed_at=datetime.fromisoformat(row["completed_at"]),
+            last_attempt_at=(
+                datetime.fromisoformat(row["last_attempt_at"]) if row["last_attempt_at"] else None
+            ),
+            last_attempt_passed=None if passed is None else bool(passed),
+        )
+
     def get_cold_check_timer(self, learner_id: str, unit_id: str) -> Optional[ColdCheckTimer]:
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT * FROM unit_cold_check WHERE learner_id = ? AND unit_id = ?",
                 (learner_id, unit_id),
             ).fetchone()
-            if row is None:
-                return None
-            passed = row["last_attempt_passed"]
-            return ColdCheckTimer(
-                learner_id=row["learner_id"],
-                unit_id=row["unit_id"],
-                completed_at=datetime.fromisoformat(row["completed_at"]),
-                last_attempt_at=(
-                    datetime.fromisoformat(row["last_attempt_at"]) if row["last_attempt_at"] else None
-                ),
-                last_attempt_passed=None if passed is None else bool(passed),
-            )
+            return None if row is None else self._cold_timer(row)
+
+    def get_cold_check_timers(self, learner_id: str) -> Dict[str, ColdCheckTimer]:
+        """Every unit's Cold Check clock in one query (the course map needs all of them)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM unit_cold_check WHERE learner_id = ?", (learner_id,)
+            ).fetchall()
+            return {row["unit_id"]: self._cold_timer(row) for row in rows}
 
     def mark_unit_activities_completed(
         self, learner_id: str, unit_id: str, completed_at: datetime
@@ -542,6 +552,32 @@ class SQLiteLearnerRepository:
                     (exercise_id, learner_id, kind, scope, position),
                 )
 
+    @staticmethod
+    def _review_result(row: sqlite3.Row) -> ReviewResult:
+        return ReviewResult(
+            last_attempt_at=datetime.fromisoformat(row["last_attempt_at"]), passed=bool(row["passed"])
+        )
+
+    def get_review_items_by_scope(self, learner_id: str, kind: str) -> Dict[str, List[ReviewItem]]:
+        """All stored review items of one kind, grouped by scope, in one query."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM review_item WHERE learner_id = ? AND kind = ? ORDER BY position ASC",
+                (learner_id, kind),
+            ).fetchall()
+            grouped: Dict[str, List[ReviewItem]] = {}
+            for row in rows:
+                grouped.setdefault(row["scope"], []).append(self._review_item(row))
+            return grouped
+
+    def get_review_results_by_scope(self, learner_id: str, kind: str) -> Dict[str, ReviewResult]:
+        """All stored review results of one kind, keyed by scope, in one query."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM review_result WHERE learner_id = ? AND kind = ?", (learner_id, kind)
+            ).fetchall()
+            return {row["scope"]: self._review_result(row) for row in rows}
+
     def get_review_result(self, learner_id: str, kind: str, scope: str) -> Optional[ReviewResult]:
         with self._connect() as conn:
             row = conn.execute(
@@ -550,9 +586,7 @@ class SQLiteLearnerRepository:
             ).fetchone()
             if row is None:
                 return None
-            return ReviewResult(
-                last_attempt_at=datetime.fromisoformat(row["last_attempt_at"]), passed=bool(row["passed"])
-            )
+            return self._review_result(row)
 
     def record_review_result(
         self, learner_id: str, kind: str, scope: str, passed: bool, attempted_at: datetime
