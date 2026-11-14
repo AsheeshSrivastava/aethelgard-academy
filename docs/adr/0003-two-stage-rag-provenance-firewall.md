@@ -73,3 +73,5 @@ We establish an **IP & Provenance Firewall** dividing RAG into two strictly isol
 **What it costs.** While the exception holds, the Positive consequences above are not fully met: AXIS can use terms our lessons do not use, and the licence safety rests on AXIS not repeating upstream text at length.
 
 **When it must be looked at again.** Before anyone other than the owner learns on the platform, or when the curriculum and concept notes are large enough to ground AXIS on their own, whichever comes first. That review decides whether AXIS moves to the Stage 3 target.
+
+**Update (2026-11-14).** The answer rule and the exit condition for this exception are in ADR-0034. The retrieval design is in ADR-0035.
