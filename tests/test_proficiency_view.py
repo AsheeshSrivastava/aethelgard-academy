@@ -222,6 +222,52 @@ def test_supported_exactly_at_the_goal_still_decides_progress():
     assert row.decision == ProgressionDecision.PROGRESS
 
 
+# --- Data for the My progress page (SPEC-12 section 6, 2026-11-14) ---
+
+
+def test_proof_stages_name_the_stage_each_supported_level_was_proven_in():
+    # Owner option A: skill levels stay overall; the page says where the proof came from.
+    entries = [make(unit_id="PY-0.1", days_ago=3), make(unit_id="PY-1.1", days_ago=2, cold_check=True)]
+    stages = {"PY-0.1": 0, "PY-1.1": 1}
+    result = build_proficiency_view(
+        [unit()], entries, statuses(), now=NOW, stage_of=lambda unit_id: stages.get(unit_id)
+    )
+
+    row = result.skills[0]
+    assert row.supported_levels == [ProficiencyLevel.UNDERSTAND, ProficiencyLevel.APPLY]
+    assert row.proof_stages == {ProficiencyLevel.UNDERSTAND: [0, 1], ProficiencyLevel.APPLY: [0, 1]}
+
+
+def test_proof_stages_leave_out_unsupported_levels_and_unknown_stages():
+    entries = [make(days_ago=3), make(days_ago=2)]  # no Cold Check, so only provisional
+    result = build_proficiency_view([unit()], entries, statuses(), now=NOW)
+
+    assert result.skills[0].proof_stages == {}
+
+
+def test_unit_rows_carry_title_goals_and_activity_progress():
+    result = view([unit(targets={"CO-1": ProficiencyLevel.APPLY, "CO-2": ProficiencyLevel.UNDERSTAND})], [])
+
+    row = result.units[0]
+    assert row.title == "PY-1.1"
+    assert [(s.skill_id, s.goal_level) for s in row.skills] == [
+        ("CO-1", ProficiencyLevel.APPLY),
+        ("CO-2", ProficiencyLevel.UNDERSTAND),
+    ]
+    assert (row.activities_done, row.activities_total, row.reset_at) == (0, 3, None)
+
+
+def test_activity_progress_and_reset_date_count_only_after_the_reset():
+    reset = NOW - timedelta(days=2)
+    before = make("CO-1", activity=ActivityType.EXPLAIN, days_ago=5)
+    after = make("CO-1", activity=ActivityType.PREDICT, days_ago=1)
+    result = build_proficiency_view([unit()], [before, after], statuses(), now=NOW, resets={"PY-1.1": reset})
+
+    row = result.units[0]
+    assert row.reset_at == reset
+    assert (row.activities_done, row.activities_total) == (1, 3)
+
+
 def test_two_entries_without_a_cold_check_stay_provisional():
     result = view([unit()], [make(days_ago=3), make(days_ago=2)])
 

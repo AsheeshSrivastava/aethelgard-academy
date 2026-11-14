@@ -12,6 +12,7 @@ const provenApplySeenAdapt: Schemas["SkillView"] = {
   current_level: "Adapt",
   confidence: "provisional",
   supported_levels: ["Understand", "Apply"],
+  proof_stages: {},
   evidence_counts: { explain: 0, perform: 2, diagnose: 1 },
   decision: "Progress",
   reason: "Sufficient evidence for Understand: supported by 3 entries including a Cold Check.",

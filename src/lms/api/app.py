@@ -1195,6 +1195,7 @@ def create_app(
             anchor = first_unfinished_unit(units, ledger, now, config, resets) or units[-1]
             stage = anchor.stage
             units = [u for u in units if course_of(u.unit_id) == course_of(anchor.unit_id)]
+        stage_by_unit = {u.unit_id: u.stage for u in catalog.list_all_units()}
         if stage is not None:
             units = [u for u in units if u.stage == stage]
 
@@ -1207,6 +1208,7 @@ def create_app(
             config=config,
             unseen_activities=lambda unit: unseen_activities(unit, learner_id),
             resets=resets,
+            stage_of=stage_by_unit.get,
         )
 
     @app.get("/api/v1/learners/me/skills", response_model=SkillsOverview)
