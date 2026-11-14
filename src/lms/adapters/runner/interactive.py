@@ -4,8 +4,9 @@ Governed by SPEC-12 section 7 and ADR-0005. One run is one child process. Its
 output arrives as events, and it stops when it hits a limit or the caller leaves.
 
 The harness runs inside the child: it marks each input() call on stdout with a
-random token, watches CPU time, and blocks Python sockets. This is not an OS
-sandbox; hosting other people's code needs the Docker runner.
+random token, watches CPU time, and blocks Python sockets. InteractiveRun is not an
+OS sandbox. DockerInteractiveRun runs the same harness inside a locked-down container
+(ADR-0036); that is the one to use for other people's code.
 """
 
 from dataclasses import dataclass
@@ -21,6 +22,17 @@ import tempfile
 import threading
 import time
 from typing import Any, ClassVar, Dict, Optional, Set
+
+from lms.adapters.runner.docker_cli import (
+    IMAGE,
+    WORKDIR,
+    cli_env,
+    docker_run_args,
+    kill_container,
+    new_container_name,
+    open_to_container,
+    remove_container,
+)
 
 MAX_SOURCE_CHARS = 512_000
 _FILE_NAME = re.compile(r"^[A-Za-z0-9_-]+\.py$")
@@ -60,8 +72,13 @@ def _install(token, cpu_limit):
     threading.Thread(target=_watch_cpu, daemon=True).start()
 
 
+def _token(arg):
+    """Docker passes the token as hex, so control characters never go through a command line."""
+    return bytes.fromhex(arg[4:]).decode() if arg.startswith("hex:") else arg
+
+
 entry = sys.argv[2]
-_install(sys.argv[1], float(sys.argv[3]))
+_install(_token(sys.argv[1]), float(sys.argv[3]))
 sys.argv = [entry]
 sys.orig_argv = [entry]
 sys.path.insert(0, os.getcwd())
@@ -127,14 +144,7 @@ class InteractiveRun:
         harness = Path(self._dir.name, "lms_run_harness.py")
         harness.write_text(HARNESS, encoding="utf-8")
 
-        self._process = subprocess.Popen(
-            [sys.executable, "-u", str(harness), self._token, entry, str(limits.cpu_seconds)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=self._dir.name,
-            env=safe_env(),
-        )
+        self._process = self._start_process(entry)
         InteractiveRun._active.add(self)
         self._readers = [
             threading.Thread(target=self._read_stream, args=(self._process.stdout, "stdout"), daemon=True),
@@ -143,6 +153,24 @@ class InteractiveRun:
         for reader in self._readers:
             reader.start()
         threading.Thread(target=self._wait, daemon=True).start()
+
+    def _start_process(self, entry: str) -> "subprocess.Popen[bytes]":
+        """Start the program. Subclasses change where it runs."""
+        return subprocess.Popen(
+            [sys.executable, "-u", str(Path(self._dir.name, "lms_run_harness.py")), self._token, entry,
+             str(self.limits.cpu_seconds)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=self._dir.name,
+            env=safe_env(),
+        )
+
+    def _kill(self) -> None:
+        self._process.kill()
+
+    def _after_exit(self) -> None:
+        """Called once, when the program has ended and before the exit event is sent."""
 
     @classmethod
     def active_count(cls) -> int:
@@ -163,7 +191,7 @@ class InteractiveRun:
 
     def stop(self) -> None:
         if self._process.poll() is None:
-            self._process.kill()
+            self._kill()
         self._process.wait()
         InteractiveRun._active.discard(self)
 
@@ -180,7 +208,7 @@ class InteractiveRun:
         if len(sent) < len(data) and not self._timed_out:
             self._timed_out = True
             self._events.put({"type": "stderr", "data": "\nStopped: the output limit was reached.\n"})
-            self._process.kill()
+            self._kill()
 
     def _read_stream(self, stream: Any, kind: str) -> None:
         decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
@@ -207,12 +235,13 @@ class InteractiveRun:
             self._process.wait(timeout=self.limits.wall_seconds)
         except subprocess.TimeoutExpired:
             self._timed_out = True
-            self._process.kill()
+            self._kill()
             self._process.wait()
         for reader in self._readers:
             reader.join(timeout=2)
         code = self._process.returncode
         InteractiveRun._active.discard(self)
+        self._after_exit()
         self._events.put(
             {
                 "type": "exit",
@@ -222,3 +251,38 @@ class InteractiveRun:
             }
         )
         self._dir.cleanup()
+
+
+class DockerInteractiveRun(InteractiveRun):
+    """The same run and the same events, inside a container (ADR-0036, SPEC-03 section 2.1).
+
+    The harness and its input() token protocol are unchanged. Killing the docker CLI process does
+    not stop a container, so every stop goes through `docker kill`, and the container is removed
+    when the run ends.
+    """
+
+    def __init__(self, files: Dict[str, str], entry: str, limits: RunLimits = RunLimits(), image: str = IMAGE):
+        self._image = image
+        self._container = new_container_name()
+        super().__init__(files, entry, limits)
+
+    def _start_process(self, entry: str) -> "subprocess.Popen[bytes]":
+        open_to_container(self._dir.name)
+        command = [
+            "python", "-u", f"{WORKDIR}/lms_run_harness.py",
+            "hex:" + self._token.encode("utf-8").hex(), entry, str(self.limits.cpu_seconds),
+        ]
+        return subprocess.Popen(
+            docker_run_args(self._container, self._dir.name, command, self._image),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=cli_env(),
+        )
+
+    def _kill(self) -> None:
+        kill_container(self._container)
+        self._process.kill()
+
+    def _after_exit(self) -> None:
+        remove_container(self._container)

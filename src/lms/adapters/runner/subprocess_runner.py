@@ -15,6 +15,36 @@ from lms.adapters.runner.interactive import safe_env
 from lms.core.interfaces import ExecutionResult, extra_file_problem
 
 
+def build_test_script(test_code: str) -> str:
+    """The run_tests.py text: import the solution, then call every test_ function. Shared with DockerRunner."""
+    return (
+        "import sys\n"
+        "import builtins\n"
+        "from pathlib import Path\n"
+        "sys.path.insert(0, '.')\n"
+        "# Provide default input mock during import to prevent hanging on top-level input()\n"
+        "_orig_input = builtins.input\n"
+        "builtins.input = lambda *args, **kwargs: 'Amara Okafor'\n"
+        "try:\n"
+        "    from solution import *\n"
+        "except Exception:\n"
+        "    pass\n"
+        "builtins.input = _orig_input\n\n"
+        f"{test_code}\n\n"
+        "# --- Auto-invoke test functions ---\n"
+        "for _name, _fn in list(locals().items()):\n"
+        "    if _name.startswith('test_') and callable(_fn):\n"
+        "        _fn()\n"
+    )
+
+
+def assertion_errors_from(stderr: str) -> List[str]:
+    """The failed-assertion lines of a traceback."""
+    if "AssertionError" not in stderr:
+        return []
+    return [line.strip() for line in stderr.splitlines() if "AssertionError" in line or "assert " in line]
+
+
 class SubprocessRunner:
     """Runs student code and test assertions locally via isolated subprocess."""
 
@@ -41,26 +71,8 @@ class SubprocessRunner:
                 (tmppath / name).write_text(source, encoding="utf-8")
 
             if test_code:
-                # Write separate test harness file that safely imports solution
-                test_script = (
-                    "import sys\n"
-                    "import builtins\n"
-                    "from pathlib import Path\n"
-                    "sys.path.insert(0, '.')\n"
-                    "# Provide default input mock during import to prevent hanging on top-level input()\n"
-                    "_orig_input = builtins.input\n"
-                    "builtins.input = lambda *args, **kwargs: 'Amara Okafor'\n"
-                    "try:\n"
-                    "    from solution import *\n"
-                    "except Exception:\n"
-                    "    pass\n"
-                    "builtins.input = _orig_input\n\n"
-                    f"{test_code}\n\n"
-                    "# --- Auto-invoke test functions ---\n"
-                    "for _name, _fn in list(locals().items()):\n"
-                    "    if _name.startswith('test_') and callable(_fn):\n"
-                    "        _fn()\n"
-                )
+                # Separate test harness file that safely imports solution
+                test_script = build_test_script(test_code)
                 runner_script = tmppath / "run_tests.py"
                 runner_script.write_text(test_script, encoding="utf-8")
                 target_to_run = runner_script
@@ -84,11 +96,7 @@ class SubprocessRunner:
                 exit_code = proc.returncode
                 success = exit_code == 0
 
-                assertion_errors: List[str] = []
-                if "AssertionError" in stderr:
-                    for line in stderr.splitlines():
-                        if "AssertionError" in line or "assert " in line:
-                            assertion_errors.append(line.strip())
+                assertion_errors = assertion_errors_from(stderr)
 
                 return ExecutionResult(
                     success=success,

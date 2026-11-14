@@ -27,6 +27,8 @@ export default defineConfig({
     timeout: 60_000,
     env: {
       MOCK_AI: "true",
+      // Browser tests run on a machine that may have no Docker; opt in to the unsandboxed runner (ADR-0036).
+      LMS_RUNNER: process.env.LMS_RUNNER ?? "subprocess",
       // Browser tests check the real waits, whatever a local .env says (ADR-0019 amendment).
       LMS_TEST_MODE: "false",
       LMS_DB_PATH: process.env.LMS_E2E_DB,

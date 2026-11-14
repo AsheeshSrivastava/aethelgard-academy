@@ -23,23 +23,27 @@ Because this code originates from learners (or AI-generated snippets), the execu
 ## 2. Hardened Sandbox Constraints
 
 ### 2.1 Production Docker Runner (`DockerRunner`)
-* **Base Image:** `python:3.14-slim` (minimal attack surface).
-* **Network Isolation:** `--network none` (zero internet access).
-* **Resource Quotas (Cgroups):**
-  * Memory: `--memory 128m` (strict 128 megabytes cap).
-  * CPU: `--cpus 1.0` (maximum 1 physical CPU core).
-  * PIDs: `--pids-limit 64` (prevents fork bombs).
-* **Filesystem Security:**
-  * Root filesystem mounted read-only: `--read-only`.
-  * Ephemeral temp volume for execution: `--tmpfs /tmp:rw,size=16m,noexec`.
-* **Execution Timeout:** Strict 5.0 seconds maximum wall-clock time.
+Governed by ADR-0036. Every learner program, interactive or not, runs in its own ephemeral container made with `docker run`:
+
+* **Image:** `python:3.14-slim`, `--pull never` (a missing image is a deployment error, never a hidden download).
+* **Network:** `--network none`.
+* **Quotas (one set, shared with README):** `--memory 256m --memory-swap 256m` (no swap), `--cpus 0.5`, `--pids-limit 64`, `--ulimit nofile=64:64`, `--ulimit fsize=1048576:1048576`.
+* **Filesystem:** `--read-only` root; `--tmpfs /tmp:rw,noexec,nosuid,size=16m`; the run folder is bind-mounted read-only at `/work` (`--mount type=bind,...,readonly`), the working directory.
+* **Privilege:** `--user 65534:65534`, `--cap-drop ALL`, `--security-opt no-new-privileges`.
+* **Environment:** no host variable is passed. Only `PYTHONIOENCODING`, `PYTHONUTF8`, `PYTHONDONTWRITEBYTECODE` are set in the container.
+* **Name:** unique per run (`lms-run-<uuid4 hex>`), used to kill and remove it.
+* **Wall-clock timeout:** `timeout_seconds` plus a 3 s start-up allowance, then `docker kill <name>`. The result is the same timed-out result as the subprocess runner.
+* **Output:** stdout and stderr together are capped at 64 KB; past the cap the container is killed and the output ends with a stop note.
+* **Cleanup:** whatever happens (success, timeout, crash, cap), the container is removed (`docker rm -f`) and the temp folder deleted.
+* **Inputs:** `code`, `test_code`, `stdin_input` and extra `files` behave as in `SubprocessRunner`; extra file names are checked with `extra_file_problem` (a bad name raises `ValueError`).
+* **Interactive runs** (SPEC-12 section 7): `DockerInteractiveRun` starts the same container with `-i` and the same harness. The `input()` token protocol, event types and `RunLimits` (CPU, wall, output) are unchanged. Stop, wall-clock expiry and the output limit all end with `docker kill` and `docker rm -f`.
 
 ### 2.2 Local / Offline Subprocess Runner (`SubprocessRunner`)
-* Used for instant offline development and local environments where the Docker daemon is inactive.
-* Employs Python `subprocess.run` with:
-  * Strict `timeout=5.0`.
-  * AST import validation (disallowing dangerous OS/sys calls when untrusted mode is active).
-  * Isolated temp directory cleanup.
+* **Not a sandbox.** Development and CI only, selected explicitly with `LMS_RUNNER=subprocess`.
+* Python `subprocess.run` with a strict timeout, a temp directory that is deleted afterwards, and a cleaned environment (no keys or `.env` values).
+
+### 2.3 Fail closed
+If Docker cannot be used (CLI missing, daemon down, image absent), `DockerRunner` raises `RunnerUnavailable` and runs nothing. The API answers HTTP 503 (`Code runner unavailable`), or a WebSocket `error` event. It never runs the code another way. The run slot taken for the attempt is given back.
 
 ---
 
@@ -64,12 +68,21 @@ When `test_code` is provided:
 
 ---
 
-## 4. Runner Factory & Fallback Strategy
+## 4. Runner Factory (no silent fallback)
 
 ```python
-def get_code_runner(prefer_docker: bool = True) -> ICodeRunner:
-    """Factory that returns DockerRunner if daemon is running, else SubprocessRunner."""
+def get_code_runner(mode: Optional[str] = None) -> ICodeRunner:
+    """mode is LMS_RUNNER when None: docker (default) | subprocess | auto."""
 ```
+
+| `LMS_RUNNER` | Result |
+| :--- | :--- |
+| unset or `docker` | `DockerRunner`. If Docker is unreachable, start-up logs an error and every run is refused (section 2.3). |
+| `subprocess` | `SubprocessRunner`, with a start-up warning that it is not a sandbox. |
+| `auto` | `DockerRunner` when Docker is reachable at start-up, else `SubprocessRunner` with a warning. |
+| anything else | `ValueError`: the app does not start. |
+
+The chosen runner and its availability are logged once at start-up.
 
 ---
 
@@ -77,4 +90,5 @@ def get_code_runner(prefer_docker: bool = True) -> ICodeRunner:
 
 1. **Sub-second Execution:** For non-looping code, execution round-trip must complete in $< 800$ms.
 2. **Deterministic Cleanup:** Every temp file and container must be destroyed even if execution aborts, times out, or crashes.
-3. **No Zombie Containers:** Container names must be unique UUIDs with `--rm` enabled to ensure automatic cleanup.
+3. **No Zombie Containers:** Container names are unique; `--rm` is set and `docker rm -f` runs in a `finally` block.
+4. **Start-up allowance:** Container start-up (about 0.3 to 1 s) is outside the sub-second target in NFR 1; that target applies to the subprocess runner.
