@@ -2,6 +2,7 @@
 used to end with `app = create_app()`, so any import (a test, a script, openapi dump) opened the
 database, read the curriculum and built the AI router. The server now starts through a factory."""
 
+import os
 import subprocess
 import sys
 
@@ -19,7 +20,8 @@ def test_importing_the_module_builds_no_app_and_creates_no_database(tmp_path):
         cwd=tmp_path,
         capture_output=True,
         text=True,
-        env={"PATH": "", "LMS_DB_PATH": str(tmp_path / "lms_state.db")},
+        # Keep the real environment: Windows needs SYSTEMROOT to start Python at all.
+        env={**os.environ, "LMS_DB_PATH": str(tmp_path / "lms_state.db")},
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
