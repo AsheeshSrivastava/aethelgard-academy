@@ -10,7 +10,8 @@ from typing import Any, Dict, Optional
 
 from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
-from lms.adapters.runner.subprocess_runner import SubprocessRunner
+from lms.adapters.runner.docker_cli import RunnerUnavailable
+from lms.adapters.runner.docker_runner import get_code_runner
 from lms.core.models import (
     GRADED_PLAYGROUND_ACTIVITIES,
     AssistanceLevel,
@@ -124,8 +125,18 @@ def handle_verify_command(
     code = solution_file.read_text(encoding="utf-8")
     test_code = test_file.read_text(encoding="utf-8") if test_file.exists() else None
 
-    runner = SubprocessRunner()
-    result = runner.execute(code=code, test_code=test_code)
+    # Follows LMS_RUNNER like the server (ADR-0036): Docker by default, and no run when Docker is down.
+    try:
+        result = get_code_runner().execute(code=code, test_code=test_code)
+    except RunnerUnavailable:
+        return {
+            "success": False,
+            "message": (
+                "Cannot run your code: Docker is not available, and lms check runs code in Docker by default. "
+                "Start Docker and run `docker pull python:3.14-slim` once. "
+                "On your own machine you can opt in to running without a sandbox with LMS_RUNNER=subprocess."
+            ),
+        }
 
     if not result.success:
         return {

@@ -32,7 +32,8 @@ from lms.adapters.runner.docker_cli import (
     remove_container,
 )
 from lms.adapters.runner.interactive import DockerInteractiveRun, RunLimits
-from lms.adapters.runner.subprocess_runner import SubprocessRunner, assertion_errors_from, build_test_script
+from lms.adapters.runner.check_harness import HARNESS, check_stdin
+from lms.adapters.runner.subprocess_runner import SubprocessRunner, assertion_errors_from
 from lms.core.interfaces import ExecutionResult, ICodeRunner, extra_file_problem
 
 logger = logging.getLogger("lms.runner")
@@ -117,7 +118,7 @@ class DockerRunner:
                 (folder_path / name).write_text(source, encoding="utf-8")
             script = "solution.py"
             if test_code:
-                (folder_path / "run_tests.py").write_text(build_test_script(test_code), encoding="utf-8")
+                (folder_path / "run_tests.py").write_text(HARNESS, encoding="utf-8")  # fixed text: checks go on stdin
                 script = "run_tests.py"
             open_to_container(folder)
 
@@ -129,7 +130,9 @@ class DockerRunner:
                 argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=cli_env()
             )
             try:
-                threads = self._start_pipes(proc, name, capture, stdin_input or "")
+                threads = self._start_pipes(
+                    proc, name, capture, check_stdin(test_code, stdin_input) if test_code else (stdin_input or "")
+                )
                 try:
                     proc.wait(timeout=timeout_seconds + STARTUP_ALLOWANCE_SECONDS)
                 except subprocess.TimeoutExpired:

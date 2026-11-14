@@ -45,6 +45,20 @@ Governed by ADR-0036. Every learner program, interactive or not, runs in its own
 ### 2.3 Fail closed
 If Docker cannot be used (CLI missing, daemon down, image absent), `DockerRunner` raises `RunnerUnavailable` and runs nothing. The API answers HTTP 503 (`Code runner unavailable`), or a WebSocket `error` event. It never runs the code another way. The run slot taken for the attempt is given back.
 
+### 2.4 Hidden checks (audit step A6b, ADR-0036 amendment)
+Hidden checks are answer material, so the learner's program must not be able to read them.
+
+* `run_tests.py` is fixed text (`check_harness.HARNESS`) with no checks in it. It is the only extra file in the run folder.
+* The checks (`test_code`) are sent as the first line of stdin (JSON `{"checks": ...}`). The learner's own `stdin_input` follows that line. `ICodeRunner.execute()` is unchanged.
+* The harness reads that line a byte at a time (no stdio buffer keeps a copy), compiles it under the file name `<hidden-checks>`, wipes the bytes, and only then imports `solution`. So the checks are not in a file, in `argv`, in the environment, in `/proc/self/cmdline`, or in `linecache`, and a traceback shows no check source line.
+* `DockerRunner` and `SubprocessRunner` use the same harness.
+* **Names and scope.** The checks run with the names they always had: `sys`, `builtins`, `Path` and `__name__ == "__main__"`. A `SystemExit` raised while importing the learner's module no longer skips the checks.
+* **Feedback.** A failing traceback has no check source line. So a check should carry a message (`assert f(2) == 4, "f(2) should be 4"`): a bare `assert` now reports only `AssertionError`. This is deliberate, because that source line was the leak.
+* **Still open.** A learner program that calls `os._exit(0)` at import ends the run with exit code 0 before any check runs, so it passes. This is old behaviour. A completion sentinel from the harness would close it.
+* **What this does not close.** The compiled checks and the learner's functions run in one Python process. A program written to attack the grader can still walk the calling frames, at import time or while a check runs, or scan its own memory (a test run found one residue copy of the check text there). Fully closing it needs the learner's code and the checks in separate processes. That is future work.
+* **What the subprocess runner cannot guarantee.** It runs as the server's user, on the host, so a learner's program can read anything that user can read, including the private answers folder (`LMS_ANSWERS_DIR`). Hiding the checks from the program is only meaningful in Docker.
+* `lms check` uses `get_code_runner()` and follows `LMS_RUNNER`. With Docker down it refuses with a message that names `docker pull` and `LMS_RUNNER=subprocess`.
+
 ---
 
 ## 3. Data Contract (`ExecutionResult`)
@@ -62,8 +76,8 @@ class ExecutionResult(BaseModel):
 ### 3.1 Verification & Assertion Injection
 When `test_code` is provided:
 1. The student's code is written to `solution.py`.
-2. The verification test code is written to `test_solution.py`.
-3. The runner executes `pytest` or a deterministic assertion harness.
+2. The verification test code is sent on stdin to the harness (section 2.4).
+3. The runner executes a deterministic assertion harness (`run_tests.py`); the checks reach it on stdin, never as a file (section 2.4).
 4. If an `AssertionError` is raised, it is parsed and extracted into `assertion_errors`.
 
 ---

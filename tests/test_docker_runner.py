@@ -167,7 +167,8 @@ def test_test_code_runs_through_the_test_script_with_the_solution_beside_it(dock
 
     assert docker.popen_args[0][-2:] == ["python", "run_tests.py"]
     assert "def f()" in docker.mounted["solution.py"]
-    assert "def test_f" in docker.mounted["run_tests.py"]
+    assert "def test_f" not in docker.mounted["run_tests.py"], "the checks go on stdin, never into the folder"
+    assert b"def test_f" in docker.proc.stdin.captured
 
 
 def test_extra_files_are_placed_beside_the_code(docker):
