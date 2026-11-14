@@ -4,11 +4,20 @@ Points are built from facts we can measure: the requirement results, words under
 the length of the review note. No model, no network. A pointer says where to look; it never gives code.
 """
 
+import re
 from typing import List, Literal, Mapping, Optional, Sequence
 
 from pydantic import BaseModel
 
 from lms.core.builds import RequirementCheck, RequirementResult, StageBuildSpec, _sections_of
+
+_CODE_BLOCK = re.compile(r"```.*?(```|\Z)", re.DOTALL)
+
+
+def strip_code_blocks(text: str) -> str:
+    """The AXIS summary may explain, but never hands over code: fenced blocks are removed."""
+    return _CODE_BLOCK.sub("(code left out)", text).strip()
+
 
 Status = Literal["not_met", "not_checked", "met"]
 _ORDER = {"not_met": 0, "not_checked": 1, "met": 2}

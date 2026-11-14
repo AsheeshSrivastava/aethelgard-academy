@@ -474,3 +474,22 @@ def test_the_summary_prompt_gets_the_script_and_the_rule_but_no_solution():
     assert "the rule text" in user
     assert "<script>\nprint('hi')  x\n</script>" in user
     assert "rule-based check" in system
+
+
+def test_code_in_the_axis_summary_is_removed(repo, catalog):
+    class Codey(MockAxisCompanion):
+        def summarise_feedback(self, points, readme, note, script=""):
+            return "Try this:\n```python\nprint(name.strip())\n```\nThen run it.", "m"
+
+    client = make_client(repo, catalog, Codey())
+    pass_cold_checks(repo)
+
+    summary = client.post(FEEDBACK, json={"files": {}}).json()["summary"]
+
+    assert "print(name" not in summary and "(code left out)" in summary and "Then run it." in summary
+
+
+def test_an_unclosed_code_fence_is_removed_too():
+    from lms.core.build_feedback import strip_code_blocks
+
+    assert "x = 1" not in strip_code_blocks("Do this ```\nx = 1")

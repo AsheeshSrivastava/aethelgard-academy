@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
-from lms.core.build_feedback import FeedbackPoint, build_feedback_points
+from lms.core.build_feedback import FeedbackPoint, build_feedback_points, strip_code_blocks
 from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
 from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -912,13 +912,17 @@ def create_app(
         points = build_feedback_points(build, payload.files, results, payload.review_note)
         summary = summary_error = model = None
         if hasattr(axis, "summarise_feedback"):
-            readme = next((payload.files[f.path] for f in build.files if f.path == "README.md" and f.path in payload.files), "")
+            readme = next(
+                (payload.files[f.path] for f in build.files if f.path.lower() == "readme.md" and f.path in payload.files), ""
+            )
             try:
                 summary, model = axis.summarise_feedback(
                     points, readme, payload.review_note or "", payload.files.get(build.entry, "")
                 )
             except DraftFailed as failure:
                 summary_error = str(failure)
+        if summary is not None:
+            summary = strip_code_blocks(summary)       # Code stays the learner's: no code in the wording (ADR-0028)
         log_event(
             learner_id, "build_feedback",
             {"course_id": course_id, "stage": stage, "run_checks": payload.run_checks,
