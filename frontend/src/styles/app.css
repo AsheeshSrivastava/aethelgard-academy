@@ -1103,11 +1103,6 @@ a.build-tile {
   color: var(--on-accent);
 }
 
-.rung-provisional {
-  background: var(--accent-line);
-  color: var(--text);
-}
-
 .rung-target {
   box-shadow: inset 0 0 0 2px var(--warm-text);
 }
@@ -3362,4 +3357,114 @@ button:disabled {
 
 .explain-nav .button {
   gap: 8px;
+}
+
+/* My progress redesign (2026-11-14) */
+.rung-provisional {
+  border: 1px dashed var(--accent);
+  background: repeating-linear-gradient(45deg, var(--accent-soft) 0 4px, var(--surface) 4px 8px);
+  color: var(--accent-text);
+}
+
+.where-summary {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.progress-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.progress-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--accent-soft);
+}
+
+.progress-tile-open {
+  border: 2px solid var(--warm-line);
+  background: var(--warm);
+  color: var(--warm-text);
+}
+
+.unit-state {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ladder-legend .legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  align-items: center;
+}
+
+.unit-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.unit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.unit-card-attention {
+  border: 2px solid var(--warm-line);
+}
+
+.unit-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: baseline;
+}
+
+.unit-card-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.evidence-log > summary {
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.ladder-legend {
+  text-align: left;
+}
+
+.ladder-legend .swatch {
+  display: inline-block;
+  width: 28px;
+  height: 14px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.ladder-legend .swatch-provisional {
+  border: 1px dashed var(--accent);
+  background: repeating-linear-gradient(45deg, var(--accent-soft) 0 4px, var(--surface) 4px 8px);
+}
+
+.ladder-legend .legend-list {
+  justify-content: flex-start;
+}
+
+.ladder-legend .legend-list li {
+  display: flex;
+  align-items: center;
 }

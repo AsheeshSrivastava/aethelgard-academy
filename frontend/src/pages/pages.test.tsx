@@ -306,7 +306,7 @@ describe("my progress", () => {
     const next = await screen.findByRole("region", { name: /next learning action/i });
     expect(within(next).getByText(proficiency.next_action!.message)).toBeInTheDocument();
     expect(within(next).getByRole("link", { name: /PY-0\.1/ })).toHaveAttribute("href", "/units/PY-0.1/debug-validate");
-    expect(await screen.findByRole("heading", { name: /Skills · Module 0/ })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Units · Module 0/ })).toBeInTheDocument();
     expect(calls.find((c) => c.url.includes("/proficiency"))!.url).not.toContain("stage=");
   });
 
@@ -324,7 +324,7 @@ describe("my progress", () => {
     renderAt("/progress");
 
     const units = await screen.findByRole("region", { name: /Units · Module 0/ });
-    expect(within(units).getByRole("link", { name: /PY-0\.4/ })).toHaveTextContent("Progress");
+    expect(within(units).getByRole("link", { name: /PY-0\.4/ })).toHaveTextContent("Done for now");
   });
 
   it("shows the ledger and filters it by skill on the server", async () => {
@@ -354,7 +354,7 @@ describe("my progress", () => {
     const user = userEvent.setup();
     renderAt("/progress");
 
-    await screen.findByRole("heading", { name: /Skills · Module 0/ });
+    await screen.findByRole("heading", { name: /Units · Module 0/ });
     await user.selectOptions(await screen.findByLabelText("Module"), "1");
 
     await waitFor(() => expect(calls.some((c) => c.url.includes("stage=1"))).toBe(true));

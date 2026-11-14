@@ -52,3 +52,60 @@ describe("My progress, 2026-11-04 fixes", () => {
     expect(cells.some((text) => /\d+\/\d+\/\d{4}/.test(text))).toBe(false);
   });
 });
+
+describe("My progress redesign, 2026-11-14", () => {
+  it("says where you are in plain words, with one tile per unit", async () => {
+    stubApi(routes({}));
+    renderAt("/progress");
+
+    const here = await screen.findByRole("region", { name: "Where you are" });
+    expect(within(here).getByText(/1 of 2 units done for now/)).toBeInTheDocument();
+    expect(within(here).getByText("Done for now")).toBeInTheDocument();
+    expect(within(here).getByText("Needs work")).toBeInTheDocument();
+  });
+
+  it("groups each unit's skills under its card", async () => {
+    stubApi(routes({}));
+    renderAt("/progress");
+
+    const card = await screen.findByRole("article", { name: /PY-0\.4/ });
+    expect(within(card).getByText("Run a first program")).toBeInTheDocument();
+    expect(within(card).getByRole("img", { name: /^CO-1:/ })).toBeInTheDocument();
+    expect(within(card).getByRole("img", { name: /^CO-2:/ })).toBeInTheDocument();
+    expect(within(card).queryByRole("img", { name: /^DE-2:/ })).not.toBeInTheDocument();
+  });
+
+  it("says when a unit was reset and how much is redone", async () => {
+    stubApi(routes({}));
+    renderAt("/progress");
+
+    const card = await screen.findByRole("article", { name: /PY-0\.1/ });
+    expect(within(card).getByText(/You reset this unit on 9 Nov 2026\. 1 of 3 activities redone/)).toBeInTheDocument();
+  });
+
+  it("names the other module that a skill's proof came from", async () => {
+    stubApi(routes({}));
+    renderAt("/progress");
+
+    const card = await screen.findByRole("article", { name: /PY-0\.4/ });
+    expect(within(card).getByText("Includes proof from Module 1.")).toBeInTheDocument();
+  });
+
+  it("explains the ladder colours in plain words", async () => {
+    stubApi(routes({}));
+    renderAt("/progress");
+
+    const legend = await screen.findByRole("region", { name: "How to read the ladders" });
+    expect(within(legend).getByText(/Proven: 2 results, including a Cold Check/)).toBeInTheDocument();
+    expect(within(legend).getByText(/Seen once, not yet proven/)).toBeInTheDocument();
+  });
+
+  it("keeps the full evidence log in a collapsible section", async () => {
+    stubApi(routes({}));
+    renderAt("/progress");
+
+    const log = (await screen.findByText("Full evidence log")).closest("details");
+    expect(log).not.toBeNull();
+    expect(await within(log as HTMLElement).findByRole("table", { name: "Evidence ledger" })).toBeInTheDocument();
+  });
+});

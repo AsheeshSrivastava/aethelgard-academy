@@ -93,7 +93,7 @@ export const proficiency: Schemas["ProficiencyView"] = {
       current_level: "Understand",
       confidence: "supported",
       supported_levels: ["Understand"],
-      proof_stages: {},
+      proof_stages: { Understand: [0, 1] },
       evidence_counts: { explain: 3, perform: 0, diagnose: 0 },
       decision: "Progress",
       reason: "Sufficient evidence.",
@@ -114,8 +114,27 @@ export const proficiency: Schemas["ProficiencyView"] = {
     },
   ],
   units: [
-    { unit_id: "PY-0.4", decision: "Progress", title: "Run a first program", skills: [], reset_at: null, activities_done: 3, activities_total: 3 },
-    { unit_id: "PY-0.1", decision: "Strengthen", title: "Programs are text", skills: [], reset_at: null, activities_done: 1, activities_total: 3 },
+    {
+      unit_id: "PY-0.4",
+      decision: "Progress",
+      title: "Run a first program",
+      skills: [
+        { skill_id: "CO-1", goal_level: "Apply" },
+        { skill_id: "CO-2", goal_level: "Understand" },
+      ],
+      reset_at: null,
+      activities_done: 3,
+      activities_total: 3,
+    },
+    {
+      unit_id: "PY-0.1",
+      decision: "Strengthen",
+      title: "Programs are text",
+      skills: [{ skill_id: "DE-2", goal_level: "Understand" }],
+      reset_at: "2026-11-09T10:00:00Z",
+      activities_done: 1,
+      activities_total: 3,
+    },
   ],
   next_action: {
     unit_id: "PY-0.1",

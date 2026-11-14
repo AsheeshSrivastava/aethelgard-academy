@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { api, type EvidenceEntry } from "../api/client";
-import { DecisionChip, ErrorNote, Loading, Panel } from "../components/common";
-import { SkillLadder } from "../components/SkillLadder";
-import { formatDate, formatDateTime, nextActionMessage, stepName } from "../lib/format";
+import { api, type EvidenceEntry, type Schemas } from "../api/client";
+import { ErrorNote, Loading, Panel } from "../components/common";
+import { UnitCard } from "../components/UnitCard";
+import { formatDate, formatDateTime, nextActionMessage, stepName, unitStateLabel } from "../lib/format";
 import { DECISION_MEANINGS } from "../lib/meanings";
 
 const ledgerActivity = (entry: EvidenceEntry) => {
@@ -41,11 +41,10 @@ function Ledger({ skills }: { skills: { skill_id: string; skill_name: string }[]
   });
 
   return (
-    <section className="card panel" aria-labelledby="ledger">
+    <details className="card panel evidence-log">
+      <summary className="panel-title">Full evidence log</summary>
+      <p className="muted small">Every result, newest first, with the help used. For checking, not for everyday use.</p>
       <div className="section-head">
-        <h2 id="ledger" className="panel-title">
-          Evidence ledger
-        </h2>
         <label className="filter">
           <span>Filter by skill</span>
           <select value={skillId} onChange={(event) => setSkillId(event.target.value)}>
@@ -89,6 +88,30 @@ function Ledger({ skills }: { skills: { skill_id: string; skill_name: string }[]
           </table>
         </div>
       )}
+    </details>
+  );
+}
+
+function WhereYouAre({ units }: { units: Schemas["UnitView"][] }) {
+  const done = units.filter((unit) => unitStateLabel(unit.decision) === "Done for now").length;
+  return (
+    <section className="card panel where-you-are" aria-labelledby="where">
+      <h2 id="where" className="eyebrow">
+        Where you are
+      </h2>
+      <p className="where-summary">
+        {done} of {units.length} {units.length === 1 ? "unit" : "units"} done for now.
+        {units.some((unit) => unitStateLabel(unit.decision) === "Needs work") &&
+          " Units marked Needs work come before this module is finished."}
+      </p>
+      <ul className="plain-list progress-tiles">
+        {units.map((unit) => (
+          <li key={unit.unit_id} className={`progress-tile progress-tile-${unitStateLabel(unit.decision) === "Done for now" ? "done" : "open"}`}>
+            <span className="mono">{unit.unit_id}</span>
+            <span className="unit-state">{unitStateLabel(unit.decision)}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -159,31 +182,45 @@ export function Progress() {
         </section>
       )}
 
+      <WhereYouAre units={units} />
+
+      <section className="card panel ladder-legend" aria-label="How to read the ladders">
+        <ul className="plain-list legend-list small">
+          <li>
+            <i className="swatch swatch-supported" /> Proven: 2 results, including a Cold Check
+          </li>
+          <li>
+            <i className="swatch swatch-provisional" /> Seen once, not yet proven
+          </li>
+          <li>
+            <i className="swatch swatch-target" /> This module's goal
+          </li>
+        </ul>
+        <p className="muted small">
+          A skill's level is overall, not per module: proof from another module still counts, and the note under a
+          skill says where it came from.
+        </p>
+      </section>
+
       <div className="progress-layout">
         <div className="progress-main">
-          <section className="card panel" aria-labelledby="skills">
-            <div className="section-head">
-              <h2 id="skills" className="panel-title">
-                Skills · {shownLabel}
-              </h2>
-              <span className="legend small muted">
-                <span>
-                  <i className="swatch swatch-supported" /> Supported
-                </span>
-                <span>
-                  <i className="swatch swatch-provisional" /> Provisional
-                </span>
-                <span>
-                  <i className="swatch swatch-target" /> Target
-                </span>
-              </span>
-            </div>
-            <ul className="plain-list ladder-list">
-              {skills.map((skill) => (
-                <SkillLadder key={skill.skill_id} skill={skill} />
+          <Panel title={`Units · ${shownLabel}`} id="units">
+            <div className="unit-cards">
+              {units.map((unit) => (
+                <UnitCard
+                  key={unit.unit_id}
+                  unit={unit}
+                  shownStage={shownStage}
+                  skills={unit.skills.flatMap((target) =>
+                    skills
+                      .filter((skill) => skill.skill_id === target.skill_id)
+                      // A skill can recur in several units: mark this unit's own goal on its ladder.
+                      .map((skill) => ({ ...skill, target_level: target.goal_level })),
+                  )}
+                />
               ))}
-            </ul>
-          </section>
+            </div>
+          </Panel>
           <Ledger skills={skills} />
         </div>
         <aside className="unit-aside">
@@ -197,18 +234,6 @@ export function Progress() {
                 </div>
               ))}
             </dl>
-          </Panel>
-          <Panel title={`Units · ${shownLabel}`} id="units">
-            <ul className="plain-list">
-              {units.map((unit) => (
-                <li key={unit.unit_id}>
-                  <Link to="/units/$unitId" params={{ unitId: unit.unit_id }} className="unit-decision">
-                    <span className="mono">{unit.unit_id}</span>
-                    <DecisionChip decision={unit.decision} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </Panel>
           <Panel title="How this is decided" id="how">
             <p className="small">

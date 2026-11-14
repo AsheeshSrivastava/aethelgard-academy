@@ -16,7 +16,7 @@ function rungClass(skill: Skill, level: Skill["target_level"], reached: boolean)
   return reached ? "rung-provisional" : "";
 }
 
-export function SkillLadder({ skill }: { skill: Skill }) {
+export function SkillLadder({ skill, note }: { skill: Skill; note?: string | null }) {
   const current = skill.current_level ? LEVELS.indexOf(skill.current_level) : -1;
   const target = LEVELS.indexOf(skill.target_level);
   const counts = skill.evidence_counts;
@@ -44,6 +44,7 @@ export function SkillLadder({ skill }: { skill: Skill }) {
         ))}
       </div>
       <p className="ladder-reason">{skillReason(skill.decision, skill.reason)}</p>
+      {note && <p className="ladder-counts">{note}</p>}
       <p className="ladder-counts">
         Evidence: {counts.explain} explain, {counts.perform} perform, {counts.diagnose} diagnose
       </p>
