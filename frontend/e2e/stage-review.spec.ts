@@ -8,7 +8,8 @@ const MAP = "/courses/python";
 const REVIEW = "/courses/python/stages/0/review";
 
 // Option positions in real Cold Check seeds, so every answer goes through the real grader.
-const QUEUE = { right: 1, wrong: 3 };
+// The retry of a failed item rotates to the other variant (cold-predict-2), whose right option is the third.
+const QUEUE = { right: 1, wrong: 3, retryRight: 2 };
 const ZONE = { right: 2, wrong: 3 };
 
 async function shot(page: Page, name: string) {
@@ -96,7 +97,7 @@ test.describe.serial("stage review and rechecks", () => {
     database("a-day-later");
     await page.goto(REVIEW);
     await expect(page.getByText("Item 2 of 2")).toBeVisible();
-    await answer(page, QUEUE.right);
+    await answer(page, QUEUE.retryRight);
 
     await expect(page.getByText("Passed.")).toBeVisible();
     await page.getByRole("link", { name: "Go to the build" }).click();

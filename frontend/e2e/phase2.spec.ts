@@ -92,6 +92,9 @@ test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) =
 
   // Trace
   await page.goto(`${UNIT}/trace`);
+  // The trace also has a state table (Stage 0 round 2); both parts must be filled.
+  await page.getByLabel("status after line 1").fill("waiting");
+  await page.getByLabel("status after line 3").fill("checked in");
   await page.getByLabel(/terminal shows/i).fill("waiting\nchecked in");
   await page.getByRole("button", { name: "Submit answer" }).click();
   await expect(page.getByRole("status", { name: "Result" })).toContainText("Passed");
@@ -148,8 +151,9 @@ test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) =
   // The retry covers only the failed skill
   moveClockForward("PY-0.1");
   await page.reload();
-  await expect(page.getByText("Kofi Mensah").first()).toBeVisible();
-  await page.getByRole("radio").nth(1).check();
+  // The retry rotates to the other variant (cold-predict-2, "Meera Das"); its right option is the third.
+  await expect(page.getByText("Meera Das").first()).toBeVisible();
+  await page.getByRole("radio").nth(2).check();
   await page.getByRole("button", { name: "Submit, one try" }).click();
   await expect(page.getByText("Passed.", { exact: true })).toBeVisible();
   await shot(page, "lesson-cold-passed");
