@@ -33,6 +33,13 @@ from lms.adapters.curriculum.quick_checks import load_quick_check_key, parse_qui
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.adapters.runner.docker_runner import get_code_runner
 from lms.adapters.runner.interactive import InteractiveRun, RunLimits, valid_start
+from lms.adapters.runner.run_slots import (
+    RETRY_AFTER_SECONDS,
+    CappedRunner,
+    RunBusy,
+    RunSlots,
+    max_runs_from_env,
+)
 from lms.core import ai_judgement
 from lms.core.ai_judgement import AiJudgement, not_judged
 from lms.core.builds import (
@@ -178,6 +185,9 @@ def current_learner_id() -> str:
     return LOCAL_LEARNER_ID
 
 
+BUSY_MESSAGE = "The server is busy running other code. Wait a moment and try again."
+
+
 def problem(status: int, title: str, detail: str) -> JSONResponse:
     """RFC 9457 error body (SPEC-12 section 1)."""
     return JSONResponse(
@@ -319,6 +329,7 @@ def create_app(
     dist_dir: Optional[Path] = None,
     test_mode: Optional[bool] = None,
     providers: Optional[ProviderRouter] = None,
+    max_concurrent_runs: Optional[int] = None,
 ) -> FastAPI:
     """Application factory for the LMS API Gateway."""
 
@@ -337,6 +348,9 @@ def create_app(
 
     if runner is None:
         runner = get_code_runner()
+    # Every code run, from any route, takes a slot first (audit A4). Per process.
+    run_slots = RunSlots(max_concurrent_runs if max_concurrent_runs is not None else max_runs_from_env())
+    runner = CappedRunner(runner, run_slots)
 
     # AXIS goes through the provider switcher unless a test injects a companion (SPEC-17).
     if axis is None:
@@ -932,7 +946,13 @@ def create_app(
             ),
         )
 
-    # --- Code Execution Sandbox Routes ---
+    # --- Code Execution Sandbox Routes (runs are capped: audit A4) ---
+    @app.exception_handler(RunBusy)
+    async def run_busy_handler(_request, _exc: RunBusy) -> JSONResponse:
+        response = problem(429, "Too many code runs", BUSY_MESSAGE)
+        response.headers["Retry-After"] = str(RETRY_AFTER_SECONDS)
+        return response
+
     @app.post("/api/v1/execute", response_model=ExecutionResult)
     def execute_code(payload: ExecuteCodeRequest):
         return runner.execute(
@@ -959,40 +979,47 @@ def create_app(
             await websocket.close()
             return
 
-        interactive = InteractiveRun(files, entry, run_limits or RunLimits())
-
-        async def send_events() -> None:
-            while True:
-                event = await asyncio.to_thread(interactive.next_event, 0.1)
-                if event is None:
-                    continue
-                await websocket.send_json(event)
-                if event["type"] == "exit":
-                    log_event(
-                        current_learner_id(), "run",
-                        {"files": files, "entry": entry, "exit_code": event.get("code"), "timed_out": event.get("timed_out")},
-                        item_id=start.get("exercise_id"),
-                    )
-                    return
-
-        async def receive_stdin() -> None:
-            while True:
-                message = await websocket.receive_json()
-                if message.get("type") == "stdin":
-                    interactive.send_stdin(str(message.get("data", "")))
-
-        sender = asyncio.create_task(send_events())
-        receiver = asyncio.create_task(receive_stdin())
-        try:
-            await asyncio.wait({sender, receiver}, return_when=asyncio.FIRST_COMPLETED)
-        except WebSocketDisconnect:
-            pass
-        finally:
-            sender.cancel()
-            receiver.cancel()
-            interactive.stop()
-        if sender.done() and not sender.cancelled():
+        if not run_slots.try_acquire():
+            await websocket.send_json({"type": "error", "message": BUSY_MESSAGE})
             await websocket.close()
+            return
+        try:
+            interactive = InteractiveRun(files, entry, run_limits or RunLimits())
+
+            async def send_events() -> None:
+                while True:
+                    event = await asyncio.to_thread(interactive.next_event, 0.1)
+                    if event is None:
+                        continue
+                    await websocket.send_json(event)
+                    if event["type"] == "exit":
+                        log_event(
+                            current_learner_id(), "run",
+                            {"files": files, "entry": entry, "exit_code": event.get("code"), "timed_out": event.get("timed_out")},
+                            item_id=start.get("exercise_id"),
+                        )
+                        return
+
+            async def receive_stdin() -> None:
+                while True:
+                    message = await websocket.receive_json()
+                    if message.get("type") == "stdin":
+                        interactive.send_stdin(str(message.get("data", "")))
+
+            sender = asyncio.create_task(send_events())
+            receiver = asyncio.create_task(receive_stdin())
+            try:
+                await asyncio.wait({sender, receiver}, return_when=asyncio.FIRST_COMPLETED)
+            except WebSocketDisconnect:
+                pass
+            finally:
+                sender.cancel()
+                receiver.cancel()
+                interactive.stop()
+            if sender.done() and not sender.cancelled():
+                await websocket.close()
+        finally:
+            run_slots.release()
 
     # --- AXIS AI Companion Routes ---
     guardrail = SocraticGuardrail()

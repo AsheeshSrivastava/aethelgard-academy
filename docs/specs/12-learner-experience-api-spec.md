@@ -269,6 +269,12 @@ server → {type: "exit", code, duration_ms, timed_out: bool}
 
 Limits: 5 s CPU, 120 s wall clock including time waiting for input, 64 KB output, no network. Runs never write evidence; only attempts do.
 
+**Concurrent run cap (audit A4, 2026-11-14).** Every code run takes a slot before it starts and gives it back when it ends: `POST /execute`, interactive runs, the playground check, practice grading and build checks. The number of slots is `LMS_MAX_CONCURRENT_RUNS` (default 4; a value that is not a positive whole number falls back to 4 with a warning). When no slot is free the run is refused at once, not queued:
+- HTTP routes answer `429` with a problem body and `Retry-After: 2`. Nothing is recorded, because grading happens before any evidence is written.
+- `WS /runs` sends `{type: "error", message: "The server is busy ..."}` and closes.
+
+The cap is per server process; with several workers it applies to each worker.
+
 - `files` keys must be plain file names ending in `.py`, and `entry` must be one of them. A bad `start` gets `{type: "error", message}` and the socket closes.
 - A run exceeding a limit is stopped and reports `timed_out: true`. Output past 64 KB is cut off with a final `stderr` notice.
 - Learner code runs with a minimal environment, so it never sees API keys or `.env` values.
