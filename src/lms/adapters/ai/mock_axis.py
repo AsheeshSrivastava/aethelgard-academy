@@ -49,7 +49,7 @@ class MockAxisCompanion:
             "offline-mock",
         )
 
-    def summarise_feedback(self, points, readme: str, note: str, script: str = "") -> Tuple[str, str]:
+    def summarise_feedback(self, points, readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, str]:
         """A fixed summary built from the points' counts (SPEC-15 section 10.2). No network."""
         not_met = sum(1 for p in points if p.status == "not_met")
         waiting = sum(1 for p in points if p.status == "not_checked")

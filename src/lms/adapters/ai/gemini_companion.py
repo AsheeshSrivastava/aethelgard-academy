@@ -181,9 +181,9 @@ class GeminiCompanion:
         self._record("document_draft", answered, response, len(sys_prompt) + len(user_msg))
         return response.text or "", answered
 
-    def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "") -> Tuple[str, Optional[str]]:
+    def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, Optional[str]]:
         """One summary call over the measured feedback points (SPEC-15 section 10.2). Never falls back."""
-        sys_prompt, user_msg = axis_rules.feedback_summary_prompts(points, readme, note, script)
+        sys_prompt, user_msg = axis_rules.feedback_summary_prompts(points, readme, note, script, run_output)
         self._check_budget(sys_prompt, user_msg)
         response = self._client.models.generate_content(
             model=self.model,

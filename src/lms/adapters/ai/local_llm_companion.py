@@ -314,9 +314,9 @@ class OpenAICompatibleCompanion:
         self._record("document_draft", answered, resp.usage, len(sys_prompt) + len(user_msg))
         return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
 
-    def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "") -> Tuple[str, Optional[str]]:
+    def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, Optional[str]]:
         """One summary call over the measured feedback points (SPEC-15 section 10.2). Never falls back."""
-        sys_prompt, user_msg = axis_rules.feedback_summary_prompts(points, readme, note, script)
+        sys_prompt, user_msg = axis_rules.feedback_summary_prompts(points, readme, note, script, run_output)
         self._check_budget(sys_prompt, user_msg)
         target_model = self.resolve_model()
         resp = self._client.chat.completions.create(

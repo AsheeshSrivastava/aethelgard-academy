@@ -185,6 +185,8 @@ class RequirementResult(BaseModel):
     id: str
     met: Optional[bool]                # None: a behaviour check that has not run yet
     detail: Optional[str] = None
+    # What the script really printed in the sample run. Kept off the API; only build feedback reads it.
+    output: Optional[str] = Field(default=None, exclude=True)
 
 
 def _comments(code: str) -> Set[str]:
@@ -380,33 +382,35 @@ def _first_missing_line(stdout: str, expected: Sequence[str], prompts: Sequence[
 
 def _readme_sample_run(
     build: StageBuildSpec, check: RequirementCheck, files: Mapping[str, str], runner: Runner
-) -> Tuple[bool, Optional[str]]:
-    """SPEC-15 section 9.2: the README's pasted run must be what the script really does."""
+) -> Tuple[bool, Optional[str], Optional[str]]:
+    """SPEC-15 section 9.2: the README's pasted run must be what the script really does.
+
+    Returns (met, detail, output). `output` is what the script printed, once it has run."""
     heading = check.heading or ""
     body = _sections_of(files.get(check.path or "", "")).get(heading.strip().lower())
     block = _first_code_block(body) if body is not None else None
     if block is None:
-        return False, f"Paste one real run inside a code block under '{heading}'."
+        return False, f"Paste one real run inside a code block under '{heading}'.", None
     code = files.get(build.entry, "")
     tree, problem = _parse(code)
     if tree is None:
-        return False, problem
+        return False, problem, None
     prompts = _input_prompts(tree)
     typed, expected = _split_transcript(block, prompts)
     if not typed:
-        return False, "Show what you typed: start each typed line with the question your script asks."
+        return False, "Show what you typed: start each typed line with the question your script asks.", None
     if not expected:
-        return False, "Show what the script printed after you typed."
+        return False, "Show what the script printed after you typed.", None
     result = runner.execute(code=code, stdin_input="\n".join(typed) + "\n", files=other_python_files(build, files))
     if not result.success:
-        return False, "The script stopped before the sample run finished."
+        return False, "The script stopped before the sample run finished.", None
     missing = _first_missing_line(result.stdout, expected, prompts)
     if missing is not None:
         # A line that starts like a prompt is often the typing of a second pasted run (owner 1A, 2026-11-09).
         if any(missing.startswith(p.rstrip()) for p in prompts):
-            return False, f"Your script did not print: `{missing}`. If you pasted more than one run, keep just one."
-        return False, f"Your script did not print: `{missing}`"
-    return True, None
+            return False, f"Your script did not print: `{missing}`. If you pasted more than one run, keep just one.", result.stdout
+        return False, f"Your script did not print: `{missing}`", result.stdout
+    return True, None, result.stdout
 
 
 def _check_one(
@@ -431,7 +435,8 @@ def _check_one(
     if check.kind == "readme_sample_run":
         if not run_checks:
             return result(None)
-        return result(*_readme_sample_run(build, check, files, runner))
+        met, detail, output = _readme_sample_run(build, check, files, runner)
+        return RequirementResult(id=requirement.id, met=met, detail=detail, output=output)
     if check.kind == "file_contains":
         content = files.get(check.path or "", "")
         return result(any(text in content for text in check.any or []))

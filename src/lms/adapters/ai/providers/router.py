@@ -161,15 +161,15 @@ class ProviderRouter:
 
     # --- document drafts (SPEC-15 section 9.4, ADR-0028) ------------------------------
 
-    def summarise_feedback(self, points: list, readme: str, note: str, script: str = "") -> Tuple[str, str]:
+    def summarise_feedback(self, points: list, readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, str]:
         """A summary of the measured feedback points. Raises DraftFailed with a plain message; no fallback."""
         if self.mock:
-            return self._mock_companion.summarise_feedback(points, readme, note, script)
+            return self._mock_companion.summarise_feedback(points, readme, note, script, run_output)
         profile = self.active_profile()
         if not self.key_set(profile):
             raise DraftFailed("AXIS is not set up for summaries. Check the model settings.")
         try:
-            text, model = self._companion_for(profile).summarise_feedback(points, readme, note, script)
+            text, model = self._companion_for(profile).summarise_feedback(points, readme, note, script, run_output)
         except BudgetExceeded:
             raise DraftFailed(BUDGET_MESSAGE) from None
         except Exception as exc:

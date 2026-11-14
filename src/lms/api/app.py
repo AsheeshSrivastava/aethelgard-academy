@@ -916,8 +916,9 @@ def create_app(
                 (payload.files[f.path] for f in build.files if f.path.lower() == "readme.md" and f.path in payload.files), ""
             )
             try:
+                run_output = next((r.output for r in results if r.output), "") or ""
                 summary, model = axis.summarise_feedback(
-                    points, readme, payload.review_note or "", payload.files.get(build.entry, "")
+                    points, readme, payload.review_note or "", payload.files.get(build.entry, ""), run_output
                 )
             except DraftFailed as failure:
                 summary_error = str(failure)
