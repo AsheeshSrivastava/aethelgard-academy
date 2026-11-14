@@ -11,31 +11,9 @@ import tempfile
 import time
 from typing import List, Mapping, Optional
 
+from lms.adapters.runner.check_harness import HARNESS, check_stdin
 from lms.adapters.runner.interactive import safe_env
 from lms.core.interfaces import ExecutionResult, extra_file_problem
-
-
-def build_test_script(test_code: str) -> str:
-    """The run_tests.py text: import the solution, then call every test_ function. Shared with DockerRunner."""
-    return (
-        "import sys\n"
-        "import builtins\n"
-        "from pathlib import Path\n"
-        "sys.path.insert(0, '.')\n"
-        "# Provide default input mock during import to prevent hanging on top-level input()\n"
-        "_orig_input = builtins.input\n"
-        "builtins.input = lambda *args, **kwargs: 'Amara Okafor'\n"
-        "try:\n"
-        "    from solution import *\n"
-        "except Exception:\n"
-        "    pass\n"
-        "builtins.input = _orig_input\n\n"
-        f"{test_code}\n\n"
-        "# --- Auto-invoke test functions ---\n"
-        "for _name, _fn in list(locals().items()):\n"
-        "    if _name.startswith('test_') and callable(_fn):\n"
-        "        _fn()\n"
-    )
 
 
 def assertion_errors_from(stderr: str) -> List[str]:
@@ -71,10 +49,9 @@ class SubprocessRunner:
                 (tmppath / name).write_text(source, encoding="utf-8")
 
             if test_code:
-                # Separate test harness file that safely imports solution
-                test_script = build_test_script(test_code)
+                # The harness is fixed text. The hidden checks go in on stdin, never to disk (SPEC-03 2.4).
                 runner_script = tmppath / "run_tests.py"
-                runner_script.write_text(test_script, encoding="utf-8")
+                runner_script.write_text(HARNESS, encoding="utf-8")
                 target_to_run = runner_script
             else:
                 target_to_run = script_path
@@ -82,7 +59,7 @@ class SubprocessRunner:
             try:
                 proc = subprocess.run(
                     [sys.executable, str(target_to_run)],
-                    input=stdin_input or "",
+                    input=check_stdin(test_code, stdin_input) if test_code else (stdin_input or ""),
                     capture_output=True,
                     text=True,
                     timeout=timeout_seconds,

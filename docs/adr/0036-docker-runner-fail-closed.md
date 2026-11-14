@@ -31,3 +31,11 @@ Until now `DockerRunner.execute()` never used Docker: it called the subprocess r
 - Negative: each run pays container start-up (roughly 0.3 to 1 s). The timeout adds a fixed 3 s start-up allowance so a slow start does not fail a correct program.
 - Residual risk: Docker shares the host kernel. Rootless Docker or gVisor is the next hardening step, not part of this change.
 - The Docker CLI is the only integration point. Replacing it with the Docker API client later changes one module.
+
+---
+
+## 4. Amendment (2026-11-14, audit step A6b): hidden checks and `lms check`
+
+- **Hidden checks are no longer written to the run folder.** They go to the harness on stdin and are compiled and wiped before the learner's module is imported (SPEC-03 section 2.4). Passive reads (files, cwd, `/proc/self/cmdline`, argv, environment, `linecache`) find nothing, in Docker and in the subprocess runner.
+- **Plain limits:** a program written to attack the grader can still reach the checks, because they run in the same process as the learner's functions; and the subprocess runner can read the private answers folder because it runs as the server's user. Separate processes are the real fix and are not part of this change.
+- **`lms check` follows `LMS_RUNNER`** like the server. With Docker down it refuses with a clear message instead of running the file unsandboxed.

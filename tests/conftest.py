@@ -22,6 +22,9 @@ import pytest
 
 from lms.adapters.curriculum.builds import ANSWERS_ENV, CURRICULUM_ENV, answers_dir_from_env
 
+# Tests that do not inject a runner use the subprocess runner (ADR-0036). Tests of the default clear it.
+os.environ.setdefault("LMS_RUNNER", "subprocess")
+
 REPO = Path(__file__).resolve().parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 REAL_ANSWERS = answers_dir_from_env()

@@ -209,3 +209,57 @@ def test_the_interactive_wall_clock_limit_kills_the_container(runner):
 def test_the_environment_variable_of_the_cli_does_not_reach_the_container(runner):
     assert "LMS_RUNNER" not in runner.execute("import os\nprint(dict(os.environ))").stdout
     assert os.environ.get("PATH")
+
+
+
+# --- A6b: the learner's program cannot find the hidden checks (ADR-0036 amendment, SPEC-03 2.4) ---
+
+HIDDEN_MARKER = "HIDDEN-MARKER-7f3a9c"
+HIDDEN_CHECKS = f"# {HIDDEN_MARKER}\ndef test_double():\n    assert double(2) == 4, 'double(2) should be 4'\n"
+
+SNOOP = """
+import glob, linecache, os, sys
+needle = 'HIDDEN-MARKER-' + '7f3a9c'  # built at run time, so this file does not contain it
+paths = glob.glob('/work/*') + glob.glob('/tmp/*') + glob.glob('*') + ['run_tests.py']
+for root, _dirs, names in os.walk('/proc/self', onerror=lambda e: None):
+    if root.count('/') <= 3:
+        paths += [os.path.join(root, n) for n in names if n in ('cmdline', 'environ', 'status')]
+found = []
+for path in paths:
+    try:
+        if needle.encode() in open(path, 'rb').read():
+            found.append(path)
+    except OSError:
+        pass
+if any(needle in a for a in sys.argv) or any(needle in v for v in os.environ.values()):
+    found.append('argv-or-env')
+if any(needle in linecache.getline(f, n) for f in ('<hidden-checks>', 'run_tests.py') for n in range(1, 8)):
+    found.append('linecache')
+print('FOUND', found)
+def double(x):
+    return x * 2
+"""
+
+
+def test_the_learner_cannot_find_the_hidden_checks_in_files_proc_argv_or_env(runner):
+    result = runner.execute(SNOOP, test_code=HIDDEN_CHECKS)
+
+    assert result.success, result
+    assert "FOUND []" in result.stdout, result.stdout
+
+
+def test_the_run_folder_holds_only_the_harness_and_the_learner_files(runner):
+    code = "import os\nprint(sorted(os.listdir('/work')))\ndef double(x):\n    return x * 2\n"
+
+    result = runner.execute(code, test_code=HIDDEN_CHECKS)
+
+    assert "['run_tests.py', 'solution.py']" in result.stdout
+
+
+def test_hidden_checks_still_grade_in_the_container(runner):
+    right = runner.execute("def double(x):\n    return x * 2\n", test_code=HIDDEN_CHECKS)
+    wrong = runner.execute("def double(x):\n    return x + 3\n", test_code=HIDDEN_CHECKS)
+
+    assert right.success is True
+    assert wrong.success is False and any("double(2) should be 4" in e for e in wrong.assertion_errors)
+    assert HIDDEN_MARKER not in wrong.stderr and "assert double(2)" not in wrong.stderr
