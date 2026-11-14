@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
+from lms.core.build_feedback import FeedbackPoint, build_feedback_points
 from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
 from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -246,6 +247,13 @@ class DraftReadmeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     files: Dict[str, str]
+
+
+class BuildFeedbackResult(BaseModel):
+    points: List[FeedbackPoint]
+    summary: Optional[str] = None      # AXIS wording over the points; None when it could not be written
+    summary_error: Optional[str] = None
+    model: Optional[str] = None
 
 
 class DraftReadmeResult(BaseModel):
@@ -880,6 +888,43 @@ def create_app(
             {"course_id": course_id, "stage": stage, "status": "drafted", "model": model, "markdown": markdown},
         )
         return DraftReadmeResult(markdown=markdown, status="drafted", model=model)
+
+    @app.post(
+        "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:feedback",
+        response_model=BuildFeedbackResult,
+    )
+    def feedback_on_my_build(
+        course_id: str,
+        stage: int,
+        payload: BuildCheckRequest,
+        learner_id: str = Depends(current_learner_id),
+    ):
+        """Point-by-point feedback from measured data, then an optional AXIS summary (SPEC-15 section 10).
+        Logged as build_feedback with no exercise id: it never counts as help on the build's code."""
+        build = open_build(course_id, stage, learner_id)
+        if isinstance(build, JSONResponse):
+            return build
+        if too_large(payload.files, payload.ownership_note, payload.review_note):
+            return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
+        results = check_requirements(
+            build, payload.files, payload.ownership_note, runner, payload.run_checks, payload.review_note
+        )
+        points = build_feedback_points(build, payload.files, results, payload.review_note)
+        summary = summary_error = model = None
+        if hasattr(axis, "summarise_feedback"):
+            readme = next((payload.files[f.path] for f in build.files if f.path == "README.md" and f.path in payload.files), "")
+            try:
+                summary, model = axis.summarise_feedback(
+                    points, readme, payload.review_note or "", payload.files.get(build.entry, "")
+                )
+            except DraftFailed as failure:
+                summary_error = str(failure)
+        log_event(
+            learner_id, "build_feedback",
+            {"course_id": course_id, "stage": stage, "run_checks": payload.run_checks,
+             "met": {p.requirement_id: p.status for p in points}, "summary": summary is not None},
+        )
+        return BuildFeedbackResult(points=points, summary=summary, summary_error=summary_error, model=model)
 
     @app.post(
         "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset",

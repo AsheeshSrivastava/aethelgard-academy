@@ -31,8 +31,10 @@ EventType = Literal[
     "hint_viewed",
     "feedback_viewed",
     "document_draft",
+    "build_feedback",
+    "feedback_disputed",
 ]
-ClientEventType = Literal["opened", "closed", "hint_viewed", "feedback_viewed"]
+ClientEventType = Literal["opened", "closed", "hint_viewed", "feedback_viewed", "feedback_disputed"]
 
 
 class InteractionEvent(BaseModel):
@@ -56,6 +58,8 @@ class ClientPayload(BaseModel):
 
     seconds_open: Optional[int] = Field(None, ge=0, le=7 * 24 * 3600)
     step: Optional[str] = Field(None, max_length=64)
+    point: Optional[str] = Field(None, max_length=64)      # feedback_disputed: the requirement id
+    reason: Optional[str] = Field(None, max_length=200)    # feedback_disputed: why the learner disagrees
 
 
 class ClientEvent(BaseModel):

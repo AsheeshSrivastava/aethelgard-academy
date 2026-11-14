@@ -181,6 +181,19 @@ class GeminiCompanion:
         self._record("document_draft", answered, response, len(sys_prompt) + len(user_msg))
         return response.text or "", answered
 
+    def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "") -> Tuple[str, Optional[str]]:
+        """One summary call over the measured feedback points (SPEC-15 section 10.2). Never falls back."""
+        sys_prompt, user_msg = axis_rules.feedback_summary_prompts(points, readme, note, script)
+        self._check_budget(sys_prompt, user_msg)
+        response = self._client.models.generate_content(
+            model=self.model,
+            contents=user_msg,
+            config=self._config(sys_prompt, 0.2, axis_rules.DRAFT_MAX_TOKENS),
+        )
+        answered = self._answered(response)
+        self._record("build_feedback", answered, response, len(sys_prompt) + len(user_msg))
+        return response.text or "", answered
+
     def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
         """One judging call (SPEC-18 section 3). Returns the raw reply and the model that answered.
 

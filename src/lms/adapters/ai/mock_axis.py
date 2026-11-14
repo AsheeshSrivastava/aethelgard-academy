@@ -49,6 +49,13 @@ class MockAxisCompanion:
             "offline-mock",
         )
 
+    def summarise_feedback(self, points, readme: str, note: str, script: str = "") -> Tuple[str, str]:
+        """A fixed summary built from the points' counts (SPEC-15 section 10.2). No network."""
+        not_met = sum(1 for p in points if p.status == "not_met")
+        waiting = sum(1 for p in points if p.status == "not_checked")
+        done = sum(1 for p in points if p.status == "met")
+        return f"{done} met, {not_met} not met, {waiting} not checked yet. Start with the first point.", "offline-mock"
+
     def judge_explanation(self, unit_id: str, prompt: str, explanation: str, rubric: Rubric) -> AiJudgement:
         return judge_with(self, unit_id, prompt, explanation, rubric)
 
