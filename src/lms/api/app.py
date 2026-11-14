@@ -1779,5 +1779,9 @@ def create_app(
     return app
 
 
-# Default ASGI application instance for uvicorn
-app = create_app()
+def create_default_app() -> FastAPI:
+    """The app the server runs: `uvicorn lms.api.app:create_default_app --factory`.
+
+    Nothing is built when this module is imported (audit A5); the app is made when uvicorn calls this.
+    """
+    return create_app()

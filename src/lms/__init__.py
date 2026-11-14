@@ -96,7 +96,7 @@ def main() -> None:
                 except ValueError:
                     pass
         print(f"Starting Aethelgard Academy Web Shell on http://127.0.0.1:{port} ...")
-        uvicorn.run("lms.api.app:app", host="127.0.0.1", port=port, reload=True)
+        uvicorn.run("lms.api.app:create_default_app", factory=True, host="127.0.0.1", port=port, reload=True)
 
     else:
         print(f"Unknown command: {cmd}. Run 'lms --help' for usage.")
