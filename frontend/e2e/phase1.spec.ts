@@ -88,8 +88,9 @@ test("a real answer shows up in My progress", async ({ page, request }) => {
 
   await page.goto("/progress");
 
-  await expect(page.getByRole("heading", { name: /Skills · Module 0/ })).toBeVisible();
-  await expect(page.getByRole("img", { name: /^CO-1: target/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Units · Module 0/ })).toBeVisible();
+  await expect(page.getByRole("img", { name: /^CO-1: target/ }).first()).toBeVisible();
+  await page.getByText("Full evidence log").click();
   await expect(page.getByRole("table", { name: "Evidence ledger" }).getByText("PY-0.1")).toBeVisible();
   await shot(page, "my-progress");
 

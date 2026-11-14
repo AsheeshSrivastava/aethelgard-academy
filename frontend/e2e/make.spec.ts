@@ -49,6 +49,7 @@ test.describe.serial("Make step (Amendment A1.3)", () => {
     await shot(page, "make-passed");
 
     await page.goto("/progress?course=python&stage=1");
+    await page.getByText("Full evidence log").click();
     await expect(page.getByRole("table", { name: "Evidence ledger" })).toContainText("Build");
   });
 

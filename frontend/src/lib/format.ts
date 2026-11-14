@@ -144,3 +144,24 @@ const TIME = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digi
 export const formatDate = (iso: string) => DATE.format(new Date(iso));
 export const formatTime = (iso: string) => TIME.format(new Date(iso)).replace(/\s/g, " ");
 export const formatDateTime = (iso: string) => `${formatDate(iso)}, ${formatTime(iso)}`;
+
+/** A unit's decision in plain words for the My progress cards (SPEC-12 section 6, 2026-11-14). */
+export function unitStateLabel(decision: Decision): string {
+  if (decision === "Progress" || decision === "Accelerate") return "Done for now";
+  if (decision === "Undecided") return "Not started";
+  return "Needs work";
+}
+
+/** Where a skill's proof came from. Levels are overall, not per stage, so say so when it is another module. */
+export function proofNote(proofStages: Record<string, number[]>, shownStage: number | null | undefined): string | null {
+  const all = [...new Set(Object.values(proofStages).flat())].sort((a, b) => a - b);
+  const others = all.filter((stage) => stage !== shownStage);
+  if (!others.length) return null;
+  const names = others.map((stage) => `Module ${stage}`).join(", ");
+  return others.length === all.length ? `Proven in ${names}.` : `Includes proof from ${names}.`;
+}
+
+/** The note on a reset unit: when, and how much of it is redone. */
+export function resetNote(resetAt: string, done: number, total: number): string {
+  return `You reset this unit on ${formatDate(resetAt)}. ${done} of ${total} activities redone; the Cold Check opens when all are done.`;
+}

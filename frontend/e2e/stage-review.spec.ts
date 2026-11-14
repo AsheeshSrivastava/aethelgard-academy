@@ -148,6 +148,7 @@ test.describe.serial("stage review and rechecks", () => {
 
     await page.goto("/progress?course=python");
     await page.getByRole("heading", { level: 1, name: "My progress" }).waitFor();
+    await page.getByText("Full evidence log").click();
     await expect(page.getByRole("table", { name: "Evidence ledger" })).toContainText("Recheck");
     await expect(page.getByRole("region", { name: "Due for review" })).toHaveCount(0);
   });

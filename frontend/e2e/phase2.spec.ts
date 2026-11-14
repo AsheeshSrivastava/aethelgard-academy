@@ -156,6 +156,7 @@ test("a learner walks all of PY-0.1, through the Cold Check", async ({ page }) =
 
   // My progress shows it, and the stage build lock moved
   await page.getByRole("link", { name: "See My progress" }).click();
+  await page.getByText("Full evidence log").click();
   await expect(page.getByRole("table", { name: "Evidence ledger" }).getByText("Cold Check").first()).toBeVisible();
   await shot(page, "progress-after-cold-check");
 });

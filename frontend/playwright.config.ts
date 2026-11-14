@@ -20,7 +20,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: `uv run --no-sync uvicorn lms.api.app:app --port ${PORT} --log-level warning`,
+    command: `uv run --no-sync uvicorn lms.api.app:create_default_app --factory --port ${PORT} --log-level warning`,
     cwd: "..",
     url: `http://127.0.0.1:${PORT}/api/v1/health`,
     reuseExistingServer: false,
