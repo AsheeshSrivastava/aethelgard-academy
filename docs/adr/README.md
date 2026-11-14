@@ -32,3 +32,5 @@
 | [ADR-0028](0028-ai-drafted-documents-learner-review-as-evidence.md) | AI-drafted documents, learner review as evidence | **Accepted** | 2026-11-09 |
 | [ADR-0029](0029-explain-in-parts-steps-and-quick-checks.md) | Explain in parts, step diagrams and quick checks | **Accepted** (SPEC-19) | 2026-11-09 |
 | [ADR-0033](0033-method-count-two-to-five.md) | A unit carries 2 to 5 methods | **Proposed** | 2026-11-14 |
+| [ADR-0034](0034-upstream-docs-primary-for-axis-until-notes-ready.md) | Upstream docs stay primary for AXIS answers until the concept notes are ready | **Proposed** | 2026-11-14 |
+| [ADR-0035](0035-axis-retrieval-strategy.md) | AXIS retrieval strategy (production grade) | **Proposed** | 2026-11-14 |
