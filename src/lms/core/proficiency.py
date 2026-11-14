@@ -81,6 +81,7 @@ class SkillEstimate(BaseModel):
     confidence: Optional[Confidence] = None
     qualifying_entry_ids: List[str] = Field(default_factory=list)  # entries backing `level`
     supported_levels: List[ProficiencyLevel] = Field(default_factory=list)  # every level with full support
+    level_entry_ids: Dict[ProficiencyLevel, List[str]] = Field(default_factory=dict)  # entries qualifying per reached level
     support_gaps: Dict[ProficiencyLevel, List[str]] = Field(default_factory=dict)  # what each reached level still lacks
     no_cold_check: List[ProficiencyLevel] = Field(default_factory=list)  # reached levels with no passed Cold Check
     weak_streak: int = 0                                            # newest consecutive weak entries
@@ -271,6 +272,9 @@ def estimate_skill(
         confidence=Confidence.SUPPORTED if supported_at(level) else Confidence.PROVISIONAL,
         qualifying_entry_ids=[e.entry_id for e in backing],
         supported_levels=[lv for lv in LEVEL_ORDER[: level_index + 1] if supported_at(lv)],
+        level_entry_ids={
+            lv: [e.entry_id for e in window if qualifies(e, lv, config)] for lv in LEVEL_ORDER[: level_index + 1]
+        },
         support_gaps={lv: gaps_at(lv) for lv in LEVEL_ORDER[: level_index + 1] if not supported_at(lv)},
         no_cold_check=[
             lv for lv in LEVEL_ORDER[: level_index + 1]
@@ -339,15 +343,18 @@ def decide_skill(
             f"{target_level.value} is provisional: it needs {', and '.join(est.support_gaps.get(target_level, []))}.",
             needs_cold_check=target_level in est.no_cold_check,
         )
-    if current > target and est.confidence == Confidence.SUPPORTED:
+    proven_above = [lv for lv in est.supported_levels if LEVEL_ORDER.index(lv) > target]
+    if proven_above:  # ADR-0016 amendment H: any proven rung above the goal; the top rung may be unproven
         return result(
             ProgressionDecision.ACCELERATE,
-            f"Supported {est.level.value} is above the {target_level.value} target.",
+            f"Supported {proven_above[-1].value} is above the {target_level.value} target.",
         )
+    # Count the target level's own entries: a supported target always includes a passed Cold Check,
+    # while the top rung's entries may not (SPEC-12 section 6, 2026-11-14).
     return result(
         ProgressionDecision.PROGRESS,
         f"Sufficient evidence for {target_level.value}: supported by "
-        f"{len(est.qualifying_entry_ids)} entries including a Cold Check.",
+        f"{len(est.level_entry_ids.get(target_level, []))} entries including a Cold Check.",
     )
 
 

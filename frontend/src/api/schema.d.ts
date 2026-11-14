@@ -1739,6 +1739,11 @@ export interface components {
             target_level: components["schemas"]["ProficiencyLevel"];
             current_level?: components["schemas"]["ProficiencyLevel"] | null;
             confidence?: components["schemas"]["Confidence"] | null;
+            /**
+             * Supported Levels
+             * @default []
+             */
+            supported_levels: components["schemas"]["ProficiencyLevel"][];
             evidence_counts: components["schemas"]["EvidenceCounts"];
             decision: components["schemas"]["ProgressionDecision"];
             /** Reason */

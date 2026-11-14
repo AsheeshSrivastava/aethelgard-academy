@@ -119,6 +119,7 @@ def test_proficiency_matches_the_spec_shape(client):
         "target_level",
         "current_level",
         "confidence",
+        "supported_levels",
         "evidence_counts",
         "decision",
         "reason",

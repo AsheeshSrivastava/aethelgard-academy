@@ -58,7 +58,8 @@ def weak(days_ago=0.5, **kw):
 # --- The decision asks about the target level -------------------------------
 
 
-def test_a_provisional_higher_level_does_not_hide_a_supported_target():
+def test_a_provisional_top_rung_does_not_hide_proven_rungs_above_the_goal():
+    # ADR-0016 amendment H: Apply is proven above the Understand goal, so Accelerate; Adapt is only seen once.
     config = EstimatorConfig(main_activities={"CO-2": ActivityType.TRACE})
     trace = dict(skill_id="CO-2", activity=ActivityType.TRACE)
     entries = [
@@ -70,7 +71,7 @@ def test_a_provisional_higher_level_does_not_hide_a_supported_target():
 
     assert d.estimate.level == ProficiencyLevel.ADAPT
     assert d.estimate.confidence == Confidence.PROVISIONAL
-    assert d.decision == ProgressionDecision.PROGRESS
+    assert d.decision == ProgressionDecision.ACCELERATE
 
 
 def test_supported_above_the_target_still_accelerates():

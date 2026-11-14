@@ -24,6 +24,8 @@ Aethelgard Academy bridges the gap between **"vibe coding with AI"** and **"prod
 2. **Socratic AI Companion (AXIS):** An AI mentor with three modes (Coach, Hybrid, Socratic). In Socratic mode, which builds use, its output is filtered so it never hands over a code solution; Cold Checks run without AXIS at all. This keeps the "productive struggle" that builds diagnostic composure and debugging instincts.
 3. **Deterministic Capability Tracking:** Replaces vanity completion percentages (`completed = true`) with an **immutable, append-only Evidence Ledger**. True mastery is calculated by analyzing historical attempts, assistance levels, and 24-hour Cold Check retention tests.
 
+> **Known limit: a skill's level is overall, not per stage.** The estimator reads a skill's evidence from every unit and stage, so Adapt proven in an early stage still counts when a later, harder stage targets the same skill. A stage only sets the goal the level is compared with. Making each stage re-prove its own skills is planned future work (see ADR-0016, amendment H).
+
 ---
 
 ## High-Level Architecture (Hexagonal / Ports & Adapters)

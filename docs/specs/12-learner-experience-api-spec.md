@@ -217,7 +217,8 @@ Assistance level for the entry is the highest level AXIS logged against that `ex
 ProficiencyView {
   stage: int | null,
   skills: [ { skill_id, skill_name, target_level, current_level | null, confidence: "provisional" | "supported" | null,
-              evidence_counts: {explain, perform, diagnose}, decision: Decision, reason, entry_ids: [str] } ],
+              supported_levels: [Level], evidence_counts: {explain, perform, diagnose}, decision: Decision,
+              reason, entry_ids: [str] } ],
   units:  [ { unit_id, decision: Decision } ],
   next_action: { unit_id, skill_id, activity, decision: Decision, message, retry_at: datetime | null } }
 Decision = "Progress" | "Accelerate" | "Strengthen" | "Rebuild" | "Undecided"
@@ -227,6 +228,8 @@ Decision = "Progress" | "Accelerate" | "Strengthen" | "Rebuild" | "Undecided"
 - **While a Cold Check retry is locked (2026-11-04).** If a unit's Cold Check is `failed_waiting`, `next_action.retry_at` is when it opens, and `activity` is a practice activity of that unit that still has an unseen item, the weakest skill's main activity first. With no unseen item left, `activity` is `cold_check`, whose step shows the countdown. It never points to an item the learner has already done.
 - **Reason wording when the Cold Check is the missing piece (2026-11-12).** The Cold Check is one of the exercises a level still needs, not an extra task. One exercise short and no Cold Check: "needs 1 more exercise at Understand, and it must be a passed Cold Check". Two or more short: "needs 2 more exercises at Understand; one must be a passed Cold Check". Enough exercises but no Cold Check: "needs a passed Cold Check". A weak streak adds "and a strong attempt after your last weak one".
 - **Cold Check not open yet (2026-11-12).** When the reason asks for a passed Cold Check and that unit's Cold Check is `not_ready` (activities left, for example after a reset), `next_action.message` adds what opens it: "Do this unit's N remaining activities to open its Cold Check." N counts the unit's activities with no entry since its last reset ("activity" when N is 1).
+- **Each rung has its own confidence (2026-11-14).** `supported_levels` lists every level up to `current_level` that has full support. A ladder colours each rung by it: a rung in the list is supported, a lower-or-equal rung not in it is provisional. `confidence` stays the confidence of `current_level` alone, so a provisional top rung never repaints the proven rungs below it.
+- **Progress reason counts the target level (2026-11-14).** A Progress `reason` counts the entries that qualify at the target level, which include a passed Cold Check by definition: "Sufficient evidence for Understand: supported by 2 entries including a Cold Check." It never counts entries from a higher rung.
 - **Concept-check evidence carries its exercise id (ADR-0016 amendment G).** `POST /explain` records `exercise_id` `<unit>/explain/v1`, so a repeated concept check counts once.
 - **Dates (2026-11-04).** The frontend shows dates as `4 Nov 2026` and times as `3:30 pm`, in the learner's own time zone.
 - **Label meanings (2026-11-04).** My progress explains the five decisions in plain words beside them: Progress, Accelerate, Strengthen, Rebuild, Undecided.
