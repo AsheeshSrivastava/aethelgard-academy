@@ -422,8 +422,9 @@ describe("Make step (Amendment A1.3)", () => {
     expect(await screen.findByText(/Make · from a blank file/)).toBeInTheDocument();
     expect(screen.getByRole("note")).toHaveTextContent(/hidden tests/i);
     expect(screen.getByText("Ask for the price per kilogram")).toBeInTheDocument();
-    expect(screen.getByText("Terminal")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Submit/ })).toBeInTheDocument();
+    // The terminal and Submit render after the editor loads, so wait for them (CI flake, 2026-11-14).
+    expect(await screen.findByText("Terminal")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /^Submit/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
   });
 
