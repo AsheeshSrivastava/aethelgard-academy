@@ -826,6 +826,65 @@
         }
       }
     },
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:feedback": {
+      "post": {
+        "summary": "Feedback On My Build",
+        "description": "Point-by-point feedback from measured data, then an optional AXIS summary (SPEC-15 section 10).\nLogged as build_feedback with no exercise id: it never counts as help on the build's code.",
+        "operationId": "feedback_on_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_feedback_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Stage"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildFeedbackResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset": {
       "post": {
         "summary": "Reset My Build",
@@ -2475,6 +2534,55 @@
         ],
         "title": "BuildCheckResult"
       },
+      "BuildFeedbackResult": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "summary_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Error"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "BuildFeedbackResult"
+      },
       "BuildFile": {
         "properties": {
           "path": {
@@ -2675,7 +2783,8 @@
               "opened",
               "closed",
               "hint_viewed",
-              "feedback_viewed"
+              "feedback_viewed",
+              "feedback_disputed"
             ],
             "title": "Event Type"
           },
@@ -2764,6 +2873,30 @@
               }
             ],
             "title": "Step"
+          },
+          "point": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           }
         },
         "additionalProperties": false,
@@ -3533,6 +3666,8 @@
           },
           "timeout_seconds": {
             "type": "number",
+            "maximum": 5.0,
+            "exclusiveMinimum": 0.0,
             "title": "Timeout Seconds",
             "default": 5.0
           },
@@ -4026,6 +4161,54 @@
         ],
         "title": "FeedbackItem"
       },
+      "FeedbackPoint": {
+        "properties": {
+          "requirement_id": {
+            "type": "string",
+            "title": "Requirement Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_met",
+              "not_checked",
+              "met"
+            ],
+            "title": "Status"
+          },
+          "where": {
+            "type": "string",
+            "title": "Where"
+          },
+          "found": {
+            "type": "string",
+            "title": "Found"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "looked_for": {
+            "type": "string",
+            "title": "Looked For"
+          },
+          "look": {
+            "type": "string",
+            "title": "Look"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requirement_id",
+          "status",
+          "where",
+          "found",
+          "why",
+          "looked_for",
+          "look"
+        ],
+        "title": "FeedbackPoint"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4091,7 +4274,9 @@
               "closed",
               "hint_viewed",
               "feedback_viewed",
-              "document_draft"
+              "document_draft",
+              "build_feedback",
+              "feedback_disputed"
             ],
             "title": "Event Type"
           },

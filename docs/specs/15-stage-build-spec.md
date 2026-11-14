@@ -284,6 +284,10 @@ When the provider has `summarise_feedback`, it receives the points and the READM
 
 - `POST /api/v1/learners/me/courses/{course_id}/stages/{stage}/build:feedback`, body as `build:check`. Runs the checks (`run_checks` as sent), returns `{points, summary, model}`. 423 until the build is open; 413 when too large.
 - Logged as kind `build_feedback` with course and stage, and no exercise id: it does not change `AssistanceLevel` and is not `supplied_reasoning` (ADR-0028, Amendment A2). The points are the same data as Verify.
+- Dispute: `POST /learners/me/interactions` with `event_type` `feedback_disputed` and payload `{point, reason}` (reason up to 200 characters). It changes no progress.
+- Each point also carries `looked_for`, the rule in words, and a miss reads "The check did not find what it looks for", never "wrong".
+- Layer 2 receives the README, the review note and the learner's entry script, never the reference solution or hidden checks.
+- Page: a "Get feedback" button beside Verify (runs the checks). The panel opens with one summary line, shows not-found and not-checked points as expandable one-liners, folds the found points, and each open point has "This is wrong" with a one-line reason.
 - Code files: results and measured facts only. README and review note: wording pointers allowed.
 
 ## 8. Acceptance
