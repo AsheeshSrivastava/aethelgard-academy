@@ -459,7 +459,7 @@ def test_local_model_streams_its_deltas():
     assert "".join(deltas) == "What type?"
     assert sent["stream"] is True
     assert sent["model"] == "test-model"
-    assert cited
+    assert cited == []  # nothing was retrieved, so nothing is cited (ADR-0034)
 
 
 def test_local_model_with_only_reasoning_still_answers():

@@ -1,0 +1,88 @@
+"""AXIS grounding is honest (ADR-0034): no fake citation, no unrelated passage, a clear label."""
+
+from pathlib import Path
+
+import pytest
+
+from lms.adapters.ai.concept_store import ConceptStore
+from lms.adapters.ai.providers import axis_rules
+from lms.adapters.ai.local_llm_companion import load_default_retriever
+from lms.core.interfaces import AxisMode
+
+FIXTURES = Path(__file__).parent / "fixtures" / "concepts"
+
+
+class EmptyRetriever:
+    passages = ["x"]
+
+    def retrieve(self, query, top_k=3):
+        return []
+
+
+@pytest.fixture
+def store():
+    s = ConceptStore()
+    for f in sorted(FIXTURES.glob("*.md")):
+        s.ingest_file(f)
+    return s
+
+
+def test_no_retriever_and_no_store_cites_nothing():
+    text, cited = axis_rules.retrieve_grounded_passages(None, None, "PY-0.4", "why does my loop print twice")
+    assert text == ""
+    assert cited == []
+
+
+def test_nothing_found_cites_nothing(store):
+    text, cited = axis_rules.retrieve_grounded_passages(
+        EmptyRetriever(), None, "PY-9.9", "zzzzqqqq xxxxwwww"
+    )
+    assert (text, cited) == ("", [])
+
+
+def test_a_question_matching_nothing_gets_no_unrelated_passage(store):
+    text, cited = axis_rules.retrieve_grounded_passages(None, store, "PY-9.9", "zzzzqqqq xxxxwwww")
+    assert text == ""
+    assert cited == []
+
+
+def test_a_matching_question_still_cites_the_matching_passage(store):
+    text, cited = axis_rules.retrieve_grounded_passages(None, store, "PY-0.4", "communication cycle")
+    assert cited
+    assert all(c.startswith("concepts/") for c in cited)
+    assert text
+
+
+def test_default_citation_no_longer_exists():
+    assert not hasattr(axis_rules, "DEFAULT_CITATION")
+
+
+@pytest.mark.parametrize("mode", [AxisMode.COACH, AxisMode.HYBRID, AxisMode.SOCRATIC])
+def test_the_prompt_says_when_nothing_was_found(mode):
+    prompt = axis_rules.build_system_prompt(mode, "")
+    assert "NO CURRICULUM PASSAGE WAS FOUND" in prompt
+    assert "not in the course yet" in prompt.lower()
+
+
+def test_coach_may_use_general_knowledge_but_must_label_it():
+    prompt = axis_rules.build_system_prompt(AxisMode.COACH, "")
+    assert "Not from the course" in prompt
+
+
+def test_socratic_stays_socratic_when_nothing_was_found():
+    prompt = axis_rules.build_system_prompt(AxisMode.SOCRATIC, "")
+    assert "STRICT INVARIANT" in prompt
+    assert "Not from the course" not in prompt
+
+
+def test_a_grounded_prompt_has_no_missing_notice():
+    prompt = axis_rules.build_system_prompt(AxisMode.COACH, "[concepts/x] some text")
+    assert "NO CURRICULUM PASSAGE WAS FOUND" not in prompt
+    assert "VERIFIED CURRICULUM GROUNDING" in prompt
+
+
+def test_a_missing_index_is_reported_in_plain_words(tmp_path, monkeypatch, caplog):
+    monkeypatch.chdir(tmp_path)
+    with caplog.at_level("WARNING"):
+        assert load_default_retriever() is None
+    assert "No retrieval index is loaded" in caplog.text
