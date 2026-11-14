@@ -71,6 +71,9 @@ class ILearnerRepository(Protocol):
     def get_cold_check_timer(self, learner_id: str, unit_id: str) -> Optional[ColdCheckTimer]:
         ...
 
+    def get_cold_check_timers(self, learner_id: str) -> Dict[str, ColdCheckTimer]:
+        ...
+
     def mark_unit_activities_completed(
         self, learner_id: str, unit_id: str, completed_at: datetime
     ) -> None:
@@ -133,6 +136,12 @@ class ILearnerRepository(Protocol):
     def reopen_review_item(
         self, learner_id: str, kind: str, scope: str, position: int, exercise_id: str
     ) -> None:
+        ...
+
+    def get_review_items_by_scope(self, learner_id: str, kind: str) -> Dict[str, List[ReviewItem]]:
+        ...
+
+    def get_review_results_by_scope(self, learner_id: str, kind: str) -> Dict[str, ReviewResult]:
         ...
 
     def get_review_result(self, learner_id: str, kind: str, scope: str) -> Optional[ReviewResult]:
