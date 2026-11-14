@@ -12,7 +12,7 @@ row is decided against the highest target among the units in scope.
 from datetime import datetime
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from lms.core.cold_check import ColdCheckState, ColdCheckStatus
 from lms.core.models import (
@@ -58,16 +58,29 @@ class SkillView(BaseModel):
     target_level: ProficiencyLevel
     current_level: Optional[ProficiencyLevel] = None
     confidence: Optional[Confidence] = None             # of current_level only
-    supported_levels: List[ProficiencyLevel] = Field(default_factory=list)  # each fully supported rung (SPEC-12 section 6)
+    supported_levels: List[ProficiencyLevel]            # each fully supported rung (SPEC-12 section 6)
+    # Stages whose evidence backs each supported rung. Levels are overall, not per stage, so the
+    # page says where the proof came from (owner option A, 2026-11-14).
+    proof_stages: Dict[ProficiencyLevel, List[int]]
     evidence_counts: EvidenceCounts
     decision: ProgressionDecision
     reason: str
     entry_ids: List[str]
 
 
+class UnitSkill(BaseModel):
+    skill_id: str
+    goal_level: ProficiencyLevel
+
+
 class UnitView(BaseModel):
     unit_id: str
     decision: ProgressionDecision
+    title: str
+    skills: List[UnitSkill]                 # the unit's target skills with its own goals
+    reset_at: Optional[datetime]            # latest reset; earlier evidence no longer counts
+    activities_done: int                    # activities with an entry since the reset
+    activities_total: int
 
 
 class NextAction(BaseModel):
@@ -153,8 +166,11 @@ def build_proficiency_view(
     config: EstimatorConfig = DEFAULT_CONFIG,
     unseen_activities: Callable[[Unit], List[str]] = lambda unit: [],
     resets: Mapping[str, datetime] = NO_RESETS,
+    stage_of: Callable[[str], Optional[int]] = lambda unit_id: None,
 ) -> ProficiencyView:
     """Decide every unit and skill in scope; `units` must be in curriculum order.
+
+    `stage_of` maps any unit id to its stage, so proof from other stages can be named.
 
     Each unit counts only evidence after its last reset; a skill row counts evidence after the
     latest reset among the units in view that target it (ADR-0016 amendment 2026-11-04).
@@ -184,15 +200,48 @@ def build_proficiency_view(
     return ProficiencyView(
         stage=stage,
         skills=[
-            _skill_view(skill_id, names[skill_id], target, shaky, _after(ledger, skill_since[skill_id]), now, config)
+            _skill_view(
+                skill_id, names[skill_id], target, shaky, _after(ledger, skill_since[skill_id]), now, config, stage_of
+            )
             for skill_id, (target, shaky) in scope.items()
         ],
-        units=[
-            UnitView(unit_id=unit.unit_id, decision=decide_unit(decisions))
-            for unit, decisions in unit_rows
-        ],
+        units=[_unit_view(unit, decisions, ledger, resets.get(unit.unit_id)) for unit, decisions in unit_rows],
         next_action=_next_action(unit_rows, ledger, cold_check_status_of, unseen_activities, config, resets),
     )
+
+
+def _unit_view(
+    unit: Unit,
+    decisions: List[SkillDecision],
+    ledger: List[EvidenceEntry],
+    since: Optional[datetime],
+) -> UnitView:
+    return UnitView(
+        unit_id=unit.unit_id,
+        decision=decide_unit(decisions),
+        title=unit.title,
+        skills=[UnitSkill(skill_id=s.skill_id, goal_level=s.goal_level) for s in unit.target_skills],
+        reset_at=since,
+        activities_done=len(_tried_activities(unit, _after(ledger, since))),
+        activities_total=len(unit.methods),
+    )
+
+
+def _proof_stages(
+    levels: List[ProficiencyLevel],
+    entry_ids_by_level: Mapping[ProficiencyLevel, List[str]],
+    ledger: List[EvidenceEntry],
+    stage_of: Callable[[str], Optional[int]],
+) -> Dict[ProficiencyLevel, List[int]]:
+    """For each supported level, the stages of the entries that back it (stages known to `stage_of`)."""
+    unit_of = {e.entry_id: e.unit_id for e in ledger}
+    proof: Dict[ProficiencyLevel, List[int]] = {}
+    for level in levels:
+        stages = {stage_of(unit_of[i]) for i in entry_ids_by_level.get(level, []) if i in unit_of}
+        stages.discard(None)
+        if stages:
+            proof[level] = sorted(stages)
+    return proof
 
 
 def _skill_view(
@@ -203,6 +252,7 @@ def _skill_view(
     ledger: List[EvidenceEntry],
     now: datetime,
     config: EstimatorConfig,
+    stage_of: Callable[[str], Optional[int]],
 ) -> SkillView:
     decided = decide_skill(target, ledger, skill_id, now=now, consecutive_shaky=shaky, config=config)
     counts = evidence_counts(ledger, skill_id, now=now, config=config)
@@ -213,6 +263,9 @@ def _skill_view(
         current_level=decided.estimate.level,
         confidence=decided.estimate.confidence,
         supported_levels=decided.estimate.supported_levels,
+        proof_stages=_proof_stages(
+            decided.estimate.supported_levels, decided.estimate.level_entry_ids, ledger, stage_of
+        ),
         evidence_counts=EvidenceCounts(
             explain=counts[EvidenceCategory.EXPLAIN_REASON],
             perform=counts[EvidenceCategory.PERFORM_SOLVE],

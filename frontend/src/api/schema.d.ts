@@ -1739,11 +1739,12 @@ export interface components {
             target_level: components["schemas"]["ProficiencyLevel"];
             current_level?: components["schemas"]["ProficiencyLevel"] | null;
             confidence?: components["schemas"]["Confidence"] | null;
-            /**
-             * Supported Levels
-             * @default []
-             */
+            /** Supported Levels */
             supported_levels: components["schemas"]["ProficiencyLevel"][];
+            /** Proof Stages */
+            proof_stages: {
+                [key: string]: number[];
+            };
             evidence_counts: components["schemas"]["EvidenceCounts"];
             decision: components["schemas"]["ProgressionDecision"];
             /** Reason */
@@ -1943,14 +1944,6 @@ export interface components {
              */
             readonly activities: string[];
         };
-        /** UnitSkill */
-        UnitSkill: {
-            /** Skill Id */
-            skill_id: string;
-            /** Skill Name */
-            skill_name: string;
-            goal_level: components["schemas"]["ProficiencyLevel"];
-        };
         /** UnitState */
         UnitState: {
             /** Step */
@@ -1970,7 +1963,7 @@ export interface components {
             /** Concept Line */
             concept_line: string;
             /** Target Skills */
-            target_skills: components["schemas"]["UnitSkill"][];
+            target_skills: components["schemas"]["lms__core__course_map__UnitSkill"][];
             /** Authored */
             authored: boolean;
             decision: components["schemas"]["ProgressionDecision"];
@@ -1991,6 +1984,16 @@ export interface components {
             /** Unit Id */
             unit_id: string;
             decision: components["schemas"]["ProgressionDecision"];
+            /** Title */
+            title: string;
+            /** Skills */
+            skills: components["schemas"]["lms__core__proficiency_view__UnitSkill"][];
+            /** Reset At */
+            reset_at: string | null;
+            /** Activities Done */
+            activities_done: number;
+            /** Activities Total */
+            activities_total: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -2009,6 +2012,20 @@ export interface components {
         VerifyRequest: {
             /** Code */
             code: string;
+        };
+        /** UnitSkill */
+        lms__core__course_map__UnitSkill: {
+            /** Skill Id */
+            skill_id: string;
+            /** Skill Name */
+            skill_name: string;
+            goal_level: components["schemas"]["ProficiencyLevel"];
+        };
+        /** UnitSkill */
+        lms__core__proficiency_view__UnitSkill: {
+            /** Skill Id */
+            skill_id: string;
+            goal_level: components["schemas"]["ProficiencyLevel"];
         };
     };
     responses: never;

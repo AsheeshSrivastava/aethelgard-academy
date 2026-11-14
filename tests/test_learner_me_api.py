@@ -120,13 +120,16 @@ def test_proficiency_matches_the_spec_shape(client):
         "current_level",
         "confidence",
         "supported_levels",
+        "proof_stages",
         "evidence_counts",
         "decision",
         "reason",
         "entry_ids",
     }
     assert set(body["skills"][0]["evidence_counts"]) == {"explain", "perform", "diagnose"}
-    assert set(body["units"][0]) == {"unit_id", "decision"}
+    assert set(body["units"][0]) == {
+        "unit_id", "decision", "title", "skills", "reset_at", "activities_done", "activities_total"
+    }
     assert set(body["next_action"]) == {"unit_id", "skill_id", "activity", "decision", "message", "retry_at"}
 
 
@@ -251,8 +254,43 @@ def test_supported_evidence_gives_progress(client, repo):
     assert row["confidence"] == "supported"
     assert row["decision"] == "Progress"
     assert len(row["entry_ids"]) == 2
-    assert body["units"][0] == {"unit_id": "PY-1.1", "decision": "Progress"}
+    assert (body["units"][0]["unit_id"], body["units"][0]["decision"]) == ("PY-1.1", "Progress")
     assert body["next_action"]["unit_id"] == "PY-1.2"
+
+
+def test_proof_stages_name_the_stage_of_the_backing_units(client, repo):
+    # SPEC-12 section 6 (2026-11-14): the API wires each unit to its stage for the "proven in Stage N" label.
+    repo.record_evidence(make_entry(days_ago=3))
+    repo.record_evidence(make_entry(days_ago=2, cold_check=True))
+
+    row = next(s for s in proficiency(client, "course_id=python&stage=1")["skills"] if s["skill_id"] == "CO-1")
+
+    assert row["proof_stages"] == {"Understand": [1], "Apply": [1]}
+
+
+def test_unit_rows_report_title_goals_and_activity_progress(client):
+    unit_row = proficiency(client, "course_id=python&stage=1")["units"][0]
+
+    assert unit_row["title"]
+    assert unit_row["skills"][0]["skill_id"] == "CO-1"
+    assert (unit_row["activities_done"], unit_row["reset_at"]) == (0, None)
+    assert unit_row["activities_total"] >= 1
+
+
+def test_proof_from_another_stage_is_named_when_viewing_a_later_stage(repo, clock):
+    # Levels are overall (owner option A): Stage 0 proof backs the skill row seen from Stage 1.
+    catalog = CurriculumCatalog()
+    catalog.add_unit(make_unit("PY-0.1", 0, "CO-1"))
+    catalog.add_unit(make_unit("PY-1.1", 1, "CO-1"))
+    app = create_app(
+        repo=repo, runner=SubprocessRunner(), axis=MockAxisCompanion(), catalog=catalog, clock=clock
+    )
+    repo.record_evidence(make_entry(unit_id="PY-0.1", days_ago=3))
+    repo.record_evidence(make_entry(unit_id="PY-0.1", days_ago=2, cold_check=True))
+
+    row = proficiency(TestClient(app), "course_id=python&stage=1")["skills"][0]
+
+    assert row["proof_stages"] == {"Understand": [0], "Apply": [0]}
 
 
 def test_main_activity_evidence_reaches_the_target(repo, clock):
@@ -294,7 +332,7 @@ def test_shaky_explain_route_feeds_the_rebuild_decision(client, repo):
 
     body = proficiency(client, "course_id=python&stage=1")
 
-    assert {"unit_id": "PY-1.2", "decision": "Rebuild"} in body["units"]
+    assert ("PY-1.2", "Rebuild") in [(u["unit_id"], u["decision"]) for u in body["units"]]
     assert body["next_action"]["activity"] == "explain"
 
 

@@ -4781,8 +4781,20 @@
               "$ref": "#/components/schemas/ProficiencyLevel"
             },
             "type": "array",
-            "title": "Supported Levels",
-            "default": []
+            "title": "Supported Levels"
+          },
+          "proof_stages": {
+            "additionalProperties": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ProficiencyLevel"
+            },
+            "type": "object",
+            "title": "Proof Stages"
           },
           "evidence_counts": {
             "$ref": "#/components/schemas/EvidenceCounts"
@@ -4807,6 +4819,8 @@
           "skill_id",
           "skill_name",
           "target_level",
+          "supported_levels",
+          "proof_stages",
           "evidence_counts",
           "decision",
           "reason",
@@ -5374,28 +5388,6 @@
         ],
         "title": "Unit"
       },
-      "UnitSkill": {
-        "properties": {
-          "skill_id": {
-            "type": "string",
-            "title": "Skill Id"
-          },
-          "skill_name": {
-            "type": "string",
-            "title": "Skill Name"
-          },
-          "goal_level": {
-            "$ref": "#/components/schemas/ProficiencyLevel"
-          }
-        },
-        "type": "object",
-        "required": [
-          "skill_id",
-          "skill_name",
-          "goal_level"
-        ],
-        "title": "UnitSkill"
-      },
       "UnitState": {
         "properties": {
           "step": {
@@ -5437,7 +5429,7 @@
           },
           "target_skills": {
             "items": {
-              "$ref": "#/components/schemas/UnitSkill"
+              "$ref": "#/components/schemas/lms__core__course_map__UnitSkill"
             },
             "type": "array",
             "title": "Target Skills"
@@ -5491,12 +5483,48 @@
           },
           "decision": {
             "$ref": "#/components/schemas/ProgressionDecision"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/lms__core__proficiency_view__UnitSkill"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "reset_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset At"
+          },
+          "activities_done": {
+            "type": "integer",
+            "title": "Activities Done"
+          },
+          "activities_total": {
+            "type": "integer",
+            "title": "Activities Total"
           }
         },
         "type": "object",
         "required": [
           "unit_id",
-          "decision"
+          "decision",
+          "title",
+          "skills",
+          "reset_at",
+          "activities_done",
+          "activities_total"
         ],
         "title": "UnitView"
       },
@@ -5552,6 +5580,45 @@
           "code"
         ],
         "title": "VerifyRequest"
+      },
+      "lms__core__course_map__UnitSkill": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "skill_name": {
+            "type": "string",
+            "title": "Skill Name"
+          },
+          "goal_level": {
+            "$ref": "#/components/schemas/ProficiencyLevel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "skill_name",
+          "goal_level"
+        ],
+        "title": "UnitSkill"
+      },
+      "lms__core__proficiency_view__UnitSkill": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "goal_level": {
+            "$ref": "#/components/schemas/ProficiencyLevel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "goal_level"
+        ],
+        "title": "UnitSkill"
       }
     }
   }
