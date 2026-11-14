@@ -105,7 +105,8 @@ For a detailed explanation of folder responsibilities and architectural decision
 ├── scripts/            # Tooling and reproducible doc fetcher (fetch_upstream.py)
 ├── tests/              # 1,400+ unit, integration, and chaos falsification tests
 ├── ARCHITECTURE.md     # In-depth System Architecture & Repository Topology
-└── LICENSE             # Business Source License (BSL 1.1)
+├── LICENSE             # Business Source License (BSL 1.1)
+└── TRADEMARKS.md       # Trademark notice (applications pending)
 ```
 
 ---
@@ -113,6 +114,7 @@ For a detailed explanation of folder responsibilities and architectural decision
 ## Licensing & Contact
 
 - **License:** Business Source License 1.1 (BSL 1.1) transitioning to Apache 2.0 on `2027-11-09`. Non-commercial educational use is permitted.
+- **Trademarks:** Aethelgard Academy™ is a product of Quest and Crossfire™. Both trademark applications are filed and pending; see [`TRADEMARKS.md`](TRADEMARKS.md).
 - **Architect & Maintainer:** Asheesh Ranjan Srivastava
 - **Email:** `asheeshsrivastava9@gmail.com`
 - **GitHub:** [@AsheeshSrivastava](https://github.com/AsheeshSrivastava)

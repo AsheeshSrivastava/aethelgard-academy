@@ -1,6 +1,6 @@
 # System Architecture & Design Guide
 
-> **Quest and Crossfire™ Curriculum Studio & Learning Platform**  
+> **Aethelgard Academy™, a product of Quest and Crossfire™**  
 > Architected by **Asheesh Ranjan Srivastava**  
 > Licensed under Business Source License (BSL 1.1)
 
