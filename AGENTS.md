@@ -72,7 +72,7 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
   - `Backend Engineering Roadmap v3.md` (Targeted soft prerequisites)
   - Supporting roadmaps slotted into the Python and Backend paths (ADR-0020): `Practical DSA Roadmap v3.md`, `Git Version Control Roadmap v2.md`, `Software Design Roadmap v2.md`, `AI-Assisted Engineering Roadmap v2.md`, `Networking Web Foundations Roadmap v2.md`, `Database SQL Roadmap v2.md`, and `Technical Writing Roadmap v1.md` (scope approved 2026-11-08; TW 0 is recommended, not a prerequisite)
 - **The Lock Rule:** Do not revise the curriculum terrain because a provider releases a model, an abstraction becomes trendy, or an API changes. Ask: *Is this a durable engineering capability, or only today's mechanism for one?*
-- **Unit Integrity:** Every unit carries 1 to 3 target skills (with goal levels: `Understand`, `Apply`, `Adapt`, `Own`) and a sequence of 2 to 3 discrete methods (beginning with `Explain` + `CO-6` concept check).
+- **Unit Integrity:** Every unit carries 1 to 3 target skills (with goal levels: `Understand`, `Apply`, `Adapt`, `Own`) and a sequence of 2 to 5 discrete methods (ADR-0033) (beginning with `Explain` + `CO-6` concept check).
 - **The Cumulative Project Spine:** All exercises connect to an evolving operational workflow (Ingress $\rightarrow$ Transformation $\rightarrow$ Egress) scaling from initial registration desk to Multi-Agent RAG.
 
 ### AI and RAG Rules (The Provenance Firewall)
