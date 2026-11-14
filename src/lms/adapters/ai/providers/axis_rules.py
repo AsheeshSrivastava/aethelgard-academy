@@ -24,7 +24,6 @@ MAX_CODE_CHARS = 4000
 MAX_RUN_OUTPUT_CHARS = 2000
 REPLY_MAX_TOKENS = 1024
 JUDGE_MAX_TOKENS = 500
-DEFAULT_CITATION = "Operational Communication Cycle"
 
 DRAFT_MAX_TOKENS = 900
 README_HEADINGS = ("What it does", "What you need first", "How to run it", "A sample run", "Limits")
@@ -61,7 +60,7 @@ def retrieve_grounded_passages(
             return "\n\n".join(snippets), [p.passage_id for p in results]
 
     if concept_store is None:
-        return "", [DEFAULT_CITATION]
+        return "", []
 
     cited_ids: List[str] = []
     snippets: List[str] = []
@@ -81,17 +80,22 @@ def retrieve_grounded_passages(
         if len(snippets) >= 3:
             break
 
-    if not cited_ids:
-        for source in concept_store.list_all_sources():
-            for p in concept_store.get_passages(source.source_id):
-                if verify_passage(source, p):
-                    cited_ids.append(p.passage_id)
-                    snippets.append(f"[{source.source_id}] {p.text}")
-                    break
-            if cited_ids:
-                break
+    # Nothing matched: cite nothing. An unrelated passage would be a source the answer never used.
+    return "\n\n".join(snippets), cited_ids
 
-    return "\n\n".join(snippets), (cited_ids or [DEFAULT_CITATION])
+
+def _not_found_notice(mode: AxisMode) -> str:
+    notice = (
+        "NO CURRICULUM PASSAGE WAS FOUND for this question. Do not pretend a course source "
+        "was used. If the question needs course material you do not have, say plainly: "
+        '"This is not in the course yet."'
+    )
+    if mode == AxisMode.COACH:
+        notice += (
+            " You may still explain syntax or an error message from general knowledge, but "
+            'begin that part with the label "Not from the course:".'
+        )
+    return notice
 
 
 def build_system_prompt(mode: AxisMode, grounded_context: str) -> str:
@@ -124,7 +128,10 @@ def build_system_prompt(mode: AxisMode, grounded_context: str) -> str:
             "before writing implementation logic."
         )
 
-    context_block = f"\n\nVERIFIED CURRICULUM GROUNDING:\n{grounded_context}" if grounded_context else ""
+    if grounded_context:
+        context_block = f"\n\nVERIFIED CURRICULUM GROUNDING:\n{grounded_context}"
+    else:
+        context_block = "\n\n" + _not_found_notice(mode)
     return f"{base_rules}\n\n{stance}{context_block}"
 
 

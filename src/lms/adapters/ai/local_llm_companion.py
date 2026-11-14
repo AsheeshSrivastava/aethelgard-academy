@@ -16,6 +16,7 @@ every other adapter.
 from __future__ import annotations
 
 import os
+import logging
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
@@ -37,6 +38,8 @@ from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGua
 from lms.core.interfaces import AxisQuery, AxisResponse, IAXISCompanion
 
 FALLBACK_MODEL = "qwen3.5-9b"
+
+logger = logging.getLogger(__name__)
 
 
 def load_dotenv_if_present() -> None:
@@ -371,6 +374,11 @@ def load_default_retriever() -> Optional[HybridRerankedRetriever]:
     if (default_index / "passages.jsonl").exists():
         try:
             return HybridRerankedRetriever.load(default_index)
-        except Exception:
+        except Exception as exc:
+            logger.warning("No retrieval index is loaded: %s could not be read (%s).", default_index, type(exc).__name__)
             return None
+    logger.warning(
+        "No retrieval index is loaded: %s does not exist. AXIS answers will say they are not grounded.",
+        default_index,
+    )
     return None
