@@ -638,7 +638,7 @@ describe("item types", () => {
     });
     const attempt = { outcome: "failed", feedback: "Your tests caught 2 of 4 faulty programs.", score: { passed: 2, total: 4 }, unit_decision: "Strengthen", evidence_entry_id: "e" };
 
-    const body = await answerAndSubmit("specify", ex, (u) => u.type(screen.getByLabelText("Your tests"), "!"), attempt);
+    const body = await answerAndSubmit("specify", ex, async (u) => u.type(await screen.findByLabelText("Your tests"), "!"), attempt);
 
     expect(body.tests).toContain("from solution import desk_for");
     expect(screen.getByText("2 of 4")).toBeInTheDocument();
