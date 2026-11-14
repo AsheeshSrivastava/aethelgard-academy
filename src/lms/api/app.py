@@ -19,7 +19,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, W
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
 from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
@@ -265,10 +265,13 @@ def public_unit(unit: Unit) -> Unit:
     )
 
 
+MAX_EXECUTE_TIMEOUT_SECONDS = 5.0  # the same as RunLimits.cpu_seconds
+
+
 class ExecuteCodeRequest(BaseModel):
     code: str
     test_code: Optional[str] = None
-    timeout_seconds: float = 5.0
+    timeout_seconds: float = Field(default=5.0, gt=0, le=MAX_EXECUTE_TIMEOUT_SECONDS)
     stdin_input: Optional[str] = None
 
 
