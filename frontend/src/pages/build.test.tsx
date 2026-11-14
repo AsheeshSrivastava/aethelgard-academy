@@ -700,3 +700,50 @@ describe("README work (SPEC-15 section 9)", () => {
     expect(document.body.textContent).not.toMatch(/\bstages?\b/i);
   });
 });
+
+describe("build feedback (SPEC-15 section 10)", () => {
+  const FEEDBACK = `${ME}/build:feedback`;
+  const reply = {
+    points: [
+      { requirement_id: "readme-sections", status: "not_met", where: "README.md", found: "The check did not find what it looks for. Limits: missing", why: "README answers the checklist points", looked_for: "These headings: 'Limits'.", look: "Compare the README headings." },
+      { requirement_id: "review", status: "met", where: "Review note", found: "Met.", why: "Review note written", looked_for: "A note of at least 20 characters.", look: "Nothing to change here." },
+    ],
+    summary: "1 found, 1 not found.",
+    summary_error: null,
+    model: "offline-mock",
+  };
+
+  async function openFeedback(extra: Record<string, unknown> = {}) {
+    const calls = stubApi({ ...routes(), [`POST ${FEEDBACK}`]: reply, "POST /api/v1/learners/me/interactions": null, ...extra });
+    renderAt(PATH);
+    await userEvent.click(await screen.findByRole("button", { name: "Get feedback" }));
+    return calls;
+  }
+
+  it("shows one summary line, the open point first and the met points folded", async () => {
+    await openFeedback();
+
+    const panel = await screen.findByRole("region", { name: "Build feedback" });
+    expect(within(panel).getByText(/1 found, 1 not found, 0 not checked yet/)).toBeInTheDocument();
+    expect(within(panel).getByText("1 found")).toBeInTheDocument();
+    expect(within(panel).getByText(/These come from rule-based checks/)).toBeInTheDocument();
+    expect(within(panel).getByText("1 found, 1 not found.")).toBeInTheDocument();
+  });
+
+  it("sends 'This is wrong' with the reason and says progress did not change", async () => {
+    const calls = await openFeedback();
+    const panel = await screen.findByRole("region", { name: "Build feedback" });
+
+    await userEvent.click(within(panel).getByText(/Not found:/));
+    await userEvent.click(within(panel).getByRole("button", { name: "This is wrong" }));
+    await userEvent.type(within(panel).getByLabelText(/Why/), "I wrote Limitations");
+    await userEvent.click(within(panel).getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(within(panel).getByText(/Nothing about your progress changed/)).toBeInTheDocument());
+    const sent = calls.find((c) => c.url === "/api/v1/learners/me/interactions" && c.method === "POST");
+    expect(JSON.parse(sent!.body!)).toEqual({
+      event_type: "feedback_disputed",
+      payload: { point: "readme-sections", reason: "I wrote Limitations" },
+    });
+  });
+});

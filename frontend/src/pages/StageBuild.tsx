@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, ApiError, type AttemptResult, type StageBuild as Build } from "../api/client";
 import { ErrorNote, Loading } from "../components/common";
+import { FeedbackPanel } from "./FeedbackPanel";
 import { AxisPanel } from "../lesson/AxisPanel";
 import { CodeEditor } from "../lesson/CodeEditor";
 import { languageOf } from "../lib/fileLanguage";
@@ -276,6 +277,11 @@ function Workspace({
     },
   });
 
+  const feedback = useMutation({
+    mutationFn: () =>
+      api.buildFeedback(stageArgs, { files, ownership_note: note, review_note: review, run_checks: true }),
+  });
+
   function askForDraft() {
     if (readmePath && (files[readmePath] ?? "") !== readmeStarter) setConfirmingDraft(true);
     else draftReadme.mutate();
@@ -369,6 +375,9 @@ function Workspace({
               <button type="button" className="button button-small" disabled={verify.isPending} onClick={() => verify.mutate()}>
                 {verify.isPending ? "Checking…" : "Verify"}
               </button>
+              <button type="button" className="button button-small" disabled={feedback.isPending} onClick={() => feedback.mutate()}>
+                {feedback.isPending ? "Reading…" : "Get feedback"}
+              </button>
             </div>
             {readmePath && open === readmePath && (
               <div className="readme-tools">
@@ -408,6 +417,8 @@ function Workspace({
             />
             <RunTerminal getFiles={getFiles} exerciseId={build.exercise_id} entry={build.entry} />
           </div>
+          {feedback.isError && <ErrorNote error={feedback.error} />}
+          {feedback.data && <FeedbackPanel feedback={feedback.data} />}
           {verify.isError && <ErrorNote error={verify.error} />}
           {verify.isSuccess && !verify.isPending && Object.keys(verified).length > 0 && (
             <p className="small" role="status">

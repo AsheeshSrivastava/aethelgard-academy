@@ -314,6 +314,19 @@ class OpenAICompatibleCompanion:
         self._record("document_draft", answered, resp.usage, len(sys_prompt) + len(user_msg))
         return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
 
+    def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, Optional[str]]:
+        """One summary call over the measured feedback points (SPEC-15 section 10.2). Never falls back."""
+        sys_prompt, user_msg = axis_rules.feedback_summary_prompts(points, readme, note, script, run_output)
+        self._check_budget(sys_prompt, user_msg)
+        target_model = self.resolve_model()
+        resp = self._client.chat.completions.create(
+            **self._params(target_model, sys_prompt, user_msg, 0.2, axis_rules.DRAFT_MAX_TOKENS)
+        )
+        answered = resp.model or target_model
+        self.last_model_answered = answered
+        self._record("build_feedback", answered, resp.usage, len(sys_prompt) + len(user_msg))
+        return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
+
     def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
         """One judging call (SPEC-18 section 3). Returns the raw reply and the model that answered.
 

@@ -335,6 +335,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Feedback On My Build
+         * @description Point-by-point feedback from measured data, then an optional AXIS summary (SPEC-15 section 10).
+         *     Logged as build_feedback with no exercise id: it never counts as help on the build's code.
+         */
+        post: operations["feedback_on_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset": {
         parameters: {
             query?: never;
@@ -914,6 +935,17 @@ export interface components {
             /** Requirements */
             requirements: components["schemas"]["RequirementResult"][];
         };
+        /** BuildFeedbackResult */
+        BuildFeedbackResult: {
+            /** Points */
+            points: components["schemas"]["FeedbackPoint"][];
+            /** Summary */
+            summary?: string | null;
+            /** Summary Error */
+            summary_error?: string | null;
+            /** Model */
+            model?: string | null;
+        };
         /** BuildFile */
         BuildFile: {
             /** Path */
@@ -992,7 +1024,7 @@ export interface components {
              * Event Type
              * @enum {string}
              */
-            event_type: "opened" | "closed" | "hint_viewed" | "feedback_viewed";
+            event_type: "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "feedback_disputed";
             /** Interaction Id */
             interaction_id?: string | null;
             /** Unit Id */
@@ -1012,6 +1044,10 @@ export interface components {
             seconds_open?: number | null;
             /** Step */
             step?: string | null;
+            /** Point */
+            point?: string | null;
+            /** Reason */
+            reason?: string | null;
         };
         /** ColdCheckFeedback */
         ColdCheckFeedback: {
@@ -1472,6 +1508,26 @@ export interface components {
             practice_activity: string;
             worked?: components["schemas"]["Reveal"] | null;
         };
+        /** FeedbackPoint */
+        FeedbackPoint: {
+            /** Requirement Id */
+            requirement_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_met" | "not_checked" | "met";
+            /** Where */
+            where: string;
+            /** Found */
+            found: string;
+            /** Why */
+            why: string;
+            /** Looked For */
+            looked_for: string;
+            /** Look */
+            look: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1498,7 +1554,7 @@ export interface components {
              * Event Type
              * @enum {string}
              */
-            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "document_draft";
+            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "document_draft" | "build_feedback" | "feedback_disputed";
             /** Payload */
             payload?: {
                 [key: string]: unknown;
@@ -2600,6 +2656,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftReadmeResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feedback_on_my_build_api_v1_learners_me_courses__course_id__stages__stage__build_feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                stage: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildFeedbackResult"];
                 };
             };
             /** @description Validation Error */

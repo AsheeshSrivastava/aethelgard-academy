@@ -257,6 +257,39 @@ AXIS data-based feedback on the README and the review note (work sequence 2d.5, 
 
 ---
 
+## 10. Data-based feedback (work sequence 2d.5; owner approved the design 2026-11-14)
+
+AXIS tells the learner what it found in the build, point by point. No Socratic questions here. Design note: `lms-backlog/2d5-build-feedback-design-note.md`.
+
+### 10.1 Layer 1: points from data (no model)
+
+`build_feedback_points(build, files, results, review_note)` returns one point per requirement, ordered not met, then not checked, then met (requirement order inside each). A point has:
+
+| Field | Meaning |
+| :--- | :--- |
+| `requirement_id` | The requirement it reports on |
+| `status` | `not_met`, `not_checked` (a check that runs code and has not run) or `met` |
+| `where` | The file, and the README section when there is one, e.g. `README.md, "A sample run"` |
+| `found` | A measured fact: the check's own detail, or a count (words under a heading, characters in the note) |
+| `why` | The requirement's label, i.e. the checklist item |
+| `look` | A pointer to where to look. Never code, never a fix |
+
+Same inputs give the same points. It needs no network, so it works with `MOCK_AI=true`. It uses only what Verify already shows: never the hidden check source or a reference solution.
+
+### 10.2 Layer 2: AXIS summary (optional)
+
+When the provider has `summarise_feedback`, it receives the points and the README and review note (as untrusted data, like section 9.4) and returns a short plain-language summary and the model name. It must not add a finding that is not in the points. If it fails or is absent, the points are still returned with `summary: null`; nothing is silently replaced (ADR-0026). `MOCK_AI=true`: a fixed summary built from the points' counts.
+
+### 10.3 Route and accounting
+
+- `POST /api/v1/learners/me/courses/{course_id}/stages/{stage}/build:feedback`, body as `build:check`. Runs the checks (`run_checks` as sent), returns `{points, summary, model}`. 423 until the build is open; 413 when too large.
+- Logged as kind `build_feedback` with course and stage, and no exercise id: it does not change `AssistanceLevel` and is not `supplied_reasoning` (ADR-0028, Amendment A2). The points are the same data as Verify.
+- Dispute: `POST /learners/me/interactions` with `event_type` `feedback_disputed` and payload `{point, reason}` (reason up to 200 characters). It changes no progress.
+- Each point also carries `looked_for`, the rule in words, and a miss reads "The check did not find what it looks for", never "wrong".
+- Layer 2 receives the README, the review note, the learner's entry script and, when the sample-run check ran, what the script really printed (up to 2,000 characters, as untrusted text). `RequirementResult.output` carries it from the check; it is excluded from every API response. Never the reference solution or hidden checks.
+- Page: a "Get feedback" button beside Verify (runs the checks). The panel opens with one summary line, shows not-found and not-checked points as expandable one-liners, folds the found points, and each open point has "This is wrong" with a one-line reason.
+- Code files: results and measured facts only. README and review note: wording pointers allowed.
+
 ## 8. Acceptance
 
 1. A stage returns `423` until its build is open (SPEC-16 section 3.4), on the build, on `build:check` and on attempts.
