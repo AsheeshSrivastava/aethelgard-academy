@@ -22,6 +22,7 @@ import argparse
 import json
 import sys
 import time
+from collections.abc import Callable
 from importlib import metadata
 from pathlib import Path
 
@@ -70,7 +71,7 @@ def main() -> int:
     for name in OUT_OF_SCOPE:
         out_qs += load_yaml(rc / "eval" / "questions" / name)
     for spec in args.extra:
-        path, prefix = spec.split("::")
+        path, prefix = spec.rsplit("::", 1)
         data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         qs = data.get("questions", [])
         out_qs += data.get("out_of_scope", [])  # learner-style files carry their own no-answer questions
@@ -91,11 +92,12 @@ def main() -> int:
         missing += [q for q in qs if q not in have]
         kept.append((name, prefix, have))
     in_sets = kept
-    print(f"corpus: {len(rows)} sources; in-scope: "
-          + ", ".join(f"{n} {len(q)}" for n, _, q in in_sets) + f"; out-of-scope: {len(out_qs)}\n")
+    print(f"corpus: {len(rows)} sources; answerable: "
+          + ", ".join(f"{n} {len(q)}" for n, _, q in in_sets)
+          + f"; no-answer: {len(out_qs)} foreign + {len(missing)} answer-file-missing\n")
     modes = [m.strip() for m in args.modes.split(",") if m.strip()]
 
-    searchers: dict[str, callable] = {}   # mode -> fn(query) -> list[(source_id, score)]
+    searchers: dict[str, Callable] = {}   # mode -> fn(query) -> list[(source_id, score)]
     closers = []
 
     if "lms" in modes:
@@ -130,7 +132,7 @@ def main() -> int:
         t0 = time.perf_counter()
         chunker = LlamaIndexChunker()
         with open_index(index, setup) as store:
-            report = sync(sources, store, lambda s: chunker(s, config), embedder, allow_mass_delete=True)
+            report = sync(sources, store, lambda s: chunker(s, config), embedder)
         print(report.render() + f"\n  (sync took {time.perf_counter() - t0:.0f} s)\n")
         reranker = make_reranker(args.reranker, rerankers)[0] if "HR" in modes else None
         for mode in ("L", "HR"):

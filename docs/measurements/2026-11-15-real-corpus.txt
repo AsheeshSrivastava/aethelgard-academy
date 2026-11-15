@@ -1,4 +1,4 @@
-corpus: 1371 sources; in-scope: python-docs-codex-questions.yaml 24, python-docs-gemini-questions.yaml 20, uv-docs-questions.yaml 27, ruff-docs-questions.yaml 30; out-of-scope: 192
+corpus: 1371 sources; answerable: python-docs-codex-questions.yaml 24, python-docs-gemini-questions.yaml 20, uv-docs-questions.yaml 27, ruff-docs-questions.yaml 30; no-answer: 192 foreign + 45 answer-file-missing
 Sync finished.
   0 sources added, 0 replaced, 1371 sources unchanged, 0 removed
   0 passages stored (0 reused an existing vector), 0 old passages removed
@@ -10,7 +10,7 @@ Sync finished.
   uv-docs-questions.yaml               first   5/27  top3  11/27 
   ruff-docs-questions.yaml             first   9/30  top3  13/30 
   ALL in-scope                         first  20/101 top3  34/101  first 20% top3 34%
-  (160 ms/question)
+  (138 ms/question)
 === L
   python-docs-codex-questions.yaml     first  14/24  top3  17/24 
   python-docs-gemini-questions.yaml    first  11/20  top3  12/20 
@@ -41,7 +41,7 @@ Sync finished.
   uv-docs-questions.yaml               first  21/27  top3  23/27 
   ruff-docs-questions.yaml             first  28/30  top3  30/30 
   ALL in-scope                         first  82/101 top3  91/101  first 81% top3 90%
-  (146 ms/question)
+  (139 ms/question)
   top-1 score in-scope: p10 -0.77 median 2.02; foreign (192): median -2.22 p90 0.20; file-missing (45): median -1.39 p90 1.52
   floor     in-scope lost    foreign refused   file-missing refused
      -7.07     0/101     0%      0/192   0%      0/45 0%
