@@ -11,7 +11,7 @@ import tempfile
 import time
 from typing import List, Mapping, Optional
 
-from lms.adapters.runner.check_harness import HARNESS, check_stdin
+from lms.adapters.runner.check_harness import HARNESS, check_stdin, new_token, with_completion
 from lms.adapters.runner.interactive import safe_env
 from lms.core.interfaces import ExecutionResult, extra_file_problem
 
@@ -39,6 +39,7 @@ class SubprocessRunner:
             problem = extra_file_problem(name)
             if problem:
                 raise ValueError(problem)
+        token = new_token()
         start_time = time.perf_counter()
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -59,7 +60,7 @@ class SubprocessRunner:
             try:
                 proc = subprocess.run(
                     [sys.executable, str(target_to_run)],
-                    input=check_stdin(test_code, stdin_input) if test_code else (stdin_input or ""),
+                    input=check_stdin(test_code, stdin_input, token) if test_code else (stdin_input or ""),
                     capture_output=True,
                     text=True,
                     timeout=timeout_seconds,
@@ -75,7 +76,7 @@ class SubprocessRunner:
 
                 assertion_errors = assertion_errors_from(stderr)
 
-                return ExecutionResult(
+                result = ExecutionResult(
                     success=success,
                     stdout=stdout,
                     stderr=stderr,
@@ -83,6 +84,7 @@ class SubprocessRunner:
                     duration_ms=round(duration_ms, 2),
                     assertion_errors=assertion_errors,
                 )
+                return with_completion(result, token) if test_code else result
 
             except subprocess.TimeoutExpired:
                 duration_ms = (time.perf_counter() - start_time) * 1000

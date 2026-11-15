@@ -52,10 +52,10 @@ def test_the_harness_is_fixed_text_that_holds_no_checks():
 
 
 def test_the_checks_travel_on_the_first_stdin_line_then_the_learner_input_follows():
-    payload = check_stdin(HIDDEN, "Amara\n")
+    payload = check_stdin(HIDDEN, "Amara\n", "tok-1")
 
     first, rest = payload.split("\n", 1)
-    assert json.loads(first) == {"checks": HIDDEN}
+    assert json.loads(first) == {"checks": HIDDEN, "token": "tok-1"}  # the token travels with the checks (ADR-0036 am. 5)
     assert rest == "Amara\n"
 
 
@@ -93,7 +93,8 @@ def test_docker_runner_puts_no_check_code_in_the_run_folder(monkeypatch):
     assert MARKER not in "".join(docker.mounted.values())
     assert docker.mounted["run_tests.py"] == HARNESS
     sent = docker.proc.stdin.captured.decode()
-    assert json.loads(sent.split("\n", 1)[0]) == {"checks": HIDDEN}
+    first = json.loads(sent.split("\n", 1)[0])
+    assert first["checks"] == HIDDEN and set(first) == {"checks", "token"}
     assert sent.endswith("\nZed\n")
 
 

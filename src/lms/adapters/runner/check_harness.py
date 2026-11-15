@@ -5,6 +5,7 @@ open. So run_tests.py is fixed text with no checks in it. The checks arrive as t
 of stdin (JSON), are compiled, and are dropped as text *before* the learner's module is
 imported. They are compiled under the name "<hidden-checks>", so a traceback or linecache has
 no source line to show. Whatever stdin_input the caller gave follows the checks line.
+The line also carries a per-run completion token that the harness prints after the last check (ADR-0036 amendment 5).
 
 What this closes: the learner's program cannot open a file, read the working folder, argv,
 the environment, /proc/self/cmdline or linecache and find the checks.
@@ -14,6 +15,9 @@ runs, or scan its own memory) could still see the compiled checks. Only a separa
 """
 
 import json
+import secrets
+
+from lms.core.interfaces import ExecutionResult
 
 HARNESS = r'''import builtins
 import json
@@ -35,7 +39,10 @@ def _read_checks_line():
 
 def _main():
     raw = _read_checks_line()
-    code = compile(json.loads(raw)["checks"], "<hidden-checks>", "exec")
+    payload = json.loads(raw)
+    code = compile(payload["checks"], "<hidden-checks>", "exec")
+    token = payload["token"]
+    del payload
     for i in range(len(raw)):
         raw[i] = 0
     del raw
@@ -53,12 +60,34 @@ def _main():
     for name, check in list(scope.items()):
         if name.startswith("test_") and callable(check):
             check()
+    # The last thing the harness does. A program that ends the run early (os._exit(0)) never gets here.
+    sys.stdout.write("\n" + token + "\n")
+    sys.stdout.flush()
 
 
 _main()
 '''
 
 
-def check_stdin(checks: str, stdin_input: str | None) -> str:
-    """What to send on stdin: the checks as one JSON line, then the learner's own input."""
-    return json.dumps({"checks": checks}) + "\n" + (stdin_input or "")
+def new_token() -> str:
+    """A fresh random completion token for one run. It is never reused and never shown to the learner."""
+    return "lms-complete-" + secrets.token_hex(16)
+
+
+def check_stdin(checks: str, stdin_input: str | None, token: str) -> str:
+    """What to send on stdin: the checks and the run's token as one JSON line, then the learner's own input."""
+    return json.dumps({"checks": checks, "token": token}) + "\n" + (stdin_input or "")
+
+
+def with_completion(result: ExecutionResult, token: str) -> ExecutionResult:
+    """Exit code 0 alone proves nothing. A checked run succeeds only if the harness printed its token.
+
+    The token line is removed from stdout, so the learner never sees it (SPEC-03 section 2.4).
+    """
+    framed = f"\n{token}\n"
+    finished = framed in result.stdout
+    update = {"stdout": result.stdout.replace(framed, "")}
+    if result.success and not finished:
+        update["success"] = False
+        update["stderr"] = result.stderr + "The program ended before the checks finished.\n"
+    return result.model_copy(update=update)
