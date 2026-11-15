@@ -32,7 +32,7 @@ from lms.adapters.runner.docker_cli import (
     remove_container,
 )
 from lms.adapters.runner.interactive import DockerInteractiveRun, RunLimits
-from lms.adapters.runner.check_harness import HARNESS, check_stdin
+from lms.adapters.runner.check_harness import HARNESS, check_stdin, new_token, with_completion
 from lms.adapters.runner.subprocess_runner import SubprocessRunner, assertion_errors_from
 from lms.core.interfaces import ExecutionResult, ICodeRunner, extra_file_problem
 
@@ -109,6 +109,7 @@ class DockerRunner:
             if problem:
                 raise ValueError(problem)
         self.require_available()
+        token = new_token()
         started = time.perf_counter()
 
         with tempfile.TemporaryDirectory(prefix="lms-run-") as folder:
@@ -131,7 +132,7 @@ class DockerRunner:
             )
             try:
                 threads = self._start_pipes(
-                    proc, name, capture, check_stdin(test_code, stdin_input) if test_code else (stdin_input or "")
+                    proc, name, capture, check_stdin(test_code, stdin_input, token) if test_code else (stdin_input or "")
                 )
                 try:
                     proc.wait(timeout=timeout_seconds + STARTUP_ALLOWANCE_SECONDS)
@@ -166,7 +167,7 @@ class DockerRunner:
                 raise RunnerUnavailable(reason)
         if capture.over:
             stderr += OUTPUT_LIMIT_NOTE
-        return ExecutionResult(
+        result = ExecutionResult(
             success=exit_code == 0 and not capture.over,
             stdout=stdout,
             stderr=stderr,
@@ -174,6 +175,7 @@ class DockerRunner:
             duration_ms=duration_ms,
             assertion_errors=assertion_errors_from(stderr),
         )
+        return with_completion(result, token) if test_code else result
 
     def _start_pipes(self, proc: Any, name: str, capture: _Capture, stdin_text: str) -> List[threading.Thread]:
         """Feed stdin and read both output streams, each on its own thread so none can block another."""
