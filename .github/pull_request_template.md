@@ -1,3 +1,6 @@
+## ADR / spec
+<!-- Which ADR and spec section this change implements. "None needed: typo" is a fine answer. -->
+
 ## Testing
 <!-- Commands you ran and what they printed (paste the summary lines). -->
 
