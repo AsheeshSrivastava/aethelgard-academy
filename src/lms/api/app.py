@@ -15,8 +15,9 @@ import logging
 import os
 from pathlib import Path
 from typing import Any, Callable, Collection, Dict, Iterator, List, Optional, Set, Tuple, Union
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
@@ -167,6 +168,34 @@ def allowed_origins() -> List[str]:
     if "*" in origins:
         logger.warning("Ignoring '*' in LMS_ALLOWED_ORIGINS: credentials are allowed.")
     return [origin for origin in origins if origin != "*"]
+
+
+DEFAULT_ALLOWED_HOSTS = "localhost,127.0.0.1"
+WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+
+def allowed_hosts() -> List[str]:
+    """Host names this server answers to, from LMS_ALLOWED_HOSTS (no ports). Stops DNS rebinding (ADR-0015)."""
+    configured = os.environ.get("LMS_ALLOWED_HOSTS", DEFAULT_ALLOWED_HOSTS)
+    hosts = [host.strip() for host in configured.split(",") if host.strip()]
+    if "*" in hosts:
+        logger.warning("Ignoring '*' in LMS_ALLOWED_HOSTS: it would turn the Host check off.")
+    return [host for host in hosts if host != "*"] or DEFAULT_ALLOWED_HOSTS.split(",")
+
+
+def origin_allowed(origin: Optional[str], host: Optional[str]) -> bool:
+    """Origin check for WebSocket handshakes and cross-site writes. A browser always sends Origin and a page cannot change it.
+
+    No Origin means a non-browser client (the CLI, tests), which a web page cannot imitate, so it passes.
+    Otherwise the Origin must be in LMS_ALLOWED_ORIGINS or be this server's own (same host and port).
+    The own-origin match trusts `host`, so it is safe only because TrustedHostMiddleware has already
+    checked that Host against LMS_ALLOWED_HOSTS. Do not call this on a path that skips that middleware.
+    """
+    if origin is None:
+        return True
+    if origin in allowed_origins():
+        return True
+    return bool(host) and origin in (f"http://{host}", f"https://{host}")
 
 
 def utc_now() -> datetime:
@@ -394,6 +423,19 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Cross-site writes (ADR-0015 5b). Added before the Host check so that check runs first (last added = outermost).
+    @app.middleware("http")
+    async def refuse_cross_site_writes(request: Request, call_next):
+        if request.method in WRITE_METHODS and not origin_allowed(
+            request.headers.get("origin"), request.headers.get("host")
+        ):
+            logger.warning("Write refused: foreign Origin %r", request.headers.get("origin"))
+            return problem(403, "Cross-site request refused", "This origin may not change learner data.")
+        return await call_next(request)
+
+    # Host allow-list, for HTTP and WebSocket alike: a rebinding page reaches us under its own name.
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts())
 
     if providers is not None:
         app.include_router(model_settings_routes(providers, current_learner_id))
@@ -1026,6 +1068,12 @@ def create_app(
     # --- Interactive Runs (SPEC-12 section 7) ---
     @app.websocket("/api/v1/runs")
     async def run_interactively(websocket: WebSocket):
+        # Refuse before accept(): a foreign web page must never be able to run code here.
+        origin = websocket.headers.get("origin")
+        if not origin_allowed(origin, websocket.headers.get("host")):
+            logging.getLogger("lms.runner").warning("Run refused: foreign Origin %r", origin)
+            await websocket.close(code=1008)
+            return
         await websocket.accept()
         start = await websocket.receive_json()
         files = start.get("files") or {}

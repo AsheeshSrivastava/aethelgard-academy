@@ -26,6 +26,8 @@ Conventions:
 | POST | `/auth/sign-out` | — | `204` |
 | GET | `/learners/me` | — | `{learner_id, display_name, auth_mode}` |
 
+**Cross-site writes (review 2026-11-15, ADR-0015 5b).** Any `POST`, `PUT`, `PATCH` or `DELETE` that carries an `Origin` header outside `LMS_ALLOWED_ORIGINS` and not equal to the server's own origin is refused with `403` and a problem body, before the route runs, so nothing is written. Requests with no `Origin` (the `lms` CLI, scripts) and all `GET`, `HEAD` and `OPTIONS` requests are not checked. The same Host allow-list as section 7 applies first.
+
 ---
 
 ## 3. Catalog
@@ -283,6 +285,12 @@ The cap is per server process; with several workers it applies to each worker.
 - A run exceeding a limit is stopped and reports `timed_out: true`. Output past 64 KB is cut off with a final `stderr` notice.
 - Learner code runs with a minimal environment, so it never sees API keys or `.env` values.
 - On this subprocess runner, the network limit blocks Python sockets. It is not an OS sandbox. Hosting other people's code needs the Docker runner (ADR-0005).
+
+**Origin and Host check (review 2026-11-15).** A web page open in the learner's browser can open a WebSocket to `localhost`, so the socket must not trust the caller:
+- Before the handshake is accepted, the `Origin` header must be in `LMS_ALLOWED_ORIGINS` or be this server's own origin (same host and port). Otherwise the server refuses the handshake (HTTP 403, so the browser sees a failed connection) and no code runs.
+- A request with no `Origin` is let through. Browsers always send it and a page cannot remove it, so only non-browser clients (the `lms` CLI, tests, scripts) arrive without one. A client on the same machine can already run code, so this adds no new reach.
+- Every request, HTTP and WebSocket, must carry a `Host` in `LMS_ALLOWED_HOSTS` (host names, no ports; default `localhost,127.0.0.1`), else `400`. This stops DNS rebinding, where the attacker's own name points at 127.0.0.1 and so passes the Origin check as "same origin". Set it to your public host name when deploying. A `*` is ignored, and an empty or `*`-only value falls back to the default. The list is read once at start-up, so a change needs a restart. `[::1]` is not supported by the default list.
+- Behind a TLS proxy that rewrites `Host` to an internal name, add the proxy's internal name to `LMS_ALLOWED_HOSTS` and the public origin to `LMS_ALLOWED_ORIGINS`, or writes and the socket are refused. A Vite dev server on a port other than 5173 must be added to `LMS_ALLOWED_ORIGINS` too.
 
 ---
 
