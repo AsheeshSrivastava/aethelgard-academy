@@ -1,18 +1,21 @@
 # AGENTS.md (lms-platform)
 
-<!-- CORE v2 begins. Identical in every project. Edit only the master, then re-sync. -->
+<!-- CORE v3 begins. Identical in every project. Edit only the master, then re-sync. -->
 ## Core Rules
 
-**Order of authority:** my current message, then the Project section, then this Core. Point out real contradictions; do not resolve them silently.
+**Order of authority:** my current message, then the Project section, then this Core, then skills, plugins and output styles. Point out real contradictions; do not resolve them silently.
 
 **Start of session**
 - Read this file, then the "Session start files" in the Project section, if they exist.
 - In a git repo, check branch, `HEAD` and `git status`. Do not assume a clean tree.
 - Report missing files or unexplained state before editing. Never discard changes you do not understand.
+- A file marked "local only" is absent in cloud sessions and fresh clones. Say once that it is absent and carry on.
 
 **Writing to me**
 - Plain English, short sentences. Answer first, keep replies short.
-- State things and ask things separately. End with one question, marked "Question", with example answers and "Other".
+- State things and ask things separately.
+- If you need an answer from me, end with exactly one line that starts `Question:`, then 2 to 4 example answers and "Other". If you need nothing, do not ask.
+- If your tool shows choices as a card, use the card and still start its text with `Question:`.
 
 **Thinking**
 - Challenge me; do not just agree.
@@ -25,7 +28,9 @@
 - When the goal is learning: question, then hint, then first step, then full solution last. Let me attempt first. Skip this for trivial or urgent work.
 - Debug with the smallest failing case and one hypothesis at a time.
 
-**Skills:** before substantial work, state once: "Skill: <name>" or "Skill check: none fits". Follow any workflow the Project section defines.
+**Skills:** before substantial work, state once: "Skill: <name>" or "Skill check: none fits". Follow any workflow the Project section defines. If a named skill has no local file, load it by name from your skill list.
+
+**Build order:** decision, ADR, spec, tests, code. Before you write or change a test or code, name the ADR and the spec section it implements. If there is none, write or amend it first, show it to me, and stop until I say go. This covers features and fixes. A typo or comment fix needs no ADR; say so in one line.
 
 **Safety**
 - Prefer reversible steps. Ask before anything destructive or hard to undo.
@@ -35,7 +40,7 @@
 **Ownership:** explain important logic enough for me to evaluate, change and recover it. Prefer simple, portable formats.
 
 **Tokens:** read only the part of a file you need; do not re-read what you just edited. Use a helper only for jobs big enough to repay its brief. Review a helper's output before use.
-<!-- CORE v2 ends. -->
+<!-- CORE v3 ends. -->
 
 ---
 
@@ -45,7 +50,7 @@
 This repository is the Knowledge Management & Learning Platform (LMS / KMS) tailored for non-traditional career switchers (social sector, policy, operations) and modern students. It implements capability-based progression across the 27-skill framework, the 10-activity pedagogical engine, an append-only Evidence Ledger, and the AXIS AI companion.
 
 ### Session start files
-- PROGRESS.md
+- PROGRESS.md (local only)
 - `docs/specs/`, `docs/adr/` and `reference/` as needed
 
 ### Production-Grade Engineering Mandate
@@ -56,9 +61,9 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
 
 ### Project workflow: the 6-step loop
 
-- For each feature, subsystem, or architectural boundary, strictly follow the 6-step loop from [skills/systems-architect-mentor/SKILL.md](skills/systems-architect-mentor/SKILL.md):
+- For each feature, subsystem, or architectural boundary, strictly follow the 6-step loop from [skills/systems-architect-mentor/SKILL.md](skills/systems-architect-mentor/SKILL.md) (local only; in a cloud session, load the `systems-architect-mentor` skill by name):
   1. **Architecture Inquiry:** Ground in the real-world operational reality, learner personas, and constraints.
-  2. **Specification (SPEC) & ADR Drafting:** Co-author the formal markdown spec and record consequential decisions in `docs/adr/`.
+  2. **ADR & Specification (SPEC) Drafting:** Record consequential decisions in `docs/adr/`, then co-author the formal markdown spec. Stop for the owner's go before step 3 (Core: Build order).
   3. **SDD + TDD Implementation:** Write automated unit tests first, then write clean modular code satisfying the contract.
   4. **No-Blind-Code Audit:** Deliver the 4 Plain-English Questions (Single Job, Ingress/Egress, Failure Handling, Spec Traceability).
   5. **Chaos Verification:** Falsify the implementation against malformed inputs, edge cases, and boundary attacks.
@@ -100,8 +105,8 @@ This repository is the Knowledge Management & Learning Platform (LMS / KMS) tail
   3. Evidence Ledger & State Persistence (`src/lms/adapters/db/`)
   4. Execution Sandbox Runner (`src/lms/adapters/runner/`)
   5. AXIS AI Companion & Curriculum RAG (`src/lms/adapters/ai/`)
-- Order for every unit: Decision $\rightarrow$ ADR (`docs/adr/`) $\rightarrow$ Spec (`docs/specs/`) $\rightarrow$ Tests First $\rightarrow$ Code.
-- A later step does not begin before the earlier one has verified passing tests.
+- Order for every platform change, feature or fix (this is not about curriculum units): Decision $\rightarrow$ ADR (`docs/adr/`) $\rightarrow$ Spec (`docs/specs/`) $\rightarrow$ Tests First $\rightarrow$ Code.
+- A later step does not begin before the earlier one is done: the owner has said go on the ADR and spec, and the earlier step's tests pass.
 
 ### Project rules
 

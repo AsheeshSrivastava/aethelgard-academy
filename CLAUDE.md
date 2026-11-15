@@ -13,11 +13,15 @@ Project rules, purpose and workflow live in AGENTS.md (loaded below).
 - Frontend types:    cd frontend && npm run typecheck
 - Frontend tests:    cd frontend && npm test
 
+## Order
+Decision, ADR, spec, tests, code. Name the ADR and spec section before
+writing a test or code (see Build order in AGENTS.md).
+
 ## Done means shown
 Run every check that covers your change and paste the output
 before saying a change is done. If a check fails, say so.
 
 ## Review
-- Every change goes in through a GitHub PR to main; CI must pass.
-- Before opening a PR: /code-review, then /security-review.
+- Every change goes in through a GitHub PR to main; CI must pass. The owner merges.
+- Before opening a PR: /code-review, then /security-review. At most 3 review rounds.
 - REVIEW.md says what counts as a real problem in this repo.
