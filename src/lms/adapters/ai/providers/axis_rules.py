@@ -69,13 +69,15 @@ def ground_with_trace(
     trace: Optional[RetrievalTrace] = None
     if retriever is not None:
         started = time.perf_counter()
-        result = retriever.search(f"{unit_id} {query_text}", top_k=3)
+        result = retriever.search(query_text, top_k=3)  # the unit id matches nothing upstream (SPEC-23 R3)
         trace = RetrievalTrace(
             index_version=result.index_version,
             mode=result.mode.value,
             status=result.status.value,
             latency_ms=int((time.perf_counter() - started) * 1000),
             passages_retrieved=len(result.passages),
+            terms_matched=result.terms_matched,
+            terms_total=result.terms_total,
         )
         if result.status is RetrievalStatus.OK and result.passages:
             items = [(p.passage_id, p.source_name or p.source_id, p.text) for p in result.passages]

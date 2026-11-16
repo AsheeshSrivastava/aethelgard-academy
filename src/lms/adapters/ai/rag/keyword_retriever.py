@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
+from lms.core.query import clean_query
 from lms.core.retrieval import (
     IndexManifest,
     IRetriever,
@@ -28,6 +29,9 @@ from lms.core.retrieval import (
 
 logger = logging.getLogger(__name__)
 
+# SPEC-23 R7. Tuned on the real corpus (1,371 sources) on 2026-11-16, question set gemini-6x50
+# (docs/measurements/2026-11-16-not-found-rules.txt). The app reads LMS_MIN_MATCHED_TERMS (startup.py).
+DEFAULT_MIN_MATCHED_TERMS = 3
 SOURCES_FILE = "sources.jsonl"
 PASSAGES_FILE = "passages.jsonl"
 
@@ -79,7 +83,9 @@ class KeywordRetriever(IRetriever):
         engine: Optional[HybridRerankedRetriever],
         manifest: Optional[IndexManifest],
         no_index_reason: str = "",
+        min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS,
     ) -> None:
+        self.min_matched_terms = min_matched_terms
         self._engine = engine
         self._manifest = manifest
         self._no_index_reason = no_index_reason
@@ -87,30 +93,34 @@ class KeywordRetriever(IRetriever):
     # --- construction ---------------------------------------------------------------------------
 
     @classmethod
-    def from_index_dir(cls, index_dir: Path | str) -> "KeywordRetriever":
+    def from_index_dir(
+        cls, index_dir: Path | str, min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS
+    ) -> "KeywordRetriever":
         """Never raises: a missing or unreadable folder gives an adapter that answers NO_INDEX (R1, R7)."""
         folder = Path(index_dir)
         if not (folder / PASSAGES_FILE).exists() or not (folder / SOURCES_FILE).exists():
-            return cls(None, None, f"{folder} has no index files")
+            return cls(None, None, f"{folder} has no index files", min_matched_terms)
         try:
             manifest = read_manifest(folder)
             engine = HybridRerankedRetriever.load(folder)
         except Exception as exc:  # corrupt JSON, missing key, unreadable file
-            return cls(None, None, f"{folder} could not be read ({type(exc).__name__})")
+            return cls(None, None, f"{folder} could not be read ({type(exc).__name__})", min_matched_terms)
         if not engine.passages:
-            return cls(None, None, f"{folder} holds no passages")
-        return cls(engine, manifest)
+            return cls(None, None, f"{folder} holds no passages", min_matched_terms)
+        return cls(engine, manifest, "", min_matched_terms)
 
     @classmethod
-    def from_hybrid(cls, engine: HybridRerankedRetriever) -> "KeywordRetriever":
+    def from_hybrid(
+        cls, engine: HybridRerankedRetriever, min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS
+    ) -> "KeywordRetriever":
         """Wrap an in-memory engine (the SPEC-20 fixture set, or a test double)."""
         if not engine.passages:
-            return cls(None, None, "the engine holds no passages")
+            return cls(None, None, "the engine holds no passages", min_matched_terms)
         records = [
             SourceRecord(s.source_id, s.licence, s.licence_basis, s.raw_sha256) for s in engine.sources.values()
         ]
         manifest = _manifest_from_records(records, [s.loader_version for s in engine.sources.values()], "in-memory")
-        return cls(engine, manifest)
+        return cls(engine, manifest, "", min_matched_terms)
 
     # --- port -----------------------------------------------------------------------------------
 
@@ -123,9 +133,16 @@ class KeywordRetriever(IRetriever):
     def manifest(self) -> Optional[IndexManifest]:
         return self._manifest
 
-    def _result(self, status: RetrievalStatus, passages: Tuple[RetrievedPassage, ...] = (), message: str = "") -> RetrievalResult:
+    def _result(
+        self,
+        status: RetrievalStatus,
+        passages: Tuple[RetrievedPassage, ...] = (),
+        message: str = "",
+        terms_matched: int = 0,
+        terms_total: int = 0,
+    ) -> RetrievalResult:
         version = self._manifest.index_version if self._manifest else ""
-        return RetrievalResult(status, self.mode, version, passages, message)
+        return RetrievalResult(status, self.mode, version, passages, message, terms_matched, terms_total)
 
     def search(
         self,
@@ -136,31 +153,41 @@ class KeywordRetriever(IRetriever):
     ) -> RetrievalResult:
         if self._engine is None or self._manifest is None:
             return self._result(RetrievalStatus.NO_INDEX, message=self._no_index_reason or "no index")
-        if not query or not query.strip():
-            return self._result(RetrievalStatus.NOT_FOUND, message="empty query")
+        words = clean_query(query or "")
+        if not words:
+            message = "empty query" if not (query or "").strip() else "no searchable words"
+            return self._result(RetrievalStatus.NOT_FOUND, message=message)
         k = clamp_top_k(top_k)
         prefixes = tuple(p for p in source_prefixes if p)
         try:
-            # Ask for every source, then filter, sort and cut here. The engine must not pick which
-            # tied passage survives the cut-off (R3), and a prefix filter must not starve the result.
-            scored = self._engine.retrieve_scored(query, top_k=max(len(self._engine.sources), k))
+            hits, total = self._engine.keyword_search(words)
         except Exception as exc:  # an adapter fault is a status, not a crash
             logger.warning("Keyword retrieval failed: %s", type(exc).__name__)
             return self._result(RetrievalStatus.UNAVAILABLE, message=f"adapter fault ({type(exc).__name__})")
         if prefixes:
-            scored = [(p, s) for p, s in scored if p.source_id.startswith(prefixes)]
+            hits = [h for h in hits if h.passage.source_id.startswith(prefixes)]
+        if not hits:
+            return self._result(RetrievalStatus.NOT_FOUND, message="nothing matched", terms_total=total)
         # Highest score first; equal scores by source, then position, so the order never wobbles (R3).
-        scored.sort(key=lambda item: (-item[1], item[0].source_id, item[0].start))
+        # Sorted here again so the adapter does not rely on the engine's order.
+        hits = sorted(hits, key=lambda h: (-h.score, h.passage.source_id, h.passage.start))
+        matched = hits[0].matched_terms
+        needed = min(self.min_matched_terms, total)
+        if matched < needed:
+            return self._result(
+                RetrievalStatus.NOT_FOUND,
+                message=f"too few query terms found: terms_matched={matched} terms_total={total} needed={needed}",
+                terms_matched=matched,
+                terms_total=total,
+            )
         passages = tuple(
             RetrievedPassage(
-                passage_id=p.passage_id,
-                source_id=p.source_id,
-                source_name=_source_name(p.source_id),
-                text=p.text,
-                score=s,
+                passage_id=h.passage.passage_id,
+                source_id=h.passage.source_id,
+                source_name=_source_name(h.passage.source_id),
+                text=h.passage.text,
+                score=h.score,
             )
-            for p, s in scored[:k]
+            for h in hits[:k]
         )
-        if not passages:
-            return self._result(RetrievalStatus.NOT_FOUND, message="nothing matched")
-        return self._result(RetrievalStatus.OK, passages)
+        return self._result(RetrievalStatus.OK, passages, terms_matched=matched, terms_total=total)

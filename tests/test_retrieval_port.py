@@ -17,7 +17,7 @@ import pytest
 import retrieval_quality as rq
 from fake_retriever import FakeRetriever, passage
 from lms.adapters.ai.rag.keyword_retriever import KeywordRetriever, read_manifest
-from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
+from lms.adapters.ai.rag.retriever import HybridRerankedRetriever, KeywordHit
 from lms.adapters.ai.rag.startup import RetrievalConfigError, build_retriever
 from lms.core.retrieval import (
     MAX_TOP_K,
@@ -45,7 +45,7 @@ class BrokenHybrid:
     sources: dict = {}
     passages: dict = {"p": object()}
 
-    def retrieve_scored(self, query, top_k=3):
+    def keyword_search(self, query):
         raise RuntimeError("engine fault")
 
 
@@ -60,8 +60,8 @@ CONTRACT = [
     ("fake-not-found", lambda tp: FakeRetriever(), "alpha", RetrievalStatus.NOT_FOUND),
     ("fake-no-index", lambda tp: FakeRetriever(status=RetrievalStatus.NO_INDEX), "alpha", RetrievalStatus.NO_INDEX),
     ("fake-unavailable", lambda tp: FakeRetriever(status=RetrievalStatus.UNAVAILABLE), "alpha", RetrievalStatus.UNAVAILABLE),
-    ("kw-ok", lambda tp: KeywordRetriever.from_index_dir(saved_index(tp)), "How do I sort a list in Python?", RetrievalStatus.OK),
-    ("kw-not-found", lambda tp: KeywordRetriever.from_index_dir(saved_index(tp)), "   ", RetrievalStatus.NOT_FOUND),
+    ("kw-ok", lambda tp: KeywordRetriever.from_index_dir(saved_index(tp), min_matched_terms=2), "How do I sort a list in Python?", RetrievalStatus.OK),
+    ("kw-not-found", lambda tp: KeywordRetriever.from_index_dir(saved_index(tp), min_matched_terms=2), "   ", RetrievalStatus.NOT_FOUND),
     ("kw-no-index", lambda tp: KeywordRetriever.from_index_dir(tp / "missing"), "anything", RetrievalStatus.NO_INDEX),
     ("kw-unavailable", lambda tp: KeywordRetriever.from_hybrid(BrokenHybrid()), "anything", RetrievalStatus.UNAVAILABLE),
 ]
@@ -105,15 +105,15 @@ def test_results_are_ordered_by_score_then_position_and_repeat_exactly(tmp_path)
 
 def test_equal_scores_are_broken_by_source_then_position():
     class Tied(HybridRerankedRetriever):
-        def retrieve_scored(self, query, top_k=3):
+        def keyword_search(self, query):
             ps = list(self.passages.values())
-            return [(p, 1.0) for p in reversed(ps)]
+            return [KeywordHit(p, 1.0, 1) for p in reversed(ps)], 1
 
     hybrid = Tied()
     rq_retriever = rq.build_keyword_retriever()
     hybrid.sources = rq_retriever.sources
     hybrid.passages = rq_retriever.passages
-    result = KeywordRetriever.from_hybrid(hybrid).search("anything", top_k=10)
+    result = KeywordRetriever.from_hybrid(hybrid, min_matched_terms=1).search("anything", top_k=10)
     start = {pid: p.start for pid, p in hybrid.passages.items()}
     order = [(p.source_id, start[p.passage_id]) for p in result.passages]
     assert order == sorted(order)
@@ -294,7 +294,7 @@ def test_the_companion_records_a_trace_for_each_answer():
 
 @pytest.fixture
 def keyword(tmp_path):
-    return KeywordRetriever.from_index_dir(saved_index(tmp_path))
+    return KeywordRetriever.from_index_dir(saved_index(tmp_path), min_matched_terms=1)
 
 
 @pytest.mark.parametrize("top_k", [0, -5, 1000])
@@ -325,18 +325,10 @@ def test_the_fake_follows_the_same_rules():
 # --- 8. Regression: same numbers through the port as through the old class (R10) ----------------
 
 
-def test_the_port_gives_the_same_ranking_as_the_old_class_on_the_spec20_set():
-    old = rq.build_keyword_retriever()
-    adapter = KeywordRetriever.from_hybrid(old)
-    for q in rq.load_questions():
-        before = [p.source_id for p in old.retrieve(q["question"], 3)]
-        after = [p.source_id for p in adapter.search(q["question"], top_k=3).passages]
-        assert after == before, q["id"]
-
-
 def test_the_port_meets_the_recorded_floor():
+    """SPEC-23 R8: the floor is measured through the shipped adapter, with the fixture's own minimum (2)."""
     floor = rq.load_floor()
-    adapter = KeywordRetriever.from_hybrid(rq.build_keyword_retriever())
+    adapter = KeywordRetriever.from_hybrid(rq.build_keyword_retriever(), min_matched_terms=2)
     result = rq.score(lambda q: [p.source_id for p in adapter.search(q, top_k=3).passages])
     assert result.first_hit >= floor["first_hit"], result
     assert result.top3 >= floor["top3"], result
@@ -398,17 +390,17 @@ def test_ties_at_the_cut_off_are_broken_by_source_then_position():
     """SPEC-21 R3: the engine may truncate in its own order, so the adapter must not rely on it."""
 
     class Truncating(HybridRerankedRetriever):
-        def retrieve_scored(self, query, top_k=3):
-            first = {}  # like the real engine: one passage per source, worst order first, cut at top_k
+        def keyword_search(self, query):
+            first = {}  # one passage per source, worst order first
             for p in sorted(self.passages.values(), key=lambda x: x.start):
                 first.setdefault(p.source_id, p)
-            return [(p, 1.0) for p in reversed(list(first.values()))][:top_k]
+            return [KeywordHit(p, 1.0, 1) for p in reversed(list(first.values()))], 1
 
     hybrid = Truncating()
     fixture = rq.build_keyword_retriever()
     hybrid.sources = fixture.sources
     hybrid.passages = fixture.passages
-    result = KeywordRetriever.from_hybrid(hybrid).search("anything", top_k=2)
+    result = KeywordRetriever.from_hybrid(hybrid, min_matched_terms=1).search("anything", top_k=2)
     one_each = {}
     for p in sorted(hybrid.passages.values(), key=lambda x: x.start):
         one_each.setdefault(p.source_id, p)

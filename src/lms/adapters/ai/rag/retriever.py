@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
@@ -16,6 +17,15 @@ from lms.adapters.ai.rag.bm25 import InvertedBM25Index
 from lms.adapters.ai.rag.chunker import HeadingSentenceSplitter
 from lms.adapters.ai.rag.fusion import reciprocal_rank_fusion
 from lms.core.rag_contracts import Passage, Source, Span, make_passages
+
+
+@dataclass(frozen=True)
+class KeywordHit:
+    """The best passage of one source for a keyword search (SPEC-23 R5, R6)."""
+
+    passage: Passage
+    score: float  # BM25
+    matched_terms: int  # distinct query terms found in this passage (headings included)
 
 
 class HybridRerankedRetriever:
@@ -146,6 +156,29 @@ class HybridRerankedRetriever:
                     break
 
         return deduped
+
+    def keyword_search(self, query: str) -> Tuple[List[KeywordHit], int]:
+        """BM25 alone: the best passage of every matching source, best first, and the number of distinct query terms.
+
+        No word-overlap list, no fusion, no bonus. Ties are ordered by source, then position (SPEC-21 R3).
+        `query` is expected to be cleaned already (core.query.clean_query).
+        """
+        terms = sorted(set(self.bm25._tokenize(query)))
+        if not terms or not self.passages:
+            return [], len(terms)
+        best: Dict[str, Tuple[float, str]] = {}
+        for pid, score in self.bm25.search(query, top_k=max(len(self.passages), 1)):
+            passage = self.passages.get(pid)
+            if passage is None:
+                continue
+            if passage.source_id not in best or score > best[passage.source_id][0]:
+                best[passage.source_id] = (score, pid)
+        hits = []
+        for score, pid in best.values():
+            matched = sum(1 for t in terms if pid in self.bm25.inverted_index.get(t, ()))
+            hits.append(KeywordHit(self.passages[pid], score, matched))
+        hits.sort(key=lambda h: (-h.score, h.passage.source_id, h.passage.start))
+        return hits, len(terms)
 
     def save(self, index_dir: Path | str) -> None:
         """Serializes retriever state to disk for sub-50ms warm loading."""

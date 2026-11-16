@@ -125,7 +125,7 @@ def test_the_keyword_adapter_says_not_found_and_the_prompt_takes_the_missing_pat
 def test_a_normal_question_still_finds_passages(tmp_path):
     target = tmp_path / "index"
     rq.build_keyword_retriever().save(target)
-    result = KeywordRetriever.from_index_dir(target).search("How do I sort a list in Python?")
+    result = KeywordRetriever.from_index_dir(target, min_matched_terms=2).search("How do I sort a list in Python?")
     assert result.status is RetrievalStatus.OK and result.passages
 
 
