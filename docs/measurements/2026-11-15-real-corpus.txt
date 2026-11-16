@@ -1,0 +1,61 @@
+corpus: 1371 sources; answerable: python-docs-codex-questions.yaml 24, python-docs-gemini-questions.yaml 20, uv-docs-questions.yaml 27, ruff-docs-questions.yaml 30; no-answer: 192 foreign + 45 answer-file-missing
+Sync finished.
+  0 sources added, 0 replaced, 1371 sources unchanged, 0 removed
+  0 passages stored (0 reused an existing vector), 0 old passages removed
+  0 texts embedded in 0.0 seconds
+  (sync took 1 s)
+=== lms
+  python-docs-codex-questions.yaml     first   2/24  top3   4/24 
+  python-docs-gemini-questions.yaml    first   4/20  top3   6/20 
+  uv-docs-questions.yaml               first   5/27  top3  11/27 
+  ruff-docs-questions.yaml             first   9/30  top3  13/30 
+  ALL in-scope                         first  20/101 top3  34/101  first 20% top3 34%
+  (138 ms/question)
+=== L
+  python-docs-codex-questions.yaml     first  14/24  top3  17/24 
+  python-docs-gemini-questions.yaml    first  11/20  top3  12/20 
+  uv-docs-questions.yaml               first  17/27  top3  24/27 
+  ruff-docs-questions.yaml             first  22/30  top3  27/30 
+  ALL in-scope                         first  64/101 top3  80/101  first 63% top3 79%
+  (1 ms/question)
+  top-1 score in-scope: p10 22.67 median 30.49; foreign (192): median 25.40 p90 33.07; file-missing (45): median 25.78 p90 38.50
+  floor     in-scope lost    foreign refused   file-missing refused
+     17.15     0/101     0%      0/192   0%      0/45 0%
+     20.06     2/101     2%     20/192  10%      2/45 4%
+     21.48     6/101     6%     38/192  20%      5/45 11%
+     22.81    11/101    11%     51/192  27%     11/45 24%
+     23.84    16/101    16%     69/192  36%     12/45 27%
+     24.61    20/101    20%     83/192  43%     18/45 40%
+     25.64    25/101    25%    100/192  52%     20/45 44%
+     26.55    28/101    28%    114/192  59%     27/45 60%
+     28.00    35/101    35%    128/192  67%     30/45 67%
+     29.38    45/101    45%    141/192  73%     31/45 69%
+     30.49    50/101    50%    158/192  82%     33/45 73%
+     32.69    60/101    59%    168/192  88%     37/45 82%
+     35.59    67/101    66%    183/192  95%     39/45 87%
+     41.52    82/101    81%    190/192  99%     41/45 91%
+     69.18   100/101    99%    192/192 100%     45/45 100%
+=== HR
+  python-docs-codex-questions.yaml     first  17/24  top3  21/24 
+  python-docs-gemini-questions.yaml    first  16/20  top3  17/20 
+  uv-docs-questions.yaml               first  21/27  top3  23/27 
+  ruff-docs-questions.yaml             first  28/30  top3  30/30 
+  ALL in-scope                         first  82/101 top3  91/101  first 81% top3 90%
+  (139 ms/question)
+  top-1 score in-scope: p10 -0.77 median 2.02; foreign (192): median -2.22 p90 0.20; file-missing (45): median -1.39 p90 1.52
+  floor     in-scope lost    foreign refused   file-missing refused
+     -7.07     0/101     0%      0/192   0%      0/45 0%
+     -4.51     0/101     0%     22/192  11%      3/45 7%
+     -3.76     0/101     0%     46/192  24%      4/45 9%
+     -3.03     1/101     1%     63/192  33%      9/45 20%
+     -2.44     1/101     1%     84/192  44%     12/45 27%
+     -2.02     2/101     2%    105/192  55%     16/45 36%
+     -1.58     4/101     4%    122/192  64%     21/45 47%
+     -1.04     7/101     7%    140/192  73%     24/45 53%
+     -0.71    13/101    13%    157/192  82%     24/45 53%
+     -0.17    18/101    18%    168/192  88%     31/45 69%
+      0.55    27/101    27%    177/192  92%     36/45 80%
+      1.40    37/101    37%    187/192  97%     39/45 87%
+      2.13    54/101    53%    190/192  99%     42/45 93%
+      3.86    75/101    74%    192/192 100%     43/45 96%
+      5.87    96/101    95%    192/192 100%     45/45 100%

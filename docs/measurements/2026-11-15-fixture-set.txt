@@ -1,0 +1,45 @@
+Sync finished.
+  12 sources added, 0 replaced, 0 sources unchanged, 0 removed
+  48 passages stored (0 reused an existing vector), 0 old passages removed
+  48 texts embedded in 0.5 seconds
+index built in 0.6 s; set: 41 answerable, 9 no-answer
+
+== L: first 38/41  top3 40/41  (0 ms/question)
+   miss Q12 paraphrase got ['dicts.md', 'functions.md', 'lists.md']
+   miss Q28 paraphrase got ['lists.md', 'web.md', 'exceptions.md']
+   miss Q32 plain      got ['strings.md', 'sql.md', 'venv.md']
+   top-1 score, answerable: min 5.874 median 14.065
+   top-1 score, no-answer:  min 3.350 median 5.441 max 8.061
+   floor   answerable lost   no-answer refused
+      3.350       0/41         1/9
+      5.441       0/41         4/9
+      7.040       1/41         8/9
+      8.386       4/41         9/9
+      9.556       7/41         9/9
+     10.533      12/41         9/9
+     11.393      16/41         9/9
+     12.722      20/41         9/9
+     16.044      24/41         9/9
+     18.322      28/41         9/9
+     23.451      32/41         9/9
+     28.927      36/41         9/9
+     38.163      39/41         9/9
+
+== HR: first 41/41  top3 41/41  (59 ms/question)
+   top-1 score, answerable: min -5.918 median 2.945
+   top-1 score, no-answer:  min -10.391 median -7.086 max -6.066
+   floor   answerable lost   no-answer refused
+    -10.391       0/41         0/9
+     -7.086       0/41         4/9
+     -6.066       0/41         9/9
+     -2.256       3/41         9/9
+     -0.068       8/41         9/9
+      1.146      11/41         9/9
+      1.862      15/41         9/9
+      2.590      20/41         9/9
+      3.236      23/41         9/9
+      4.027      27/41         9/9
+      4.613      31/41         9/9
+      5.035      35/41         9/9
+      5.676      40/41         9/9
+
