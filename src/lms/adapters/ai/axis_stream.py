@@ -9,6 +9,7 @@ import re
 from pathlib import PurePosixPath
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
+from lms.adapters.ai import passage_safety
 from lms.adapters.ai.socratic_guardrail import (
     GUIDING_INQUIRY,
     PROMPT_TAG_NAMES,
@@ -111,6 +112,18 @@ class SocraticStreamFilter:
         return [chunk]
 
 
+def _could_become_tag(tail: str) -> bool:
+    """True when `tail` (starting at a "<") may still grow into one of our prompt tags."""
+    lowered = tail.lower()
+    bare = lowered.lstrip("<").lstrip("/")
+    if any(name.startswith(bare) for name in PROMPT_TAG_NAMES):
+        return True
+    return any(
+        lowered.startswith(f"<{name}") or lowered.startswith(f"</{name}")
+        for name in PROMPT_TAG_NAMES
+    ) and ">" not in lowered
+
+
 def strip_prompt_tags(deltas: Iterable[str]) -> Iterator[str]:
     """Remove echoed prompt tags, even when a tag is split across deltas."""
     held = ""
@@ -118,10 +131,7 @@ def strip_prompt_tags(deltas: Iterable[str]) -> Iterator[str]:
         held = remove_prompt_tags(held + delta)
         # Keep back only text that could still become a tag.
         start = held.rfind("<")
-        possible = start >= 0 and any(
-            f"<{name}>".startswith(held[start:]) or f"</{name}>".startswith(held[start:])
-            for name in PROMPT_TAG_NAMES
-        )
+        possible = start >= 0 and _could_become_tag(held[start:])
         ready, held = (held[:start], held[start:]) if possible else (held, "")
         if ready:
             yield ready
@@ -137,10 +147,14 @@ def stream_axis(
 ) -> Iterator[Tuple[str, Dict[str, Any]]]:
     """Yield (event, data) pairs: tokens, then citations, then done."""
     deltas, cited = axis.stream(query)
+    grounding = cited if isinstance(cited, passage_safety.Grounding) else None
     gate = SocraticStreamFilter(guardrail) if query.mode == AxisMode.SOCRATIC else None
     sent: List[str] = []
 
-    for delta in strip_prompt_tags(deltas):
+    clean_deltas = strip_prompt_tags(deltas)
+    if grounding is not None:
+        clean_deltas = passage_safety.strip_unknown_labels_stream(clean_deltas, grounding.labels)
+    for delta in clean_deltas:
         for chunk in gate.feed(delta) if gate else [delta]:
             sent.append(chunk)
             yield "token", {"text": chunk}
@@ -149,6 +163,8 @@ def stream_axis(
             sent.append(chunk)
             yield "token", {"text": chunk}
 
+    if grounding is not None:
+        cited = grounding.cited_for("".join(sent))  # from the finished reply (SPEC-22 R6, R7)
     for concept in cited:
         yield "citation", {"name": concept}
 

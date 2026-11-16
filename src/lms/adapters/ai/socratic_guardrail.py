@@ -17,8 +17,16 @@ GUIDING_INQUIRY = (
 )
 REFLECTION_PROMPT = "\n\nWhat is your hypothesis for why this step behaves the way it does?"
 
-PROMPT_TAG_NAMES = ("learner_query", "learner_code", "execution_stderr")
-PROMPT_TAG_PATTERN = re.compile(rf"</?(?:{'|'.join(PROMPT_TAG_NAMES)})>")
+PROMPT_TAG_NAMES = (
+    "learner_query",
+    "learner_code",
+    "execution_stderr",
+    "learner_explanation",
+    "reference_passages",
+    "passage",
+)
+# Opening or closing, any case; an opening tag may carry attributes (SPEC-22 R2).
+PROMPT_TAG_PATTERN = re.compile(rf"</?(?:{'|'.join(PROMPT_TAG_NAMES)})(?:\s[^<>]*)?/?>", re.IGNORECASE)
 
 
 def remove_prompt_tags(text: str) -> str:

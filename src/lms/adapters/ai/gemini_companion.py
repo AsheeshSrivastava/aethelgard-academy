@@ -88,17 +88,17 @@ class GeminiCompanion:
         self.last_backend_used = f"Gemini ({answered})"
         return answered
 
-    def _grounding(self, query: AxisQuery) -> Tuple[str, List[str]]:
-        text, cited, self.last_retrieval = axis_rules.ground_with_trace(
+    def _grounding(self, query: AxisQuery) -> Any:
+        grounding, self.last_retrieval = axis_rules.ground_with_trace(
             self.retriever, self.concept_store, query.unit_id, query.user_prompt
         )
-        return text, cited
+        return grounding
 
     # --- IAXISCompanion ----------------------------------------------------------
 
     def consult(self, query: AxisQuery) -> AxisResponse:
-        grounded_text, cited = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounded_text)
+        cited = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, cited.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
         try:
@@ -115,9 +115,9 @@ class GeminiCompanion:
         self._record("consult", self._answered(response), response, len(sys_prompt) + len(user_msg))
         return axis_rules.finish_reply(raw, query, cited, self.guardrail, self.classifier)
 
-    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
-        grounded_text, cited = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounded_text)
+    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
+        cited = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, cited.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
         return self._stream_deltas(sys_prompt, user_msg), cited

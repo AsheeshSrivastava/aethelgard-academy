@@ -283,8 +283,8 @@ def test_the_companion_records_a_trace_for_each_answer():
     from lms.adapters.ai.providers import axis_rules
 
     fake = FakeRetriever((passage("a.md", "alpha beta", pid="a.md#1"),), index_version="v9")
-    text, ids, trace = axis_rules.ground_with_trace(fake, None, "PY-1.1", "alpha")
-    assert ids == ["a.md#1"] and "alpha beta" in text
+    grounding, trace = axis_rules.ground_with_trace(fake, None, "PY-1.1", "alpha")
+    assert grounding.ids == ["a.md#1"] and "alpha beta" in grounding.block
     assert (trace.index_version, trace.mode, trace.status) == ("v9", "keyword_only", "ok")
     assert isinstance(trace.latency_ms, int) and trace.latency_ms >= 0
 

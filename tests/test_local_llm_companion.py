@@ -130,7 +130,8 @@ def test_coach_mode_syntax_lookup_classification_and_concept_grounding():
                             "role": "assistant",
                             "content": (
                                 "You can use `.strip()` to remove leading and trailing spaces, "
-                                "and `.upper()` to convert characters to uppercase."
+                                "and `.upper()` to convert characters to uppercase. "
+                                "A software program is fundamentally an operational communication cycle."
                             ),
                         }
                     }
@@ -326,6 +327,7 @@ def test_the_retrieval_port_integration_in_companion():
     resp = companion.consult(query)
 
     assert "python/builtins" in captured_system_prompt
-    assert len(resp.cited_concepts) > 0
-    assert any("python/builtins" in cid for cid in resp.cited_concepts)
+    assert "<reference_passages>" in captured_system_prompt.split("MODE:", 1)[1]
+    # A question-only Socratic reply uses no passage, so it cites none (SPEC-22 R6).
+    assert resp.cited_concepts == []
 

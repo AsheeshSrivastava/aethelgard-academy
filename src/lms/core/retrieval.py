@@ -62,14 +62,19 @@ class IndexManifest:
     sources: Tuple[SourceRecord, ...]
 
 
-@dataclass(frozen=True)
+@dataclass
 class RetrievalTrace:
-    """What one answer's retrieval did; written to the interaction log (ADR-0022)."""
+    """What one answer's retrieval did; written to the interaction log (ADR-0022).
+
+    passages_cited is filled in once the reply is checked against the passages (SPEC-22 R8).
+    """
 
     index_version: str
     mode: str
     status: str
     latency_ms: int
+    passages_retrieved: int = 0
+    passages_cited: int = 0
 
     def as_log_fields(self) -> Dict[str, object]:
         return {
@@ -77,6 +82,8 @@ class RetrievalTrace:
             "retrieval_mode": self.mode,
             "retrieval_status": self.status,
             "latency_ms": self.latency_ms,
+            "passages_retrieved": self.passages_retrieved,
+            "passages_cited": self.passages_cited,
         }
 
 

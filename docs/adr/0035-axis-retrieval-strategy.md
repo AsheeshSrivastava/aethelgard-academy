@@ -1,6 +1,6 @@
 # ADR 0035: AXIS retrieval strategy (production grade)
 
-- **Status:** Proposed; in progress. Work steps 1 to 3 are done (SPEC-20, SPEC-21); steps 4 to 7 remain. Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
+- **Status:** Proposed; in progress. Work steps 1 to 3 are done (SPEC-20, SPEC-21); step 4 is split in two (4a done by SPEC-22, 4b next); steps 5 to 7 remain. See section 5 (amendment 2026-11-16). Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-14
 - **Extends:** ADR-0011 (HR pipeline), ADR-0012 (persistent artifacts), ADR-0034
@@ -37,7 +37,7 @@ A passage must pass a score threshold on the reranker score (and on the fusion s
 
 ### 2.5 Safe use of retrieved text
 - **Retrieved text is untrusted data.** It goes into the prompt inside a fenced, labelled block with a standing instruction that it is reference material, not instructions. Passages are length-capped and stripped of control sequences that imitate the prompt template.
-- **Citations are checked.** A chip shows only a passage id that was retrieved this turn; ids the model invents are dropped. A cited passage that the answer does not use is not shown (checked by the quote-overlap rule in SPEC-09).
+- **Citations are checked.** A chip shows only a passage id that was retrieved this turn; ids the model invents are dropped. A cited passage that the answer does not use is not shown (checked by the quote-overlap rule in SPEC-22 R6).
 - **Licence care:** quotes are short and always carry the readable source name.
 
 ### 2.6 Offline regression gate and the first decision
@@ -77,7 +77,7 @@ During the test period the owner's computer is the server, so rag-core runs in-p
 - A fixture set of 30 to 50 questions is small. It guards against regressions; it does not prove quality (the larger local run does that).
 
 ## 4. Work sequence (one small PR each, tests first)
-Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6).
+Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6); step 4a, fenced untrusted passages, checked citations and no "first 30" fallback (SPEC-22, which also defines the quote-overlap rule that 2.5 needs; SPEC-09 never had one).
 1. Fixture index and question set, with the CI gate on keyword-only mode (2.6).
 2. Local measurement: keyword-only with stop words dropped and a floor, against HR, on the set. Decide whether the models are worth adopting.
 3. Retrieval port with our own result type, manifest with `index_version`, startup load, explicit mode choice, logging (2.2, 2.3).
@@ -86,3 +86,19 @@ Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ra
 6. rag-core adapter and, if step 2 says yes, model wiring as an optional extra, with timeouts, self-checks, the labelled downgrade and the tuned threshold (2.4, 2.7).
 7. Optional, only if measured: more query cleanup, then LLM rewriting (2.8).
 A7 (ConceptStore wiring) is paused until there are enough concept notes. The self-hosted pilot ADR is on hold.
+
+## 5. Amendment 2026-11-16 (owner-approved plan)
+
+### 5.1 New plan order
+Step 4 is split so each PR stays small and testable:
+- **4a (SPEC-22, F7):** fenced and capped untrusted passages, checked citations (quote-overlap rule), no "first 30" fallback.
+- **4b (next spec, F8):** stop words and the unit id dropped from the query, and a minimum score so `not_found` can fire on weak matches (2.4).
+- Steps 5, 6 and 7 are unchanged in order. Contextual retrieval (5.2) is an optional, measured addition after step 6, not part of 4a or 4b.
+
+### 5.2 Contextual retrieval: design only, nothing built yet
+- Each passage may get a short, model-written context sentence ("where this passage sits in its page"). It is stored in a **separate, search-only field**. It is indexed for search but is **never put in the prompt, never shown to the learner and never cited**; the passage text the learner sees and the quote-overlap check use stays the original source text.
+- Adding or changing this field **changes `index_version`**, because the index changes what it finds. An index built without it keeps its old version.
+- It is adopted only if the question set (2.6) shows a clear gain, the same rule as the embedder and reranker. Building it needs a model call per passage at index time, so a printed cost estimate comes first (AGENTS.md).
+
+### 5.3 GraphRAG: considered and rejected
+GraphRAG (a knowledge graph built over the text) was considered for questions that need links between topics. Rejected for now: the course map's prerequisite graph already holds the links we need (what comes before what), it is authored by us, and a model-built graph would add cost, a second index to version and a new place for wrong facts. Revisit only if the question set shows a class of cross-topic questions that keyword and hybrid search cannot answer.
