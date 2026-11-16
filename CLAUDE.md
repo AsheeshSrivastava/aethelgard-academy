@@ -22,6 +22,7 @@ Run every check that covers your change and paste the output
 before saying a change is done. If a check fails, say so.
 
 ## Review
+- Run the checks first. If any check fails, fix it and do not start /code-review or /security-review until all checks pass.
 - Every change goes in through a GitHub PR to main; CI must pass. The owner merges.
 - Before opening a PR: /code-review, then /security-review. At most 3 review rounds.
 - REVIEW.md says what counts as a real problem in this repo.
