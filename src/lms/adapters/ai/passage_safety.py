@@ -142,8 +142,9 @@ def strip_unknown_labels_stream(deltas: Iterable[str], valid: Set[str]) -> Itera
         cut = tail.start() if tail else len(buf)
         ready, held = buf[:cut], buf[cut:]
         out = _emit(prev, ready, valid)
+        if ready:
+            prev = ready[-1]  # the original character, so the indexing rule matches the whole-text version
         if out:
-            prev = out[-1]
             yield out
     out = _emit(prev, held, valid)
     if out:

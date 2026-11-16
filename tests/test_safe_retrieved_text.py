@@ -249,3 +249,19 @@ def test_edge_long_source_name_non_ascii_and_huge_reply():
     assert len(g.block) < 2000
     assert g.cited_for("x " * 10000) == []
     assert g.cited_for("naïve café ünï naïve") == ["a"]
+
+
+# --- review round 1 ----------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("text", ["see [9][9] now", "x [9] [9] y", "a[9][9]"])
+def test_stream_and_whole_text_label_removal_agree(text):
+    whole = ps.strip_unknown_labels(text, {"1"})
+    for cut in range(1, len(text)):
+        assert "".join(ps.strip_unknown_labels_stream([text[:cut], text[cut:]], {"1"})) == whole, (text, cut)
+
+
+def test_a_rebuilt_tag_in_a_reply_is_removed():
+    from lms.adapters.ai.socratic_guardrail import remove_prompt_tags
+
+    assert remove_prompt_tags("<pas<passage>sage>X") == "X"

@@ -82,7 +82,7 @@ def ground_with_trace(
             return passage_safety.build_grounding(items, trace), trace
 
     items = _concept_store_passages(concept_store, unit_id, query_text)
-    if trace is not None:
+    if trace is not None and items:
         trace.passages_retrieved = len(items)
     return passage_safety.build_grounding(items, trace), trace
 

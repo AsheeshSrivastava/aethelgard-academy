@@ -185,8 +185,8 @@ class OpenAICompatibleCompanion:
         return grounding
 
     def consult(self, query: AxisQuery) -> AxisResponse:
-        cited_concepts = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, cited_concepts.block)
+        grounding = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)  # BudgetExceeded is never swallowed
 
@@ -211,15 +211,15 @@ class OpenAICompatibleCompanion:
                 return self._mock_fallback.consult(query)
             raise LocalLLMError(f"Model consultation failed: {type(exc).__name__}") from None
 
-        return axis_rules.finish_reply(raw_content, query, cited_concepts, self.guardrail, self.classifier)
+        return axis_rules.finish_reply(raw_content, query, grounding, self.guardrail, self.classifier)
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
-        """Stream the model's reply. Returns (deltas, cited concepts)."""
-        cited_concepts = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, cited_concepts.block)
+        """Stream the model's reply. Returns (deltas, the grounding that decides the citations once the reply is done)."""
+        grounding = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
-        return self._stream_deltas(query, sys_prompt, user_msg), cited_concepts
+        return self._stream_deltas(query, sys_prompt, user_msg), grounding
 
     def _stream_deltas(self, query: AxisQuery, sys_prompt: str, user_msg: str) -> Iterator[str]:
         sent_any = False

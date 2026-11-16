@@ -31,7 +31,11 @@ PROMPT_TAG_PATTERN = re.compile(rf"</?(?:{'|'.join(PROMPT_TAG_NAMES)})(?:\s[^<>]
 
 def remove_prompt_tags(text: str) -> str:
     """Models sometimes echo the tags our prompt wraps learner text in."""
-    return PROMPT_TAG_PATTERN.sub("", text)
+    while True:  # until none is left, so "<pas<passage>sage>" cannot rebuild a tag
+        stripped = PROMPT_TAG_PATTERN.sub("", text)
+        if stripped == text:
+            return text
+        text = stripped
 
 
 class SocraticBoundaryViolation(Exception):

@@ -97,8 +97,8 @@ class GeminiCompanion:
     # --- IAXISCompanion ----------------------------------------------------------
 
     def consult(self, query: AxisQuery) -> AxisResponse:
-        cited = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, cited.block)
+        grounding = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
         try:
@@ -113,14 +113,14 @@ class GeminiCompanion:
         except Exception as exc:
             raise GeminiError(f"Gemini consultation failed: {type(exc).__name__}") from None
         self._record("consult", self._answered(response), response, len(sys_prompt) + len(user_msg))
-        return axis_rules.finish_reply(raw, query, cited, self.guardrail, self.classifier)
+        return axis_rules.finish_reply(raw, query, grounding, self.guardrail, self.classifier)
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
-        cited = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, cited.block)
+        grounding = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
-        return self._stream_deltas(sys_prompt, user_msg), cited
+        return self._stream_deltas(sys_prompt, user_msg), grounding
 
     def _stream_deltas(self, sys_prompt: str, user_msg: str) -> Iterator[str]:
         last: Any = None
