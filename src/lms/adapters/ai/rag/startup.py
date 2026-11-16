@@ -46,8 +46,9 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     manifest = retriever.manifest
     if manifest is None:
         logger.warning(
-            "No retrieval index is loaded: %s. AXIS answers will say they are not grounded. (mode=%s)",
+            "No retrieval index is loaded: %s (%s). AXIS answers will say they are not grounded. (mode=%s)",
             index_dir,
+            retriever.no_index_reason,
             mode.value,
         )
     else:

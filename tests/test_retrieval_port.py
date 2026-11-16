@@ -389,3 +389,37 @@ def test_sources_without_passages_gives_no_index(tmp_path):
 def test_empty_and_huge_queries_do_not_raise(keyword):
     assert keyword.search("").status is RetrievalStatus.NOT_FOUND
     assert keyword.search("list " * 2000).status in (RetrievalStatus.OK, RetrievalStatus.NOT_FOUND)
+
+
+# --- Review round 1 ------------------------------------------------------------------------------
+
+
+def test_ties_at_the_cut_off_are_broken_by_source_then_position():
+    """SPEC-21 R3: the engine may truncate in its own order, so the adapter must not rely on it."""
+
+    class Truncating(HybridRerankedRetriever):
+        def retrieve_scored(self, query, top_k=3):
+            first = {}  # like the real engine: one passage per source, worst order first, cut at top_k
+            for p in sorted(self.passages.values(), key=lambda x: x.start):
+                first.setdefault(p.source_id, p)
+            return [(p, 1.0) for p in reversed(list(first.values()))][:top_k]
+
+    hybrid = Truncating()
+    fixture = rq.build_keyword_retriever()
+    hybrid.sources = fixture.sources
+    hybrid.passages = fixture.passages
+    result = KeywordRetriever.from_hybrid(hybrid).search("anything", top_k=2)
+    one_each = {}
+    for p in sorted(hybrid.passages.values(), key=lambda x: x.start):
+        one_each.setdefault(p.source_id, p)
+    expected = sorted((p.source_id, p.start, p.passage_id) for p in one_each.values())[:2]
+    assert [(p.source_id, hybrid.passages[p.passage_id].start, p.passage_id) for p in result.passages] == expected
+
+
+def test_the_startup_warning_says_why_the_index_was_not_loaded(tmp_path, caplog):
+    index = saved_index(tmp_path)
+    with open(index / "sources.jsonl", "a", encoding="utf-8") as f:
+        f.write("{not json\n")
+    with caplog.at_level(logging.WARNING):
+        build_retriever({"LMS_INDEX_DIR": str(index)})
+    assert "JSONDecodeError" in caplog.text

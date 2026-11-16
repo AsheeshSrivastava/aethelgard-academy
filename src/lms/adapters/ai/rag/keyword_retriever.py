@@ -115,6 +115,11 @@ class KeywordRetriever(IRetriever):
     # --- port -----------------------------------------------------------------------------------
 
     @property
+    def no_index_reason(self) -> str:
+        """Why there is no index (the path and an error class name only); empty when one is loaded."""
+        return self._no_index_reason
+
+    @property
     def manifest(self) -> Optional[IndexManifest]:
         return self._manifest
 
@@ -136,9 +141,9 @@ class KeywordRetriever(IRetriever):
         k = clamp_top_k(top_k)
         prefixes = tuple(p for p in source_prefixes if p)
         try:
-            # With a prefix filter the engine must rank every source first, so the filter cannot starve the result.
-            asked = max(len(self._engine.sources), k) if prefixes else k
-            scored = self._engine.retrieve_scored(query, top_k=asked)
+            # Ask for every source, then filter, sort and cut here. The engine must not pick which
+            # tied passage survives the cut-off (R3), and a prefix filter must not starve the result.
+            scored = self._engine.retrieve_scored(query, top_k=max(len(self._engine.sources), k))
         except Exception as exc:  # an adapter fault is a status, not a crash
             logger.warning("Keyword retrieval failed: %s", type(exc).__name__)
             return self._result(RetrievalStatus.UNAVAILABLE, message=f"adapter fault ({type(exc).__name__})")
