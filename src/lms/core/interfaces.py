@@ -262,6 +262,10 @@ class IAXISCompanion(Protocol):
     def consult(self, query: AxisQuery) -> AxisResponse:
         ...
 
-    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
-        """The reply as text deltas, plus the concepts it cites."""
+    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
+        """The reply as text deltas, plus its citations.
+
+        The second item is either a list of cited concepts (mock) or an object with
+        `cited_for(reply)` that works out the citations from the finished reply (SPEC-22 R7).
+        """
         ...

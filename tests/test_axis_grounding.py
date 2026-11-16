@@ -75,9 +75,9 @@ def test_socratic_stays_socratic_when_nothing_was_found():
 
 
 def test_a_grounded_prompt_has_no_missing_notice():
-    prompt = axis_rules.build_system_prompt(AxisMode.COACH, "[concepts/x] some text")
+    prompt = axis_rules.build_system_prompt(AxisMode.COACH, "<reference_passages>x</reference_passages>")
     assert "NO CURRICULUM PASSAGE WAS FOUND" not in prompt
-    assert "VERIFIED CURRICULUM GROUNDING" in prompt
+    assert "untrusted reference material" in prompt
 
 
 def test_a_missing_index_is_reported_in_plain_words(tmp_path, monkeypatch, caplog):

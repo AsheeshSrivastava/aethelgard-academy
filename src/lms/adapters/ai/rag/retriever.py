@@ -112,8 +112,8 @@ class HybridRerankedRetriever:
         candidate_ids = [pid for pid, _ in fused]
 
         if not candidate_ids:
-            # Fallback to any remaining lexical or all passages
-            candidate_ids = list(self.passages.keys())[:30]
+            # Nothing matched: return nothing. Unrelated passages would be cited as if they answered (SPEC-22 R4).
+            return []
 
         # 4. Cross-Encoder Reranking
         scored_candidates: List[Tuple[str, float]] = []

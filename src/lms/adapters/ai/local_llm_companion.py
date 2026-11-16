@@ -178,15 +178,15 @@ class OpenAICompatibleCompanion:
 
     # --- IAXISCompanion -------------------------------------------------------------
 
-    def _grounding(self, query: AxisQuery) -> Tuple[str, List[str]]:
-        text, cited, self.last_retrieval = axis_rules.ground_with_trace(
+    def _grounding(self, query: AxisQuery) -> Any:
+        grounding, self.last_retrieval = axis_rules.ground_with_trace(
             self.retriever, self.concept_store, query.unit_id, query.user_prompt
         )
-        return text, cited
+        return grounding
 
     def consult(self, query: AxisQuery) -> AxisResponse:
-        grounded_text, cited_concepts = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounded_text)
+        grounding = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)  # BudgetExceeded is never swallowed
 
@@ -211,15 +211,15 @@ class OpenAICompatibleCompanion:
                 return self._mock_fallback.consult(query)
             raise LocalLLMError(f"Model consultation failed: {type(exc).__name__}") from None
 
-        return axis_rules.finish_reply(raw_content, query, cited_concepts, self.guardrail, self.classifier)
+        return axis_rules.finish_reply(raw_content, query, grounding, self.guardrail, self.classifier)
 
-    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
-        """Stream the model's reply. Returns (deltas, cited concepts)."""
-        grounded_text, cited_concepts = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounded_text)
+    def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
+        """Stream the model's reply. Returns (deltas, the grounding that decides the citations once the reply is done)."""
+        grounding = self._grounding(query)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
-        return self._stream_deltas(query, sys_prompt, user_msg), cited_concepts
+        return self._stream_deltas(query, sys_prompt, user_msg), grounding
 
     def _stream_deltas(self, query: AxisQuery, sys_prompt: str, user_msg: str) -> Iterator[str]:
         sent_any = False
