@@ -93,6 +93,10 @@ class HybridRerankedRetriever:
 
     def retrieve(self, query: str, top_k: int = 3) -> List[Passage]:
         """Executes Hybrid (Dense + BM25) -> RRF (k=60) -> Rerank -> Source Dedup."""
+        return [passage for passage, _score in self.retrieve_scored(query, top_k)]
+
+    def retrieve_scored(self, query: str, top_k: int = 3) -> List[Tuple[Passage, float]]:
+        """Same search as retrieve(), keeping each passage's score (SPEC-21 R3)."""
         if not self.passages:
             return []
 
@@ -128,16 +132,16 @@ class HybridRerankedRetriever:
             scored_candidates.sort(key=lambda x: x[1], reverse=True)
 
         # 5. Source File Deduplication (1 passage per source file)
-        deduped: List[Passage] = []
+        deduped: List[Tuple[Passage, float]] = []
         seen_sources: Set[str] = set()
 
-        for pid, _score in scored_candidates:
+        for pid, score in scored_candidates:
             passage = self.passages.get(pid)
             if passage is None:
                 continue
             if passage.source_id not in seen_sources:
                 seen_sources.add(passage.source_id)
-                deduped.append(passage)
+                deduped.append((passage, float(score)))
                 if len(deduped) == top_k:
                     break
 

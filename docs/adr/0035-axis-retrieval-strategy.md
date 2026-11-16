@@ -1,6 +1,6 @@
 # ADR 0035: AXIS retrieval strategy (production grade)
 
-- **Status:** Proposed. Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
+- **Status:** Proposed; in progress. Work steps 1 to 3 are done (SPEC-20, SPEC-21); steps 4 to 7 remain. Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-14
 - **Extends:** ADR-0011 (HR pipeline), ADR-0012 (persistent artifacts), ADR-0034
@@ -77,7 +77,7 @@ During the test period the owner's computer is the server, so rag-core runs in-p
 - A fixture set of 30 to 50 questions is small. It guards against regressions; it does not prove quality (the larger local run does that).
 
 ## 4. Work sequence (one small PR each, tests first)
-Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo).
+Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6).
 1. Fixture index and question set, with the CI gate on keyword-only mode (2.6).
 2. Local measurement: keyword-only with stop words dropped and a floor, against HR, on the set. Decide whether the models are worth adopting.
 3. Retrieval port with our own result type, manifest with `index_version`, startup load, explicit mode choice, logging (2.2, 2.3).

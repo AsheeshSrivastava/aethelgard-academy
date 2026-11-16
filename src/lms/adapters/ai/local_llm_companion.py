@@ -33,7 +33,7 @@ from lms.adapters.ai.providers.axis_rules import (  # noqa: F401 (re-exports)
 )
 from lms.adapters.ai.providers.metering import UsageMeter
 from lms.adapters.ai.providers.profiles import ProviderProfile
-from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
+from lms.core.retrieval import IRetriever, RetrievalTrace
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.interfaces import AxisQuery, AxisResponse, IAXISCompanion
 
@@ -81,7 +81,7 @@ class OpenAICompatibleCompanion:
         api_key: Optional[str] = None,
         timeout_seconds: float = 30.0,
         concept_store: Optional[ConceptStore] = None,
-        retriever: Optional[HybridRerankedRetriever] = None,
+        retriever: Optional[IRetriever] = None,
         guardrail: Optional[SocraticGuardrail] = None,
         classifier: Optional[AssistanceClassifier] = None,
         fallback_to_mock: bool = True,
@@ -122,6 +122,7 @@ class OpenAICompatibleCompanion:
         self._resolved_model: Optional[str] = None
         self._mock_fallback = MockAxisCompanion(guardrail=self.guardrail, classifier=self.classifier)
         self.last_backend_used: str = "LocalLLM (pending)"
+        self.last_retrieval: Optional[RetrievalTrace] = None
         self.last_model_answered: Optional[str] = None
 
     # --- model and request shape -----------------------------------------------
@@ -178,9 +179,10 @@ class OpenAICompatibleCompanion:
     # --- IAXISCompanion -------------------------------------------------------------
 
     def _grounding(self, query: AxisQuery) -> Tuple[str, List[str]]:
-        return axis_rules.retrieve_grounded_passages(
+        text, cited, self.last_retrieval = axis_rules.ground_with_trace(
             self.retriever, self.concept_store, query.unit_id, query.user_prompt
         )
+        return text, cited
 
     def consult(self, query: AxisQuery) -> AxisResponse:
         grounded_text, cited_concepts = self._grounding(query)
@@ -354,7 +356,7 @@ LocalLLMCompanion = OpenAICompatibleCompanion
 
 def get_axis_companion(
     concept_store: Optional[ConceptStore] = None,
-    retriever: Optional[HybridRerankedRetriever] = None,
+    retriever: Optional[IRetriever] = None,
 ) -> IAXISCompanion:
     """Factory returning MockAxisCompanion when MOCK_AI=true, else the local companion."""
     load_dotenv_if_present()
@@ -369,16 +371,8 @@ def get_axis_companion(
     return OpenAICompatibleCompanion(concept_store=concept_store, retriever=retriever, disable_thinking=True)
 
 
-def load_default_retriever() -> Optional[HybridRerankedRetriever]:
-    default_index = Path("data/index")
-    if (default_index / "passages.jsonl").exists():
-        try:
-            return HybridRerankedRetriever.load(default_index)
-        except Exception as exc:
-            logger.warning("No retrieval index is loaded: %s could not be read (%s).", default_index, type(exc).__name__)
-            return None
-    logger.warning(
-        "No retrieval index is loaded: %s does not exist. AXIS answers will say they are not grounded.",
-        default_index,
-    )
-    return None
+def load_default_retriever() -> IRetriever:
+    """Load the index named by LMS_INDEX_DIR and LMS_RETRIEVAL_MODE. Called at startup or on use, never at import."""
+    from lms.adapters.ai.rag.startup import build_retriever
+
+    return build_retriever()
