@@ -21,7 +21,7 @@ from lms.adapters.ai.providers.profiles import (
     ProviderKind,
     ProviderProfile,
 )
-from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
+from lms.core.retrieval import IRetriever
 from lms.adapters.db.model_usage import UsageStore
 from lms.core.ai_judgement import AiJudgement, Rubric, not_judged
 from lms.core.interfaces import AxisQuery, AxisResponse
@@ -54,7 +54,7 @@ class DraftFailed(Exception):
 
 def default_factory(
     concept_store: Optional[ConceptStore] = None,
-    retriever: Optional[HybridRerankedRetriever] = None,
+    retriever: Optional[IRetriever] = None,
 ) -> Factory:
     def make(profile: ProviderProfile, api_key: Optional[str], meter: UsageMeter) -> Any:
         if profile.kind is ProviderKind.GEMINI:
@@ -223,6 +223,11 @@ class ProviderRouter:
             return iter([BUDGET_MESSAGE]), []
 
     @property
+    def last_retrieval(self) -> Any:
+        """What the last answer's retrieval did (SPEC-21 R8); None for the mock."""
+        return getattr(self.current(), "last_retrieval", None)
+
+    @property
     def last_backend_used(self) -> str:
         return getattr(self.current(), "last_backend_used", "Offline Mock (MOCK_AI=true)")
 
@@ -261,7 +266,8 @@ def build_default_router(db_path: str, profiles_path: Optional[str] = None) -> P
     """The router the app uses when nothing is injected."""
     from pathlib import Path
 
-    from lms.adapters.ai.local_llm_companion import load_default_retriever, load_dotenv_if_present
+    from lms.adapters.ai.local_llm_companion import load_dotenv_if_present
+    from lms.adapters.ai.rag.startup import build_retriever, configured_mode
     from lms.adapters.ai.providers.profiles import DEFAULT_PROFILES_PATH, load_profiles
 
     load_dotenv_if_present()
@@ -269,7 +275,8 @@ def build_default_router(db_path: str, profiles_path: Optional[str] = None) -> P
     profiles = load_profiles(Path(profiles_path) if profiles_path else DEFAULT_PROFILES_PATH)
     store = UsageStore(db_path)
     store.initialize()
-    retriever = None if mock else load_default_retriever()
+    configured_mode()  # a bad LMS_RETRIEVAL_MODE stops startup even with MOCK_AI=true (SPEC-21 R6)
+    retriever = None if mock else build_retriever()
     return ProviderRouter(
         profiles, store, environ=os.environ, mock=mock,
         factory=default_factory(retriever=retriever),

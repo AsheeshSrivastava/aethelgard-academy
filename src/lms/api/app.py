@@ -44,6 +44,7 @@ from lms.adapters.runner.run_slots import (
 )
 from lms.core import ai_judgement
 from lms.core.ai_judgement import AiJudgement, not_judged
+from lms.core.retrieval import RetrievalTrace
 from lms.core.build_feedback import FeedbackPoint, build_feedback_points, strip_code_blocks
 from lms.core.builds import (
     RequirementResult,
@@ -209,6 +210,12 @@ _EVIDENCE_LINK: ContextVar[Tuple[Optional[str], Optional[str]]] = ContextVar("ev
 def current_session(x_session_id: Optional[str] = Header(None)) -> Optional[str]:
     """One id per app visit, sent by the client; a malformed one is dropped (ADR-0022)."""
     return x_session_id if valid_id(x_session_id) else None
+
+
+def retrieval_fields(axis: Any) -> Dict[str, Any]:
+    """index_version, retrieval_mode, retrieval_status and latency_ms of the answer just given (SPEC-21 R8)."""
+    trace = getattr(axis, "last_retrieval", None)
+    return trace.as_log_fields() if isinstance(trace, RetrievalTrace) else {}
 
 
 def current_learner_id() -> str:
@@ -1186,7 +1193,7 @@ def create_app(
                         log_event(
                             learner_id, "axis",
                             {"mode": query.mode.value, "question": query.user_prompt, "answer": "".join(said),
-                             "assistance": data["assistance_level"]},
+                             "assistance": data["assistance_level"], **retrieval_fields(axis)},
                             unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
                         )
                     if event == "citation":
@@ -1218,7 +1225,7 @@ def create_app(
         log_event(
             learner_id, "axis",
             {"mode": query.mode.value, "question": query.user_prompt, "answer": response.reply,
-             "assistance": response.detected_assistance_level.value},
+             "assistance": response.detected_assistance_level.value, **retrieval_fields(axis)},
             unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
         )
         if query.exercise_id:

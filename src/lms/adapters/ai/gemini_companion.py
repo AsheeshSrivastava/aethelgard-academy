@@ -15,7 +15,7 @@ from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.providers import axis_rules
 from lms.adapters.ai.providers.metering import BudgetExceeded, UsageMeter
 from lms.adapters.ai.providers.profiles import ProviderProfile
-from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
+from lms.core.retrieval import IRetriever, RetrievalTrace
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.interfaces import AxisQuery, AxisResponse
 
@@ -43,7 +43,7 @@ class GeminiCompanion:
         api_key: Optional[str] = None,
         client: Any = None,
         concept_store: Optional[ConceptStore] = None,
-        retriever: Optional[HybridRerankedRetriever] = None,
+        retriever: Optional[IRetriever] = None,
         guardrail: Optional[SocraticGuardrail] = None,
         classifier: Optional[AssistanceClassifier] = None,
         profile: Optional[ProviderProfile] = None,
@@ -63,6 +63,7 @@ class GeminiCompanion:
         self.meter = meter
         self.last_model_answered: Optional[str] = None
         self.last_backend_used: str = "Gemini (pending)"
+        self.last_retrieval: Optional[RetrievalTrace] = None
 
     # --- helpers -------------------------------------------------------------
 
@@ -88,9 +89,10 @@ class GeminiCompanion:
         return answered
 
     def _grounding(self, query: AxisQuery) -> Tuple[str, List[str]]:
-        return axis_rules.retrieve_grounded_passages(
+        text, cited, self.last_retrieval = axis_rules.ground_with_trace(
             self.retriever, self.concept_store, query.unit_id, query.user_prompt
         )
+        return text, cited
 
     # --- IAXISCompanion ----------------------------------------------------------
 

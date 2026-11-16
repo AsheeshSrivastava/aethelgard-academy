@@ -7,16 +7,15 @@ import pytest
 from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.providers import axis_rules
 from lms.adapters.ai.local_llm_companion import load_default_retriever
+from fake_retriever import FakeRetriever
 from lms.core.interfaces import AxisMode
+from lms.core.retrieval import RetrievalStatus
 
 FIXTURES = Path(__file__).parent / "fixtures" / "concepts"
 
 
-class EmptyRetriever:
-    passages = ["x"]
-
-    def retrieve(self, query, top_k=3):
-        return []
+def EmptyRetriever():
+    return FakeRetriever()
 
 
 @pytest.fixture
@@ -83,6 +82,7 @@ def test_a_grounded_prompt_has_no_missing_notice():
 
 def test_a_missing_index_is_reported_in_plain_words(tmp_path, monkeypatch, caplog):
     monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("LMS_INDEX_DIR", raising=False)
     with caplog.at_level("WARNING"):
-        assert load_default_retriever() is None
+        assert load_default_retriever().search("anything").status is RetrievalStatus.NO_INDEX
     assert "No retrieval index is loaded" in caplog.text

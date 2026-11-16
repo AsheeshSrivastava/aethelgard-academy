@@ -282,22 +282,12 @@ def test_get_axis_companion_factory_respects_mock_ai_env(monkeypatch):
     assert comp_local.model == "Qwen3.6-35B-A3B-UD-Q4_K_XL"
 
 
-def test_hybrid_reranked_retriever_integration_in_companion():
-    from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
-    from lms.core.rag_contracts import Source, content_sha256, normalize_text
+def test_the_retrieval_port_integration_in_companion():
+    from fake_retriever import FakeRetriever, passage
 
-    text = normalize_text("# Python Builtins\n\ninput() reads a line from stream and returns str.")
-    source = Source(
-        source_id="python/builtins",
-        version="3.12",
-        text=text,
-        raw_sha256=content_sha256(text),
-        loader_version="1.0",
-        licence="PSF-2.0",
-        licence_basis="declared",
+    retriever = FakeRetriever(
+        (passage("python/builtins", "input() reads a line from stream and returns str.", pid="python/builtins#1"),)
     )
-    retriever = HybridRerankedRetriever()
-    retriever.index_source(source)
 
     captured_system_prompt = ""
 

@@ -6,10 +6,10 @@ assistance classifier live here once, so a provider switch can never change them
 
 from __future__ import annotations
 
+import time
 from typing import Any, List, Optional, Sequence, Tuple
 
 from lms.adapters.ai.concept_store import ConceptStore
-from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
 from lms.adapters.ai.socratic_guardrail import (
     AssistanceClassifier,
     SocraticGuardrail,
@@ -18,6 +18,7 @@ from lms.adapters.ai.socratic_guardrail import (
 from lms.core.ai_judgement import Idea
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
 from lms.core.rag_contracts import verify_passage
+from lms.core.retrieval import IRetriever, RetrievalStatus, RetrievalTrace
 
 MAX_PROMPT_CHARS = 4000
 MAX_CODE_CHARS = 4000
@@ -47,18 +48,44 @@ JUDGE_SYSTEM_PROMPT = (
 
 
 def retrieve_grounded_passages(
-    retriever: Optional[HybridRerankedRetriever],
+    retriever: Optional[IRetriever],
     concept_store: Optional[ConceptStore],
     unit_id: str,
     query_text: str,
 ) -> Tuple[str, List[str]]:
     """Verified curriculum passages, from the retriever first, then the concept store."""
-    if retriever is not None and retriever.passages:
-        results = retriever.retrieve(f"{unit_id} {query_text}", top_k=3)
-        if results:
-            snippets = [f"[{p.source_id}] {p.text}" for p in results]
-            return "\n\n".join(snippets), [p.passage_id for p in results]
+    text, cited, _trace = ground_with_trace(retriever, concept_store, unit_id, query_text)
+    return text, cited
 
+
+def ground_with_trace(
+    retriever: Optional[IRetriever],
+    concept_store: Optional[ConceptStore],
+    unit_id: str,
+    query_text: str,
+) -> Tuple[str, List[str], Optional[RetrievalTrace]]:
+    """Like retrieve_grounded_passages, plus what the retrieval did (SPEC-21 R8)."""
+    trace: Optional[RetrievalTrace] = None
+    if retriever is not None:
+        started = time.perf_counter()
+        result = retriever.search(f"{unit_id} {query_text}", top_k=3)
+        trace = RetrievalTrace(
+            index_version=result.index_version,
+            mode=result.mode.value,
+            status=result.status.value,
+            latency_ms=int((time.perf_counter() - started) * 1000),
+        )
+        if result.status is RetrievalStatus.OK and result.passages:
+            snippets = [f"[{p.source_id}] {p.text}" for p in result.passages]
+            return "\n\n".join(snippets), [p.passage_id for p in result.passages], trace
+
+    text, cited = _concept_store_passages(concept_store, unit_id, query_text)
+    return text, cited, trace
+
+
+def _concept_store_passages(
+    concept_store: Optional[ConceptStore], unit_id: str, query_text: str
+) -> Tuple[str, List[str]]:
     if concept_store is None:
         return "", []
 
