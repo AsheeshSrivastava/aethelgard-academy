@@ -29,7 +29,9 @@ from lms.core.retrieval import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MIN_MATCHED_TERMS = 3  # SPEC-23 R7; the app reads LMS_MIN_MATCHED_TERMS (startup.py)
+# SPEC-23 R7. Tuned on the real corpus (1,371 sources) on 2026-11-16, question set gemini-6x50
+# (docs/measurements/2026-11-16-not-found-rules.txt). The app reads LMS_MIN_MATCHED_TERMS (startup.py).
+DEFAULT_MIN_MATCHED_TERMS = 3
 SOURCES_FILE = "sources.jsonl"
 PASSAGES_FILE = "passages.jsonl"
 

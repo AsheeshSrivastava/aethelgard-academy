@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -220,6 +221,69 @@ def main() -> int:
     print("  BM25 alone (best passage per source):  %d / %d" % score(lambda q: [r[0] for r in ranker.rank(q)[0]][:3]))
     for w in (1, 3, 10):
         print("  fused with word-overlap list, lexical weight %-2d: %d / %d" % ((w,) + score(lambda q, w=w: fused(q, w))))
+    # ---- 7. ideas measured and NOT adopted (numbers quoted in SPEC-23 section 1) -----------------
+    print("\n== 7. not adopted: error types and identifiers cut out of pasted blocks; path stripping")
+    error_type = re.compile(r"\b[A-Z][A-Za-z]*(?:Error|Exception|Warning|Exit|Failed)\b")
+    ident = re.compile(r"`([^`\n]{2,60})`|\b([a-z]+(?:_[a-z0-9]+)+)\b|\b([A-Za-z_]\w*\.[\w.]+)\b|(--[a-z][a-z0-9-]+)")
+
+    def extract(text: str) -> str:
+        lines = text.strip().splitlines()
+        if len(lines) <= 1:
+            return clean_query(text)
+        parts = clean_query(lines[0]).split()
+        pasted = "\n".join(lines[1:])
+        parts += error_type.findall(pasted)
+        parts += [next(g for g in mo.groups() if g) for mo in ident.finditer(pasted)]
+        return " ".join(dict.fromkeys(parts))
+
+    win_path = re.compile(r"[A-Za-z]:\\\S*")
+    url = re.compile(r"https?://\S+")
+    pasted_total = sum(q["kind"] == "pasted" for _, q in ans)
+    variants7 = (
+        ("cleanup only (shipped)", clean_query),
+        ("pasted block cut to error types and identifiers", extract),
+        ("cleanup + Windows paths and URLs removed", lambda t: clean_query(url.sub(" ", win_path.sub(" ", t)))),
+    )
+    for label, fn in variants7:
+        p1 = p3 = a1 = a3 = 0
+        for s, q in ans:
+            ids = [r[0] for r in ranker.rank(fn(q["q"]))[0]][:3]
+            hit1 = bool(ids) and right(ids[0], s + "/", q["expect"])
+            hit3 = any(right(i, s + "/", q["expect"]) for i in ids)
+            a1, a3 = a1 + hit1, a3 + hit3
+            if q["kind"] == "pasted":
+                p1, p3 = p1 + hit1, p3 + hit3
+        print(f"  {label:<52} pasted {p1}/{p3} of {pasted_total}; all {a1}/{a3} of {len(ans)}")
+
+    print("\n== 8. rule: refuse when fewer than min(M, n) distinct cleaned terms are in the best passage (real corpus)")
+    for minimum in (2, 3, 4):
+        def refused(key, minimum=minimum):
+            rows, qt = cleaned[key]
+            return (not rows) or rows[0][2] < min(minimum, len(qt))
+        fr = sum(refused((s, q["q"])) for s, q in ans)
+        cr = sum(refused((s, q["q"])) for s, q in oos)
+        print(f"  M={minimum}: false refusal {fr}/{len(ans)}, correct refusal {cr}/{len(oos)}")
+
+    print("\n== 9. the SPEC-20 fixture (12 short docs, 41 answerable, 9 no-answer), cleaned query, BM25 alone")
+    sys.path.insert(0, str(ROOT / "tests"))
+    import retrieval_quality as rq  # noqa: E402
+
+    fx = Ranker(rq.build_keyword_retriever())
+    fixture_questions = rq.load_questions()
+    for minimum in (None, 2, 3, 4):
+        lost = first = top3 = refused_ok = 0
+        for q in fixture_questions:
+            rows, qt = fx.rank(clean_query(q["question"]))
+            refuse = minimum is not None and ((not rows) or rows[0][2] < min(minimum, len(qt)))
+            ids = [] if refuse else [r[0] for r in rows][:3]
+            if q["expected_source"]:
+                lost += refuse
+                first += bool(ids) and ids[0] == q["expected_source"]
+                top3 += q["expected_source"] in ids
+            else:
+                refused_ok += not ids
+        label = "no refusal rule" if minimum is None else f"M={minimum}"
+        print(f"  {label:<16} first {first}/41 top3 {top3}/41; answerable refused {lost}/41; no-answer refused {refused_ok}/9")
     return 0
 
 

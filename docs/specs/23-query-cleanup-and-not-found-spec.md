@@ -9,7 +9,7 @@ Sets: the six Gemini question files, validated first (every expected file exists
 
 1. **Today's `keyword_only` ranking is the weakest part.** It fuses BM25 with a word-overlap list that stands in for embeddings, then adds +1 to almost every passage. On the cleaned query it gets 48 first-hit / 87 top-3 of 240. BM25 alone gets 70 / 142. Giving BM25 more weight in the fusion helps but never catches up (weight 3: 54/117, weight 10: 62/132). So weighted fusion is not worth adopting here; dropping the stand-in list is.
 2. **Query cleanup is a small win.** Dropping function words (a, the, how, do, is...) while keeping "not" and "no": 70 / 142 against 72 / 137 for the raw question. Top-3 +5, first-hit -2, so it is roughly neutral by itself; its real value is that the "not found" signal below needs a clean term count.
-3. **Extracting error types and identifiers from pasted blocks made things worse** (pasted questions: 18/38 raw, 12/26 extracted). The pasted text already carries those words and the message wording matters. Not adopted. Stripping Windows paths and URLs changed nothing (69 / 144), so not adopted either.
+3. **Extracting error types and identifiers from pasted blocks made things worse** (pasted questions: 17/35 with plain cleanup, 14/25 extracted). The pasted text already carries those words and the message wording matters. Not adopted. Stripping Windows paths and URLs changed nothing that matters (69 / 144 against 70 / 142), so not adopted either.
 4. **No score floor separates the groups well.** BM25 score of the top hit: separation (AUC) 0.77; the score of answerable questions overlaps the out-of-scope ones. This matches the earlier real-corpus result.
 5. **The count of query terms found in the top passage separates best** (AUC 0.83; gap between 1st and 2nd score 0.49, a coin flip; share of terms matched 0.57). Rule "refuse when fewer than M distinct cleaned query terms appear in the best passage":
 
@@ -17,11 +17,11 @@ Sets: the six Gemini question files, validated first (every expected file exists
 |---|---|---|
 | 2 | 0 of 240 (0%) | 2 of 60 (3%) |
 | 3 | 15 of 240 (6%) | 26 of 60 (43%) |
-| 4 | about 19% | about 75% |
+| 4 | 45 of 240 (19%) | 45 of 60 (75%) |
 
    Honest reading: the rule is a trade, not a clean split. M=3 refuses roughly 4 in 10 labelled out-of-scope questions and wrongly refuses about 6% of good ones. The correct-refusal number understates the truth: the sets were written against one doc set, and several "out-of-scope" questions have a fair answer elsewhere in the 1,371-source corpus (for example an httpx question answered in the fastapi docs). The remaining misses are mostly path-only pastes ("why is this failing??" plus a file path) and questions about neighbouring tools.
-6. **The number does not transfer between corpora.** On the small SPEC-20 fixture (12 short docs) M=3 loses 10 of 41 answerable questions; M=2 loses 2 and refuses 8 of 9 no-answer questions. So M is a per-index setting that must be tuned and recorded (ADR-0035 2.4 says exactly this), not a constant in code.
-7. **Fixture gate.** BM25 alone on the cleaned query scores 37 first-hit / 40 top-3 of 41 on the SPEC-20 fixture, against 31 / 36 today. With the refusal rule at the fixture's minimum of 2 it scores 36 / 39 and refuses 8 of the 9 no-answer questions. The floor goes up to that. It cannot go down.
+6. **The number does not transfer between corpora.** On the small SPEC-20 fixture (12 short docs) M=3 loses 10 of 41 answerable questions (and refuses all 9 no-answer); M=2 loses 2 and refuses 8 of 9 no-answer questions. So M is a per-index setting that must be tuned and recorded (ADR-0035 2.4 says exactly this), not a constant in code.
+7. **Fixture gate.** BM25 alone on the cleaned query scores 36 first-hit / 40 top-3 of 41 on the SPEC-20 fixture, against 31 / 36 today. With the refusal rule at the fixture's minimum of 2 it scores 36 / 39 and refuses 8 of the 9 no-answer questions. The floor goes up to that. It cannot go down.
 8. **Limit of all this.** These are keyword-only numbers. Keyword search finds the right file first for only 30% of real-corpus questions (rag-core measured about 80% for HR on its sets). `keyword_only` is the development and CI mode; HR will need its own tuning of the rule in step 6.
 
 ## 2. Scope
@@ -34,7 +34,7 @@ In this step:
 Not in this step: the `hybrid_rerank` adapter and its own threshold (ADR step 6); LLM query rewriting (ADR 2.8, only if measured to help); changes to prompt wording (ADR-0034, step 5).
 
 ## 3. Requirements
-- R1. `clean_query(text) -> str` lives in `core/` (pure standard library). It splits the text into the same tokens the BM25 index uses, drops a fixed list of function words (the list in the measurement script: articles, auxiliaries, question words, pronouns, prepositions; **not** "not" or "no"), removes repeats (first occurrence wins, order kept), and joins with single spaces. It never raises.
+- R1. `clean_query(text) -> str` lives in `core/` (pure standard library). It splits the text into the same tokens the BM25 index uses, drops a fixed list of function words (the list in `core/query.py`, which the measurement script imports: articles, auxiliaries, question words, pronouns, prepositions; **not** "not" or "no"), removes repeats (first occurrence wins, order kept), and joins with single spaces. It never raises.
 - R2. If cleaning leaves no word, the search returns `not_found` (message "no searchable words"); it does not fall back to the raw text.
 - R3. `axis_rules.ground_with_trace` stops prepending `unit_id`. The query is the learner's text only. `unit_id` is still used for the concept-store path.
 - R4. No error-type or identifier extraction and no path stripping (section 1, items 3). The pasted block stays in the query as typed, after R1.
@@ -43,7 +43,7 @@ Not in this step: the `hybrid_rerank` adapter and its own threshold (ADR step 6)
 - R7. `M` comes from `LMS_MIN_MATCHED_TERMS` (integer 1 to 10; default 3, tuned on the real corpus on 2026-11-16 with set version `gemini-6x50`). An invalid value fails startup with a clear message, as in SPEC-21 R6. The tuning value, date and set version are written next to the default in code and in `docs/measurements/`.
 - R8. The SPEC-20 CI gate runs the fixture with its own `M` (2, per section 1 item 6) so the gate does not depend on the real-corpus setting. `floor.json` is raised to 36 first-hit and 39 top-3 (from 31 and 36) and records 8 of 9 no-answer questions refused; the date and set version are updated. The gate's no-answer check now also asserts the share of no-answer questions refused.
 - R9. The interaction log keeps the SPEC-21/22 fields. A `not_found` caused by this rule logs `terms_matched` and `terms_total` through the trace, so the false-refusal rate can be watched on real traffic.
-- R10. `source_prefixes`, `top_k`, `no_index` and `unavailable` behave as in SPEC-21.
+- R10. `source_prefixes`, `top_k`, `no_index` and `unavailable` behave as in SPEC-21. The SPEC-21 contract tests keep their assertions; their set-up changes only where R5 forces it (a fixture adapter built with minimum 2, test doubles that implement `keyword_search`), and the test that compared the new ranking with the old class is replaced by the floor test of R8.
 
 ## 4. Tests first (names, written before code)
 1. `clean_query`: drops function words, keeps "not" and "no", keeps order, removes repeats, keeps error names, flags and dotted names such as `--locked`, `exclude_unset`, `pytest.mark.slow`; empty and whitespace input; a 10,000-character input (R1).

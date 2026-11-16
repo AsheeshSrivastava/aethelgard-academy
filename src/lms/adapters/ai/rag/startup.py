@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Mapping, Optional
 
-from lms.adapters.ai.rag.keyword_retriever import KeywordRetriever
+from lms.adapters.ai.rag.keyword_retriever import DEFAULT_MIN_MATCHED_TERMS, KeywordRetriever
 from lms.core.retrieval import IRetriever, RetrievalMode
 
 logger = logging.getLogger(__name__)
@@ -16,8 +16,6 @@ MODE_ENV = "LMS_RETRIEVAL_MODE"
 INDEX_DIR_ENV = "LMS_INDEX_DIR"
 DEFAULT_INDEX_DIR = "data/index"
 MIN_TERMS_ENV = "LMS_MIN_MATCHED_TERMS"
-# Tuned on the real corpus (1,371 sources) on 2026-11-16, question set gemini-6x50 (SPEC-23, docs/measurements/).
-DEFAULT_MIN_MATCHED_TERMS = 3
 
 
 class RetrievalConfigError(Exception):

@@ -103,3 +103,19 @@ C:\Users\sam\shop\parser.py:9: in parse_payload
   fused with word-overlap list, lexical weight 1 : 48 / 87
   fused with word-overlap list, lexical weight 3 : 54 / 117
   fused with word-overlap list, lexical weight 10: 62 / 132
+
+== 7. not adopted: error types and identifiers cut out of pasted blocks; path stripping
+  cleanup only (shipped)                               pasted 17/35 of 60; all 70/142 of 240
+  pasted block cut to error types and identifiers      pasted 14/25 of 60; all 67/132 of 240
+  cleanup + Windows paths and URLs removed             pasted 16/37 of 60; all 69/144 of 240
+
+== 8. rule: refuse when fewer than min(M, n) distinct cleaned terms are in the best passage (real corpus)
+  M=2: false refusal 0/240, correct refusal 2/60
+  M=3: false refusal 15/240, correct refusal 26/60
+  M=4: false refusal 45/240, correct refusal 45/60
+
+== 9. the SPEC-20 fixture (12 short docs, 41 answerable, 9 no-answer), cleaned query, BM25 alone
+  no refusal rule  first 36/41 top3 40/41; answerable refused 0/41; no-answer refused 3/9
+  M=2              first 36/41 top3 39/41; answerable refused 2/41; no-answer refused 8/9
+  M=3              first 30/41 top3 31/41; answerable refused 10/41; no-answer refused 9/9
+  M=4              first 23/41 top3 23/41; answerable refused 18/41; no-answer refused 9/9
