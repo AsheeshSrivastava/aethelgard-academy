@@ -1,6 +1,6 @@
 # ADR 0035: AXIS retrieval strategy (production grade)
 
-- **Status:** Proposed; in progress. Work steps 1 to 3 are done (SPEC-20, SPEC-21); step 4 is split in two (4a done by SPEC-22, 4b next); steps 5 to 7 remain. See section 5 (amendment 2026-11-16). Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
+- **Status:** Proposed; in progress. Work steps 1 to 3 are done (SPEC-20, SPEC-21); step 4 is split in two (4a done by SPEC-22, 4b done by SPEC-23); steps 5 to 7 remain. See section 5 (amendment 2026-11-16). Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-14
 - **Extends:** ADR-0011 (HR pipeline), ADR-0012 (persistent artifacts), ADR-0034
@@ -77,7 +77,7 @@ During the test period the owner's computer is the server, so rag-core runs in-p
 - A fixture set of 30 to 50 questions is small. It guards against regressions; it does not prove quality (the larger local run does that).
 
 ## 4. Work sequence (one small PR each, tests first)
-Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6); step 4a, fenced untrusted passages, checked citations and no "first 30" fallback (SPEC-22, which also defines the quote-overlap rule that 2.5 needs; SPEC-09 never had one).
+Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6); step 4a, fenced untrusted passages, checked citations and no "first 30" fallback (SPEC-22, which also defines the quote-overlap rule that 2.5 needs; SPEC-09 never had one); step 4b, query cleanup (function words out, unit id out), `keyword_only` ranked by BM25 alone, and "not found" on the number of query terms found, minimum 3 on the real corpus and 2 on the CI fixture (SPEC-23; measured, see `docs/measurements/2026-11-16-not-found-rules.txt`). Weighted fusion, error-type extraction and path stripping were measured and not adopted.
 1. Fixture index and question set, with the CI gate on keyword-only mode (2.6).
 2. Local measurement: keyword-only with stop words dropped and a floor, against HR, on the set. Decide whether the models are worth adopting.
 3. Retrieval port with our own result type, manifest with `index_version`, startup load, explicit mode choice, logging (2.2, 2.3).
@@ -92,7 +92,7 @@ A7 (ConceptStore wiring) is paused until there are enough concept notes. The sel
 ### 5.1 New plan order
 Step 4 is split so each PR stays small and testable:
 - **4a (SPEC-22, F7):** fenced and capped untrusted passages, checked citations (quote-overlap rule), no "first 30" fallback.
-- **4b (next spec, F8):** stop words and the unit id dropped from the query, and a minimum score so `not_found` can fire on weak matches (2.4).
+- **4b (done, SPEC-23, F8):** stop words and the unit id dropped from the query, and a minimum score so `not_found` can fire on weak matches (2.4).
 - Steps 5, 6 and 7 are unchanged in order. Contextual retrieval (5.2) is an optional, measured addition after step 6, not part of 4a or 4b.
 
 ### 5.2 Contextual retrieval: design only, nothing built yet

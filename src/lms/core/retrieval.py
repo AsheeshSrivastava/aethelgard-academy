@@ -44,6 +44,8 @@ class RetrievalResult:
     index_version: str  # empty string when there is no index
     passages: Tuple[RetrievedPassage, ...] = ()  # empty unless status is OK
     message: str = ""  # short, for logs
+    terms_matched: int = 0  # query terms found in the best passage (SPEC-23 R6); 0 when not measured
+    terms_total: int = 0  # distinct cleaned query terms
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,8 @@ class RetrievalTrace:
     latency_ms: int
     passages_retrieved: int = 0
     passages_cited: int = 0
+    terms_matched: int = 0
+    terms_total: int = 0
 
     def as_log_fields(self) -> Dict[str, object]:
         return {
@@ -84,6 +88,8 @@ class RetrievalTrace:
             "latency_ms": self.latency_ms,
             "passages_retrieved": self.passages_retrieved,
             "passages_cited": self.passages_cited,
+            "terms_matched": self.terms_matched,
+            "terms_total": self.terms_total,
         }
 
 

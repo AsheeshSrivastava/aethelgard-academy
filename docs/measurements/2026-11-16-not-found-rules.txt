@@ -1,0 +1,105 @@
+sets validated: 6 files, 240 answerable, 60 out-of-scope
+
+== 1. query cleanup (first hit / top 3, answerable questions, by kind)
+variant                                                                      plain         error    paraphrase        pasted           ALL
+raw question (today, without unit id)                                  23/42 of 60   26/39 of 60    5/18 of 60   18/38 of 60 72/137 of 240
+function words out (SPEC-23 cleanup)                                   23/45 of 60   23/44 of 60    7/18 of 60   17/35 of 60 70/142 of 240
+
+== 2. 'not found' rules. A rule refuses when the signal is BELOW the threshold.
+   false refusal = answerable question refused (bad). correct refusal = out-of-scope question refused (good).
+   thresholds are read on the tune sets (fastapi, httpx, pydantic) and then on the check sets (pytest, python, uv).
+
+  rule: score
+     thr | tune: false-refusal  correct-refusal | check: false-refusal  correct-refusal
+       0 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+       2 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+       4 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+       6 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+       8 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+      10 |         0/120   0%      0/30    0%     |          0/120   0%      1/30    3%
+      12 |         0/120   0%      0/30    0%     |          0/120   0%      2/30    7%
+      14 |         0/120   0%      0/30    0%     |          4/120   3%      7/30   23%
+      16 |         3/120   2%      5/30   17%     |          9/120   8%     10/30   33%
+      18 |         8/120   7%     11/30   37%     |         21/120  18%     15/30   50%
+      20 |        16/120  13%     15/30   50%     |         28/120  23%     19/30   63%
+
+  rule: matched
+     thr | tune: false-refusal  correct-refusal | check: false-refusal  correct-refusal
+       1 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+       2 |         0/120   0%      0/30    0%     |          0/120   0%      2/30    7%
+       3 |         7/120   6%     15/30   50%     |          8/120   7%     11/30   37%
+       4 |        22/120  18%     23/30   77%     |         23/120  19%     22/30   73%
+
+  rule: frac
+     thr | tune: false-refusal  correct-refusal | check: false-refusal  correct-refusal
+     0.2 |         2/120   2%      1/30    3%     |          2/120   2%      2/30    7%
+     0.3 |        16/120  13%      7/30   23%     |         17/120  14%      4/30   13%
+     0.4 |        49/120  41%     13/30   43%     |         45/120  38%     10/30   33%
+     0.5 |        71/120  59%     20/30   67%     |         65/120  54%     15/30   50%
+     0.6 |        88/120  73%     25/30   83%     |         88/120  73%     27/30   90%
+     0.7 |       102/120  85%     29/30   97%     |        103/120  86%     29/30   97%
+
+  rule: idf_frac
+     thr | tune: false-refusal  correct-refusal | check: false-refusal  correct-refusal
+     0.2 |         1/120   1%      2/30    7%     |         12/120  10%      4/30   13%
+     0.3 |        33/120  28%     11/30   37%     |         36/120  30%      9/30   30%
+     0.4 |        59/120  49%     17/30   57%     |         57/120  48%     17/30   57%
+     0.5 |        79/120  66%     24/30   80%     |         77/120  64%     25/30   83%
+     0.6 |        92/120  77%     26/30   87%     |         91/120  76%     28/30   93%
+     0.7 |       102/120  85%     29/30   97%     |        103/120  86%     28/30   93%
+
+  rule: gap
+     thr | tune: false-refusal  correct-refusal | check: false-refusal  correct-refusal
+     0.0 |         0/120   0%      0/30    0%     |          0/120   0%      0/30    0%
+    0.02 |         9/120   8%      1/30    3%     |         17/120  14%      4/30   13%
+    0.05 |        29/120  24%      6/30   20%     |         30/120  25%      9/30   30%
+     0.1 |        57/120  48%     13/30   43%     |         59/120  49%     15/30   50%
+    0.15 |        76/120  63%     17/30   57%     |         80/120  67%     21/30   70%
+     0.2 |        86/120  72%     20/30   67%     |         92/120  77%     27/30   90%
+     0.3 |       109/120  91%     23/30   77%     |        108/120  90%     29/30   97%
+
+  combined: refuse when matched < M OR score < S
+  M=2 S= 6 | tune   0/120   0%    0/30    0%  | check   0/120   0%    2/30    7%
+  M=2 S= 8 | tune   0/120   0%    0/30    0%  | check   0/120   0%    2/30    7%
+  M=2 S=10 | tune   0/120   0%    0/30    0%  | check   0/120   0%    3/30   10%
+  M=2 S=12 | tune   0/120   0%    0/30    0%  | check   0/120   0%    3/30   10%
+  M=3 S= 6 | tune   7/120   6%   15/30   50%  | check   8/120   7%   11/30   37%
+  M=3 S= 8 | tune   7/120   6%   15/30   50%  | check   8/120   7%   11/30   37%
+  M=3 S=10 | tune   7/120   6%   15/30   50%  | check   8/120   7%   11/30   37%
+  M=3 S=12 | tune   7/120   6%   15/30   50%  | check   8/120   7%   11/30   37%
+
+== 3. top-1 signal by question group
+  oos neighbouring   n=24  score median 19.8 max 39.6; matched median 3 max 5
+  oos other-tool     n=18  score median 18.4 max 23.2; matched median 2 max 4
+  oos general        n=18  score median 19.9 max 45.1; matched median 3 max 8
+  answerable           n=240 score p10 17.4 median 26.1; matched p10 3 median 5
+
+== 4. separation of answerable from out-of-scope, by signal (AUC)
+  score     AUC 0.77
+  matched   AUC 0.83
+  frac      AUC 0.57
+  idf_frac  AUC 0.58
+  gap       AUC 0.49
+
+== 5. sample of out-of-scope questions NOT refused by 'matched < 3' (question -> top source)
+  [fastapi-docs] how do i write alembic database migrations for my sqlmodel tables? -> fastapi-docs/tutorial/sql-databases.md
+  [fastapi-docs] how do i set up celery with redis for distributed background job queue -> fastapi-docs/tutorial/background-tasks.md
+  [fastapi-docs] how do i validate json request bodies in go gin using binding tags? -> zed-docs/src/tasks.md
+  [fastapi-docs] why is this failing??
+C:\Users\sam\api\services\pricing.py:12: in calc -> llamaindex-docs/module_guides/observability/index.md
+  [httpx-docs] how do i automatically retry failed 503 requests with exponential back -> httpx-docs/advanced/transports.md
+  [httpx-docs] how do i cache http responses on disk with hishel? -> httpx-docs/third_party_packages.md
+  [httpx-docs] how do i use aiohttp ClientSession instead of httpx? -> fastapi-docs/advanced/async-tests.md
+  [httpx-docs] what is the difference between http 401 unauthorized and 403 forbidden -> fastapi-docs/how-to/authentication-error-status-code.md
+  [httpx-docs] why is this failing??
+C:\Users\sam\shop\parser.py:9: in parse_payload
+ -> python-docs/tutorial/stdlib2.rst
+  [pydantic-docs] how do i integrate pydantic with fastapi dependency injection and open -> fastapi-docs/features.md
+  [pydantic-docs] how do i use pydantic-ai to build structured llm agents? -> llamaindex-docs/understanding/agent/structured_output.md
+  [pydantic-docs] how do i migrate from marshmallow schemas to pydantic v2? -> fastapi-docs/how-to/migrate-from-pydantic-v1-to-pydantic-v2.md
+
+== 6. ranking, answerable questions (first hit / top 3 of 240), cleaned query
+  BM25 alone (best passage per source):  70 / 142
+  fused with word-overlap list, lexical weight 1 : 48 / 87
+  fused with word-overlap list, lexical weight 3 : 54 / 117
+  fused with word-overlap list, lexical weight 10: 62 / 132

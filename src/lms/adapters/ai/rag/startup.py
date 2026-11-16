@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 MODE_ENV = "LMS_RETRIEVAL_MODE"
 INDEX_DIR_ENV = "LMS_INDEX_DIR"
 DEFAULT_INDEX_DIR = "data/index"
+MIN_TERMS_ENV = "LMS_MIN_MATCHED_TERMS"
+# Tuned on the real corpus (1,371 sources) on 2026-11-16, question set gemini-6x50 (SPEC-23, docs/measurements/).
+DEFAULT_MIN_MATCHED_TERMS = 3
 
 
 class RetrievalConfigError(Exception):
@@ -37,12 +40,28 @@ def configured_mode(environ: Optional[Mapping[str, str]] = None) -> RetrievalMod
     return mode
 
 
+def configured_min_terms(environ: Optional[Mapping[str, str]] = None) -> int:
+    """LMS_MIN_MATCHED_TERMS: whole number 1 to 10; unset or empty means the default (SPEC-23 R7)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(MIN_TERMS_ENV) or "").strip()
+    if not raw:
+        return DEFAULT_MIN_MATCHED_TERMS
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 0
+    if not 1 <= value <= 10:
+        raise RetrievalConfigError(f"{MIN_TERMS_ENV}='{raw}' is not allowed. Use a whole number from 1 to 10.")
+    return value
+
+
 def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     """Load the index once and say what was loaded. A missing folder gives NO_INDEX, not a crash (R7)."""
     env = os.environ if environ is None else environ
     mode = configured_mode(env)
+    min_terms = configured_min_terms(env)
     index_dir = Path(env.get(INDEX_DIR_ENV) or DEFAULT_INDEX_DIR)
-    retriever = KeywordRetriever.from_index_dir(index_dir)
+    retriever = KeywordRetriever.from_index_dir(index_dir, min_matched_terms=min_terms)
     manifest = retriever.manifest
     if manifest is None:
         logger.warning(
@@ -53,10 +72,11 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
         )
     else:
         logger.info(
-            "Retrieval ready: mode=%s index_version=%s sources=%d index_dir=%s",
+            "Retrieval ready: mode=%s index_version=%s sources=%d index_dir=%s min_matched_terms=%d",
             mode.value,
             manifest.index_version,
             len(manifest.sources),
             index_dir,
+            min_terms,
         )
     return retriever

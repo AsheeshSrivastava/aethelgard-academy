@@ -9,10 +9,16 @@ import shutil
 import pytest
 
 import retrieval_quality as rq
+from lms.adapters.ai.rag.keyword_retriever import KeywordRetriever
 
 
-def _search(retriever):
-    return lambda q: [p.source_id for p in retriever.retrieve(q, 3)]
+def _adapter(set_dir=rq.SET_DIR):
+    """The shipped keyword_only adapter, with the fixture's own minimum (SPEC-23 R8)."""
+    return KeywordRetriever.from_hybrid(rq.build_keyword_retriever(set_dir), min_matched_terms=2)
+
+
+def _search(adapter):
+    return lambda q: [p.source_id for p in adapter.search(q, top_k=3).passages]
 
 
 # --- guards on the set itself (SPEC-20 3.3) -----------------------------------
@@ -62,7 +68,7 @@ def test_floor_file_records_value_date_and_set_version():
 
 def test_keyword_only_meets_the_recorded_floor():
     floor = rq.load_floor()
-    result = rq.score(_search(rq.build_keyword_retriever()))
+    result = rq.score(_search(_adapter()))
     assert result.first_hit >= floor["first_hit"], result
     assert result.top3 >= floor["top3"], result
 
@@ -73,7 +79,7 @@ def test_gate_fails_when_a_doc_is_dropped(tmp_path):
     for name in ("lists.md", "dicts.md", "git.md", "sql.md"):
         (tmp_path / "set" / "docs" / name).unlink()
     floor = rq.load_floor()
-    result = rq.score(_search(rq.build_keyword_retriever(tmp_path / "set")))
+    result = rq.score(_search(_adapter(tmp_path / "set")))
     assert result.first_hit < floor["first_hit"] or result.top3 < floor["top3"]
 
 
@@ -92,5 +98,5 @@ def test_gate_needs_no_ragcore_or_models():
 
 @pytest.mark.parametrize("q", [q for q in rq.load_questions() if q["expected_source"] is None])
 def test_no_answer_questions_still_return_without_error(q):
-    """Not-found is not gated yet (SPEC-20 2); here we only require no crash."""
-    rq.build_keyword_retriever().retrieve(q["question"], 3)
+    """No crash on a question with no answer; the refusal share is gated in test_query_and_not_found.py (SPEC-23 R8)."""
+    _adapter().search(q["question"], top_k=3)

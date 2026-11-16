@@ -1,8 +1,12 @@
 {
-  "first_hit": 31,
-  "top3": 36,
+  "first_hit": 36,
+  "top3": 39,
   "answerable": 41,
-  "mode": "keyword_only (current LMS retriever, no models)",
-  "date": "2026-11-15",
-  "set_version": "1"
+  "no_answer_refused": 8,
+  "no_answer_total": 9,
+  "min_matched_terms": 2,
+  "mode": "keyword_only (BM25 alone on the cleaned query, minimum 2 matched terms; SPEC-23)",
+  "date": "2026-11-16",
+  "set_version": "1",
+  "previous": "2026-11-15: first_hit 31, top3 36 (fusion with a word-overlap list, raw query, no refusal rule). Raised, not lowered."
 }
