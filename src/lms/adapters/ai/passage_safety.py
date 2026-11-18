@@ -78,6 +78,21 @@ class Grounding:
         return "<reference_passages>\n" + "\n".join(rows) + "\n</reference_passages>"
 
     @property
+    def source_state(self) -> str:
+        """What the learner should know about this turn's source (SPEC-24 R9).
+
+        "course" when at least one passage reached the model, else why none did.
+        """
+        if self.entries:
+            return "course"
+        status = getattr(self.trace, "status", None)
+        if status in ("no_index", "unavailable"):
+            return status
+        if self.trace is None:
+            return "no_index"  # nothing was searched, so there was no reference to check against
+        return "not_found"
+
+    @property
     def ids(self) -> List[str]:
         return [e.passage_id for e in self.entries]
 

@@ -29,7 +29,7 @@ The curriculum notes are not ready (10 approved, many to write), so AXIS cannot 
    - Answers are built from retrieved, verified passages.
    - The prompt says: use the passages, cite only passages you used, and if none fit, say so.
    - A citation chip shows only a passage that was retrieved, verified and used. No default citation, no fallback to an unrelated passage.
-   - No passage found: AXIS says "This is not in the course yet" (or "not in the docs"), shows no chip. In Coach mode only, it may explain syntax or an error message from general knowledge, labelled "Not from the course". Socratic mode stays Socratic (ADR-0009).
+   - No passage found: AXIS says "This is not in the course yet" (or "not in the docs"), shows no chip. ~~In Coach mode only, it may explain syntax or an error message from general knowledge, labelled "Not from the course".~~ **Amended 2026-11-18 (owner decision, SPEC-24 R4):** no mode answers from the model's own memory. With no source, AXIS works only from what the learner wrote (restate, ask guiding questions) and gives no facts, syntax or error explanations. Socratic mode stays Socratic (ADR-0009). Concept Check judging and README feedback compare the learner's text with data we supply and are not affected.
    - No index loaded (fresh clone, mock mode): AXIS says so in plain words. It never answers as if grounded.
 4. **Licence care.** Upstream text is quoted in short passages with a readable source name, never at length and never as a raw passage id.
 5. **Exit condition.** When the concept notes and lessons cover the corpus well enough (measured by ADR-0035's question set: curriculum answers a set share of the questions), the owner decides whether upstream moves to "second source" or is removed.

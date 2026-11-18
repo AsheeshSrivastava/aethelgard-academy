@@ -54,6 +54,8 @@ class AxisResponse(BaseModel):
     suggested_action: Optional[str] = None
     cited_concepts: List[str] = Field(default_factory=list)
     detected_assistance_level: AssistanceLevel = AssistanceLevel.NONE
+    # "course", "not_found", "no_index" or "unavailable" (SPEC-24 R9); None when not applicable (mock).
+    source_state: Optional[str] = None
 
 
 class ILearnerRepository(Protocol):

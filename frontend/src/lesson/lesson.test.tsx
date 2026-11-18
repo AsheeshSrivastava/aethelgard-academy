@@ -959,8 +959,12 @@ describe("AXIS panel", () => {
     return new Response(text, { status: 200, headers: { "content-type": "text/event-stream" } });
   }
 
-  async function ask(reply: () => Response) {
-    const calls = stubApi({ ...routes("predict", ex), "POST /api/v1/axis/stream": reply });
+  async function ask(reply: () => Response, status?: object) {
+    const calls = stubApi({
+      ...routes("predict", ex),
+      ...(status ? { "GET /api/v1/axis/status": status } : {}),
+      "POST /api/v1/axis/stream": reply,
+    });
     const user = userEvent.setup();
     renderAt("/units/PY-0.1/predict");
     const panel = await screen.findByRole("complementary", { name: "AXIS facilitator" });
@@ -983,6 +987,58 @@ describe("AXIS panel", () => {
 
     expect(await within(panel).findByText("What type?")).toBeInTheDocument();
     expect(within(panel).getByRole("link", { name: "Standard streams" })).toHaveAttribute("href", "https://docs.python.org/3/");
+  });
+
+  // SPEC-24 R11: the standing status line.
+  it.each([
+    ["not_loaded", "Course reference not loaded. AXIS can still talk with you, but its answers are not checked against the course."],
+    ["unavailable", "Course search is not working right now. AXIS answers are not checked against the course."],
+    ["mock", "Practice mode: AXIS replies are fixed examples, not checked against the course."],
+  ])("shows a status line when the course reference is %s", async (value, text) => {
+    await ask(() => sse([["done", { assistance_level: "none", cited_concepts: [] }]]), { course_reference: value });
+    const panel = await screen.findByRole("complementary", { name: "AXIS facilitator" });
+    expect(await within(panel).findByRole("status")).toHaveTextContent(text);
+  });
+
+  it("shows no status line when the course reference is ready", async () => {
+    const { panel } = await ask(() => sse([["done", { assistance_level: "none", cited_concepts: [] }]]), {
+      course_reference: "ready",
+    });
+    await within(panel).findByRole("group", { name: "Facilitation mode" });
+    expect(within(panel).queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("shows no status line when the status request fails", async () => {
+    const { panel } = await ask(() => sse([["done", { assistance_level: "none", cited_concepts: [] }]]));
+    expect(within(panel).queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  // SPEC-24 R12: the per-answer note.
+  it.each([
+    ["not_found", "No course source matched this question."],
+    ["no_index", "Course reference not loaded. This answer was not checked against the course."],
+    ["unavailable", "Course search unavailable. This answer was not checked against the course."],
+    ["something_new", "This answer was not checked against the course."],
+  ])("notes under a reply whose source state is %s", async (state, text) => {
+    const { panel } = await ask(() =>
+      sse([
+        ["token", { text: "What is the input?" }],
+        ["done", { assistance_level: "none", cited_concepts: [], source_state: state }],
+      ]),
+    );
+    expect(await within(panel).findByText("What is the input?")).toBeInTheDocument();
+    expect(await within(panel).findByText(text)).toBeInTheDocument();
+  });
+
+  it.each([["course"], [undefined]])("shows no note when the source state is %s", async (state) => {
+    const { panel } = await ask(() =>
+      sse([
+        ["token", { text: "What is the input?" }],
+        ["done", { assistance_level: "none", cited_concepts: [], ...(state ? { source_state: state } : {}) }],
+      ]),
+    );
+    expect(await within(panel).findByText("What is the input?")).toBeInTheDocument();
+    expect(within(panel).queryByText(/not checked against the course|No course source matched/)).not.toBeInTheDocument();
   });
 
   it("renders code in replies as code, not as raw markdown", async () => {

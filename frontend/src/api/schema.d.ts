@@ -73,6 +73,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/axis/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Axis Status
+         * @description Is the course reference loaded? One word, no path or version (SPEC-24 R10).
+         */
+        get: operations["axis_status_api_v1_axis_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/features": {
         parameters: {
             query?: never;
@@ -892,6 +912,8 @@ export interface components {
             cited_concepts?: string[];
             /** @default none */
             detected_assistance_level: components["schemas"]["AssistanceLevel"];
+            /** Source State */
+            source_state?: string | null;
         };
         /** AxisStreamRequest */
         AxisStreamRequest: {
@@ -2197,6 +2219,28 @@ export interface operations {
         };
     };
     health_check_api_v1_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    axis_status_api_v1_axis_status_get: {
         parameters: {
             query?: never;
             header?: never;

@@ -186,7 +186,7 @@ class OpenAICompatibleCompanion:
 
     def consult(self, query: AxisQuery) -> AxisResponse:
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)  # BudgetExceeded is never swallowed
 
@@ -216,7 +216,7 @@ class OpenAICompatibleCompanion:
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
         """Stream the model's reply. Returns (deltas, the grounding that decides the citations once the reply is done)."""
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
         return self._stream_deltas(query, sys_prompt, user_msg), grounding

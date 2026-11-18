@@ -1,5 +1,6 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { answerNote, fetchCourseReference, statusLine } from "./axisNotices";
 import { streamAxis, streamSafe, type SseEvent } from "./axisStream";
 import { Prose } from "./Prose";
 import { activityFor } from "./steps";
@@ -18,6 +19,7 @@ interface Message {
   role: "you" | "axis";
   text: string;
   citations: Citation[];
+  sourceState?: string;
   error?: string;
 }
 
@@ -38,7 +40,16 @@ export function AxisPanel({
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [busy, setBusy] = useState(false);
+  const [courseReference, setCourseReference] = useState<string | undefined>(undefined);
   const nextId = useRef(0);
+
+  useEffect(() => {
+    let live = true;
+    void fetchCourseReference().then((value) => live && setCourseReference(value));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   function update(id: number, change: (message: Message) => Message) {
     setMessages((current) => current.map((message) => (message.id === id ? change(message) : message)));
@@ -47,6 +58,10 @@ export function AxisPanel({
   function onEvent(id: number, { event, data }: SseEvent) {
     if (event === "token") update(id, (m) => ({ ...m, text: m.text + String(data.text) }));
     if (event === "citation") update(id, (m) => ({ ...m, citations: [...m.citations, data as unknown as Citation] }));
+    if (event === "done" && typeof data.source_state === "string") {
+      const state = data.source_state;
+      update(id, (m) => ({ ...m, sourceState: state }));
+    }
     if (event === "error") update(id, (m) => ({ ...m, error: String(data.message) }));
   }
 
@@ -104,6 +119,11 @@ export function AxisPanel({
           </div>
         )}
       </div>
+      {statusLine(courseReference) && (
+        <p className="axis-status small" role="status">
+          {statusLine(courseReference)}
+        </p>
+      )}
       <div className="axis-messages" aria-live="polite">
         {messages.length === 0 && <p className="small muted">Stuck? Ask about what you are doing here. AXIS can see this step and your code.</p>}
         {messages.map((message, index) => (
@@ -119,6 +139,9 @@ export function AxisPanel({
               <p className="error-note" role="alert">
                 {message.error}
               </p>
+            )}
+            {message.role === "axis" && answerNote(message.sourceState) && (
+              <p className="axis-source-note small muted">{answerNote(message.sourceState)}</p>
             )}
             {message.citations.length > 0 && (
               <div className="citations">
