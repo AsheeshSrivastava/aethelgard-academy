@@ -1,0 +1,225 @@
+SPEC-25 measurement on the six Gemini sets
+set_version 4ac0cd942b512228612ac701cac5e59218e0a2a26db1cc4adcbfdccae55d95b3
+index_version 121b0a31c0f680328a7fc98834247959b24e9e36c5e000e9687aadd8f6474c55  (1371 files, 13712 passages)
+date 2026-11-18; modes lms,L,HR; offline, no paid call; scores are rounded, no timings (R11)
+Metrics are over answerable questions only. K counts files for L/HR (one passage per file) and for lms (cap 1).
+
+Sync finished.
+  0 sources added, 0 replaced, 1371 sources unchanged, 0 removed
+  0 passages stored (0 reused an existing vector), 0 old passages removed
+  0 texts embedded in 0.0 seconds
+rag-core: embedder=jina-v2-base-en@322d4d7e2f35e84137961a65af894fda0385eb7a+f3ec4cf7de7e561007f27c9efc7148b0bd713f81; reranker=bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e; chunker=llamaindex/1500/6000
+
+====================================================================================================
+R5. BASELINE: the six Gemini sets (240 answerable, 60 out-of-scope)
+====================================================================================================
+[set_version=4ac0cd942b51 index_version=121b0a31c0f6 mode=lms date=2026-11-18]
+  ALL answerable             n=240  hit@1  28.3  hit@3  56.7  hit@5  67.5  MRR 0.433  nDCG@1/3/5 0.283/0.416/0.459  P@1/3/5  35.0/ 28.3/ 20.5 (n=40)
+    kind plain               n=60   hit@1  35.0  hit@3  68.3  hit@5  75.0  MRR 0.510  nDCG@1/3/5 0.350/0.529/0.552  P@1/3/5  40.0/ 26.7/ 24.0 (n=5)
+    kind error               n=60   hit@1  38.3  hit@3  71.7  hit@5  85.0  MRR 0.561  nDCG@1/3/5 0.383/0.523/0.576  P@1/3/5  31.6/ 29.8/ 22.1 (n=19)
+    kind paraphrase          n=60   hit@1  11.7  hit@3  28.3  hit@5  35.0  MRR 0.203  nDCG@1/3/5 0.117/0.206/0.232  P@1/3/5   0.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  28.3  hit@3  58.3  hit@5  75.0  MRR 0.458  nDCG@1/3/5 0.283/0.408/0.474  P@1/3/5  54.5/ 33.3/ 21.8 (n=11)
+    set fastapi-docs         n=40   hit@1  32.5  hit@3  62.5  hit@5  67.5  MRR 0.482  nDCG@1/3/5 0.325/0.468/0.496  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  30.0  hit@3  65.0  hit@5  72.5  MRR 0.458  nDCG@1/3/5 0.300/0.453/0.479  P@1/3/5  62.5/ 37.5/ 25.0 (n=8)
+    set pydantic-docs        n=40   hit@1  25.0  hit@3  57.5  hit@5  72.5  MRR 0.428  nDCG@1/3/5 0.250/0.413/0.466  P@1/3/5  18.2/ 18.2/ 18.2 (n=11)
+    set pytest-docs          n=40   hit@1  27.5  hit@3  47.5  hit@5  60.0  MRR 0.391  nDCG@1/3/5 0.275/0.353/0.404  P@1/3/5  50.0/ 25.0/ 15.0 (n=8)
+    set python-docs          n=40   hit@1  17.5  hit@3  47.5  hit@5  57.5  MRR 0.327  nDCG@1/3/5 0.175/0.339/0.379  P@1/3/5   0.0/ 44.4/ 26.7 (n=3)
+    set uv-docs              n=40   hit@1  37.5  hit@3  60.0  hit@5  75.0  MRR 0.513  nDCG@1/3/5 0.375/0.474/0.527  P@1/3/5  30.0/ 30.0/ 22.0 (n=10)
+  refusal: false-refusal   6.2% of 240 answerable; correct-refusal  43.3% of 60 out-of-scope
+
+[set_version=4ac0cd942b51 index_version=121b0a31c0f6 mode=L date=2026-11-18]
+  ALL answerable             n=240  hit@1  34.2  hit@3  64.2  hit@5  71.7  MRR 0.494  nDCG@1/3/5 0.342/0.489/0.521  P@1/3/5  45.0/ 32.5/ 23.5 (n=40)
+    kind plain               n=60   hit@1  41.7  hit@3  80.0  hit@5  81.7  MRR 0.593  nDCG@1/3/5 0.417/0.628/0.640  P@1/3/5  40.0/ 40.0/ 28.0 (n=5)
+    kind error               n=60   hit@1  46.7  hit@3  83.3  hit@5  91.7  MRR 0.658  nDCG@1/3/5 0.467/0.634/0.670  P@1/3/5  47.4/ 35.1/ 26.3 (n=19)
+    kind paraphrase          n=60   hit@1  15.0  hit@3  30.0  hit@5  38.3  MRR 0.239  nDCG@1/3/5 0.150/0.230/0.264  P@1/3/5  20.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  33.3  hit@3  63.3  hit@5  75.0  MRR 0.488  nDCG@1/3/5 0.333/0.463/0.512  P@1/3/5  54.5/ 33.3/ 23.6 (n=11)
+    set fastapi-docs         n=40   hit@1  30.0  hit@3  70.0  hit@5  75.0  MRR 0.499  nDCG@1/3/5 0.300/0.504/0.526  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  45.0  hit@3  67.5  hit@5  80.0  MRR 0.588  nDCG@1/3/5 0.450/0.550/0.616  P@1/3/5  62.5/ 45.8/ 32.5 (n=8)
+    set pydantic-docs        n=40   hit@1  35.0  hit@3  62.5  hit@5  70.0  MRR 0.497  nDCG@1/3/5 0.350/0.475/0.503  P@1/3/5  36.4/ 24.2/ 20.0 (n=11)
+    set pytest-docs          n=40   hit@1  40.0  hit@3  62.5  hit@5  72.5  MRR 0.517  nDCG@1/3/5 0.400/0.508/0.549  P@1/3/5  62.5/ 33.3/ 25.0 (n=8)
+    set python-docs          n=40   hit@1  17.5  hit@3  57.5  hit@5  62.5  MRR 0.358  nDCG@1/3/5 0.175/0.400/0.421  P@1/3/5   0.0/ 33.3/ 20.0 (n=3)
+    set uv-docs              n=40   hit@1  37.5  hit@3  65.0  hit@5  70.0  MRR 0.507  nDCG@1/3/5 0.375/0.497/0.513  P@1/3/5  40.0/ 30.0/ 20.0 (n=10)
+  refusal: not measured (no not_found rule in this mode until plan step 7); top-1 score of 60 no-answer questions: median 22.62
+
+[set_version=4ac0cd942b51 index_version=121b0a31c0f6 mode=HR date=2026-11-18]
+  ALL answerable             n=240  hit@1  46.7  hit@3  74.6  hit@5  85.4  MRR 0.613  nDCG@1/3/5 0.467/0.598/0.643  P@1/3/5  42.5/ 33.3/ 26.0 (n=40)
+    kind plain               n=60   hit@1  66.7  hit@3  88.3  hit@5  95.0  MRR 0.781  nDCG@1/3/5 0.667/0.776/0.805  P@1/3/5  60.0/ 33.3/ 28.0 (n=5)
+    kind error               n=60   hit@1  41.7  hit@3  81.7  hit@5  93.3  MRR 0.617  nDCG@1/3/5 0.417/0.599/0.645  P@1/3/5  42.1/ 33.3/ 27.4 (n=19)
+    kind paraphrase          n=60   hit@1  36.7  hit@3  65.0  hit@5  76.7  MRR 0.517  nDCG@1/3/5 0.367/0.517/0.567  P@1/3/5  40.0/ 26.7/ 24.0 (n=5)
+    kind pasted              n=60   hit@1  41.7  hit@3  63.3  hit@5  76.7  MRR 0.537  nDCG@1/3/5 0.417/0.499/0.555  P@1/3/5  36.4/ 36.4/ 23.6 (n=11)
+    set fastapi-docs         n=40   hit@1  45.0  hit@3  80.0  hit@5  87.5  MRR 0.619  nDCG@1/3/5 0.450/0.637/0.659  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  62.5  hit@3  87.5  hit@5  92.5  MRR 0.745  nDCG@1/3/5 0.625/0.736/0.762  P@1/3/5  62.5/ 41.7/ 27.5 (n=8)
+    set pydantic-docs        n=40   hit@1  42.5  hit@3  72.5  hit@5  82.5  MRR 0.590  nDCG@1/3/5 0.425/0.553/0.591  P@1/3/5  36.4/ 24.2/ 23.6 (n=11)
+    set pytest-docs          n=40   hit@1  40.0  hit@3  70.0  hit@5  85.0  MRR 0.561  nDCG@1/3/5 0.400/0.538/0.614  P@1/3/5  50.0/ 37.5/ 27.5 (n=8)
+    set python-docs          n=40   hit@1  55.0  hit@3  72.5  hit@5  82.5  MRR 0.638  nDCG@1/3/5 0.550/0.632/0.678  P@1/3/5  33.3/ 44.4/ 33.3 (n=3)
+    set uv-docs              n=40   hit@1  35.0  hit@3  65.0  hit@5  82.5  MRR 0.526  nDCG@1/3/5 0.350/0.491/0.553  P@1/3/5  30.0/ 30.0/ 24.0 (n=10)
+  refusal: not measured (no not_found rule in this mode until plan step 7); top-1 score of 60 no-answer questions: median -1.30
+
+====================================================================================================
+Old sets, same modes, for before/after (rag-core real-corpus sets; SPEC-20 fixture)
+====================================================================================================
+[old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=lms date=2026-11-18]
+  ALL answerable             n=101  hit@1  59.4  hit@3  75.2  hit@5  84.2  MRR 0.687  nDCG@1/3/5 0.594/0.644/0.679  P@1/3/5  66.7/ 39.3/ 25.6 (n=39)
+    kind old                 n=101  hit@1  59.4  hit@3  75.2  hit@5  84.2  MRR 0.687  nDCG@1/3/5 0.594/0.644/0.679  P@1/3/5  66.7/ 39.3/ 25.6 (n=39)
+    set python-docs-codex-questions.yaml n=24   hit@1  54.2  hit@3  70.8  hit@5  75.0  MRR 0.626  nDCG@1/3/5 0.542/0.570/0.577  P@1/3/5  68.8/ 31.2/ 20.0 (n=16)
+    set python-docs-gemini-questions.yaml n=20   hit@1  45.0  hit@3  65.0  hit@5  85.0  MRR 0.595  nDCG@1/3/5 0.450/0.572/0.646  P@1/3/5  50.0/ 22.2/ 20.0 (n=6)
+    set ruff-docs-questions.yaml n=30   hit@1  70.0  hit@3  90.0  hit@5  93.3  MRR 0.797  nDCG@1/3/5 0.700/0.746/0.767  P@1/3/5  69.2/ 56.4/ 35.4 (n=13)
+    set uv-docs-questions.yaml n=27   hit@1  63.0  hit@3  70.4  hit@5  81.5  MRR 0.686  nDCG@1/3/5 0.630/0.651/0.697  P@1/3/5  75.0/ 41.7/ 25.0 (n=4)
+  refusal: false-refusal   5.9% of 101 answerable; correct-refusal  25.3% of 237 out-of-scope
+
+[old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=L date=2026-11-18]
+  ALL answerable             n=101  hit@1  63.4  hit@3  79.2  hit@5  87.1  MRR 0.718  nDCG@1/3/5 0.634/0.661/0.699  P@1/3/5  71.8/ 37.6/ 25.1 (n=39)
+    kind old                 n=101  hit@1  63.4  hit@3  79.2  hit@5  87.1  MRR 0.718  nDCG@1/3/5 0.634/0.661/0.699  P@1/3/5  71.8/ 37.6/ 25.1 (n=39)
+    set python-docs-codex-questions.yaml n=24   hit@1  58.3  hit@3  70.8  hit@5  79.2  MRR 0.651  nDCG@1/3/5 0.583/0.560/0.604  P@1/3/5  68.8/ 35.4/ 22.5 (n=16)
+    set python-docs-gemini-questions.yaml n=20   hit@1  55.0  hit@3  60.0  hit@5  75.0  MRR 0.613  nDCG@1/3/5 0.550/0.562/0.627  P@1/3/5  50.0/ 16.7/ 13.3 (n=6)
+    set ruff-docs-questions.yaml n=30   hit@1  73.3  hit@3  90.0  hit@5  96.7  MRR 0.817  nDCG@1/3/5 0.733/0.724/0.763  P@1/3/5  84.6/ 46.2/ 32.3 (n=13)
+    set uv-docs-questions.yaml n=27   hit@1  63.0  hit@3  88.9  hit@5  92.6  MRR 0.748  nDCG@1/3/5 0.630/0.752/0.767  P@1/3/5  75.0/ 50.0/ 30.0 (n=4)
+  refusal: not measured (no not_found rule in this mode until plan step 7); top-1 score of 237 no-answer questions: median 25.57
+
+[old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=HR date=2026-11-18]
+  ALL answerable             n=101  hit@1  81.2  hit@3  90.1  hit@5  95.0  MRR 0.866  nDCG@1/3/5 0.812/0.815/0.844  P@1/3/5  87.2/ 51.3/ 32.8 (n=39)
+    kind old                 n=101  hit@1  81.2  hit@3  90.1  hit@5  95.0  MRR 0.866  nDCG@1/3/5 0.812/0.815/0.844  P@1/3/5  87.2/ 51.3/ 32.8 (n=39)
+    set python-docs-codex-questions.yaml n=24   hit@1  70.8  hit@3  87.5  hit@5  95.8  MRR 0.806  nDCG@1/3/5 0.708/0.725/0.791  P@1/3/5  81.2/ 45.8/ 31.2 (n=16)
+    set python-docs-gemini-questions.yaml n=20   hit@1  80.0  hit@3  85.0  hit@5  90.0  MRR 0.838  nDCG@1/3/5 0.800/0.808/0.830  P@1/3/5  83.3/ 38.9/ 23.3 (n=6)
+    set ruff-docs-questions.yaml n=30   hit@1  93.3  hit@3 100.0  hit@5 100.0  MRR 0.967  nDCG@1/3/5 0.933/0.908/0.915  P@1/3/5  92.3/ 64.1/ 40.0 (n=13)
+    set uv-docs-questions.yaml n=27   hit@1  77.8  hit@3  85.2  hit@5  92.6  MRR 0.830  nDCG@1/3/5 0.778/0.796/0.825  P@1/3/5 100.0/ 50.0/ 30.0 (n=4)
+  refusal: not measured (no not_found rule in this mode until plan step 7); top-1 score of 237 no-answer questions: median -2.06
+
+[SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=lms date=2026-11-18]
+  ALL answerable             n=41   hit@1  87.8  hit@3  95.1  hit@5  95.1  MRR 0.915  nDCG@1/3/5 0.878/0.924/0.924  P@1/3/5   -  /  -  /  -   (n=0)
+    kind plain               n=15   hit@1  86.7  hit@3  93.3  hit@5  93.3  MRR 0.900  nDCG@1/3/5 0.867/0.909/0.909  P@1/3/5   -  /  -  /  -   (n=0)
+    kind error               n=14   hit@1  92.9  hit@3 100.0  hit@5 100.0  MRR 0.964  nDCG@1/3/5 0.929/0.974/0.974  P@1/3/5   -  /  -  /  -   (n=0)
+    kind paraphrase          n=12   hit@1  83.3  hit@3  91.7  hit@5  91.7  MRR 0.875  nDCG@1/3/5 0.833/0.886/0.886  P@1/3/5   -  /  -  /  -   (n=0)
+  refusal: false-refusal   4.9% of 41 answerable; correct-refusal  88.9% of 9 out-of-scope
+
+  CI floor check: first_hit 36 (floor 36), top3 39 (floor 39) -> not below the floor
+
+[SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=L date=2026-11-18]
+  ALL answerable             n=41   hit@1  92.7  hit@3  97.6  hit@5  97.6  MRR 0.951  nDCG@1/3/5 0.927/0.958/0.958  P@1/3/5   -  /  -  /  -   (n=0)
+    kind plain               n=15   hit@1  93.3  hit@3 100.0  hit@5 100.0  MRR 0.967  nDCG@1/3/5 0.933/0.975/0.975  P@1/3/5   -  /  -  /  -   (n=0)
+    kind error               n=14   hit@1 100.0  hit@3 100.0  hit@5 100.0  MRR 1.000  nDCG@1/3/5 1.000/1.000/1.000  P@1/3/5   -  /  -  /  -   (n=0)
+    kind paraphrase          n=12   hit@1  83.3  hit@3  91.7  hit@5  91.7  MRR 0.875  nDCG@1/3/5 0.833/0.886/0.886  P@1/3/5   -  /  -  /  -   (n=0)
+  refusal: not measured (no not_found rule in this mode until plan step 7); top-1 score of 9 no-answer questions: median 5.44
+
+[SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=HR date=2026-11-18]
+  ALL answerable             n=41   hit@1 100.0  hit@3 100.0  hit@5 100.0  MRR 1.000  nDCG@1/3/5 1.000/1.000/1.000  P@1/3/5   -  /  -  /  -   (n=0)
+    kind plain               n=15   hit@1 100.0  hit@3 100.0  hit@5 100.0  MRR 1.000  nDCG@1/3/5 1.000/1.000/1.000  P@1/3/5   -  /  -  /  -   (n=0)
+    kind error               n=14   hit@1 100.0  hit@3 100.0  hit@5 100.0  MRR 1.000  nDCG@1/3/5 1.000/1.000/1.000  P@1/3/5   -  /  -  /  -   (n=0)
+    kind paraphrase          n=12   hit@1 100.0  hit@3 100.0  hit@5 100.0  MRR 1.000  nDCG@1/3/5 1.000/1.000/1.000  P@1/3/5   -  /  -  /  -   (n=0)
+  refusal: not measured (no not_found rule in this mode until plan step 7); top-1 score of 9 no-answer questions: median -7.09
+
+====================================================================================================
+R6. MISS ANALYSIS: answerable questions that miss at K=3, one label each (rule-based, fixed order)
+====================================================================================================
+  gemini/lms: 104 of 240 answerable questions miss at K=3 wording 87, vague chunk 0, multi-page 4, other 13
+
+  Label 'wording': 87 questions. 10 examples (fixed seed 25; labels are inferred by rule, not read by a human)
+   - [pytest-docs / paraphrase] my code uses python's logger to emit debug messages, how can my assertions check what was recorded?
+       expected ['how-to/logging']   got ['httpx-docs/logging.md', 'pytest-docs/how-to/assert.rst']
+   - [fastapi-docs / paraphrase] my user object has a hashed_password field that i want stripped out automatically before sending json
+       expected ['tutorial/response-model']   got ['httpx-docs/quickstart.md', 'fastapi-docs/release-notes.md']
+   - [pydantic-docs / error] my validator runs fine on creation, but mutating user.age = "bad" later doesn't raise an error
+       expected ['config', 'models']   got ['pydantic-docs/experimental.md', 'pydantic-docs/validators.md']
+   - [pytest-docs / plain] how do i create a temporary file in a test that cleans itself up?
+       expected ['how-to/tmp_path']   got ['pytest-docs/changelog.rst', 'pytest-docs/getting-started.rst']
+   - [uv-docs / paraphrase] how do i separate packages only needed for linting and testing from the ones shipped in production?
+       expected ['concepts/projects/dependencies']   got []
+   - [python-docs / error] why does my single-item tuple ('hello') act like a plain string instead of a tuple?
+       expected ['tutorial/datastructures']   got ['python-docs/tutorial/inputoutput.rst', 'pydantic-docs/performance.md']
+   - [fastapi-docs / paraphrase] how do i turn off /docs and /redoc in production while keeping them in local dev?
+       expected ['how-to/conditional-openapi']   got ['zed-docs/src/ai/agent-panel.md', 'fastapi-docs/deployment/docker.md']
+   - [pydantic-docs / paraphrase] i want my standard @dataclass classes to automatically check types at runtime without inheriting from BaseMode...
+       expected ['dataclasses']   got ['pydantic-docs/serialization.md', 'pydantic-docs/config.md']
+   - [fastapi-docs / paraphrase] my main.py has 30 endpoints now, how do i split routes into separate modules by feature?
+       expected ['tutorial/bigger-applications']   got ['fastapi-docs/tutorial/testing.md', 'prompt-engineering-guide/models/mistral-large.md']
+   - [python-docs / pasted] why is len() returning 3 instead of 1?? items = ("hat") print(len(items)) # 3 C:\Users\sam\shop\order.py:2 ite...
+       expected ['tutorial/datastructures']   got ['pydantic-docs/types.md', 'pydantic-docs/models.md']
+
+  Label 'vague chunk': 0 questions. 10 examples (fixed seed 25; labels are inferred by rule, not read by a human)
+
+  Label 'multi-page': 4 questions. 10 examples (fixed seed 25; labels are inferred by rule, not read by a human)
+   - [uv-docs / plain] how do i install packages using uv pip inside a virtual environment?
+       expected ['pip/packages', 'pip/environments']   got ['uv-docs/guides/integration/marimo.md', 'uv-docs/guides/integration/jupyter.md']
+   - [fastapi-docs / plain] how do i return a 404 error with a custom json message in fastapi?
+       expected ['tutorial/handling-errors']   got ['fastapi-docs/tutorial/frontend.md', 'fastapi-docs/advanced/additional-responses.md']
+   - [pydantic-docs / plain] how do i convert a pydantic model to a dictionary or json string?
+       expected ['serialization', 'json']   got ['pydantic-docs/models.md', 'fastapi-docs/tutorial/encoder.md']
+   - [fastapi-docs / paraphrase] how do i run multiple processes of my api in production so it handles more traffic?
+       expected ['deployment/server-workers']   got ['fastapi-docs/deployment/concepts.md', 'fastapi-docs/deployment/docker.md']
+
+  Label 'other': 13 questions. 10 examples (fixed seed 25; labels are inferred by rule, not read by a human)
+   - [python-docs / plain] how do i write a list comprehension with an if condition?
+       expected ['tutorial/datastructures']   got []
+   - [python-docs / plain] how do i format numbers to 2 decimal places inside an f-string?
+       expected ['tutorial/inputoutput']   got ['pytest-docs/how-to/doctest.rst', 'python-docs/tutorial/stdlib2.rst']
+   - [pytest-docs / plain] how do i check that my function raises a ValueError?
+       expected ['how-to/assert']   got []
+   - [pydantic-docs / plain] how do i validate arguments passed to a normal python function using type hints?
+       expected ['validation_decorator']   got ['fastapi-docs/python-types.md', 'python-docs/tutorial/controlflow.rst']
+   - [uv-docs / error] uv says my script is missing requests even though i installed it in my project venv
+       expected ['guides/scripts']   got ['uv-docs/index.md', 'uv-docs/guides/migration/pip-to-project.md']
+   - [python-docs / paraphrase] why do two modules importing each other fail partway through loading?
+       expected ['reference/import']   got ['llamaindex-docs/optimizing/custom_modules.md', 'llamaindex-docs/module_guides/loading/index.md']
+   - [pydantic-docs / error] pydantic raises ValidationError Extra inputs are not permitted when extra fields are in the json
+       expected ['models']   got ['fastapi-docs/tutorial/request-form-models.md', 'fastapi-docs/tutorial/header-param-models.md']
+   - [pydantic-docs / plain] how do i load environment variables and .env files into a settings class?
+       expected ['pydantic_settings']   got ['uv-docs/concepts/configuration-files.md', 'fastapi-docs/advanced/settings.md']
+   - [pytest-docs / plain] how do i run the same test with different inputs?
+       expected ['how-to/parametrize']   got ['dspy-docs/docs/learn/programming/language_models.md', 'huggingface-course/chapter2/5.mdx']
+   - [fastapi-docs / plain] how do i set a cookie on a fastapi response?
+       expected ['advanced/response-cookies']   got []
+
+  gemini/L: 86 of 240 answerable questions miss at K=3 wording 76, vague chunk 0, multi-page 2, other 8
+
+  gemini/HR: 61 of 240 answerable questions miss at K=3 wording 55, vague chunk 0, multi-page 1, other 5
+
+====================================================================================================
+R7. Passages kept per source file (lms keyword mode, SPEC-23 cleaned query, min 3 matched terms)
+   Hit@K = expected file among the top K passages. By-file@K = among the first K distinct files of the top 10 passages.
+   'chars' = mean characters of source text passed to the model for the top 3 passages after the SPEC-22 caps.
+
+   cap 1: Hit@1/3/5  28.3/ 56.7/ 67.5   by-file@1/3/5  28.3/ 56.7/ 67.5   distinct files in top 5 4.69   chars 2372   false-refusal   6.2  correct-refusal  43.3
+   cap 2: Hit@1/3/5  28.3/ 52.9/ 64.6   by-file@1/3/5  28.3/ 56.7/ 67.5   distinct files in top 5 3.84   chars 2359   false-refusal   6.2  correct-refusal  43.3
+   cap 3: Hit@1/3/5  28.3/ 52.9/ 64.6   by-file@1/3/5  28.3/ 56.7/ 67.5   distinct files in top 5 3.65   chars 2341   false-refusal   6.2  correct-refusal  43.3
+
+   Verdict (R9): best Hit@3 gain over cap 1 is -3.7 points (bar: at least +2.0 with refusals within 1 point). Bar not met on passage-level Hit@3; the default stays 1.
+   Note: cap 2 and 3 fill the top K with passages of the same file, so passage-level Hit@K can rise while the number of distinct files falls. By-file Hit@K is the fair comparison for 'does the learner see the right page'.
+
+====================================================================================================
+R9. Tuning sweeps. A shipped value changes only with a gain of at least 2 points on Hit@3 (or the gated number)
+    and no more than 1 point worse false-refusal and correct-refusal, on the Gemini sets AND the SPEC-20 fixture.
+    Reading of the rule used here: Hit@3 gain is judged on the Gemini sets; the fixture (41 questions) must not
+    drop in top3 (floor, R10) and both refusal rates must stay within 1 point on both data sets.
+
+    CI floor (floor.json): first_hit 36, top3 39 of 41
+
+(a) min_matched_terms (shipped 3 for the real corpus; the fixture uses 2)
+    min 2: Gemini Hit@3  59.2  false-refusal   0.0  correct-refusal   3.3  | fixture first 36/41 top3 39/41 false-refusal   4.9 correct-refusal  88.9 (8/9)
+    min 3: Gemini Hit@3  56.7  false-refusal   6.2  correct-refusal  43.3  | fixture first 30/41 top3 31/41 false-refusal  24.4 correct-refusal 100.0 (9/9)
+    min 4: Gemini Hit@3  49.6  false-refusal  18.8  correct-refusal  75.0  | fixture first 23/41 top3 23/41 false-refusal  43.9 correct-refusal 100.0 (9/9)
+    min 2 vs shipped 3: Hit@3 +2.5 pts, false-refusal -6.2 pts, correct-refusal -40.0 pts -> bar not met
+    min 4 vs shipped 3: Hit@3 -7.1 pts, false-refusal +12.5 pts, correct-refusal +31.7 pts -> bar not met
+
+(b) CITATION_MIN_RUN (shipped 4). Supplied text should be recognised as quoting the passage; answer text should not.
+    exact = 12 words copied from the top passage; edited = 20 words with every 6th dropped (runs of 5);
+    other = 12 words of a passage from a different file; echo = the learner's own question as the reply.
+    222 questions with a usable top passage (of 225 answered)
+    run 3: recall exact 100.0  recall edited 100.0  false-cite other-file text   2.3  false-cite echoed question  48.6
+    run 4: recall exact 100.0  recall edited 100.0  false-cite other-file text   0.5  false-cite echoed question  28.4
+    run 5: recall exact 100.0  recall edited  99.1  false-cite other-file text   0.0  false-cite echoed question  16.7
+    run 6: recall exact 100.0  recall edited  61.3  false-cite other-file text   0.0  false-cite echoed question  10.4
+    run 3 vs shipped 4: edited recall +0.0 pts, false-cite +1.8/+20.3 pts -> bar not met (gated number = recall of edited supplied text)
+    run 5 vs shipped 4: edited recall -0.9 pts, false-cite -0.5/-11.7 pts -> bar not met (gated number = recall of edited supplied text)
+    run 6 vs shipped 4: edited recall -38.7 pts, false-cite -0.5/-18.0 pts -> bar not met (gated number = recall of edited supplied text)
+
+(c) Character caps (shipped 1,200 per passage, 3,600 in total). The caps do not change which files are found, so Hit@K cannot
+    move. Gated number used here: share of the learner's cleaned query terms still present in the text the model gets.
+      800/2400 : term retention  64.7%  mean chars 1981  passages over the per-passage cap  57.9%  dropped by the total cap   0.0%
+     1200/3600 : term retention  67.5%  mean chars 2530  passages over the per-passage cap  32.6%  dropped by the total cap   0.0%
+     1600/4800 : term retention  68.0%  mean chars 2707  passages over the per-passage cap   0.0%  dropped by the total cap   0.0%
+     2000/6000 : term retention  68.0%  mean chars 2707  passages over the per-passage cap   0.0%  dropped by the total cap   0.0%
+    800/2400 vs shipped: term retention -2.8 pts, prompt size -22% -> bar not met
+    1600/4800 vs shipped: term retention +0.4 pts, prompt size +7% -> bar not met
+    2000/6000 vs shipped: term retention +0.4 pts, prompt size +7% -> bar not met
+
+Review sheet written: 2026-11-18-gemini-review-sheet.md

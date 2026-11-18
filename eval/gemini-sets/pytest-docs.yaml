@@ -1,0 +1,222 @@
+questions:
+- q: how do i run only one test function instead of the whole file?
+  kind: plain
+  expect: [how-to/usage]
+- q: how do i make pytest stop right after the first test fails?
+  kind: plain
+  expect: [how-to/failures]
+- q: how do i check that my function raises a ValueError?
+  kind: plain
+  expect: [how-to/assert]
+- q: where do i put shared fixtures so multiple test files can use them without importing?
+  kind: plain
+  expect: [how-to/fixtures]
+- q: how do i run the same test with different inputs?
+  kind: plain
+  expect: [how-to/parametrize]
+- q: how can i see print() statements when a test passes?
+  kind: plain
+  expect: [how-to/capture-stdout-stderr]
+- q: how do i skip a test if it only works on linux?
+  kind: plain
+  expect: [how-to/skipping]
+- q: how do i create a temporary file in a test that cleans itself up?
+  kind: plain
+  expect: [how-to/tmp_path]
+- q: how do i mock an environment variable in pytest?
+  kind: plain
+  expect: [how-to/monkeypatch]
+- q: what does exit code 5 mean in pytest?
+  kind: plain
+  expect: [reference/exit-codes]
+- q: pytest says fixture 'tmp_dir' not found, what did i do wrong?
+  kind: error
+  expect: [how-to/tmp_path]
+- q: i keep getting PytestUnknownMarkWarning for my custom slow tag, how do i fix it?
+  kind: error
+  expect: [how-to/mark, reference/reference]
+- q: pytest fails with ModuleNotFoundError for my app package even though python -m pytest works, why?
+  kind: error
+  expect: [how-to/usage, explanation/pythonpath]
+- q: pytest says Failed DID NOT RAISE ValueError even though my function returned None, why?
+  kind: error
+  expect: [how-to/assert, example/reportingdemo]
+- q: i marked a test with xfail and now it shows XPASS instead of failing the build, why?
+  kind: error
+  expect: [how-to/skipping]
+- q: pytest says collected 0 items when i run it on my folder even though i have test files inside
+  kind: error
+  expect: [how-to/usage, example/pythoncollection]
+- q: my test fails trying to read from stdin when my function calls input(), how do i allow it?
+  kind: error
+  expect: [how-to/capture-stdout-stderr]
+- q: pytest prints PytestUnraisableExceptionWarning at the end of my test run, what does that mean?
+  kind: error
+  expect: [how-to/failures, reference/reference]
+- q: my unittest.TestCase method gives TypeError missing 1 required positional argument when i pass a pytest fixture
+  kind: error
+  expect: [how-to/unittest]
+- q: pytest ignores my test class because it has an __init__ method, why?
+  kind: error
+  expect: [example/pythoncollection]
+- q: my test setup code runs again for every single test and it is slow
+  kind: paraphrase
+  expect: [how-to/fixtures]
+- q: is there a way to only execute the ones that broke last time without typing their names?
+  kind: paraphrase
+  expect: [how-to/cache]
+- q: pytest keeps printing deprecation notices from a library at the bottom of the output, how do i hide them?
+  kind: paraphrase
+  expect: [how-to/capture-warnings]
+- q: how do i temporarily replace a global dict or function in my code just for one test and restore it afterwards?
+  kind: paraphrase
+  expect: [how-to/monkeypatch]
+- q: i have 10 different input pairs and expected outputs, do i have to write 10 separate def lines?
+  kind: paraphrase
+  expect: [how-to/parametrize]
+- q: my code uses python's logger to emit debug messages, how can my assertions check what was recorded?
+  kind: paraphrase
+  expect: [how-to/logging]
+- q: i want to check 5 items in a loop inside one test and see all of the ones that fail instead of stopping at the first
+  kind: paraphrase
+  expect: [how-to/subtests]
+- q: where can i write a throwaway json on disk during a check so it doesn't pollute my repo?
+  kind: paraphrase
+  expect: [how-to/tmp_path]
+- q: one of my checks passes on my laptop and randomly breaks in CI every few runs, what does pytest offer to debug that?
+  kind: paraphrase
+  expect: [explanation/flaky]
+- q: where do i save default command flags in my project repo so i don't have to pass them every time?
+  kind: paraphrase
+  expect: [reference/customize, example/simple]
+- q: |
+    why is this failing??
+    E       fixture 'tmp_dir' not found
+    C:\Users\sam\shop\tests\test_export.py:8
+    def test_write_csv(tmp_dir):
+        out = tmp_dir / "items.csv"
+        out.write_text("id,name\n1,hat\n")
+        assert out.exists()
+  kind: pasted
+  expect: [how-to/tmp_path]
+- q: |
+    why doesn't this pass??
+        def test_bad_port():
+            with pytest.raises(RuntimeError) as excinfo:
+                raise NotImplementedError("missing")
+    >       assert excinfo.type is RuntimeError
+    E       AssertionError: assert <class 'NotImplementedError'> is RuntimeError
+    C:\Users\sam\shop\tests\test_config.py:14: AssertionError
+  kind: pasted
+  expect: [how-to/assert]
+- q: |
+    why does this fail when it clearly logged hello??
+    >       assert "hello" in caplog.text
+    E       AssertionError: assert 'hello' in ''
+    C:\Users\sam\shop\tests\test_audit.py:11: AssertionError
+    def test_audit(caplog):
+        logging.getLogger("shop").info("hello")
+        assert "hello" in caplog.text
+  kind: pasted
+  expect: [how-to/logging]
+- q: |
+    why is pytest complaining about my test method??
+    E   TypeError: TestCart.test_save() missing 1 required positional argument: 'tmp_path'
+    C:\Users\sam\shop\tests\test_cart.py:9: TypeError
+    class TestCart(unittest.TestCase):
+        def test_save(self, tmp_path):
+            p = tmp_path / "cart.json"
+            assert p.parent.exists()
+  kind: pasted
+  expect: [how-to/unittest]
+- q: |
+    why did this fail when my function returned False??
+        def test_zero():
+    >       with pytest.raises(ValueError):
+                parse_qty("0")
+    E       Failed: DID NOT RAISE <class 'ValueError'>
+    C:\Users\sam\shop\tests\test_orders.py:6: Failed
+    def parse_qty(raw):
+        return int(raw) > 0
+  kind: pasted
+  expect: [how-to/assert, example/reportingdemo]
+- q: |
+    why is this crashing in pytest??
+    >       name = input("enter name: ")
+    E       OSError: pytest: reading from stdin while output is captured! Consider using -s.
+    C:\Users\sam\shop\tests\test_cli.py:5: OSError
+    def test_prompt():
+        name = input("enter name: ")
+        assert name == "sam"
+  kind: pasted
+  expect: [how-to/capture-stdout-stderr]
+- q: |
+    why does it say not found when i just want to tag slow tests??
+    ERROR: 'slow' not found in `markers` configuration option
+    C:\Users\sam\shop\tests\test_sync.py:3
+    @pytest.mark.slow
+    def test_full_sync():
+        assert run_sync() is True
+  kind: pasted
+  expect: [how-to/mark]
+- q: |
+    why did this fail if the assertion passed??
+    FAILED C:\Users\sam\shop\tests\test_auth.py::test_login - [XPASS(strict)]
+    @pytest.mark.xfail(strict=True)
+    def test_login():
+        assert 1 + 1 == 2
+  kind: pasted
+  expect: [how-to/skipping]
+- q: |
+    why can't test_orders see db when it works in test_users??
+    E       fixture 'db' not found
+    C:\Users\sam\shop\tests\test_orders.py:4
+    def test_orders(db):
+        assert db.count() == 0
+  kind: pasted
+  expect: [how-to/fixtures]
+- q: |
+    why does pytest fail to import my own package??
+    ImportError while importing test module 'C:\Users\sam\shop\tests\test_pricing.py'.
+    tests\test_pricing.py:1: in <module>
+        from shop.pricing import total
+    E   ModuleNotFoundError: No module named 'shop'
+  kind: pasted
+  expect: [how-to/usage, explanation/goodpractices, explanation/pythonpath]
+out_of_scope:
+- q: how do i get a line-by-line code coverage percentage report when i run pytest?
+  kind: neighbouring
+  why: pytest-docs does not document pytest-cov or coverage.py configuration and reports
+- q: how do i run my pytest suite in parallel across multiple cpu cores?
+  kind: neighbouring
+  why: pytest-docs mentions pytest-xdist only as a third-party plugin and does not explain parallel execution
+- q: how do i test async def functions with pytest?
+  kind: neighbouring
+  why: pytest-docs does not cover pytest-asyncio or async test execution
+- q: how do i use unittest.mock.patch with pytest?
+  kind: neighbouring
+  why: pytest-docs covers monkeypatch rather than unittest.mock or pytest-mock
+- q: how do i mock a module with jest.mock in my react tests?
+  kind: other-tool
+  why: pytest-docs is for Python pytest, not JavaScript Jest
+- q: how do i run only one test method in junit 5 with maven?
+  kind: other-tool
+  why: pytest-docs is for Python pytest, not Java JUnit or Maven
+- q: how do i write table-driven tests in go using t.Run?
+  kind: other-tool
+  why: pytest-docs is for Python pytest, not Go testing
+- q: should i put unit tests or integration tests first on my backend engineering resume?
+  kind: general
+  why: pytest-docs does not give career or resume advice
+- q: what is the difference between a unit test, an integration test, and an end-to-end test?
+  kind: general
+  why: pytest-docs does not teach general software testing taxonomy
+- q: |
+    why is this failing??
+    C:\Users\sam\shop\shop\pricing.py:4: in apply_discount
+        return apply_discount(price - 1)
+    E   RecursionError: maximum recursion depth exceeded
+    def apply_discount(price):
+        return apply_discount(price - 1)
+  kind: general
+  why: the failure is an infinite recursion bug in the user's Python code, not a pytest behavior explained in the docs

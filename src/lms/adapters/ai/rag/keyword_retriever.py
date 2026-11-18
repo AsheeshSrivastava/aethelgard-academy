@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 # SPEC-23 R7. Tuned on the real corpus (1,371 sources) on 2026-11-16, question set gemini-6x50
 # (docs/measurements/2026-11-16-not-found-rules.txt). The app reads LMS_MIN_MATCHED_TERMS (startup.py).
 DEFAULT_MIN_MATCHED_TERMS = 3
+# SPEC-25 R7: how many passages of one source file may come back. 1 is today's behaviour.
+DEFAULT_PASSAGES_PER_SOURCE = 1
 SOURCES_FILE = "sources.jsonl"
 PASSAGES_FILE = "passages.jsonl"
 
@@ -84,8 +86,12 @@ class KeywordRetriever(IRetriever):
         manifest: Optional[IndexManifest],
         no_index_reason: str = "",
         min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS,
+        passages_per_source: int = DEFAULT_PASSAGES_PER_SOURCE,
     ) -> None:
+        if passages_per_source < 1:
+            raise ValueError("passages_per_source must be at least 1")
         self.min_matched_terms = min_matched_terms
+        self.passages_per_source = passages_per_source
         self._engine = engine
         self._manifest = manifest
         self._no_index_reason = no_index_reason
@@ -94,33 +100,39 @@ class KeywordRetriever(IRetriever):
 
     @classmethod
     def from_index_dir(
-        cls, index_dir: Path | str, min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS
+        cls,
+        index_dir: Path | str,
+        min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS,
+        passages_per_source: int = DEFAULT_PASSAGES_PER_SOURCE,
     ) -> "KeywordRetriever":
         """Never raises: a missing or unreadable folder gives an adapter that answers NO_INDEX (R1, R7)."""
         folder = Path(index_dir)
         if not (folder / PASSAGES_FILE).exists() or not (folder / SOURCES_FILE).exists():
-            return cls(None, None, f"{folder} has no index files", min_matched_terms)
+            return cls(None, None, f"{folder} has no index files", min_matched_terms, passages_per_source)
         try:
             manifest = read_manifest(folder)
             engine = HybridRerankedRetriever.load(folder)
         except Exception as exc:  # corrupt JSON, missing key, unreadable file
-            return cls(None, None, f"{folder} could not be read ({type(exc).__name__})", min_matched_terms)
+            return cls(None, None, f"{folder} could not be read ({type(exc).__name__})", min_matched_terms, passages_per_source)
         if not engine.passages:
-            return cls(None, None, f"{folder} holds no passages", min_matched_terms)
-        return cls(engine, manifest, "", min_matched_terms)
+            return cls(None, None, f"{folder} holds no passages", min_matched_terms, passages_per_source)
+        return cls(engine, manifest, "", min_matched_terms, passages_per_source)
 
     @classmethod
     def from_hybrid(
-        cls, engine: HybridRerankedRetriever, min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS
+        cls,
+        engine: HybridRerankedRetriever,
+        min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS,
+        passages_per_source: int = DEFAULT_PASSAGES_PER_SOURCE,
     ) -> "KeywordRetriever":
         """Wrap an in-memory engine (the SPEC-20 fixture set, or a test double)."""
         if not engine.passages:
-            return cls(None, None, "the engine holds no passages", min_matched_terms)
+            return cls(None, None, "the engine holds no passages", min_matched_terms, passages_per_source)
         records = [
             SourceRecord(s.source_id, s.licence, s.licence_basis, s.raw_sha256) for s in engine.sources.values()
         ]
         manifest = _manifest_from_records(records, [s.loader_version for s in engine.sources.values()], "in-memory")
-        return cls(engine, manifest, "", min_matched_terms)
+        return cls(engine, manifest, "", min_matched_terms, passages_per_source)
 
     # --- port -----------------------------------------------------------------------------------
 
@@ -163,7 +175,10 @@ class KeywordRetriever(IRetriever):
         k = clamp_top_k(top_k)
         prefixes = tuple(p for p in source_prefixes if p)
         try:
-            hits, total = self._engine.keyword_search(words)
+            if self.passages_per_source == 1:
+                hits, total = self._engine.keyword_search(words)  # exactly today's call
+            else:
+                hits, total = self._engine.keyword_search(words, per_source=self.passages_per_source)
         except Exception as exc:  # an adapter fault is a status, not a crash
             logger.warning("Keyword retrieval failed: %s", type(exc).__name__)
             return self._result(RetrievalStatus.UNAVAILABLE, message=f"adapter fault ({type(exc).__name__})")

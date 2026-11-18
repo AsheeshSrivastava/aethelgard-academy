@@ -157,26 +157,39 @@ class HybridRerankedRetriever:
 
         return deduped
 
-    def keyword_search(self, query: str) -> Tuple[List[KeywordHit], int]:
-        """BM25 alone: the best passage of every matching source, best first, and the number of distinct query terms.
+    def keyword_search(self, query: str, per_source: int = 1) -> Tuple[List[KeywordHit], int]:
+        """BM25 alone: the best passage(s) of every matching source, best first, and the number of distinct query terms.
 
+        `per_source` is how many passages of one source may come back (SPEC-25 R7); 1 is the shipped value
+        and gives exactly the output this method had before the setting existed.
         No word-overlap list, no fusion, no bonus. Ties are ordered by source, then position (SPEC-21 R3).
         `query` is expected to be cleaned already (core.query.clean_query).
         """
+        if per_source < 1:
+            raise ValueError("per_source must be at least 1")
         terms = sorted(set(self.bm25._tokenize(query)))
         if not terms or not self.passages:
             return [], len(terms)
-        best: Dict[str, Tuple[float, str]] = {}
+        by_source: Dict[str, List[Tuple[float, str]]] = {}
         for pid, score in self.bm25.search(query, top_k=max(len(self.passages), 1)):
             passage = self.passages.get(pid)
             if passage is None:
                 continue
-            if passage.source_id not in best or score > best[passage.source_id][0]:
-                best[passage.source_id] = (score, pid)
+            by_source.setdefault(passage.source_id, []).append((score, pid))
         hits = []
-        for score, pid in best.values():
-            matched = sum(1 for t in terms if pid in self.bm25.inverted_index.get(t, ()))
-            hits.append(KeywordHit(self.passages[pid], score, matched))
+        for scored in by_source.values():
+            if per_source == 1:
+                # first of the highest score, as before (a later equal score never replaced an earlier one)
+                best = scored[0]
+                for item in scored[1:]:
+                    if item[0] > best[0]:
+                        best = item
+                keep = [best]
+            else:
+                keep = sorted(scored, key=lambda x: (-x[0], self.passages[x[1]].start))[:per_source]
+            for score, pid in keep:
+                matched = sum(1 for t in terms if pid in self.bm25.inverted_index.get(t, ()))
+                hits.append(KeywordHit(self.passages[pid], score, matched))
         hits.sort(key=lambda h: (-h.score, h.passage.source_id, h.passage.start))
         return hits, len(terms)
 

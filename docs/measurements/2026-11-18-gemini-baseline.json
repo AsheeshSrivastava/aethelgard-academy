@@ -1,0 +1,1206 @@
+{
+ "char_caps": {
+  "1200/3600": {
+   "mean_chars": 2530.4844,
+   "passages_cut_share": 0.3259,
+   "passages_dropped_share": 0.0,
+   "term_retention": 0.6753
+  },
+  "1600/4800": {
+   "mean_chars": 2707.2356,
+   "passages_cut_share": 0.0,
+   "passages_dropped_share": 0.0,
+   "term_retention": 0.6796
+  },
+  "2000/6000": {
+   "mean_chars": 2707.2356,
+   "passages_cut_share": 0.0,
+   "passages_dropped_share": 0.0,
+   "term_retention": 0.6796
+  },
+  "800/2400": {
+   "mean_chars": 1981.4533,
+   "passages_cut_share": 0.5793,
+   "passages_dropped_share": 0.0,
+   "term_retention": 0.6469
+  }
+ },
+ "citation_min_run": {
+  "3": {
+   "false_echo": 0.4865,
+   "false_other": 0.0225,
+   "recall_edited": 1.0,
+   "recall_exact": 1.0
+  },
+  "4": {
+   "false_echo": 0.2838,
+   "false_other": 0.0045,
+   "recall_edited": 1.0,
+   "recall_exact": 1.0
+  },
+  "5": {
+   "false_echo": 0.1667,
+   "false_other": 0.0,
+   "recall_edited": 0.991,
+   "recall_exact": 1.0
+  },
+  "6": {
+   "false_echo": 0.1036,
+   "false_other": 0.0,
+   "recall_edited": 0.6126,
+   "recall_exact": 1.0
+  }
+ },
+ "date": "2026-11-18",
+ "fixture/HR": {
+  "metrics": {
+   "by_kind": {
+    "error": {
+     "hit@1": 1.0,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 1.0,
+     "n": 14,
+     "ndcg@1": 1.0,
+     "ndcg@3": 1.0,
+     "ndcg@5": 1.0,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "paraphrase": {
+     "hit@1": 1.0,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 1.0,
+     "n": 12,
+     "ndcg@1": 1.0,
+     "ndcg@3": 1.0,
+     "ndcg@5": 1.0,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "plain": {
+     "hit@1": 1.0,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 1.0,
+     "n": 15,
+     "ndcg@1": 1.0,
+     "ndcg@3": 1.0,
+     "ndcg@5": 1.0,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    }
+   },
+   "by_set": {
+    "spec20-fixture": {
+     "hit@1": 1.0,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 1.0,
+     "n": 41,
+     "ndcg@1": 1.0,
+     "ndcg@3": 1.0,
+     "ndcg@5": 1.0,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    }
+   },
+   "overall": {
+    "hit@1": 1.0,
+    "hit@3": 1.0,
+    "hit@5": 1.0,
+    "mrr": 1.0,
+    "n": 41,
+    "ndcg@1": 1.0,
+    "ndcg@3": 1.0,
+    "ndcg@5": 1.0,
+    "p@1": null,
+    "p@3": null,
+    "p@5": null,
+    "p_n": 0
+   }
+  },
+  "refusal": null,
+  "stamp": "SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=HR date=2026-11-18"
+ },
+ "fixture/L": {
+  "metrics": {
+   "by_kind": {
+    "error": {
+     "hit@1": 1.0,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 1.0,
+     "n": 14,
+     "ndcg@1": 1.0,
+     "ndcg@3": 1.0,
+     "ndcg@5": 1.0,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "paraphrase": {
+     "hit@1": 0.8333,
+     "hit@3": 0.9167,
+     "hit@5": 0.9167,
+     "mrr": 0.875,
+     "n": 12,
+     "ndcg@1": 0.8333,
+     "ndcg@3": 0.8859,
+     "ndcg@5": 0.8859,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "plain": {
+     "hit@1": 0.9333,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 0.9667,
+     "n": 15,
+     "ndcg@1": 0.9333,
+     "ndcg@3": 0.9754,
+     "ndcg@5": 0.9754,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    }
+   },
+   "by_set": {
+    "spec20-fixture": {
+     "hit@1": 0.9268,
+     "hit@3": 0.9756,
+     "hit@5": 0.9756,
+     "mrr": 0.9512,
+     "n": 41,
+     "ndcg@1": 0.9268,
+     "ndcg@3": 0.9576,
+     "ndcg@5": 0.9576,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    }
+   },
+   "overall": {
+    "hit@1": 0.9268,
+    "hit@3": 0.9756,
+    "hit@5": 0.9756,
+    "mrr": 0.9512,
+    "n": 41,
+    "ndcg@1": 0.9268,
+    "ndcg@3": 0.9576,
+    "ndcg@5": 0.9576,
+    "p@1": null,
+    "p@3": null,
+    "p@5": null,
+    "p_n": 0
+   }
+  },
+  "refusal": null,
+  "stamp": "SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=L date=2026-11-18"
+ },
+ "fixture/lms": {
+  "metrics": {
+   "by_kind": {
+    "error": {
+     "hit@1": 0.9286,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 0.9643,
+     "n": 14,
+     "ndcg@1": 0.9286,
+     "ndcg@3": 0.9736,
+     "ndcg@5": 0.9736,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "paraphrase": {
+     "hit@1": 0.8333,
+     "hit@3": 0.9167,
+     "hit@5": 0.9167,
+     "mrr": 0.875,
+     "n": 12,
+     "ndcg@1": 0.8333,
+     "ndcg@3": 0.8859,
+     "ndcg@5": 0.8859,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "plain": {
+     "hit@1": 0.8667,
+     "hit@3": 0.9333,
+     "hit@5": 0.9333,
+     "mrr": 0.9,
+     "n": 15,
+     "ndcg@1": 0.8667,
+     "ndcg@3": 0.9087,
+     "ndcg@5": 0.9087,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    }
+   },
+   "by_set": {
+    "spec20-fixture": {
+     "hit@1": 0.878,
+     "hit@3": 0.9512,
+     "hit@5": 0.9512,
+     "mrr": 0.9146,
+     "n": 41,
+     "ndcg@1": 0.878,
+     "ndcg@3": 0.9242,
+     "ndcg@5": 0.9242,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    }
+   },
+   "overall": {
+    "hit@1": 0.878,
+    "hit@3": 0.9512,
+    "hit@5": 0.9512,
+    "mrr": 0.9146,
+    "n": 41,
+    "ndcg@1": 0.878,
+    "ndcg@3": 0.9242,
+    "ndcg@5": 0.9242,
+    "p@1": null,
+    "p@3": null,
+    "p@5": null,
+    "p_n": 0
+   }
+  },
+  "refusal": {
+   "answerable_n": 41,
+   "correct_refusal": 0.8889,
+   "false_refusal": 0.0488,
+   "out_of_scope_n": 9
+  },
+  "stamp": "SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=lms date=2026-11-18"
+ },
+ "gemini/HR": {
+  "metrics": {
+   "by_kind": {
+    "error": {
+     "hit@1": 0.4167,
+     "hit@3": 0.8167,
+     "hit@5": 0.9333,
+     "mrr": 0.6175,
+     "n": 60,
+     "ndcg@1": 0.4167,
+     "ndcg@3": 0.5993,
+     "ndcg@5": 0.6445,
+     "p@1": 0.4211,
+     "p@3": 0.3333,
+     "p@5": 0.2737,
+     "p_n": 19
+    },
+    "paraphrase": {
+     "hit@1": 0.3667,
+     "hit@3": 0.65,
+     "hit@5": 0.7667,
+     "mrr": 0.5172,
+     "n": 60,
+     "ndcg@1": 0.3667,
+     "ndcg@3": 0.5168,
+     "ndcg@5": 0.5669,
+     "p@1": 0.4,
+     "p@3": 0.2667,
+     "p@5": 0.24,
+     "p_n": 5
+    },
+    "pasted": {
+     "hit@1": 0.4167,
+     "hit@3": 0.6333,
+     "hit@5": 0.7667,
+     "mrr": 0.5375,
+     "n": 60,
+     "ndcg@1": 0.4167,
+     "ndcg@3": 0.4993,
+     "ndcg@5": 0.555,
+     "p@1": 0.3636,
+     "p@3": 0.3636,
+     "p@5": 0.2364,
+     "p_n": 11
+    },
+    "plain": {
+     "hit@1": 0.6667,
+     "hit@3": 0.8833,
+     "hit@5": 0.95,
+     "mrr": 0.7806,
+     "n": 60,
+     "ndcg@1": 0.6667,
+     "ndcg@3": 0.7763,
+     "ndcg@5": 0.8054,
+     "p@1": 0.6,
+     "p@3": 0.3333,
+     "p@5": 0.28,
+     "p_n": 5
+    }
+   },
+   "by_set": {
+    "fastapi-docs": {
+     "hit@1": 0.45,
+     "hit@3": 0.8,
+     "hit@5": 0.875,
+     "mrr": 0.6192,
+     "n": 40,
+     "ndcg@1": 0.45,
+     "ndcg@3": 0.6374,
+     "ndcg@5": 0.6586,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "httpx-docs": {
+     "hit@1": 0.625,
+     "hit@3": 0.875,
+     "hit@5": 0.925,
+     "mrr": 0.7446,
+     "n": 40,
+     "ndcg@1": 0.625,
+     "ndcg@3": 0.7361,
+     "ndcg@5": 0.7625,
+     "p@1": 0.625,
+     "p@3": 0.4167,
+     "p@5": 0.275,
+     "p_n": 8
+    },
+    "pydantic-docs": {
+     "hit@1": 0.425,
+     "hit@3": 0.725,
+     "hit@5": 0.825,
+     "mrr": 0.5904,
+     "n": 40,
+     "ndcg@1": 0.425,
+     "ndcg@3": 0.5525,
+     "ndcg@5": 0.591,
+     "p@1": 0.3636,
+     "p@3": 0.2424,
+     "p@5": 0.2364,
+     "p_n": 11
+    },
+    "pytest-docs": {
+     "hit@1": 0.4,
+     "hit@3": 0.7,
+     "hit@5": 0.85,
+     "mrr": 0.5613,
+     "n": 40,
+     "ndcg@1": 0.4,
+     "ndcg@3": 0.5377,
+     "ndcg@5": 0.6144,
+     "p@1": 0.5,
+     "p@3": 0.375,
+     "p@5": 0.275,
+     "p_n": 8
+    },
+    "python-docs": {
+     "hit@1": 0.55,
+     "hit@3": 0.725,
+     "hit@5": 0.825,
+     "mrr": 0.6379,
+     "n": 40,
+     "ndcg@1": 0.55,
+     "ndcg@3": 0.6324,
+     "ndcg@5": 0.6781,
+     "p@1": 0.3333,
+     "p@3": 0.4444,
+     "p@5": 0.3333,
+     "p_n": 3
+    },
+    "uv-docs": {
+     "hit@1": 0.35,
+     "hit@3": 0.65,
+     "hit@5": 0.825,
+     "mrr": 0.5258,
+     "n": 40,
+     "ndcg@1": 0.35,
+     "ndcg@3": 0.4914,
+     "ndcg@5": 0.5531,
+     "p@1": 0.3,
+     "p@3": 0.3,
+     "p@5": 0.24,
+     "p_n": 10
+    }
+   },
+   "overall": {
+    "hit@1": 0.4667,
+    "hit@3": 0.7458,
+    "hit@5": 0.8542,
+    "mrr": 0.6132,
+    "n": 240,
+    "ndcg@1": 0.4667,
+    "ndcg@3": 0.5979,
+    "ndcg@5": 0.6429,
+    "p@1": 0.425,
+    "p@3": 0.3333,
+    "p@5": 0.26,
+    "p_n": 40
+   }
+  },
+  "refusal": null,
+  "stamp": "set_version=4ac0cd942b51 index_version=121b0a31c0f6 mode=HR date=2026-11-18"
+ },
+ "gemini/L": {
+  "metrics": {
+   "by_kind": {
+    "error": {
+     "hit@1": 0.4667,
+     "hit@3": 0.8333,
+     "hit@5": 0.9167,
+     "mrr": 0.6581,
+     "n": 60,
+     "ndcg@1": 0.4667,
+     "ndcg@3": 0.6344,
+     "ndcg@5": 0.6696,
+     "p@1": 0.4737,
+     "p@3": 0.3509,
+     "p@5": 0.2632,
+     "p_n": 19
+    },
+    "paraphrase": {
+     "hit@1": 0.15,
+     "hit@3": 0.3,
+     "hit@5": 0.3833,
+     "mrr": 0.2386,
+     "n": 60,
+     "ndcg@1": 0.15,
+     "ndcg@3": 0.2298,
+     "ndcg@5": 0.2642,
+     "p@1": 0.2,
+     "p@3": 0.1333,
+     "p@5": 0.08,
+     "p_n": 5
+    },
+    "pasted": {
+     "hit@1": 0.3333,
+     "hit@3": 0.6333,
+     "hit@5": 0.75,
+     "mrr": 0.4878,
+     "n": 60,
+     "ndcg@1": 0.3333,
+     "ndcg@3": 0.4634,
+     "ndcg@5": 0.512,
+     "p@1": 0.5455,
+     "p@3": 0.3333,
+     "p@5": 0.2364,
+     "p_n": 11
+    },
+    "plain": {
+     "hit@1": 0.4167,
+     "hit@3": 0.8,
+     "hit@5": 0.8167,
+     "mrr": 0.5931,
+     "n": 60,
+     "ndcg@1": 0.4167,
+     "ndcg@3": 0.6282,
+     "ndcg@5": 0.6398,
+     "p@1": 0.4,
+     "p@3": 0.4,
+     "p@5": 0.28,
+     "p_n": 5
+    }
+   },
+   "by_set": {
+    "fastapi-docs": {
+     "hit@1": 0.3,
+     "hit@3": 0.7,
+     "hit@5": 0.75,
+     "mrr": 0.4987,
+     "n": 40,
+     "ndcg@1": 0.3,
+     "ndcg@3": 0.5039,
+     "ndcg@5": 0.5259,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "httpx-docs": {
+     "hit@1": 0.45,
+     "hit@3": 0.675,
+     "hit@5": 0.8,
+     "mrr": 0.5883,
+     "n": 40,
+     "ndcg@1": 0.45,
+     "ndcg@3": 0.5503,
+     "ndcg@5": 0.6156,
+     "p@1": 0.625,
+     "p@3": 0.4583,
+     "p@5": 0.325,
+     "p_n": 8
+    },
+    "pydantic-docs": {
+     "hit@1": 0.35,
+     "hit@3": 0.625,
+     "hit@5": 0.7,
+     "mrr": 0.4967,
+     "n": 40,
+     "ndcg@1": 0.35,
+     "ndcg@3": 0.4751,
+     "ndcg@5": 0.5034,
+     "p@1": 0.3636,
+     "p@3": 0.2424,
+     "p@5": 0.2,
+     "p_n": 11
+    },
+    "pytest-docs": {
+     "hit@1": 0.4,
+     "hit@3": 0.625,
+     "hit@5": 0.725,
+     "mrr": 0.5171,
+     "n": 40,
+     "ndcg@1": 0.4,
+     "ndcg@3": 0.5075,
+     "ndcg@5": 0.5488,
+     "p@1": 0.625,
+     "p@3": 0.3333,
+     "p@5": 0.25,
+     "p_n": 8
+    },
+    "python-docs": {
+     "hit@1": 0.175,
+     "hit@3": 0.575,
+     "hit@5": 0.625,
+     "mrr": 0.3583,
+     "n": 40,
+     "ndcg@1": 0.175,
+     "ndcg@3": 0.3999,
+     "ndcg@5": 0.4215,
+     "p@1": 0.0,
+     "p@3": 0.3333,
+     "p@5": 0.2,
+     "p_n": 3
+    },
+    "uv-docs": {
+     "hit@1": 0.375,
+     "hit@3": 0.65,
+     "hit@5": 0.7,
+     "mrr": 0.5071,
+     "n": 40,
+     "ndcg@1": 0.375,
+     "ndcg@3": 0.497,
+     "ndcg@5": 0.5133,
+     "p@1": 0.4,
+     "p@3": 0.3,
+     "p@5": 0.2,
+     "p_n": 10
+    }
+   },
+   "overall": {
+    "hit@1": 0.3417,
+    "hit@3": 0.6417,
+    "hit@5": 0.7167,
+    "mrr": 0.4944,
+    "n": 240,
+    "ndcg@1": 0.3417,
+    "ndcg@3": 0.489,
+    "ndcg@5": 0.5214,
+    "p@1": 0.45,
+    "p@3": 0.325,
+    "p@5": 0.235,
+    "p_n": 40
+   }
+  },
+  "refusal": null,
+  "stamp": "set_version=4ac0cd942b51 index_version=121b0a31c0f6 mode=L date=2026-11-18"
+ },
+ "gemini/lms": {
+  "metrics": {
+   "by_kind": {
+    "error": {
+     "hit@1": 0.3833,
+     "hit@3": 0.7167,
+     "hit@5": 0.85,
+     "mrr": 0.5614,
+     "n": 60,
+     "ndcg@1": 0.3833,
+     "ndcg@3": 0.5231,
+     "ndcg@5": 0.5764,
+     "p@1": 0.3158,
+     "p@3": 0.2982,
+     "p@5": 0.2211,
+     "p_n": 19
+    },
+    "paraphrase": {
+     "hit@1": 0.1167,
+     "hit@3": 0.2833,
+     "hit@5": 0.35,
+     "mrr": 0.2031,
+     "n": 60,
+     "ndcg@1": 0.1167,
+     "ndcg@3": 0.2058,
+     "ndcg@5": 0.2323,
+     "p@1": 0.0,
+     "p@3": 0.1333,
+     "p@5": 0.08,
+     "p_n": 5
+    },
+    "pasted": {
+     "hit@1": 0.2833,
+     "hit@3": 0.5833,
+     "hit@5": 0.75,
+     "mrr": 0.4578,
+     "n": 60,
+     "ndcg@1": 0.2833,
+     "ndcg@3": 0.4076,
+     "ndcg@5": 0.4737,
+     "p@1": 0.5455,
+     "p@3": 0.3333,
+     "p@5": 0.2182,
+     "p_n": 11
+    },
+    "plain": {
+     "hit@1": 0.35,
+     "hit@3": 0.6833,
+     "hit@5": 0.75,
+     "mrr": 0.5103,
+     "n": 60,
+     "ndcg@1": 0.35,
+     "ndcg@3": 0.5295,
+     "ndcg@5": 0.5519,
+     "p@1": 0.4,
+     "p@3": 0.2667,
+     "p@5": 0.24,
+     "p_n": 5
+    }
+   },
+   "by_set": {
+    "fastapi-docs": {
+     "hit@1": 0.325,
+     "hit@3": 0.625,
+     "hit@5": 0.675,
+     "mrr": 0.4821,
+     "n": 40,
+     "ndcg@1": 0.325,
+     "ndcg@3": 0.4675,
+     "ndcg@5": 0.4962,
+     "p@1": null,
+     "p@3": null,
+     "p@5": null,
+     "p_n": 0
+    },
+    "httpx-docs": {
+     "hit@1": 0.3,
+     "hit@3": 0.65,
+     "hit@5": 0.725,
+     "mrr": 0.4579,
+     "n": 40,
+     "ndcg@1": 0.3,
+     "ndcg@3": 0.4527,
+     "ndcg@5": 0.4786,
+     "p@1": 0.625,
+     "p@3": 0.375,
+     "p@5": 0.25,
+     "p_n": 8
+    },
+    "pydantic-docs": {
+     "hit@1": 0.25,
+     "hit@3": 0.575,
+     "hit@5": 0.725,
+     "mrr": 0.4279,
+     "n": 40,
+     "ndcg@1": 0.25,
+     "ndcg@3": 0.4132,
+     "ndcg@5": 0.4657,
+     "p@1": 0.1818,
+     "p@3": 0.1818,
+     "p@5": 0.1818,
+     "p_n": 11
+    },
+    "pytest-docs": {
+     "hit@1": 0.275,
+     "hit@3": 0.475,
+     "hit@5": 0.6,
+     "mrr": 0.3912,
+     "n": 40,
+     "ndcg@1": 0.275,
+     "ndcg@3": 0.3527,
+     "ndcg@5": 0.4043,
+     "p@1": 0.5,
+     "p@3": 0.25,
+     "p@5": 0.15,
+     "p_n": 8
+    },
+    "python-docs": {
+     "hit@1": 0.175,
+     "hit@3": 0.475,
+     "hit@5": 0.575,
+     "mrr": 0.3267,
+     "n": 40,
+     "ndcg@1": 0.175,
+     "ndcg@3": 0.3385,
+     "ndcg@5": 0.3794,
+     "p@1": 0.0,
+     "p@3": 0.4444,
+     "p@5": 0.2667,
+     "p_n": 3
+    },
+    "uv-docs": {
+     "hit@1": 0.375,
+     "hit@3": 0.6,
+     "hit@5": 0.75,
+     "mrr": 0.5129,
+     "n": 40,
+     "ndcg@1": 0.375,
+     "ndcg@3": 0.4743,
+     "ndcg@5": 0.5273,
+     "p@1": 0.3,
+     "p@3": 0.3,
+     "p@5": 0.22,
+     "p_n": 10
+    }
+   },
+   "overall": {
+    "hit@1": 0.2833,
+    "hit@3": 0.5667,
+    "hit@5": 0.675,
+    "mrr": 0.4331,
+    "n": 240,
+    "ndcg@1": 0.2833,
+    "ndcg@3": 0.4165,
+    "ndcg@5": 0.4586,
+    "p@1": 0.35,
+    "p@3": 0.2833,
+    "p@5": 0.205,
+    "p_n": 40
+   }
+  },
+  "refusal": {
+   "answerable_n": 240,
+   "correct_refusal": 0.4333,
+   "false_refusal": 0.0625,
+   "out_of_scope_n": 60
+  },
+  "stamp": "set_version=4ac0cd942b51 index_version=121b0a31c0f6 mode=lms date=2026-11-18"
+ },
+ "index_version": "121b0a31c0f680328a7fc98834247959b24e9e36c5e000e9687aadd8f6474c55",
+ "min_matched_terms": {
+  "2": {
+   "correct_refusal": 0.0333,
+   "false_refusal": 0.0,
+   "fixture": {
+    "answerable": 41,
+    "correct_refusal": 0.8889,
+    "false_refusal": 0.0488,
+    "first_hit": 36,
+    "no_answer": 9,
+    "top3": 39
+   },
+   "hit3": 0.5917
+  },
+  "3": {
+   "correct_refusal": 0.4333,
+   "false_refusal": 0.0625,
+   "fixture": {
+    "answerable": 41,
+    "correct_refusal": 1.0,
+    "false_refusal": 0.2439,
+    "first_hit": 30,
+    "no_answer": 9,
+    "top3": 31
+   },
+   "hit3": 0.5667
+  },
+  "4": {
+   "correct_refusal": 0.75,
+   "false_refusal": 0.1875,
+   "fixture": {
+    "answerable": 41,
+    "correct_refusal": 1.0,
+    "false_refusal": 0.439,
+    "first_hit": 23,
+    "no_answer": 9,
+    "top3": 23
+   },
+   "hit3": 0.4958
+  }
+ },
+ "misses": {
+  "gemini/HR": {
+   "multi-page": 1,
+   "other": 5,
+   "total_misses": 61,
+   "vague chunk": 0,
+   "wording": 55
+  },
+  "gemini/L": {
+   "multi-page": 2,
+   "other": 8,
+   "total_misses": 86,
+   "vague chunk": 0,
+   "wording": 76
+  },
+  "gemini/lms": {
+   "multi-page": 4,
+   "other": 13,
+   "total_misses": 104,
+   "vague chunk": 0,
+   "wording": 87
+  }
+ },
+ "modes": [
+  "lms",
+  "L",
+  "HR"
+ ],
+ "old-real/HR": {
+  "metrics": {
+   "by_kind": {
+    "old": {
+     "hit@1": 0.8119,
+     "hit@3": 0.901,
+     "hit@5": 0.9505,
+     "mrr": 0.8662,
+     "n": 101,
+     "ndcg@1": 0.8119,
+     "ndcg@3": 0.8148,
+     "ndcg@5": 0.8445,
+     "p@1": 0.8718,
+     "p@3": 0.5128,
+     "p@5": 0.3282,
+     "p_n": 39
+    }
+   },
+   "by_set": {
+    "python-docs-codex-questions.yaml": {
+     "hit@1": 0.7083,
+     "hit@3": 0.875,
+     "hit@5": 0.9583,
+     "mrr": 0.8056,
+     "n": 24,
+     "ndcg@1": 0.7083,
+     "ndcg@3": 0.7245,
+     "ndcg@5": 0.7909,
+     "p@1": 0.8125,
+     "p@3": 0.4583,
+     "p@5": 0.3125,
+     "p_n": 16
+    },
+    "python-docs-gemini-questions.yaml": {
+     "hit@1": 0.8,
+     "hit@3": 0.85,
+     "hit@5": 0.9,
+     "mrr": 0.8375,
+     "n": 20,
+     "ndcg@1": 0.8,
+     "ndcg@3": 0.8082,
+     "ndcg@5": 0.8297,
+     "p@1": 0.8333,
+     "p@3": 0.3889,
+     "p@5": 0.2333,
+     "p_n": 6
+    },
+    "ruff-docs-questions.yaml": {
+     "hit@1": 0.9333,
+     "hit@3": 1.0,
+     "hit@5": 1.0,
+     "mrr": 0.9667,
+     "n": 30,
+     "ndcg@1": 0.9333,
+     "ndcg@3": 0.9085,
+     "ndcg@5": 0.9152,
+     "p@1": 0.9231,
+     "p@3": 0.641,
+     "p@5": 0.4,
+     "p_n": 13
+    },
+    "uv-docs-questions.yaml": {
+     "hit@1": 0.7778,
+     "hit@3": 0.8519,
+     "hit@5": 0.9259,
+     "mrr": 0.8296,
+     "n": 27,
+     "ndcg@1": 0.7778,
+     "ndcg@3": 0.7959,
+     "ndcg@5": 0.8245,
+     "p@1": 1.0,
+     "p@3": 0.5,
+     "p@5": 0.3,
+     "p_n": 4
+    }
+   },
+   "overall": {
+    "hit@1": 0.8119,
+    "hit@3": 0.901,
+    "hit@5": 0.9505,
+    "mrr": 0.8662,
+    "n": 101,
+    "ndcg@1": 0.8119,
+    "ndcg@3": 0.8148,
+    "ndcg@5": 0.8445,
+    "p@1": 0.8718,
+    "p@3": 0.5128,
+    "p@5": 0.3282,
+    "p_n": 39
+   }
+  },
+  "refusal": null,
+  "stamp": "old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=HR date=2026-11-18"
+ },
+ "old-real/L": {
+  "metrics": {
+   "by_kind": {
+    "old": {
+     "hit@1": 0.6337,
+     "hit@3": 0.7921,
+     "hit@5": 0.8713,
+     "mrr": 0.7185,
+     "n": 101,
+     "ndcg@1": 0.6337,
+     "ndcg@3": 0.6606,
+     "ndcg@5": 0.6991,
+     "p@1": 0.7179,
+     "p@3": 0.3761,
+     "p@5": 0.2513,
+     "p_n": 39
+    }
+   },
+   "by_set": {
+    "python-docs-codex-questions.yaml": {
+     "hit@1": 0.5833,
+     "hit@3": 0.7083,
+     "hit@5": 0.7917,
+     "mrr": 0.6507,
+     "n": 24,
+     "ndcg@1": 0.5833,
+     "ndcg@3": 0.5602,
+     "ndcg@5": 0.6041,
+     "p@1": 0.6875,
+     "p@3": 0.3542,
+     "p@5": 0.225,
+     "p_n": 16
+    },
+    "python-docs-gemini-questions.yaml": {
+     "hit@1": 0.55,
+     "hit@3": 0.6,
+     "hit@5": 0.75,
+     "mrr": 0.6125,
+     "n": 20,
+     "ndcg@1": 0.55,
+     "ndcg@3": 0.5622,
+     "ndcg@5": 0.6268,
+     "p@1": 0.5,
+     "p@3": 0.1667,
+     "p@5": 0.1333,
+     "p_n": 6
+    },
+    "ruff-docs-questions.yaml": {
+     "hit@1": 0.7333,
+     "hit@3": 0.9,
+     "hit@5": 0.9667,
+     "mrr": 0.8167,
+     "n": 30,
+     "ndcg@1": 0.7333,
+     "ndcg@3": 0.7239,
+     "ndcg@5": 0.7625,
+     "p@1": 0.8462,
+     "p@3": 0.4615,
+     "p@5": 0.3231,
+     "p_n": 13
+    },
+    "uv-docs-questions.yaml": {
+     "hit@1": 0.6296,
+     "hit@3": 0.8889,
+     "hit@5": 0.9259,
+     "mrr": 0.7481,
+     "n": 27,
+     "ndcg@1": 0.6296,
+     "ndcg@3": 0.7523,
+     "ndcg@5": 0.7666,
+     "p@1": 0.75,
+     "p@3": 0.5,
+     "p@5": 0.3,
+     "p_n": 4
+    }
+   },
+   "overall": {
+    "hit@1": 0.6337,
+    "hit@3": 0.7921,
+    "hit@5": 0.8713,
+    "mrr": 0.7185,
+    "n": 101,
+    "ndcg@1": 0.6337,
+    "ndcg@3": 0.6606,
+    "ndcg@5": 0.6991,
+    "p@1": 0.7179,
+    "p@3": 0.3761,
+    "p@5": 0.2513,
+    "p_n": 39
+   }
+  },
+  "refusal": null,
+  "stamp": "old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=L date=2026-11-18"
+ },
+ "old-real/lms": {
+  "metrics": {
+   "by_kind": {
+    "old": {
+     "hit@1": 0.5941,
+     "hit@3": 0.7525,
+     "hit@5": 0.8416,
+     "mrr": 0.687,
+     "n": 101,
+     "ndcg@1": 0.5941,
+     "ndcg@3": 0.6443,
+     "ndcg@5": 0.6795,
+     "p@1": 0.6667,
+     "p@3": 0.3932,
+     "p@5": 0.2564,
+     "p_n": 39
+    }
+   },
+   "by_set": {
+    "python-docs-codex-questions.yaml": {
+     "hit@1": 0.5417,
+     "hit@3": 0.7083,
+     "hit@5": 0.75,
+     "mrr": 0.6264,
+     "n": 24,
+     "ndcg@1": 0.5417,
+     "ndcg@3": 0.5697,
+     "ndcg@5": 0.5773,
+     "p@1": 0.6875,
+     "p@3": 0.3125,
+     "p@5": 0.2,
+     "p_n": 16
+    },
+    "python-docs-gemini-questions.yaml": {
+     "hit@1": 0.45,
+     "hit@3": 0.65,
+     "hit@5": 0.85,
+     "mrr": 0.595,
+     "n": 20,
+     "ndcg@1": 0.45,
+     "ndcg@3": 0.5722,
+     "ndcg@5": 0.6464,
+     "p@1": 0.5,
+     "p@3": 0.2222,
+     "p@5": 0.2,
+     "p_n": 6
+    },
+    "ruff-docs-questions.yaml": {
+     "hit@1": 0.7,
+     "hit@3": 0.9,
+     "hit@5": 0.9333,
+     "mrr": 0.7972,
+     "n": 30,
+     "ndcg@1": 0.7,
+     "ndcg@3": 0.7459,
+     "ndcg@5": 0.767,
+     "p@1": 0.6923,
+     "p@3": 0.5641,
+     "p@5": 0.3538,
+     "p_n": 13
+    },
+    "uv-docs-questions.yaml": {
+     "hit@1": 0.6296,
+     "hit@3": 0.7037,
+     "hit@5": 0.8148,
+     "mrr": 0.6864,
+     "n": 27,
+     "ndcg@1": 0.6296,
+     "ndcg@3": 0.6512,
+     "ndcg@5": 0.6975,
+     "p@1": 0.75,
+     "p@3": 0.4167,
+     "p@5": 0.25,
+     "p_n": 4
+    }
+   },
+   "overall": {
+    "hit@1": 0.5941,
+    "hit@3": 0.7525,
+    "hit@5": 0.8416,
+    "mrr": 0.687,
+    "n": 101,
+    "ndcg@1": 0.5941,
+    "ndcg@3": 0.6443,
+    "ndcg@5": 0.6795,
+    "p@1": 0.6667,
+    "p@3": 0.3932,
+    "p@5": 0.2564,
+    "p_n": 39
+   }
+  },
+  "refusal": {
+   "answerable_n": 101,
+   "correct_refusal": 0.2532,
+   "false_refusal": 0.0594,
+   "out_of_scope_n": 237
+  },
+  "stamp": "old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=lms date=2026-11-18"
+ },
+ "passages_per_source": {
+  "1": {
+   "correct_refusal": 0.4333,
+   "distinct_files_top5": 4.6875,
+   "false_refusal": 0.0625,
+   "hit_by_file": {
+    "1": 0.2833,
+    "3": 0.5667,
+    "5": 0.675
+   },
+   "hit_passages": {
+    "1": 0.2833,
+    "3": 0.5667,
+    "5": 0.675
+   },
+   "mean_chars_top3": 2372.3292
+  },
+  "2": {
+   "correct_refusal": 0.4333,
+   "distinct_files_top5": 3.8417,
+   "false_refusal": 0.0625,
+   "hit_by_file": {
+    "1": 0.2833,
+    "3": 0.5667,
+    "5": 0.675
+   },
+   "hit_passages": {
+    "1": 0.2833,
+    "3": 0.5292,
+    "5": 0.6458
+   },
+   "mean_chars_top3": 2358.9375
+  },
+  "3": {
+   "correct_refusal": 0.4333,
+   "distinct_files_top5": 3.65,
+   "false_refusal": 0.0625,
+   "hit_by_file": {
+    "1": 0.2833,
+    "3": 0.5667,
+    "5": 0.675
+   },
+   "hit_passages": {
+    "1": 0.2833,
+    "3": 0.5292,
+    "5": 0.6458
+   },
+   "mean_chars_top3": 2341.3458
+  }
+ },
+ "ragcore": "embedder=jina-v2-base-en@322d4d7e2f35e84137961a65af894fda0385eb7a+f3ec4cf7de7e561007f27c9efc7148b0bd713f81; reranker=bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e; chunker=llamaindex/1500/6000",
+ "set_version": "4ac0cd942b512228612ac701cac5e59218e0a2a26db1cc4adcbfdccae55d95b3"
+}

@@ -7,7 +7,11 @@ import os
 from pathlib import Path
 from typing import Mapping, Optional
 
-from lms.adapters.ai.rag.keyword_retriever import DEFAULT_MIN_MATCHED_TERMS, KeywordRetriever
+from lms.adapters.ai.rag.keyword_retriever import (
+    DEFAULT_MIN_MATCHED_TERMS,
+    DEFAULT_PASSAGES_PER_SOURCE,
+    KeywordRetriever,
+)
 from lms.core.retrieval import IRetriever, RetrievalMode
 
 logger = logging.getLogger(__name__)
@@ -16,6 +20,7 @@ MODE_ENV = "LMS_RETRIEVAL_MODE"
 INDEX_DIR_ENV = "LMS_INDEX_DIR"
 DEFAULT_INDEX_DIR = "data/index"
 MIN_TERMS_ENV = "LMS_MIN_MATCHED_TERMS"
+PASSAGES_PER_SOURCE_ENV = "LMS_PASSAGES_PER_SOURCE"
 
 
 class RetrievalConfigError(Exception):
@@ -53,13 +58,29 @@ def configured_min_terms(environ: Optional[Mapping[str, str]] = None) -> int:
     return value
 
 
+def configured_passages_per_source(environ: Optional[Mapping[str, str]] = None) -> int:
+    """LMS_PASSAGES_PER_SOURCE: whole number 1 to 5; unset or empty means 1 (SPEC-25 R7)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(PASSAGES_PER_SOURCE_ENV) or "").strip()
+    if not raw:
+        return DEFAULT_PASSAGES_PER_SOURCE
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 0
+    if not 1 <= value <= 5:
+        raise RetrievalConfigError(f"{PASSAGES_PER_SOURCE_ENV}='{raw}' is not allowed. Use a whole number from 1 to 5.")
+    return value
+
+
 def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     """Load the index once and say what was loaded. A missing folder gives NO_INDEX, not a crash (R7)."""
     env = os.environ if environ is None else environ
     mode = configured_mode(env)
     min_terms = configured_min_terms(env)
+    per_source = configured_passages_per_source(env)
     index_dir = Path(env.get(INDEX_DIR_ENV) or DEFAULT_INDEX_DIR)
-    retriever = KeywordRetriever.from_index_dir(index_dir, min_matched_terms=min_terms)
+    retriever = KeywordRetriever.from_index_dir(index_dir, min_matched_terms=min_terms, passages_per_source=per_source)
     manifest = retriever.manifest
     if manifest is None:
         logger.warning(
@@ -70,11 +91,12 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
         )
     else:
         logger.info(
-            "Retrieval ready: mode=%s index_version=%s sources=%d index_dir=%s min_matched_terms=%d",
+            "Retrieval ready: mode=%s index_version=%s sources=%d index_dir=%s min_matched_terms=%d passages_per_source=%d",
             mode.value,
             manifest.index_version,
             len(manifest.sources),
             index_dir,
             min_terms,
+            per_source,
         )
     return retriever

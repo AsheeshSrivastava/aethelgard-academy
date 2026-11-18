@@ -1,0 +1,237 @@
+questions:
+- q: how do i read a query parameter like ?skip=0&limit=10 in my endpoint?
+  kind: plain
+  expect: [tutorial/query-params]
+- q: how do i return a 201 status code when creating an item?
+  kind: plain
+  expect: [tutorial/response-status-code]
+- q: how do i accept an uploaded file in a fastapi route?
+  kind: plain
+  expect: [tutorial/request-files]
+- q: how do i return a 404 error with a custom json message in fastapi?
+  kind: plain
+  expect: [tutorial/handling-errors]
+- q: how do i validate that a json request body matches a schema?
+  kind: plain
+  expect: [tutorial/body]
+- q: how do i set a cookie on a fastapi response?
+  kind: plain
+  expect: [advanced/response-cookies]
+- q: how do i add middleware that runs before and after every request?
+  kind: plain
+  expect: [tutorial/middleware]
+- q: how do i write a websocket endpoint in fastapi?
+  kind: plain
+  expect: [advanced/websockets]
+- q: how do i run my fastapi app in dev mode with auto-reload using the cli?
+  kind: plain
+  expect: [fastapi-cli]
+- q: how do i configure environment variables and settings using pydantic in fastapi?
+  kind: plain
+  expect: [advanced/settings]
+- q: calling /users/me gives 422 Input should be a valid integer because it matches /users/{user_id}, how do i fix it?
+  kind: error
+  expect: [tutorial/path-params]
+- q: fastapi raises RuntimeError Form data requires python-multipart to be installed when i use Form()
+  kind: error
+  expect: [tutorial/request-forms]
+- q: TestClient fails with RuntimeError To use TestClient first install httpx
+  kind: error
+  expect: [tutorial/testing]
+- q: my custom header X_Token is never found in Header() because fastapi turns underscores into hyphens
+  kind: error
+  expect: [tutorial/header-params]
+- q: swagger /docs fails to load openapi.json with 404 when my app is behind nginx at /api/v1
+  kind: error
+  expect: [advanced/behind-a-proxy]
+- q: browsers reject my cors response when i set allow_origins=["*"] together with allow_credentials=True
+  kind: error
+  expect: [tutorial/cors]
+- q: fastapi throws TypeError Object of type datetime is not JSON serializable when i pass a pydantic model to a json encoder
+  kind: error
+  expect: [tutorial/encoder]
+- q: raising HTTPException after yield in a dependency does not return the error response properly
+  kind: error
+  expect: [tutorial/dependencies/dependencies-with-yield]
+- q: PATCH update overwrites optional fields with None unless i use exclude_unset=True, why?
+  kind: error
+  expect: [tutorial/body-updates]
+- q: my /token login route fails with 401 when using OAuth2PasswordBearer, how do i set up jwt auth?
+  kind: error
+  expect: [tutorial/security/oauth2-jwt]
+- q: how do i send an email after returning the api response so the client doesn't have to wait?
+  kind: paraphrase
+  expect: [tutorial/background-tasks]
+- q: my react frontend on port 3000 is blocked by the browser from calling my api on port 8000
+  kind: paraphrase
+  expect: [tutorial/cors]
+- q: my user object has a hashed_password field that i want stripped out automatically before sending json
+  kind: paraphrase
+  expect: [tutorial/response-model]
+- q: how do i make sure a database session closes after the endpoint finishes even if an error happens?
+  kind: paraphrase
+  expect: [tutorial/dependencies/dependencies-with-yield]
+- q: how do i swap out my real database helper for a fake one when running automated checks?
+  kind: paraphrase
+  expect: [advanced/testing-dependencies]
+- q: my main.py has 30 endpoints now, how do i split routes into separate modules by feature?
+  kind: paraphrase
+  expect: [tutorial/bigger-applications]
+- q: how do i turn off /docs and /redoc in production while keeping them in local dev?
+  kind: paraphrase
+  expect: [how-to/conditional-openapi]
+- q: how do i serve a folder of images and css directly from my fastapi app?
+  kind: paraphrase
+  expect: [tutorial/static-files]
+- q: where do i load a machine learning model once when the server boots up and clean it up on shutdown?
+  kind: paraphrase
+  expect: [advanced/events]
+- q: how do i run multiple processes of my api in production so it handles more traffic?
+  kind: paraphrase
+  expect: [deployment/server-workers]
+- q: |
+    why is this failing??
+    GET /users/me -> 422 Unprocessable Entity
+    {"detail":[{"type":"int_parsing","loc":["path","user_id"],"msg":"Input should be a valid integer","input":"me"}]}
+    C:\Users\sam\api\main.py:12
+    @app.get("/users/{user_id}")
+    async def read_user(user_id: int):
+        return {"user_id": user_id}
+    @app.get("/users/me")
+    async def read_user_me():
+        return {"user_id": "the current user"}
+  kind: pasted
+  expect: [tutorial/path-params]
+- q: |
+    why won't my app start??
+    RuntimeError: Form data requires "python-multipart" to be installed.
+    You can install "python-multipart" with:
+    pip install python-multipart
+    C:\Users\sam\api\routes\auth.py:7
+    @app.post("/login/")
+    async def login(username: Annotated[str, Form()], password: Annotated[str, Form()]):
+        return {"username": username}
+  kind: pasted
+  expect: [tutorial/request-forms]
+- q: |
+    why is my header always None??
+    GET /items/ with header x_api_key: secret123
+    Response: {"x_api_key": null}
+    C:\Users\sam\api\main.py:9
+    @app.get("/items/")
+    async def read_items(x_api_key: Annotated[str | None, Header()] = None):
+        return {"x_api_key": x_api_key}
+  kind: pasted
+  expect: [tutorial/header-params]
+- q: |
+    why is my test crashing before it even calls the route??
+    RuntimeError: Using the Starlette TestClient requires the httpx package to be installed.
+    C:\Users\sam\api\tests\test_main.py:4
+    from fastapi.testclient import TestClient
+    client = TestClient(app)
+    def test_read_main():
+        response = client.get("/")
+  kind: pasted
+  expect: [tutorial/testing]
+- q: |
+    why does my partial update wipe out fields i didn't send??
+    PATCH /items/foo with {"price": 25.0}
+    Response: {"name": "Foo", "description": null, "price": 25.0}
+    C:\Users\sam\api\main.py:18
+    @app.patch("/items/{item_id}")
+    async def update_item(item_id: str, item: Item):
+        update_data = item.model_dump()
+        stored_item_model = Item(**items[item_id])
+        return stored_item_model.model_copy(update=update_data)
+  kind: pasted
+  expect: [tutorial/body-updates]
+- q: |
+    why is this raising a json error??
+    TypeError: Object of type datetime is not JSON serializable
+    C:\Users\sam\api\main.py:15
+    @app.put("/items/{id}")
+    def update_item(id: str, item: Item):
+        fake_db[id] = item.model_dump()
+        json.dumps(fake_db[id])
+  kind: pasted
+  expect: [tutorial/encoder]
+- q: |
+    why did my response leak the user's password??
+    POST /user/ -> 200 OK
+    {"username": "sam", "email": "sam@example.com", "password": "secret"}
+    C:\Users\sam\api\main.py:11
+    @app.post("/user/")
+    async def create_user(user: UserIn):
+        return user
+  kind: pasted
+  expect: [tutorial/response-model]
+- q: |
+    why does my frontend get a cors error even though i added the middleware??
+    Access to fetch at 'http://localhost:8000/items' from origin 'http://localhost:3000' has been blocked by CORS policy
+    C:\Users\sam\api\main.py:8
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+    )
+  kind: pasted
+  expect: [tutorial/cors]
+- q: |
+    why does /docs show Failed to load API definition in production??
+    GET https://example.com/openapi.json 404 (Not Found)
+    nginx proxies https://example.com/api/v1/ -> http://127.0.0.1:8000/
+    C:\Users\sam\api\main.py:3
+    app = FastAPI()
+    @app.get("/app")
+    def read_main(request: Request):
+        return {"message": "Hello World"}
+  kind: pasted
+  expect: [advanced/behind-a-proxy]
+- q: |
+    why is my route returning a 200 instead of 404 when the item is missing??
+    GET /items/unknown -> 200 OK {"error": "not found"}
+    C:\Users\sam\api\main.py:10
+    @app.get("/items/{item_id}")
+    async def read_item(item_id: str):
+        if item_id not in items:
+            return {"error": "not found"}
+        return {"item": items[item_id]}
+  kind: pasted
+  expect: [tutorial/handling-errors]
+out_of_scope:
+- q: how do i write alembic database migrations for my sqlmodel tables?
+  kind: neighbouring
+  why: fastapi-docs covers SQLModel basics but does not document Alembic migrations
+- q: how do i set up celery with redis for distributed background job queues?
+  kind: neighbouring
+  why: fastapi-docs covers FastAPI BackgroundTasks, not Celery or Redis job queues
+- q: how do i rate limit fastapi endpoints per ip address with slowapi?
+  kind: neighbouring
+  why: fastapi-docs does not document slowapi or rate limiting
+- q: how do i configure gunicorn worker timeouts in a systemd unit file?
+  kind: neighbouring
+  why: fastapi-docs covers server workers conceptually but does not document systemd unit files or gunicorn timeout tuning
+- q: how do i define an express.js router middleware in typescript?
+  kind: other-tool
+  why: fastapi-docs is for Python FastAPI, not Node.js Express
+- q: how do i create a spring boot @RestController with @GetMapping?
+  kind: other-tool
+  why: fastapi-docs is for Python FastAPI, not Java Spring Boot
+- q: how do i validate json request bodies in go gin using binding tags?
+  kind: other-tool
+  why: fastapi-docs is for Python FastAPI, not Go Gin
+- q: should i use rest or graphql for a new public api in 2026?
+  kind: general
+  why: fastapi-docs does not give general API architecture advice comparing REST and GraphQL
+- q: how do i explain async vs sync tradeoffs in a backend engineering interview?
+  kind: general
+  why: fastapi-docs does not give interview preparation or career advice
+- q: |
+    why is this failing??
+    C:\Users\sam\api\services\pricing.py:12: in calc_tax
+        return amount * rate
+    TypeError: can't multiply sequence by non-int of type 'float'
+    def calc_tax(amount, rate=0.1):
+        return amount * rate
+  kind: general
+  why: the failure is a Python string-vs-number type bug in user code, not a FastAPI behavior
