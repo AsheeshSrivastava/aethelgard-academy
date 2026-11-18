@@ -133,6 +133,9 @@ class KeywordRetriever(IRetriever):
     def manifest(self) -> Optional[IndexManifest]:
         return self._manifest
 
+    def index_status(self) -> RetrievalStatus:
+        return RetrievalStatus.NO_INDEX if self._engine is None or self._manifest is None else RetrievalStatus.OK
+
     def _result(
         self,
         status: RetrievalStatus,

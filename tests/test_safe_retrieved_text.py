@@ -119,7 +119,9 @@ def test_the_keyword_adapter_says_not_found_and_the_prompt_takes_the_missing_pat
     assert result.status is RetrievalStatus.NOT_FOUND and result.passages == ()
     grounding, _trace = axis_rules.ground_with_trace(adapter, None, "PY-9.9", "zzzzqqqq xxxxwwww")
     assert grounding.block == "" and grounding.ids == []
-    assert "NO CURRICULUM PASSAGE WAS FOUND" in axis_rules.build_system_prompt(AxisMode.COACH, grounding.block)
+    assert grounding.source_state == "not_found"
+    prompt = axis_rules.build_system_prompt(AxisMode.COACH, grounding.block, grounding.source_state)
+    assert "NO COURSE SOURCE IS AVAILABLE" in prompt
 
 
 def test_a_normal_question_still_finds_passages(tmp_path):

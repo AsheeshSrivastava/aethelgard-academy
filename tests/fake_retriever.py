@@ -30,6 +30,10 @@ class FakeRetriever(IRetriever):
         self.index_version = index_version
         self.calls: list = []
 
+    def index_status(self) -> RetrievalStatus:
+        # A search-time "nothing found" is not an index problem.
+        return RetrievalStatus.OK if self.status is RetrievalStatus.NOT_FOUND else self.status
+
     def search(self, query: str, *, top_k: int = 3, source_prefixes: Tuple[str, ...] = ()) -> RetrievalResult:
         self.calls.append((query, top_k, source_prefixes))
         if self.status is not RetrievalStatus.OK:

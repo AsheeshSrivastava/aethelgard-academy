@@ -21,7 +21,7 @@ from lms.adapters.ai.providers.profiles import (
     ProviderKind,
     ProviderProfile,
 )
-from lms.core.retrieval import IRetriever
+from lms.core.retrieval import IRetriever, RetrievalStatus
 from lms.adapters.db.model_usage import UsageStore
 from lms.core.ai_judgement import AiJudgement, Rubric, not_judged
 from lms.core.interfaces import AxisQuery, AxisResponse
@@ -79,6 +79,31 @@ def default_factory(
     return make
 
 
+def course_reference_for(retriever: Optional[IRetriever], mock: bool = False) -> str:
+    """ready, not_loaded, unavailable or mock: what the AXIS panel may show (SPEC-24 R10).
+
+    Never carries a path, a version or an error text.
+    """
+    if mock:
+        return "mock"
+    if retriever is None:
+        return "not_loaded"
+    try:
+        status = retriever.index_status()
+    except Exception:
+        return "unavailable"
+    return {RetrievalStatus.OK: "ready", RetrievalStatus.NO_INDEX: "not_loaded"}.get(status, "unavailable")
+
+
+def course_reference_of(axis: Any) -> str:
+    """The status for whatever answers AXIS: a router, a companion that holds a retriever, or the mock."""
+    if hasattr(axis, "course_reference"):
+        return str(axis.course_reference)
+    if isinstance(axis, MockAxisCompanion):
+        return "mock"
+    return course_reference_for(getattr(axis, "retriever", None))
+
+
 class ProviderRouter:
     def __init__(
         self,
@@ -88,7 +113,9 @@ class ProviderRouter:
         mock: bool = False,
         factory: Optional[Factory] = None,
         meter: Optional[UsageMeter] = None,
+        retriever: Optional[IRetriever] = None,
     ) -> None:
+        self.retriever = retriever  # only to report its status to the panel (SPEC-24 R10)
         self.profiles = profiles
         self.store = store
         self.environ = environ if environ is not None else os.environ
@@ -223,6 +250,10 @@ class ProviderRouter:
             return iter([BUDGET_MESSAGE]), []
 
     @property
+    def course_reference(self) -> str:
+        return course_reference_for(self.retriever, self.mock)
+
+    @property
     def last_retrieval(self) -> Any:
         """What the last answer's retrieval did (SPEC-21 R8); None for the mock."""
         return getattr(self.current(), "last_retrieval", None)
@@ -279,7 +310,7 @@ def build_default_router(db_path: str, profiles_path: Optional[str] = None) -> P
     retriever = None if mock else build_retriever()
     return ProviderRouter(
         profiles, store, environ=os.environ, mock=mock,
-        factory=default_factory(retriever=retriever),
+        factory=default_factory(retriever=retriever), retriever=retriever,
     )
 
 
@@ -292,5 +323,7 @@ __all__ = [
     "ProviderRouter",
     "UnknownProfile",
     "build_default_router",
+    "course_reference_for",
+    "course_reference_of",
     "default_factory",
 ]

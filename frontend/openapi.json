@@ -157,6 +157,29 @@
         }
       }
     },
+    "/api/v1/axis/status": {
+      "get": {
+        "summary": "Axis Status",
+        "description": "Is the course reference loaded? One word, no path or version (SPEC-24 R10).",
+        "operationId": "axis_status_api_v1_axis_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Axis Status Api V1 Axis Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/features": {
       "get": {
         "summary": "Get Features",
@@ -2392,6 +2415,17 @@
           "detected_assistance_level": {
             "$ref": "#/components/schemas/AssistanceLevel",
             "default": "none"
+          },
+          "source_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source State"
           }
         },
         "type": "object",

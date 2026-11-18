@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
-from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router
+from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router, course_reference_of
 from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.adapters.curriculum.concepts import ConceptCatalog
@@ -536,6 +536,11 @@ def create_app(
     @app.get("/api/v1/health")
     def health_check() -> Dict[str, str]:
         return {"status": "ok", "version": "0.1.0"}
+
+    @app.get("/api/v1/axis/status")
+    def axis_status() -> Dict[str, str]:
+        """Is the course reference loaded? One word, no path or version (SPEC-24 R10)."""
+        return {"course_reference": course_reference_of(axis)}
 
     @app.get("/api/v1/features", response_model=Features)
     def get_features():

@@ -1766,6 +1766,16 @@ button:disabled {
   min-height: 44px;
 }
 
+.axis-status {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border, currentColor);
+}
+
+.axis-source-note {
+  margin: 0.25rem 0 0;
+}
+
 .axis-note {
   padding: 0 16px 14px;
   font-size: 12px;

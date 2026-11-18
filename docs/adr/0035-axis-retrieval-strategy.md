@@ -77,7 +77,7 @@ During the test period the owner's computer is the server, so rag-core runs in-p
 - A fixture set of 30 to 50 questions is small. It guards against regressions; it does not prove quality (the larger local run does that).
 
 ## 4. Work sequence (one small PR each, tests first)
-Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6); step 4a, fenced untrusted passages, checked citations and no "first 30" fallback (SPEC-22, which also defines the quote-overlap rule that 2.5 needs; SPEC-09 never had one); step 4b, query cleanup (function words out, unit id out), `keyword_only` ranked by BM25 alone, and "not found" on the number of query terms found, minimum 3 on the real corpus and 2 on the CI fixture (SPEC-23; measured, see `docs/measurements/2026-11-16-not-found-rules.txt`). Weighted fusion, error-type extraction and path stripping were measured and not adopted.
+Done: ADR-0034 and this ADR (#37); honest basics (#42); rag-core packaged as `ragcore` v0.1.0 (separate repo); step 1, fixture set and CI gate (SPEC-20, #47); step 2, local measurement (#48); step 3, retrieval port, manifest, startup load and logging (SPEC-21; the mode `hybrid_rerank` is accepted in the type but fails startup until step 6); step 4a, fenced untrusted passages, checked citations and no "first 30" fallback (SPEC-22, which also defines the quote-overlap rule that 2.5 needs; SPEC-09 never had one); step 4b, query cleanup (function words out, unit id out), `keyword_only` ranked by BM25 alone, and "not found" on the number of query terms found, minimum 3 on the real corpus and 2 on the CI fixture (SPEC-23; measured, see `docs/measurements/2026-11-16-not-found-rules.txt`). Weighted fusion, error-type extraction and path stripping were measured and not adopted; step 4c, prompt rules and a visible "no index" status (SPEC-24): one rule for every mode (no answers from the model's memory; ADR-0034 amended), a distinct notice per state (`not_found`, `no_index`, `unavailable`), `source_state` on every reply, a yes/no `index_status()` on the retrieval port, `GET /api/v1/axis/status`, and a status line and per-answer note on the AXIS panel.
 1. Fixture index and question set, with the CI gate on keyword-only mode (2.6).
 2. Local measurement: keyword-only with stop words dropped and a floor, against HR, on the set. Decide whether the models are worth adopting.
 3. Retrieval port with our own result type, manifest with `index_version`, startup load, explicit mode choice, logging (2.2, 2.3).
@@ -90,10 +90,21 @@ A7 (ConceptStore wiring) is paused until there are enough concept notes. The sel
 ## 5. Amendment 2026-11-16 (owner-approved plan)
 
 ### 5.1 New plan order
-Step 4 is split so each PR stays small and testable:
-- **4a (SPEC-22, F7):** fenced and capped untrusted passages, checked citations (quote-overlap rule), no "first 30" fallback.
-- **4b (done, SPEC-23, F8):** stop words and the unit id dropped from the query, and a minimum score so `not_found` can fire on weak matches (2.4).
-- Steps 5, 6 and 7 are unchanged in order. Contextual retrieval (5.2) is an optional, measured addition after step 6, not part of 4a or 4b.
+Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follows. **The nine-step list below is the plan order. The "Work sequence" numbers in section 4 are the older numbering** (corrected 2026-11-16; an earlier version of this section wrongly said the later steps were unchanged in order and put contextual retrieval after the rag-core adapter).
+
+| Plan step | What | Status | Old section 4 number |
+| :--- | :--- | :--- | :--- |
+| 1 | Retrieval port | done (SPEC-21, #50) | 3 |
+| 2 | Safe retrieved text: fenced and capped passages, checked citations, no "first 30" fallback | done (SPEC-22, #51) | 4 (4a) |
+| 3 | Query cleanup and `not_found` | done (SPEC-23, #53) | 4 (4b) |
+| 4 | Prompt rules and the "no index" message | this step (SPEC-24) | 5 |
+| 5 | Measurement: the six Gemini sets, P@K, MRR and nDCG at K=1, 3 and 5, and the per-file passage limit test | next | 2 (extended) |
+| 6 | Contextual retrieval: heading path first, then an LLM-written context in a search-only field (5.2); local against cheap paid on a small trial. A paid run needs a printed estimate and the owner runs it | after 5 | not numbered before |
+| 7 | rag-core adapter and model wiring, with `not_found` re-tuned for the reranker (2.4, 2.7) | after 6 | 6 |
+| 8 | Tracing, metrics and answer-level evals behind a hexagonal port (local adapter, no-op in CI, vendors optional); its ADR comes first | after 7 | not numbered before |
+| 9 | Learner-style questions: query rewriting and at most one bounded agentic retry, only if measured to help (2.8) | last, optional | 7 |
+
+Later, not in the nine: A7 (ConceptStore wiring), then A8 (split `app.py`). The old section 4 items 1 and 2 (fixture set, first local measurement) were done before this list began (SPEC-20, #47 and #48). GraphRAG stays rejected (5.3).
 
 ### 5.2 Contextual retrieval: design only, nothing built yet
 - Each passage may get a short, model-written context sentence ("where this passage sits in its page"). It is stored in a **separate, search-only field**. It is indexed for search but is **never put in the prompt, never shown to the learner and never cited**; the passage text the learner sees and the quote-overlap check use stays the original source text.

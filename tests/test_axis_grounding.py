@@ -58,25 +58,26 @@ def test_default_citation_no_longer_exists():
 
 @pytest.mark.parametrize("mode", [AxisMode.COACH, AxisMode.HYBRID, AxisMode.SOCRATIC])
 def test_the_prompt_says_when_nothing_was_found(mode):
-    prompt = axis_rules.build_system_prompt(mode, "")
-    assert "NO CURRICULUM PASSAGE WAS FOUND" in prompt
+    prompt = axis_rules.build_system_prompt(mode, "", "not_found")
+    assert "NO COURSE SOURCE IS AVAILABLE" in prompt
     assert "not in the course yet" in prompt.lower()
 
 
-def test_coach_may_use_general_knowledge_but_must_label_it():
-    prompt = axis_rules.build_system_prompt(AxisMode.COACH, "")
-    assert "Not from the course" in prompt
+def test_no_mode_gets_a_general_knowledge_path_any_more():
+    """ADR-0034 amended 2026-11-18 (SPEC-24 R4): the Coach "Not from the course" exception is gone."""
+    prompt = axis_rules.build_system_prompt(AxisMode.COACH, "", "not_found")
+    assert "Not from the course" not in prompt
 
 
 def test_socratic_stays_socratic_when_nothing_was_found():
-    prompt = axis_rules.build_system_prompt(AxisMode.SOCRATIC, "")
+    prompt = axis_rules.build_system_prompt(AxisMode.SOCRATIC, "", "not_found")
     assert "STRICT INVARIANT" in prompt
     assert "Not from the course" not in prompt
 
 
 def test_a_grounded_prompt_has_no_missing_notice():
     prompt = axis_rules.build_system_prompt(AxisMode.COACH, "<reference_passages>x</reference_passages>")
-    assert "NO CURRICULUM PASSAGE WAS FOUND" not in prompt
+    assert "NO COURSE SOURCE IS AVAILABLE" not in prompt
     assert "untrusted reference material" in prompt
 
 

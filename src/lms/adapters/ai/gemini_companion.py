@@ -98,7 +98,7 @@ class GeminiCompanion:
 
     def consult(self, query: AxisQuery) -> AxisResponse:
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
         try:
@@ -117,7 +117,7 @@ class GeminiCompanion:
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block)
+        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
         user_msg = axis_rules.build_user_message(query)
         self._check_budget(sys_prompt, user_msg)
         return self._stream_deltas(sys_prompt, user_msg), grounding

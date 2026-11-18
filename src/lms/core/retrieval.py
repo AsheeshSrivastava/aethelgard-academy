@@ -106,6 +106,10 @@ class IRetriever(ABC):
     ) -> RetrievalResult:
         """Missing or unreadable index: NO_INDEX. Adapter fault: UNAVAILABLE. Nothing found: NOT_FOUND."""
 
+    @abstractmethod
+    def index_status(self) -> RetrievalStatus:
+        """Is the index usable right now? OK, NO_INDEX or UNAVAILABLE. Never searches and never raises (SPEC-24 R8)."""
+
 
 def clamp_top_k(top_k: int) -> int:
     return max(MIN_TOP_K, min(MAX_TOP_K, int(top_k)))
