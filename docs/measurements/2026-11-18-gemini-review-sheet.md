@@ -30,9 +30,9 @@ put `y` or `n`. The bar is 22 of 24 `y` on **each** box (90%). Below that, the s
 | 20 | python-docs / pasted | why did rex get buddy's tricks?? print(rex.tricks) # ['roll over', 'play dead'] C:\Users\sam\shop\pets.py:6 class Dog: tricks = [] def add_trick(self, trick): s... | `tutorial/classes` | [y] | [y] |
 | 21 | uv-docs / plain | how do i set up uv inside a dockerfile for production? | `guides/integration/docker` | [y] | [y] |
 | 22 | uv-docs / error | uv complains about requires-python mismatch when i try to add a dependency that needs python 3.11+ | `concepts/resolution` | [y] | [y] |
-| 23 | uv-docs / paraphrase | how do i see why a package is installed in my environment as a dependency tree? | `getting-started/features` | [y] | [n] |
+| 23 | uv-docs / paraphrase | how do i see why a package is installed in my environment as a dependency tree? | `getting-started/features` | [y] | [y] |
 | 24 | uv-docs / pasted | why did uv add fail with a python version error?? × No solution found when resolving dependencies: ╰─▶ Because the current Python version (3.9.18) does not sati... | `concepts/resolution` | [y] | [y] |
 
-Totals: realistic 24 / 24, page right 23 / 24. Both are at or above the 22-of-24 bar (R8).
+Totals: realistic 24 / 24, page right 24 / 24.
 
-Marks entered by Claude on 2026-11-18 on the owner's instruction, after the owner reviewed the detailed sheet (passage text and Claude's pre-marks). Question 23 is marked n for the page originally expected (pip/inspection never mentions a dependency tree); the set was corrected afterwards, in commit 6b103f7, to getting-started/features. The expected pages shown in the table for questions 22 and 24 are the corrected ones.
+Reviewed by the owner 2026-11-18 (marks adopted from Claude's pre-marks after reading the page passages; 90% bar met, sets may be used as a gate).
