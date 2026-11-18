@@ -148,7 +148,7 @@ def refusal_rates(answerable_statuses: Sequence[str], out_of_scope_statuses: Seq
 # --- R6: failure labels (inferred by rule, not read by a human) -------------------------------------------
 
 
-def _tokens(text: str) -> List[str]:
+def tokens(text: str) -> List[str]:
     return [t.lower() for t in _TOKEN.findall(text or "")]
 
 
@@ -175,7 +175,7 @@ def classify_miss(
     from lms.core.query import FUNCTION_WORDS  # the same function-word list as the query cleanup
 
     # 1. wording: fewer than half of the cleaned query terms occur in the best passage
-    passage_tokens = set(_tokens(best_passage))
+    passage_tokens = set(tokens(best_passage))
     present = sum(1 for t in terms if t.lower() in passage_tokens)
     if present * 2 < len(terms):
         return "wording"

@@ -264,9 +264,12 @@ def passages_test(out: Out, index_dir: Path, sets):
     out.data["passages_per_source"] = res
     base, best = res[1], max(res[2]["hit_passages"][3], res[3]["hit_passages"][3])
     gain = best - base["hit_passages"][3]
-    out.p(f"\n   Verdict (R9): best Hit@3 gain over cap 1 is {gain * 100:+.1f} points (bar: at least +2.0 with refusals within 1 point). "
-          + ("Bar met on Hit@3; see the by-file and distinct-file lines before changing the default." if gain >= BAR_GAIN
-             else "Bar not met on passage-level Hit@3; the default stays 1."))
+    gain_f = max(res[2]["hit_by_file"][3], res[3]["hit_by_file"][3]) - base["hit_by_file"][3]
+    out.p(f"\n   Verdict (R9): best gain over cap 1 is {gain * 100:+.1f} points on passage-level Hit@3 and {gain_f * 100:+.1f} points on by-file Hit@3 "
+          "(bar: at least +2.0 on both; refusals are unchanged by the cap). "
+          + ("Bar met; check the distinct-file line before changing the default." if gain >= BAR_GAIN and gain_f >= BAR_GAIN
+             else "Bar not met; the default stays 1."))
+    out.p("   By-file uses the first 10 passages, so at cap 3 fewer than 5 distinct files may be available, which limits by-file@5 for higher caps.")
     out.p("   Note: cap 2 and 3 fill the top K with passages of the same file, so passage-level Hit@K can rise while the "
           "number of distinct files falls. By-file Hit@K is the fair comparison for 'does the learner see the right page'.\n")
 
@@ -419,7 +422,7 @@ def tuning(out: Out, index_dir: Path, sets):
             for qtext, passages in cases:
                 g = ps.build_grounding([(p.passage_id, p.source_name, p.text) for p in passages])
                 terms = [t.lower() for t in clean_query_words(qtext)]
-                have = set(ml._tokens(" ".join(e.text for e in g.entries)))
+                have = set(ml.tokens(" ".join(e.text for e in g.entries)))
                 if terms:
                     ret.append(sum(t in have for t in terms) / len(terms))
                 chars.append(sum(len(e.text) for e in g.entries))
@@ -464,7 +467,7 @@ def write_sheet(path: Path, sets, version: str):
     ]
     for i, item in enumerate(sample, start=1):
         q = " ".join(item["q"].split())
-        q = (q[:230] + "...") if len(q) > 230 else q
+        q = (q[:160] + "...") if len(q) > 160 else q
         q = q.replace("|", "\\|")
         lines.append(f"| {i} | {item['set']} / {item['kind']} | {q} | `{', '.join(item['expect'])}` | [ ] | [ ] |")
     lines += ["", "Totals: realistic ___ / 24, page right ___ / 24.", ""]
@@ -511,7 +514,9 @@ def main() -> int:
     out.p(f"set_version {version}")
     out.p(f"index_version {index_version}  ({len(corpus_ids)} files, {len(engine.passages)} passages)")
     out.p(f"date {args.date}; modes {','.join(modes)}; offline, no paid call; scores are rounded, no timings (R11)")
-    out.p("Metrics are over answerable questions only. K counts files for L/HR (one passage per file) and for lms (cap 1).\n")
+    out.p("Metrics are over answerable questions only. K counts files for L/HR (one passage per file) and for lms (cap 1).")
+    out.p("nDCG ideal = every corpus file that matches an expect piece, so a broad piece (for example 'models') lowers nDCG even for a rank-1 hit.")
+    out.p("The rag-core sync timing line is left out of this file so the numbers repeat exactly (R11).\n")
     out.data.update({"set_version": version, "index_version": index_version, "date": args.date, "modes": modes})
 
     items = [(n, sets[n]["prefix"], sets[n]["questions"]) for n in sorted(sets)]
@@ -524,7 +529,8 @@ def main() -> int:
             print("--ragcore-root is needed for modes L and HR")
             return 2
         rs, closers, ragnote = ragcore_searchers(Path(args.ragcore_root), rows_src, Path(args.ragcore_index_dir), modes,
-                                                 args.embedder, args.reranker, out.p)
+                                                 args.embedder, args.reranker,
+                                                 lambda t: [out.p(ln) for ln in t.splitlines() if "second" not in ln])
         searchers.update(rs)
         out.p(f"rag-core: {ragnote}\n")
         out.data["ragcore"] = ragnote
@@ -548,7 +554,7 @@ def main() -> int:
                 o_items, o_no = old_sets(Path(args.ragcore_root), corpus_ids)
                 for mode in modes:
                     rows, a, o, sc = evaluate(searchers[mode], [(n, p, q) for n, p, q in o_items], o_no, corpus_ids)
-                    stamp = f"old real-corpus sets ({sum(len(q) for _, _, q in o_items)} answerable, {len(o_no)} no-answer) index_version={index_version[:12]} mode={mode} date={args.date}"
+                    stamp = f"set_version=n/a (rag-core sets, unversioned) old real-corpus sets ({sum(len(q) for _, _, q in o_items)} answerable, {len(o_no)} no-answer) index_version={index_version[:12]} mode={mode} date={args.date}"
                     report_mode(out, f"old-real/{mode}", stamp, rows, a, o, sc, refusal=(mode == "lms"))
             else:
                 out.p("  (old real-corpus sets need --ragcore-root; skipped)\n")
@@ -621,7 +627,7 @@ def run_fixture(out, items, no_q, fixture_ids, searchers, modes, args):
     floor = rq.load_floor()
     for mode in modes:
         rows, a, o, sc = evaluate(searchers[mode], items, no_q, fixture_ids)
-        stamp = f"SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode={mode} date={args.date}"
+        stamp = f"set_version=fixture-{floor['set_version']} SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode={mode} date={args.date}"
         report_mode(out, f"fixture/{mode}", stamp, rows, a, o, sc, refusal=(mode == "lms"), by_set=False)
         if mode == "lms":
             first = sum(r["flags"][0] for r in rows)

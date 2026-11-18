@@ -53,3 +53,7 @@ These fill gaps in the text above; none changes a requirement.
 - Content terms (R6.2) are the distinct non-function words of the passage (same function-word list as the query cleanup).
 - Refusal (R4) is measured for the lms mode only. rag-core L and HR have no "not found" rule until plan step 7; their rows show top-1 score spread instead.
 - SET_VERSION is the sha256 of the six files in name order, with line endings normalised to LF.
+- R9 reading: the 2-point Hit@3 gain is judged on the Gemini sets. The SPEC-20 fixture (41 questions, 1 question is about 2.4 points) is held to "top3 not below floor.json, and false-refusal and correct-refusal each within 1 point of the shipped value". For CITATION_MIN_RUN the gated number is recall of lightly edited supplied text, with false citations no more than 1 point worse. For the character caps the gated number is the share of query terms still present in the text the model receives, and a gain there is weighed against prompt size.
+- R2 loader: scripts/measure_lib.py loads the Gemini sets; the old rag-core sets are read with the existing `load_yaml` and set lists of measure_real_corpus.py, imported by measure_gemini.py, so there is still one rule for "right" (`measure_lib.is_right`).
+- R7 setting: read from `LMS_PASSAGES_PER_SOURCE` (whole number 1 to 5, default 1), like `LMS_MIN_MATCHED_TERMS`. By-file Hit@K uses the first 10 passages.
+- The rag-core sync report's timing line is not written into the baseline file (R11).

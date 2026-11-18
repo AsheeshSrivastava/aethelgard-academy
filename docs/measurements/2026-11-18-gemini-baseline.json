@@ -130,7 +130,7 @@
    }
   },
   "refusal": null,
-  "stamp": "SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=HR date=2026-11-18"
+  "stamp": "set_version=fixture-1 SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=HR date=2026-11-18"
  },
  "fixture/L": {
   "metrics": {
@@ -210,7 +210,7 @@
    }
   },
   "refusal": null,
-  "stamp": "SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=L date=2026-11-18"
+  "stamp": "set_version=fixture-1 SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=L date=2026-11-18"
  },
  "fixture/lms": {
   "metrics": {
@@ -295,7 +295,7 @@
    "false_refusal": 0.0488,
    "out_of_scope_n": 9
   },
-  "stamp": "SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=lms date=2026-11-18"
+  "stamp": "set_version=fixture-1 SPEC-20 fixture (41 answerable, 9 no-answer; lms uses min 2 terms) mode=lms date=2026-11-18"
  },
  "gemini/HR": {
   "metrics": {
@@ -956,7 +956,7 @@
    }
   },
   "refusal": null,
-  "stamp": "old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=HR date=2026-11-18"
+  "stamp": "set_version=n/a (rag-core sets, unversioned) old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=HR date=2026-11-18"
  },
  "old-real/L": {
   "metrics": {
@@ -1050,7 +1050,7 @@
    }
   },
   "refusal": null,
-  "stamp": "old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=L date=2026-11-18"
+  "stamp": "set_version=n/a (rag-core sets, unversioned) old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=L date=2026-11-18"
  },
  "old-real/lms": {
   "metrics": {
@@ -1149,7 +1149,7 @@
    "false_refusal": 0.0594,
    "out_of_scope_n": 237
   },
-  "stamp": "old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=lms date=2026-11-18"
+  "stamp": "set_version=n/a (rag-core sets, unversioned) old real-corpus sets (101 answerable, 237 no-answer) index_version=121b0a31c0f6 mode=lms date=2026-11-18"
  },
  "passages_per_source": {
   "1": {
