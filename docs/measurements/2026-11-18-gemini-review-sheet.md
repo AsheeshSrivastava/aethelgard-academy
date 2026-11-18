@@ -1,6 +1,6 @@
 # Review sheet: 24 questions from the six Gemini sets (SPEC-25 R8)
 
-SET_VERSION `4ac0cd942b512228`. Seed 25. Four questions per set, one of each kind. Fill the two boxes for each question:
+SET_VERSION `5d5fbd741a89ee65`. Seed 25. Four questions per set, one of each kind. Fill the two boxes for each question:
 put `y` or `n`. The bar is 22 of 24 `y` on **each** box (90%). Below that, the sets are not used as a gate until fixed.
 
 - *Realistic?* Would a learner plausibly type or paste this?
@@ -29,8 +29,8 @@ put `y` or `n`. The bar is 22 of 24 `y` on **each** box (90%). Below that, the s
 | 19 | python-docs / paraphrase | how do i make my custom class printable in a nice human-readable way and comparable with ==? | `reference/datamodel` | [ ] | [ ] |
 | 20 | python-docs / pasted | why did rex get buddy's tricks?? print(rex.tricks) # ['roll over', 'play dead'] C:\Users\sam\shop\pets.py:6 class Dog: tricks = [] def add_trick(self, trick): s... | `tutorial/classes` | [ ] | [ ] |
 | 21 | uv-docs / plain | how do i set up uv inside a dockerfile for production? | `guides/integration/docker` | [ ] | [ ] |
-| 22 | uv-docs / error | uv complains about requires-python mismatch when i try to add a dependency that needs python 3.11+ | `concepts/python-versions, concepts/resolution` | [ ] | [ ] |
-| 23 | uv-docs / paraphrase | how do i see why a package is installed in my environment as a dependency tree? | `pip/inspection` | [ ] | [ ] |
-| 24 | uv-docs / pasted | why did uv add fail with a python version error?? × No solution found when resolving dependencies: ╰─▶ Because the current Python version (3.9.18) does not sati... | `concepts/python-versions, concepts/resolution` | [ ] | [ ] |
+| 22 | uv-docs / error | uv complains about requires-python mismatch when i try to add a dependency that needs python 3.11+ | `concepts/resolution` | [ ] | [ ] |
+| 23 | uv-docs / paraphrase | how do i see why a package is installed in my environment as a dependency tree? | `getting-started/features` | [ ] | [ ] |
+| 24 | uv-docs / pasted | why did uv add fail with a python version error?? × No solution found when resolving dependencies: ╰─▶ Because the current Python version (3.9.18) does not sati... | `concepts/resolution` | [ ] | [ ] |
 
 Totals: realistic ___ / 24, page right ___ / 24.

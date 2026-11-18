@@ -46,7 +46,7 @@ questions:
   expect: [guides/tools]
 - q: uv complains about requires-python mismatch when i try to add a dependency that needs python 3.11+
   kind: error
-  expect: [concepts/python-versions, concepts/resolution]
+  expect: [concepts/resolution]
 - q: uv run ignores my active conda or venv environment and creates a .venv in the project folder instead
   kind: error
   expect: [concepts/projects/sync, pip/environments]
@@ -85,7 +85,7 @@ questions:
   expect: [concepts/resolution]
 - q: how do i see why a package is installed in my environment as a dependency tree?
   kind: paraphrase
-  expect: [pip/inspection]
+  expect: [getting-started/features]
 - q: how do i store uv's downloaded interpreters and environments in a custom folder on another drive?
   kind: paraphrase
   expect: [reference/storage]
@@ -155,7 +155,7 @@ questions:
     C:\Users\sam\shop\pyproject.toml:4
     requires-python = ">=3.9"
   kind: pasted
-  expect: [concepts/python-versions, concepts/resolution]
+  expect: [concepts/resolution]
 - q: |
     why did uv run ignore the virtual environment i activated??
     warning: `VIRTUAL_ENV=C:\Users\sam\other-venv` does not match the project environment path `.venv` and will be ignored
