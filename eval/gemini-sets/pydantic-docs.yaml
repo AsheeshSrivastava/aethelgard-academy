@@ -1,0 +1,232 @@
+questions:
+- q: how do i convert a pydantic model to a dictionary or json string?
+  kind: plain
+  expect: [serialization, json]
+- q: how do i write a custom validator for one field in pydantic?
+  kind: plain
+  expect: [validators]
+- q: how do i accept camelCase json keys for snake_case python fields?
+  kind: plain
+  expect: [alias]
+- q: how do i stop pydantic from turning the string "123" into the integer 123?
+  kind: plain
+  expect: [strict_mode]
+- q: how do i validate a list of dicts without wrapping it in a BaseModel class?
+  kind: plain
+  expect: [type_adapter]
+- q: how do i make pydantic raise an error if the input json has extra unknown keys?
+  kind: plain
+  expect: [models, config]
+- q: how do i generate a json schema from my pydantic model?
+  kind: plain
+  expect: [json_schema]
+- q: how do i validate arguments passed to a normal python function using type hints?
+  kind: plain
+  expect: [validation_decorator]
+- q: how do i load environment variables and .env files into a settings class?
+  kind: plain
+  expect: [pydantic_settings]
+- q: how do i use a discriminated union so pydantic picks the right model by a type field?
+  kind: plain
+  expect: [unions]
+- q: pydantic throws PydanticUserError Model is not fully defined when two models reference each other, how do i fix it?
+  kind: error
+  expect: [forward_annotations]
+- q: pydantic silently ignores my invalid default value on a field instead of raising ValidationError, why?
+  kind: error
+  expect: [fields]
+- q: my validator runs fine on creation, but mutating user.age = "bad" later doesn't raise an error
+  kind: error
+  expect: [config, models]
+- q: passing a sqlalchemy object to model_validate fails with Input should be a valid dictionary or instance of User
+  kind: error
+  expect: [models]
+- q: my union field prints 6 different validation errors for every branch when input fails, how do i make it cleaner?
+  kind: error
+  expect: [unions]
+- q: pydantic raises ValidationError Extra inputs are not permitted when extra fields are in the json
+  kind: error
+  expect: [models]
+- q: my Field(default=[]) list seems shared or flagged by type checkers, what should i use instead?
+  kind: error
+  expect: [fields]
+- q: calling model_validate_json fails when my custom validator expects a python dict instead of raw json
+  kind: error
+  expect: [json, validators]
+- q: pydantic turns my string "false" into boolean False even though i wanted strict booleans
+  kind: error
+  expect: [strict_mode, conversion_table]
+- q: my pydantic dataclass fails with TypeError or schema error when using forward references
+  kind: error
+  expect: [dataclasses, forward_annotations]
+- q: how do i run a check that compares two different attributes on the same object, like password and confirm_password?
+  kind: paraphrase
+  expect: [validators]
+- q: my api sends nested keys like data.user.fullName and i want to pull that straight into a flat python attribute
+  kind: paraphrase
+  expect: [alias]
+- q: how do i make parsing faster when i already have a raw json string from an http response?
+  kind: paraphrase
+  expect: [performance, json]
+- q: i want to check if a single python dict matches a TypedDict or list[int] without creating a class
+  kind: paraphrase
+  expect: [type_adapter]
+- q: how do i attach min length or greater-than rules directly inside Annotated type hints?
+  kind: paraphrase
+  expect: [fields, types]
+- q: i want my standard @dataclass classes to automatically check types at runtime without inheriting from BaseModel
+  kind: paraphrase
+  expect: [dataclasses]
+- q: how do i drop None values or unprovided keys when turning an object back into a dict?
+  kind: paraphrase
+  expect: [serialization]
+- q: why does pydantic convert "42" into 42 by default, and what types coerce into what?
+  kind: paraphrase
+  expect: [conversion_table, models]
+- q: how do i chain multiple small transformation steps like strip then lowercase using the pipeline api?
+  kind: paraphrase
+  expect: [experimental]
+- q: how do i make a model read-only after creation so attributes cannot be reassigned?
+  kind: paraphrase
+  expect: [config]
+- q: |
+    why is this failing??
+    pydantic.errors.PydanticUserError: `Order` is not fully defined; you should define `Customer`, then call `Order.model_rebuild()`.
+    C:\Users\sam\shop\schemas\order.py:6
+    class Order(BaseModel):
+        customer: "Customer"
+    class Customer(BaseModel):
+        orders: list[Order] = []
+  kind: pasted
+  expect: [forward_annotations]
+- q: |
+    why didn't pydantic catch this invalid default value??
+    no error raised when defining User, User() returns age='not-a-number'
+    C:\Users\sam\shop\schemas\user.py:4
+    class User(BaseModel):
+        age: int = "not-a-number"
+    u = User()
+  kind: pasted
+  expect: [fields]
+- q: |
+    why did this fail when passing my orm object??
+    pydantic_core._pydantic_core.ValidationError: 1 validation error for UserOut
+      Input should be a valid dictionary or instance of UserOut [type=model_type, input_value=<UserORM id=1>]
+    C:\Users\sam\shop\routes\users.py:11
+    orm_user = db.get(UserORM, 1)
+    return UserOut.model_validate(orm_user)
+  kind: pasted
+  expect: [models]
+- q: |
+    why does assigning a bad value after creation not raise an error??
+    expected ValidationError, got no error and u.age == "oops"
+    C:\Users\sam\shop\schemas\user.py:9
+    class User(BaseModel):
+        age: int
+    u = User(age=20)
+    u.age = "oops"
+  kind: pasted
+  expect: [config]
+- q: |
+    why is it rejecting my camelCase json when i set an alias??
+    ValidationError: 1 validation error for Item
+    firstName
+      Field required [type=missing, input_value={'first_name': 'Sam'}, input_type=dict]
+    C:\Users\sam\shop\schemas\item.py:5
+    class Item(BaseModel):
+        first_name: str = Field(alias="firstName")
+    Item(first_name="Sam")
+  kind: pasted
+  expect: [alias]
+- q: |
+    why did this fail when my validator returned nothing??
+    ValidationError: 1 validation error for Product
+    name
+      Input should be a valid string [type=string_type, input_value=None]
+    C:\Users\sam\shop\schemas\product.py:8
+    @field_validator("name")
+    @classmethod
+    def check_name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("empty")
+  kind: pasted
+  expect: [validators]
+- q: |
+    why is pydantic rejecting extra keys i didn't list??
+    ValidationError: 1 validation error for Config
+    debug
+      Extra inputs are not permitted [type=extra_forbidden, input_value=True]
+    C:\Users\sam\shop\schemas\cfg.py:4
+    class Config(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        host: str
+    Config(host="localhost", debug=True)
+  kind: pasted
+  expect: [models, config]
+- q: |
+    why did this accept a string when i wanted an int only??
+    Item(count="5") -> Item(count=5) instead of raising ValidationError
+    C:\Users\sam\shop\schemas\item.py:5
+    class Item(BaseModel):
+        count: int
+    Item(count="5")
+  kind: pasted
+  expect: [strict_mode, models]
+- q: |
+    why is this union error so long and blaming the wrong branch??
+    ValidationError: 2 validation errors for Pet
+    dog.bark  Field required
+    cat.meow  Field required
+    C:\Users\sam\shop\schemas\pet.py:7
+    class Pet(BaseModel):
+        animal: Dog | Cat
+    Pet(animal={"kind": "dog", "name": "Rex"})
+  kind: pasted
+  expect: [unions]
+- q: |
+    why does my function not validate its arguments??
+    add("not", "int") -> "notint" instead of raising ValidationError
+    C:\Users\sam\shop\utils\math.py:4
+    def add(a: int, b: int) -> int:
+        return a + b
+    add("not", "int")
+  kind: pasted
+  expect: [validation_decorator]
+out_of_scope:
+- q: how do i map a pydantic model to a postgresql table with sqlalchemy?
+  kind: neighbouring
+  why: pydantic-docs covers data validation and serialization, not SQLAlchemy ORM table mapping
+- q: how do i integrate pydantic with fastapi dependency injection and openapi routes?
+  kind: neighbouring
+  why: pydantic-docs does not document FastAPI routing or dependency injection
+- q: how do i use pydantic-ai to build structured llm agents?
+  kind: neighbouring
+  why: pydantic-docs does not cover the separate pydantic-ai library
+- q: how do i migrate from marshmallow schemas to pydantic v2?
+  kind: neighbouring
+  why: pydantic-docs does not include a Marshmallow migration guide
+- q: how do i define a zod schema with z.object in typescript?
+  kind: other-tool
+  why: pydantic-docs is for Python Pydantic, not TypeScript Zod
+- q: how do i use serde derive Serialize and Deserialize in rust?
+  kind: other-tool
+  why: pydantic-docs is for Python Pydantic, not Rust Serde
+- q: how do i validate request dtos with bean validation @NotNull in java?
+  kind: other-tool
+  why: pydantic-docs is for Python Pydantic, not Java Bean Validation
+- q: when should i use a dataclass vs a named tuple vs a regular class in python?
+  kind: general
+  why: pydantic-docs focuses on Pydantic models and dataclasses rather than general Python data structure trade-offs
+- q: how do i structure a portfolio project to show data modeling skills to recruiters?
+  kind: general
+  why: pydantic-docs does not give career or portfolio advice
+- q: |
+    why is this failing??
+    C:\Users\sam\shop\db.py:14: in save_user
+        conn.commit()
+    sqlite3.OperationalError: database is locked
+    with sqlite3.connect("app.db") as conn:
+        conn.execute("INSERT INTO users VALUES (?)", (name,))
+        conn.commit()
+  kind: general
+  why: the error is a SQLite database locking issue, not a Pydantic validation or schema problem

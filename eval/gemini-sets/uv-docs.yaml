@@ -1,0 +1,210 @@
+questions:
+- q: how do i initialize a new python project with uv?
+  kind: plain
+  expect: [concepts/projects/init, guides/projects]
+- q: how do i add a package like httpx to my uv project?
+  kind: plain
+  expect: [concepts/projects/dependencies]
+- q: how do i run pytest inside my project using uv?
+  kind: plain
+  expect: [concepts/projects/run]
+- q: how do i install a specific python version like 3.12 with uv?
+  kind: plain
+  expect: [guides/install-python, concepts/python-versions]
+- q: how do i run a cli tool like ruff once without installing it into my project?
+  kind: plain
+  expect: [guides/tools]
+- q: how do i create a requirements.txt file from uv.lock?
+  kind: plain
+  expect: [concepts/projects/export]
+- q: how do i migrate an existing requirements.txt repo to a uv project?
+  kind: plain
+  expect: [guides/migration/pip-to-project]
+- q: how do i install packages using uv pip inside a virtual environment?
+  kind: plain
+  expect: [pip/packages, pip/environments]
+- q: how do i set up uv inside a dockerfile for production?
+  kind: plain
+  expect: [guides/integration/docker]
+- q: how do i clear uv's downloaded package cache?
+  kind: plain
+  expect: [concepts/cache]
+- q: uv failed with "Failed to build numpy==1.19.5", why is uv trying to compile it from source?
+  kind: error
+  expect: [reference/troubleshooting/build-failures]
+- q: uv says "No solution found when resolving dependencies" because two packages disagree on a version, how do i debug it?
+  kind: error
+  expect: [concepts/resolution]
+- q: uv run keeps modifying uv.lock in CI and failing our --locked check, why?
+  kind: error
+  expect: [concepts/projects/sync]
+- q: uv pip install fails because it cannot verify our corporate SSL certificate
+  kind: error
+  expect: [concepts/authentication/certificates]
+- q: uvx says command not found or fails when the cli binary name differs from the pypi package name
+  kind: error
+  expect: [guides/tools]
+- q: uv complains about requires-python mismatch when i try to add a dependency that needs python 3.11+
+  kind: error
+  expect: [concepts/resolution]
+- q: uv run ignores my active conda or venv environment and creates a .venv in the project folder instead
+  kind: error
+  expect: [concepts/projects/sync, pip/environments]
+- q: uv build fails or produces an empty wheel because my src layout isn't matched by the build backend
+  kind: error
+  expect: [concepts/build-backend, concepts/projects/layout]
+- q: uv fails with 401 unauthorized when pulling from our private pypi index
+  kind: error
+  expect: [concepts/authentication/http, concepts/indexes]
+- q: uv says my script is missing requests even though i installed it in my project venv
+  kind: error
+  expect: [guides/scripts]
+- q: how do i put package requirements right inside a single standalone .py file so anyone can run it?
+  kind: paraphrase
+  expect: [guides/scripts]
+- q: i have three related python packages in one monorepo that depend on each other, how do i manage them together?
+  kind: paraphrase
+  expect: [concepts/projects/workspaces]
+- q: how do i pin the exact python version my whole team should use when they clone the repo?
+  kind: paraphrase
+  expect: [concepts/python-versions]
+- q: how do i separate packages only needed for linting and testing from the ones shipped in production?
+  kind: paraphrase
+  expect: [concepts/projects/dependencies]
+- q: how do i point uv at a private company package registry instead of public pypi?
+  kind: paraphrase
+  expect: [concepts/indexes]
+- q: how do i make sure github actions uses uv and caches downloads between workflow runs?
+  kind: paraphrase
+  expect: [guides/integration/github]
+- q: how do i compile a requirements.in file into a pinned requirements.txt with hashes?
+  kind: paraphrase
+  expect: [pip/compile]
+- q: how do i force uv to use a pre-release or beta version of a dependency?
+  kind: paraphrase
+  expect: [concepts/resolution]
+- q: how do i see why a package is installed in my environment as a dependency tree?
+  kind: paraphrase
+  expect: [getting-started/features]
+- q: how do i store uv's downloaded interpreters and environments in a custom folder on another drive?
+  kind: paraphrase
+  expect: [reference/storage]
+- q: |
+    why is this failing??
+    × Failed to build `numpy==1.19.5`
+    ├─▶ The build backend returned an error
+    ╰─▶ Call to `setuptools.build_meta:__legacy__.build_wheel` failed (exit status: 1)
+    C:\Users\sam\shop\pyproject.toml:6
+    [project]
+    requires-python = ">=3.12"
+    dependencies = ["numpy==1.19.5"]
+  kind: pasted
+  expect: [reference/troubleshooting/build-failures]
+- q: |
+    why can't uv install these two packages together??
+    x No solution found when resolving dependencies:
+    ╰─▶ Because pkg-a==1.0.0 depends on httpx>=0.27 and pkg-b==2.0.0 depends on httpx<0.25, we can conclude that pkg-a==1.0.0 and pkg-b==2.0.0 are incompatible.
+    C:\Users\sam\shop\pyproject.toml:5
+    dependencies = ["pkg-a==1.0.0", "pkg-b==2.0.0"]
+  kind: pasted
+  expect: [concepts/resolution]
+- q: |
+    why is my standalone script failing when httpx is in my project??
+    Traceback (most recent call last):
+      File "C:\Users\sam\shop\scripts\fetch.py", line 1, in <module>
+        import httpx
+    ModuleNotFoundError: No module named 'httpx'
+    # ran: uv run --no-project scripts/fetch.py
+    import httpx
+    print(httpx.get("https://example.com").status_code)
+  kind: pasted
+  expect: [guides/scripts]
+- q: |
+    why did uv fail in ci when i used --locked??
+    error: The lockfile at `uv.lock` needs to be updated, but `--locked` was provided.
+    C:\Users\sam\shop\pyproject.toml:4
+    [project]
+    name = "shop"
+    dependencies = ["fastapi>=0.115", "pydantic>=2.9"]
+  kind: pasted
+  expect: [concepts/projects/sync]
+- q: |
+    why is uvx saying there is no executable for this package??
+    The executable `pillow` was not found in package `pillow`
+    C:\Users\sam\shop> uvx pillow --help
+    # trying to run a cli from a package whose command has a different name
+  kind: pasted
+  expect: [guides/tools]
+- q: |
+    why did uv pip install fail with a certificate error??
+    error: Failed to fetch: `https://pypi.org/simple/requests/`
+      Caused by: invalid peer certificate: UnknownIssuer
+    C:\Users\sam\shop> uv pip install requests
+  kind: pasted
+  expect: [concepts/authentication/certificates]
+- q: |
+    why is uv refusing to install into my system python??
+    error: No virtual environment found; run `uv venv` to create an environment, or pass `--system` to override
+    C:\Users\sam\shop> uv pip install pytest
+  kind: pasted
+  expect: [pip/environments, pip/packages]
+- q: |
+    why did uv add fail with a python version error??
+    × No solution found when resolving dependencies:
+    ╰─▶ Because the current Python version (3.9.18) does not satisfy Python>=3.11 and mypkg requires Python>=3.11
+    C:\Users\sam\shop\pyproject.toml:4
+    requires-python = ">=3.9"
+  kind: pasted
+  expect: [concepts/resolution]
+- q: |
+    why did uv run ignore the virtual environment i activated??
+    warning: `VIRTUAL_ENV=C:\Users\sam\other-venv` does not match the project environment path `.venv` and will be ignored
+    C:\Users\sam\shop> uv run python -c "import sys; print(sys.executable)"
+  kind: pasted
+  expect: [concepts/projects/sync]
+- q: |
+    why is my private index failing with 401??
+    error: Failed to fetch: `https://pkgs.example.com/simple/my-lib/`
+      Caused by: HTTP status client error (401 Unauthorized)
+    C:\Users\sam\shop\pyproject.toml:9
+    [[tool.uv.index]]
+    url = "https://pkgs.example.com/simple/"
+  kind: pasted
+  expect: [concepts/authentication/http, concepts/indexes]
+out_of_scope:
+- q: how do i configure poetry groups and poetry.lock in an existing poetry project?
+  kind: neighbouring
+  why: uv-docs documents uv and pip compatibility, not Poetry commands or poetry.lock management
+- q: how do i create a conda environment.yml file with mambaforge channels?
+  kind: neighbouring
+  why: uv-docs does not document Conda or Mamba environment.yml workflows
+- q: how do i write a custom setuptools setup.py C extension with cython?
+  kind: neighbouring
+  why: uv-docs does not teach how to write Cython or setuptools C extensions
+- q: how do i publish a package to npm with package.json?
+  kind: other-tool
+  why: uv-docs is for Python uv, not Node.js npm
+- q: how do i use cargo add and Cargo.lock in a rust project?
+  kind: other-tool
+  why: uv-docs is for Python uv, not Rust Cargo
+- q: how do i manage go modules with go mod tidy?
+  kind: other-tool
+  why: uv-docs is for Python uv, not Go modules
+- q: how do i deploy and configure a self-hosted devpi or pypiserver instance?
+  kind: neighbouring
+  why: uv-docs covers publishing and authenticating to indexes, not setting up or hosting devpi or pypiserver
+- q: should i use a monorepo or separate repositories for my backend microservices?
+  kind: general
+  why: uv-docs covers uv workspaces technically but does not give general monorepo vs polyrepo architecture advice
+- q: how do i explain dependency management and reproducibility in a junior dev interview?
+  kind: general
+  why: uv-docs does not give career or interview advice
+- q: |
+    why is this failing??
+    C:\Users\sam\shop\main.py:5: in start
+        app.run(port="8000")
+    TypeError: port must be an int, not str
+    def start():
+        app.run(port="8000")
+  kind: general
+  why: the error is an application argument type bug in user code, not a uv packaging or environment issue

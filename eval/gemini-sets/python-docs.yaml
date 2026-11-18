@@ -1,0 +1,226 @@
+questions:
+- q: how do i create and activate a virtual environment in python?
+  kind: plain
+  expect: [tutorial/venv]
+- q: how do i read and write a json file in python?
+  kind: plain
+  expect: [tutorial/inputoutput]
+- q: how do i make a python file runnable as a script without running its code when imported?
+  kind: plain
+  expect: [tutorial/modules]
+- q: how do i catch multiple exception types in one except block?
+  kind: plain
+  expect: [tutorial/errors]
+- q: how do i write a list comprehension with an if condition?
+  kind: plain
+  expect: [tutorial/datastructures]
+- q: how do i format numbers to 2 decimal places inside an f-string?
+  kind: plain
+  expect: [tutorial/inputoutput]
+- q: how do i accept any number of keyword arguments with **kwargs in a function?
+  kind: plain
+  expect: [tutorial/controlflow]
+- q: how do i inherit from a parent class and call super() in python?
+  kind: plain
+  expect: [tutorial/classes]
+- q: how do i make a custom object work with a with statement?
+  kind: plain
+  expect: [reference/datamodel]
+- q: how does the walrus operator := work in python expressions?
+  kind: plain
+  expect: [reference/expressions]
+- q: why does python give 0.1 + 0.2 == 0.30000000000000004 instead of 0.3?
+  kind: error
+  expect: [tutorial/floatingpoint]
+- q: i get UnboundLocalError cannot access local variable count where it is not associated with a value inside my function
+  kind: error
+  expect: [reference/executionmodel]
+- q: python raises TypeError Dog.bark() takes 0 positional arguments but 1 was given when i call d.bark()
+  kind: error
+  expect: [tutorial/classes]
+- q: i get ImportError attempted relative import with no known parent package when running my module directly
+  kind: error
+  expect: [reference/import, tutorial/modules]
+- q: python raises SyntaxError unterminated string literal on a windows path raw string r"C:\Users\sam\"
+  kind: error
+  expect: [reference/lexical_analysis]
+- q: why does my function remember items from the previous call when i used def add_item(x, items=[]):?
+  kind: error
+  expect: [tutorial/controlflow]
+- q: why do all instances of my Dog class share the same tricks list when i put tricks = [] on the class?
+  kind: error
+  expect: [tutorial/classes]
+- q: i tried to make an empty set with {} and now add() raises AttributeError dict object has no attribute add
+  kind: error
+  expect: [tutorial/datastructures]
+- q: why does my single-item tuple ('hello') act like a plain string instead of a tuple?
+  kind: error
+  expect: [tutorial/datastructures]
+- q: python gives IndentationError unindent does not match any outer indentation level, what causes that?
+  kind: error
+  expect: [reference/lexical_analysis]
+- q: how do i run a cleanup block that always executes whether an error happened or not?
+  kind: paraphrase
+  expect: [tutorial/errors]
+- q: i want to loop over two lists side by side and also get the index number of each item
+  kind: paraphrase
+  expect: [tutorial/datastructures]
+- q: how do i write a function that pauses and hands back one item at a time with yield instead of building a huge list?
+  kind: paraphrase
+  expect: [tutorial/classes]
+- q: how do i check a value against several patterns and unpack dict or list shapes cleanly?
+  kind: paraphrase
+  expect: [tutorial/controlflow, reference/compound_stmts]
+- q: why does changing a list inside a for loop skip items, and what should i do instead?
+  kind: paraphrase
+  expect: [tutorial/controlflow]
+- q: how do i make my custom class printable in a nice human-readable way and comparable with ==?
+  kind: paraphrase
+  expect: [reference/datamodel]
+- q: what happens when a loop finishes normally without hitting break, and how do i run code only in that case?
+  kind: paraphrase
+  expect: [tutorial/controlflow]
+- q: why do two modules importing each other fail partway through loading?
+  kind: paraphrase
+  expect: [reference/import]
+- q: how do i prevent python from writing a __pycache__ folder or speed up loading?
+  kind: paraphrase
+  expect: [tutorial/modules]
+- q: how do i limit what gets exported when someone runs from mymod import *?
+  kind: paraphrase
+  expect: [tutorial/modules]
+- q: |
+    why is this failing??
+    File "C:\Users\sam\shop\counter.py", line 4, in bump
+        total += 1
+    UnboundLocalError: cannot access local variable 'total' where it is not associated with a value
+    total = 0
+    def bump():
+        total += 1
+  kind: pasted
+  expect: [reference/executionmodel]
+- q: |
+    why is my second call keeping the old items??
+    print(add_item("a"))  # ['a']
+    print(add_item("b"))  # ['a', 'b']  <-- expected ['b']
+    C:\Users\sam\shop\cart.py:3
+    def add_item(item, bucket=[]):
+        bucket.append(item)
+        return bucket
+  kind: pasted
+  expect: [tutorial/controlflow]
+- q: |
+    why did rex get buddy's tricks??
+    print(rex.tricks)  # ['roll over', 'play dead']
+    C:\Users\sam\shop\pets.py:6
+    class Dog:
+        tricks = []
+        def add_trick(self, trick):
+            self.tricks.append(trick)
+    buddy = Dog(); buddy.add_trick("roll over")
+    rex = Dog(); rex.add_trick("play dead")
+  kind: pasted
+  expect: [tutorial/classes]
+- q: |
+    why is this saying 0 positional arguments when i passed none??
+    File "C:\Users\sam\shop\user.py", line 6, in <module>
+        u.greet()
+    TypeError: User.greet() takes 0 positional arguments but 1 was given
+    class User:
+        def greet():
+            return "hi"
+    u = User()
+    u.greet()
+  kind: pasted
+  expect: [tutorial/classes]
+- q: |
+    why does this say dict has no attribute add??
+    File "C:\Users\sam\shop\tags.py", line 3, in <module>
+        tags.add("python")
+    AttributeError: 'dict' object has no attribute 'add'
+    tags = {}
+    tags.add("python")
+  kind: pasted
+  expect: [tutorial/datastructures]
+- q: |
+    why is this assertion failing in python??
+    File "C:\Users\sam\shop\money.py", line 2, in <module>
+        assert 0.1 + 0.2 == 0.3
+    AssertionError
+    total = 0.1 + 0.2
+    assert total == 0.3
+  kind: pasted
+  expect: [tutorial/floatingpoint]
+- q: |
+    why did python fail to parse this windows folder string??
+    File "C:\Users\sam\shop\paths.py", line 1
+        folder = r"C:\Users\sam\"
+                 ^
+    SyntaxError: unterminated string literal (detected at line 1)
+    folder = r"C:\Users\sam\"
+  kind: pasted
+  expect: [reference/lexical_analysis]
+- q: |
+    why does my relative import fail when i run this file??
+    File "C:\Users\sam\shop\pkg\sub.py", line 1, in <module>
+        from . import helper
+    ImportError: attempted relative import with no known parent package
+    # running: python pkg/sub.py
+    from . import helper
+  kind: pasted
+  expect: [reference/import, tutorial/modules]
+- q: |
+    why is len() returning 3 instead of 1??
+    items = ("hat")
+    print(len(items))  # 3
+    C:\Users\sam\shop\order.py:2
+    items = ("hat")
+    print(type(items), len(items))
+  kind: pasted
+  expect: [tutorial/datastructures]
+- q: |
+    why did my loop skip deleting 'b'??
+    letters = ['a', 'b', 'c']
+    # result was ['a', 'c'] when trying to remove 'b' and 'c'
+    C:\Users\sam\shop\clean.py:3
+    for ch in letters:
+        if ch in ('b', 'c'):
+            letters.remove(ch)
+  kind: pasted
+  expect: [tutorial/controlflow]
+out_of_scope:
+- q: how do i run multiple coroutines concurrently with asyncio.gather and asyncio.TaskGroup?
+  kind: neighbouring
+  why: python-docs here contains only the tutorial and language reference, not the asyncio library reference
+- q: how do i use parameterized ? placeholders in sqlite3 to prevent sql injection?
+  kind: neighbouring
+  why: python-docs here does not include the sqlite3 standard library documentation
+- q: how do i recursively find files with pathlib.Path.rglob?
+  kind: neighbouring
+  why: python-docs here does not include the pathlib standard library reference
+- q: how do i set up a logging.config.dictConfig with RotatingFileHandler?
+  kind: neighbouring
+  why: python-docs here mentions logging briefly in the tutorial tour, not logging.config.dictConfig
+- q: how do i use destructuring and spread syntax on objects in javascript?
+  kind: other-tool
+  why: python-docs is for Python, not JavaScript
+- q: how do i handle borrow checker lifetime errors in rust?
+  kind: other-tool
+  why: python-docs is for Python, not Rust
+- q: how do i write a bash for loop over all .txt files in a directory?
+  kind: other-tool
+  why: python-docs is for Python, not Bash shell scripting
+- q: should i learn python or go first for backend engineering jobs?
+  kind: general
+  why: python-docs does not give career or language-choice advice
+- q: what is big-o time complexity and why does O(n^2) matter?
+  kind: general
+  why: python-docs does not teach general algorithms and complexity theory
+- q: |
+    why is this failing??
+    requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.example.com', port=443): Max retries exceeded
+    C:\Users\sam\shop\client.py:4
+    import requests
+    r = requests.get("https://api.example.com/data")
+  kind: general
+  why: the error is a network failure in the third-party requests library, not a Python language or tutorial topic

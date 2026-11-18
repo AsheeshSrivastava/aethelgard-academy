@@ -1,0 +1,215 @@
+questions:
+- q: how do i send query parameters like ?key=value in an httpx get request?
+  kind: plain
+  expect: [quickstart]
+- q: how do i send a json body in an httpx post request?
+  kind: plain
+  expect: [quickstart]
+- q: how do i make async http requests with httpx?
+  kind: plain
+  expect: [async]
+- q: how do i set a custom timeout on an httpx request?
+  kind: plain
+  expect: [advanced/timeouts]
+- q: how do i reuse tcp connections across multiple requests in httpx?
+  kind: plain
+  expect: [advanced/clients]
+- q: how do i enable http/2 support in httpx?
+  kind: plain
+  expect: [http2]
+- q: how do i pass basic auth username and password to httpx?
+  kind: plain
+  expect: [advanced/authentication]
+- q: how do i configure an http or socks proxy in httpx?
+  kind: plain
+  expect: [advanced/proxies]
+- q: how do i stream a large response instead of loading it all into memory?
+  kind: plain
+  expect: [quickstart]
+- q: how do i turn on debug logging to see raw http requests in httpx?
+  kind: plain
+  expect: [logging]
+- q: httpx returns a 301 or 302 response instead of following the redirect like requests does, why?
+  kind: error
+  expect: [compatibility, quickstart]
+- q: httpx raises ImportError Using http2=True requires the h2 package to be installed
+  kind: error
+  expect: [http2]
+- q: my httpx request fails with ReadTimeout after 5 seconds when calling a slow api
+  kind: error
+  expect: [advanced/timeouts, exceptions]
+- q: httpx raises HTTPStatusError 404 Not Found when i call raise_for_status(), how do i catch it properly?
+  kind: error
+  expect: [exceptions, quickstart]
+- q: httpx keeps trying to use my corporate HTTP_PROXY env var even though i want a direct connection
+  kind: error
+  expect: [environment_variables]
+- q: i get SSLCertVerificationError when calling an internal service with a self-signed cert in httpx
+  kind: error
+  expect: [advanced/ssl]
+- q: httpx raises PoolTimeout because too many connections are open, how do i tune the connection pool?
+  kind: error
+  expect: [advanced/resource-limits, exceptions]
+- q: response.text has garbled characters because the server didn't send a charset header
+  kind: error
+  expect: [advanced/text-encodings]
+- q: my proxy config raises an error when i pass a dictionary of schemes like requests does
+  kind: error
+  expect: [troubleshooting, compatibility]
+- q: calling client.get() inside an async def blocks or warns instead of being awaited, why?
+  kind: error
+  expect: [async]
+- q: how do i test my fastapi or starlette app in memory without starting a real network server?
+  kind: paraphrase
+  expect: [advanced/transports]
+- q: i want to run a callback function automatically every time a response comes back to log the status code
+  kind: paraphrase
+  expect: [advanced/event-hooks]
+- q: how do i fake http responses in unit tests without hitting the real internet?
+  kind: paraphrase
+  expect: [advanced/transports]
+- q: i'm switching from the requests library and my code keeps breaking on redirects and sessions, where is the cheat sheet?
+  kind: paraphrase
+  expect: [compatibility]
+- q: how do i send files in a multipart upload?
+  kind: paraphrase
+  expect: [quickstart]
+- q: how do i put a default Authorization header and base url on every call without repeating them?
+  kind: paraphrase
+  expect: [advanced/clients]
+- q: how do i implement a custom hmac signing scheme that modifies outgoing requests?
+  kind: paraphrase
+  expect: [advanced/authentication]
+- q: how do i limit how many simultaneous sockets stay open so i don't exhaust file descriptors?
+  kind: paraphrase
+  expect: [advanced/resource-limits]
+- q: how do i make sure my client ignores system proxy variables on my machine?
+  kind: paraphrase
+  expect: [environment_variables]
+- q: i want to retry or inspect all network errors with one base exception class, what is the hierarchy?
+  kind: paraphrase
+  expect: [exceptions]
+- q: |
+    why did i get 302 instead of the final page??
+    r = httpx.get("https://example.org/old")
+    print(r.status_code)  # 302
+    C:\Users\sam\shop\client.py:6
+    def fetch_page():
+        r = httpx.get("https://example.org/old")
+        return r.text
+  kind: pasted
+  expect: [compatibility, quickstart]
+- q: |
+    why is this crashing on import??
+    ImportError: Using http2=True, but the 'h2' package is not installed. Make sure to install httpx using `pip install httpx[http2]`.
+    C:\Users\sam\shop\client.py:3
+    client = httpx.Client(http2=True)
+    r = client.get("https://example.com")
+  kind: pasted
+  expect: [http2]
+- q: |
+    why does this fail after 5 seconds??
+    httpx.ReadTimeout: timed out
+    C:\Users\sam\shop\sync_jobs.py:14: in fetch_report
+        r = httpx.get("https://slow.example.com/report")
+    def fetch_report():
+        return httpx.get("https://slow.example.com/report").json()
+  kind: pasted
+  expect: [advanced/timeouts]
+- q: |
+    why didn't my 404 raise an exception until i added raise_for_status??
+    httpx.HTTPStatusError: Client error '404 Not Found' for url 'https://api.example.com/items/99'
+    C:\Users\sam\shop\client.py:9
+    r = httpx.get("https://api.example.com/items/99")
+    r.raise_for_status()
+  kind: pasted
+  expect: [quickstart, exceptions]
+- q: |
+    why is it still routing through the proxy when i didn't pass one??
+    httpx.ProxyError: [Errno 111] Connection refused
+    HTTP_PROXY=http://127.0.0.1:8888 is set in shell
+    C:\Users\sam\shop\client.py:5
+    with httpx.Client() as client:
+        r = client.get("https://api.example.com/health")
+  kind: pasted
+  expect: [environment_variables]
+- q: |
+    why is ssl failing against my local dev server??
+    httpx.ConnectError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate
+    C:\Users\sam\shop\client.py:7
+    r = httpx.get("https://localhost:8443/ping")
+  kind: pasted
+  expect: [advanced/ssl]
+- q: |
+    why did this fail when using async??
+    TypeError: object Response can't be used in 'await' expression
+    C:\Users\sam\shop\async_client.py:6
+    async def fetch():
+        with httpx.Client() as client:
+            r = await client.get("https://example.com")
+            return r.text
+  kind: pasted
+  expect: [async]
+- q: |
+    why is my proxy dictionary failing??
+    TypeError: Client.__init__() got an unexpected keyword argument 'proxies'
+    C:\Users\sam\shop\client.py:4
+    client = httpx.Client(proxies={"http://": "http://localhost:8080"})
+    r = client.get("http://example.com")
+  kind: pasted
+  expect: [advanced/proxies, troubleshooting]
+- q: |
+    why did my response text have weird symbols??
+    r.text -> "cafÃ©" instead of "café"
+    C:\Users\sam\shop\scraper.py:8
+    r = httpx.get("https://example.com/menu")
+    print(r.text)
+  kind: pasted
+  expect: [advanced/text-encodings]
+- q: |
+    why is my async client leaking connections or warning at exit??
+    ResourceWarning: unclosed <socket.socket ...>
+    C:\Users\sam\shop\worker.py:11
+    async def run():
+        client = httpx.AsyncClient()
+        r = await client.get("https://example.com")
+        return r.status_code
+  kind: pasted
+  expect: [async]
+out_of_scope:
+- q: how do i automatically retry failed 503 requests with exponential backoff using tenacity?
+  kind: neighbouring
+  why: httpx-docs does not document tenacity or built-in exponential backoff retry policies
+- q: how do i cache http responses on disk with hishel?
+  kind: neighbouring
+  why: httpx-docs mentions third-party packages briefly but does not document how to configure hishel caching
+- q: how do i use httpx to connect to a websocket server?
+  kind: neighbouring
+  why: httpx is an HTTP client and httpx-docs does not cover WebSocket clients
+- q: how do i use aiohttp ClientSession instead of httpx?
+  kind: neighbouring
+  why: httpx-docs documents HTTPX only, not aiohttp
+- q: how do i make a fetch() request with AbortController timeout in javascript?
+  kind: other-tool
+  why: httpx-docs is for Python HTTPX, not browser or Node.js fetch
+- q: how do i configure axios interceptors in typescript?
+  kind: other-tool
+  why: httpx-docs is for Python HTTPX, not JavaScript Axios
+- q: how do i use curl with -L and -H flags from bash?
+  kind: other-tool
+  why: httpx-docs is for Python HTTPX, not the curl CLI
+- q: what is the difference between http 401 unauthorized and 403 forbidden?
+  kind: general
+  why: httpx-docs does not teach general HTTP status code semantics
+- q: how do i design idempotency keys for payment apis?
+  kind: general
+  why: httpx-docs does not cover general backend API design patterns
+- q: |
+    why is this failing??
+    C:\Users\sam\shop\parser.py:9: in parse_payload
+        return data["items"][0]["price"]
+    KeyError: 'items'
+    def parse_payload(data):
+        return data["items"][0]["price"]
+  kind: general
+  why: the error is a missing dictionary key in the user's JSON parsing code, not an HTTPX client error

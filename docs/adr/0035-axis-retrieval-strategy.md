@@ -97,8 +97,8 @@ Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follow
 | 1 | Retrieval port | done (SPEC-21, #50) | 3 |
 | 2 | Safe retrieved text: fenced and capped passages, checked citations, no "first 30" fallback | done (SPEC-22, #51) | 4 (4a) |
 | 3 | Query cleanup and `not_found` | done (SPEC-23, #53) | 4 (4b) |
-| 4 | Prompt rules and the "no index" message | this step (SPEC-24) | 5 |
-| 5 | Measurement: the six Gemini sets, P@K, MRR and nDCG at K=1, 3 and 5, and the per-file passage limit test | next | 2 (extended) |
+| 4 | Prompt rules and the "no index" message | done (SPEC-24, #54) | 5 |
+| 5 | Measurement: the six Gemini sets, P@K, MRR and nDCG at K=1, 3 and 5, and the per-file passage limit test | this step (SPEC-25) | 2 (extended) |
 | 6 | Contextual retrieval: heading path first, then an LLM-written context in a search-only field (5.2); local against cheap paid on a small trial. A paid run needs a printed estimate and the owner runs it | after 5 | not numbered before |
 | 7 | rag-core adapter and model wiring, with `not_found` re-tuned for the reranker (2.4, 2.7) | after 6 | 6 |
 | 8 | Tracing, metrics and answer-level evals behind a hexagonal port (local adapter, no-op in CI, vendors optional); its ADR comes first | after 7 | not numbered before |
