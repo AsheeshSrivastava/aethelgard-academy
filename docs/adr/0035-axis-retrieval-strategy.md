@@ -1,6 +1,6 @@
 # ADR 0035: AXIS retrieval strategy (production grade)
 
-- **Status:** Proposed; in progress. Work steps 1 to 3 are done (SPEC-20, SPEC-21); step 4 is split in two (4a done by SPEC-22, 4b done by SPEC-23); steps 5 to 7 remain. See section 5 (amendment 2026-11-16). Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
+- **Status:** Proposed; in progress. Plan steps 1 to 5 and 7 are done (SPEC-21 to SPEC-25, SPEC-27); step 6a is measured (SPEC-26, default off, branch not merged); 6b and 5b are skipped by the owner for later; steps 8 and 9 remain. See section 5 (amendments 2026-11-16 and 2026-11-19). Amended 2026-11-15 after the owner's read of the independent review (section 7): decisions (a) and (b) accepted, (c) rejected, rag-core adopted as the retrieval library.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-14
 - **Extends:** ADR-0011 (HR pipeline), ADR-0012 (persistent artifacts), ADR-0034
@@ -98,7 +98,7 @@ Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follow
 | 2 | Safe retrieved text: fenced and capped passages, checked citations, no "first 30" fallback | done (SPEC-22, #51) | 4 (4a) |
 | 3 | Query cleanup and `not_found` | done (SPEC-23, #53) | 4 (4b) |
 | 4 | Prompt rules and the "no index" message | done (SPEC-24, #54) | 5 |
-| 5 | Measurement: the six Gemini sets, P@K, MRR and nDCG at K=1, 3 and 5, and the per-file passage limit test | this step (SPEC-25) | 2 (extended) |
+| 5 | Measurement: the six Gemini sets, P@K, MRR and nDCG at K=1, 3 and 5, and the per-file passage limit test | done (SPEC-25, #55); the mode stress test (5b) was skipped by the owner 2026-11-19, to be re-run later | 2 (extended) |
 | 6 | Contextual retrieval: heading path first, then an LLM-written context in a search-only field (5.2); local against cheap paid on a small trial. A paid run needs a printed estimate and the owner runs it | 6a measured, small gain, default stays off (SPEC-26, on a separate unmerged branch); **6b skipped by the owner 2026-11-19, to be revisited after real use** (5.5) | not numbered before |
 | 7 | rag-core adapter and model wiring, with `not_found` re-tuned for the reranker (2.4, 2.7) | done (SPEC-27, #56, merged 2026-11-19) | 6 |
 | 8 | Tracing, metrics and answer-level evals behind a hexagonal port (local adapter, no-op in CI, vendors optional); its ADR comes first | after 7 | not numbered before |
