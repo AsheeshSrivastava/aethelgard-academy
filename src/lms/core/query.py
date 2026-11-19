@@ -37,3 +37,9 @@ def clean_query_words(text: str) -> List[str]:
 def clean_query(text: str) -> str:
     """The search text: `clean_query_words` joined by single spaces. Empty when nothing is left."""
     return " ".join(clean_query_words(text))
+
+
+def count_matched_terms(words: List[str], text: str) -> int:
+    """How many of the distinct cleaned query `words` occur as whole tokens in `text` (case-insensitive)."""
+    present = {t.lower() for t in _TOKEN.findall(text or "")}
+    return sum(1 for w in {x.lower() for x in words} if w in present)

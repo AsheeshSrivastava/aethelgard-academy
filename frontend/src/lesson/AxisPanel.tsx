@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { answerNote, fetchCourseReference, statusLine } from "./axisNotices";
+import { answerNote, fetchCourseReference, KEYWORD_ONLY_NOTE, statusLine } from "./axisNotices";
 import { streamAxis, streamSafe, type SseEvent } from "./axisStream";
 import { Prose } from "./Prose";
 import { activityFor } from "./steps";
@@ -20,6 +20,7 @@ interface Message {
   text: string;
   citations: Citation[];
   sourceState?: string;
+  keywordOnly?: boolean;
   error?: string;
 }
 
@@ -58,6 +59,9 @@ export function AxisPanel({
   function onEvent(id: number, { event, data }: SseEvent) {
     if (event === "token") update(id, (m) => ({ ...m, text: m.text + String(data.text) }));
     if (event === "citation") update(id, (m) => ({ ...m, citations: [...m.citations, data as unknown as Citation] }));
+    if (event === "done" && data.retrieval_downgraded === true) {
+      update(id, (m) => ({ ...m, keywordOnly: true }));
+    }
     if (event === "done" && typeof data.source_state === "string") {
       const state = data.source_state;
       update(id, (m) => ({ ...m, sourceState: state }));
@@ -142,6 +146,9 @@ export function AxisPanel({
             )}
             {message.role === "axis" && answerNote(message.sourceState) && (
               <p className="axis-source-note small muted">{answerNote(message.sourceState)}</p>
+            )}
+            {message.role === "axis" && message.keywordOnly && (
+              <p className="axis-source-note small muted">{KEYWORD_ONLY_NOTE}</p>
             )}
             {message.citations.length > 0 && (
               <div className="citations">

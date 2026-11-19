@@ -1041,6 +1041,19 @@ describe("AXIS panel", () => {
     expect(within(panel).queryByText(/not checked against the course|No course source matched/)).not.toBeInTheDocument();
   });
 
+  // SPEC-27 D2: the labelled downgrade.
+  it.each([[true, true], [false, false]])("shows 'Keyword search only' when downgraded is %s", async (downgraded, shown) => {
+    const { panel } = await ask(() =>
+      sse([
+        ["token", { text: "What is the input?" }],
+        ["done", { assistance_level: "none", cited_concepts: [], source_state: "course", ...(downgraded ? { retrieval_downgraded: true } : {}) }],
+      ]),
+    );
+    expect(await within(panel).findByText("What is the input?")).toBeInTheDocument();
+    if (shown) expect(await within(panel).findByText("Keyword search only")).toBeInTheDocument();
+    else expect(within(panel).queryByText("Keyword search only")).not.toBeInTheDocument();
+  });
+
   it("renders code in replies as code, not as raw markdown", async () => {
     const { panel } = await ask(() =>
       sse([

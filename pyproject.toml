@@ -21,6 +21,12 @@ dependencies = [
     "websockets>=17.4",
 ]
 
+[project.optional-dependencies]
+# Hybrid search (ADR-0035 2.1, 2.7, SPEC-27 R10). Without it the app runs keyword search only; CI never installs it.
+retrieval = [
+    "ragcore[embed,variants] @ git+https://github.com/AsheeshSrivastava/Content-Library-Aethelgard-Academy@v0.2.0",
+]
+
 [project.scripts]
 lms = "lms:main"
 

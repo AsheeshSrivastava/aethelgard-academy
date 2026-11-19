@@ -46,6 +46,7 @@ class RetrievalResult:
     message: str = ""  # short, for logs
     terms_matched: int = 0  # query terms found in the best passage (SPEC-23 R6); 0 when not measured
     terms_total: int = 0  # distinct cleaned query terms
+    downgraded: bool = False  # ranking models were not used for this answer; shown as "Keyword search only" (SPEC-27 R6)
 
 
 @dataclass(frozen=True)
@@ -79,6 +80,7 @@ class RetrievalTrace:
     passages_cited: int = 0
     terms_matched: int = 0
     terms_total: int = 0
+    downgraded: bool = False
 
     def as_log_fields(self) -> Dict[str, object]:
         return {
@@ -90,6 +92,7 @@ class RetrievalTrace:
             "passages_cited": self.passages_cited,
             "terms_matched": self.terms_matched,
             "terms_total": self.terms_total,
+            "downgraded": self.downgraded,
         }
 
 

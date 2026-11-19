@@ -914,6 +914,8 @@ export interface components {
             detected_assistance_level: components["schemas"]["AssistanceLevel"];
             /** Source State */
             source_state?: string | null;
+            /** Retrieval Downgraded */
+            retrieval_downgraded?: boolean;
         };
         /** AxisStreamRequest */
         AxisStreamRequest: {

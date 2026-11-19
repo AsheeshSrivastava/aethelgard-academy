@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 from pathlib import Path
 from typing import Mapping, Optional
@@ -11,6 +12,12 @@ from lms.adapters.ai.rag.keyword_retriever import (
     DEFAULT_MIN_MATCHED_TERMS,
     DEFAULT_PASSAGES_PER_SOURCE,
     KeywordRetriever,
+)
+from lms.adapters.ai.rag.ragcore_retriever import (
+    DEFAULT_CONCURRENCY,
+    DEFAULT_TIMEOUT_S,
+    DowngradedRetriever,
+    open_ragcore_retriever,
 )
 from lms.core.retrieval import IRetriever, RetrievalMode
 
@@ -21,6 +28,22 @@ INDEX_DIR_ENV = "LMS_INDEX_DIR"
 DEFAULT_INDEX_DIR = "data/index"
 MIN_TERMS_ENV = "LMS_MIN_MATCHED_TERMS"
 PASSAGES_PER_SOURCE_ENV = "LMS_PASSAGES_PER_SOURCE"
+TIMEOUT_ENV = "LMS_RETRIEVAL_TIMEOUT_S"
+CONCURRENCY_ENV = "LMS_RERANK_CONCURRENCY"
+HR_MIN_SCORE_ENV = "LMS_HR_MIN_SCORE"
+HR_MIN_TERMS_ENV = "LMS_HR_MIN_TERMS"
+# SPEC-27 R9, owner decision 2026-11-19: tuned on the six Gemini sets (set_version 5d5fbd741a89, index_version of the
+# rag-core index 1fc9c2f9a6ff, docs/measurements/2026-11-19-hybrid-adapter.txt). On all six: 6.2% of answerable
+# questions wrongly refused, 41.7% of out-of-scope questions refused. Slightly under the bar's 43.3%; accepted as a
+# recorded deviation (ADR-0035 5.4).
+DEFAULT_HR_MIN_SCORE = -2.6
+DEFAULT_HR_MIN_TERMS = 2
+RAGCORE_INDEX_ENV = "LMS_RAGCORE_INDEX"
+DEFAULT_RAGCORE_INDEX = "data/ragcore/index.db"
+EMBEDDER_ENV = "LMS_EMBEDDER"
+RERANKER_ENV = "LMS_RERANKER"
+DEFAULT_EMBEDDER = "jina-v2-base-en"
+DEFAULT_RERANKER = "bge-reranker-v2-m3"
 
 
 class RetrievalConfigError(Exception):
@@ -28,7 +51,7 @@ class RetrievalConfigError(Exception):
 
 
 def configured_mode(environ: Optional[Mapping[str, str]] = None) -> RetrievalMode:
-    """The mode named by LMS_RETRIEVAL_MODE. Unknown, or not built yet, fails loudly (R6)."""
+    """The mode named by LMS_RETRIEVAL_MODE. An unknown value fails loudly (SPEC-21 R6, SPEC-27 R4)."""
     env = os.environ if environ is None else environ
     raw = (env.get(MODE_ENV) or RetrievalMode.KEYWORD_ONLY.value).strip()
     try:
@@ -36,10 +59,6 @@ def configured_mode(environ: Optional[Mapping[str, str]] = None) -> RetrievalMod
     except ValueError:
         choices = ", ".join(m.value for m in RetrievalMode)
         raise RetrievalConfigError(f"Unknown {MODE_ENV} '{raw}'. Choose one of: {choices}.") from None
-    if mode is RetrievalMode.HYBRID_RERANK:
-        raise RetrievalConfigError(
-            f"{MODE_ENV}=hybrid_rerank is not available in this build. Use {RetrievalMode.KEYWORD_ONLY.value}."
-        )
     return mode
 
 
@@ -73,6 +92,68 @@ def configured_passages_per_source(environ: Optional[Mapping[str, str]] = None) 
     return value
 
 
+def configured_timeout_s(environ: Optional[Mapping[str, str]] = None) -> float:
+    """LMS_RETRIEVAL_TIMEOUT_S: seconds per hybrid search, above 0 and at most 300; unset means 10 (SPEC-27 D3)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(TIMEOUT_ENV) or "").strip()
+    if not raw:
+        return DEFAULT_TIMEOUT_S
+    try:
+        value = float(raw)
+    except ValueError:
+        value = 0.0
+    if not (0 < value <= 300) or math.isnan(value):
+        raise RetrievalConfigError(f"{TIMEOUT_ENV}='{raw}' is not allowed. Use a number of seconds above 0 and up to 300.")
+    return value
+
+
+def configured_rerank_concurrency(environ: Optional[Mapping[str, str]] = None) -> int:
+    """LMS_RERANK_CONCURRENCY: whole number 1 to 8; unset means 2 (SPEC-27 D3)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(CONCURRENCY_ENV) or "").strip()
+    if not raw:
+        return DEFAULT_CONCURRENCY
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 0
+    if not 1 <= value <= 8:
+        raise RetrievalConfigError(f"{CONCURRENCY_ENV}='{raw}' is not allowed. Use a whole number from 1 to 8.")
+    return value
+
+
+def configured_hr_min_score(environ: Optional[Mapping[str, str]] = None) -> Optional[float]:
+    """LMS_HR_MIN_SCORE: floor on the top reranker score; unset or empty means -2.6, "off" means no floor (SPEC-27 R9)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(HR_MIN_SCORE_ENV) or "").strip()
+    if not raw:
+        return DEFAULT_HR_MIN_SCORE
+    if raw.lower() == "off":
+        return None
+    try:
+        value = float(raw)
+    except ValueError:
+        value = math.nan
+    if not math.isfinite(value):
+        raise RetrievalConfigError(f"{HR_MIN_SCORE_ENV}='{raw}' is not allowed. Use a number, 'off' for no floor, or leave it empty for the default.")
+    return value
+
+
+def configured_hr_min_terms(environ: Optional[Mapping[str, str]] = None) -> int:
+    """LMS_HR_MIN_TERMS: the term rule for hybrid search, 0 (off) to 10; unset or empty means 2 (SPEC-27 R9)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(HR_MIN_TERMS_ENV) or "").strip()
+    if not raw:
+        return DEFAULT_HR_MIN_TERMS
+    try:
+        value = int(raw)
+    except ValueError:
+        value = -1
+    if not 0 <= value <= 10:
+        raise RetrievalConfigError(f"{HR_MIN_TERMS_ENV}='{raw}' is not allowed. Use a whole number from 0 (off) to 10.")
+    return value
+
+
 def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     """Load the index once and say what was loaded. A missing folder gives NO_INDEX, not a crash (R7)."""
     env = os.environ if environ is None else environ
@@ -99,4 +180,26 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
             min_terms,
             per_source,
         )
-    return retriever
+    if mode is not RetrievalMode.HYBRID_RERANK:
+        return retriever
+    timeout_s = configured_timeout_s(env)
+    concurrency = configured_rerank_concurrency(env)
+    min_score = configured_hr_min_score(env)
+    hr_terms = configured_hr_min_terms(env)
+    ragcore_index = Path(env.get(RAGCORE_INDEX_ENV) or DEFAULT_RAGCORE_INDEX)
+    if manifest is None:
+        return retriever  # no keyword index to fall back on: the plain NO_INDEX answer is the honest one
+    hybrid = open_ragcore_retriever(
+        ragcore_index, retriever,
+        embedder_id=env.get(EMBEDDER_ENV) or DEFAULT_EMBEDDER,
+        reranker_id=env.get(RERANKER_ENV) or DEFAULT_RERANKER,
+        timeout_s=timeout_s, concurrency=concurrency,
+        min_matched_terms=hr_terms,
+        min_score=min_score, passages_per_source=per_source,
+    )
+    if isinstance(hybrid, DowngradedRetriever):
+        logger.warning("Retrieval mode: keyword_only (labelled downgrade) because hybrid_rerank failed: %s", hybrid.reason)
+    else:
+        logger.info("Retrieval mode: hybrid_rerank index=%s timeout_s=%g concurrency=%d min_score=%s",
+                    ragcore_index, timeout_s, concurrency, min_score)
+    return hybrid
