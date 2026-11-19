@@ -48,14 +48,14 @@ One trace per AXIS interaction, named by kind, carrying the same `interaction_id
 
 | Trace kind | Call kinds it covers | Child spans |
 |---|---|---|
-| `axis_question` | `consult`, `stream` | query cleanup, `retrieve` (keyword or hybrid, slot wait), `prompt_build`, `model_call`, `citation_check` |
+| `axis_question` | `consult`, `stream` | query cleanup, `retrieve` (keyword or hybrid, slot wait; the passage ids and scores returned), `prompt_build`, `model_call`, `citation_check` (the passage ids the reply cited) |
 | `concept_check` | `judge_explanation` (CO-6, ADR-0026) | rubric load, `model_call`, verdict rule |
 | `readme_draft` | `document_draft` (`draft_readme`, Amendment A2) | `prompt_build`, `model_call` |
 | `build_review` | `build_feedback` | pointer rules (no model), `model_call` if any |
 
 All five call kinds already pass the one place in each companion adapter that does the `UsageMeter` check and record; the span wraps that place. Retrieval spans exist only on `consult` and `stream`. The judge profile, cap reached, provider refused and mock fallback are attributes, so a `not_judged` result is visible. The existing `model_usage` table (tokens and cost per call) stays the money record; traces link to it by call id and do not replace it. A test per kind: a fake companion call produces exactly one trace of that kind, so a model call that skips these entry points is caught.
 
-**Attribute allow-list.** Allowed: ids, mode, unit id, timings, counts, `source_state`, `retrieval_mode`, `downgraded`, `index_version`, provider profile id, token counts, error class name. A new attribute is a visible code change. **Never** in any trace: learner question, answer, code, README text, concept-check explanation, passage text, keys, URLs. A debug switch that adds text would need its own owner decision.
+**Attribute allow-list.** Allowed: ids (including `passage_id`, a derived hash, never passage text), scores, mode, unit id, timings, counts, `source_state`, `retrieval_mode`, `downgraded`, `index_version`, provider profile id, token counts, error class name. A new attribute is a visible code change. Passage ids make each answer auditable: a reply that states facts but cites no retrieved passage id is flagged in the span summary and the obedience eval (2.5). **Never** in any trace: learner question, answer, code, README text, concept-check explanation, passage text, keys, URLs. A debug switch that adds text would need its own owner decision.
 
 ### 2.3 Span summary
 
@@ -129,7 +129,8 @@ Observability never changes a learner's answer. A tracer error is caught, counte
 1. **SPEC-28, tracing:** the port, `NoopTracer`, `LocalTracer`, the allow-list, never-raises, the guard test that fails if a span carries learner text, and spans wired into all five call kinds (one test per kind).
 2. **SPEC-29, report and thumbs:** `lms report axis-modes`, the static HTML report with the latency and refusal summary from spans, the re-measure of the hybrid timeout and concurrency recorded in ADR-0035 section 5.4, and the thumbs control with `axis_feedback`.
 3. **SPEC-30, answer evals:** the deterministic checker with canned replies in CI, the obedience harness, the hand-review sample, and the first local-model run and report.
-4. **Later, only when the owner asks:** vendor adapters (each with its own ADR), the live dashboard page (SPEC-29b), paid judged evals.
+4. **Planned after SPEC-28 (owner, 2026-11-19): a LangSmith adapter for owner-run eval runs only, in its own ADR.** It will state: eval runs use made-up questions from `eval/gemini-sets/`, never learners; full text may be sent only behind an explicit eval flag that `lms serve` never sets; the API key is set by the owner and never printed or stored; real learner traces stay ids-only and never leave the machine. This ADR does not decide it.
+5. **Later, only when the owner asks:** other vendor adapters (each with its own ADR), the live dashboard page (SPEC-29b), paid judged evals.
 
 Step 9 of ADR-0035 (query rewriting and a bounded retry) is not touched here; if built, it adds spans through the same port.
 
