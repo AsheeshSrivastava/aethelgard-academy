@@ -172,4 +172,6 @@ def stream_axis(
     done: Dict[str, Any] = {"assistance_level": assistance.value, "cited_concepts": cited}
     if grounding is not None:
         done["source_state"] = grounding.source_state  # SPEC-24 R9: server data, never the model's words
+        if grounding.downgraded:
+            done["retrieval_downgraded"] = True  # SPEC-27 R6: the learner sees "Keyword search only"
     yield "done", done

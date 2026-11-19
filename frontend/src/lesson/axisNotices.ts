@@ -15,6 +15,9 @@ export function answerNote(sourceState: string | undefined): string | null {
   return ANSWER_NOTES[sourceState] ?? GENERIC_NOTE;
 }
 
+/** The label under a reply that was found with keyword search only (SPEC-27 D2, ADR-0035 2.7). */
+export const KEYWORD_ONLY_NOTE = "Keyword search only";
+
 const STATUS_LINES: Record<string, string> = {
   not_loaded: "Course reference not loaded. AXIS can still talk with you, but its answers are not checked against the course.",
   unavailable: "Course search is not working right now. AXIS answers are not checked against the course.",

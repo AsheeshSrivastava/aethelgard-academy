@@ -93,6 +93,11 @@ class Grounding:
         return "not_found"
 
     @property
+    def downgraded(self) -> bool:
+        """True when the ranking models were not used for this turn: shown as "Keyword search only" (SPEC-27 R6)."""
+        return bool(getattr(self.trace, "downgraded", False))
+
+    @property
     def ids(self) -> List[str]:
         return [e.passage_id for e in self.entries]
 

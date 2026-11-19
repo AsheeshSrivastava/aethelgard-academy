@@ -233,10 +233,20 @@ def test_an_unknown_mode_fails_startup_with_a_clear_message(tmp_path):
     assert "keyword_only" in str(err.value)
 
 
-def test_hybrid_rerank_fails_startup_until_its_adapter_exists(tmp_path):
-    with pytest.raises(RetrievalConfigError) as err:
-        build_retriever({"LMS_RETRIEVAL_MODE": "hybrid_rerank", "LMS_INDEX_DIR": str(tmp_path)})
-    assert "not available in this build" in str(err.value)
+def test_hybrid_rerank_without_its_models_starts_as_labelled_keyword_search(tmp_path):
+    """SPEC-27 R3/R4 (replaces the SPEC-21 R6 'not available in this build' rule): never a quiet fallback."""
+    rq.build_keyword_retriever().save(tmp_path / "index")
+    env = {"LMS_RETRIEVAL_MODE": "hybrid_rerank", "LMS_INDEX_DIR": str(tmp_path / "index"),
+           "LMS_RAGCORE_INDEX": str(tmp_path / "missing" / "index.db")}
+    result = build_retriever(env).search("list")
+    assert result.status is RetrievalStatus.OK
+    assert result.mode is RetrievalMode.KEYWORD_ONLY and result.downgraded
+
+
+def test_hybrid_rerank_bad_timeout_fails_startup(tmp_path):
+    with pytest.raises(RetrievalConfigError, match="LMS_RETRIEVAL_TIMEOUT_S"):
+        build_retriever({"LMS_RETRIEVAL_MODE": "hybrid_rerank", "LMS_RETRIEVAL_TIMEOUT_S": "0",
+                         "LMS_INDEX_DIR": str(tmp_path)})
 
 
 def test_the_router_fails_startup_on_a_bad_mode_even_with_mock_ai(tmp_path, monkeypatch):

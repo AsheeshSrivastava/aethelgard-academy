@@ -56,6 +56,8 @@ class AxisResponse(BaseModel):
     detected_assistance_level: AssistanceLevel = AssistanceLevel.NONE
     # "course", "not_found", "no_index" or "unavailable" (SPEC-24 R9); None when not applicable (mock).
     source_state: Optional[str] = None
+    # True when the ranking models were not used for this answer (SPEC-27 R6); shown as "Keyword search only".
+    retrieval_downgraded: bool = False
 
 
 class ILearnerRepository(Protocol):

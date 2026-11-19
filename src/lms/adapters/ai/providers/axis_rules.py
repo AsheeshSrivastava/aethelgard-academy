@@ -85,6 +85,7 @@ def ground_with_trace(
             passages_retrieved=len(result.passages),
             terms_matched=result.terms_matched,
             terms_total=result.terms_total,
+            downgraded=result.downgraded,
         )
         if result.status is RetrievalStatus.OK and result.passages:
             items = [(p.passage_id, p.source_name or p.source_id, p.text) for p in result.passages]
@@ -294,6 +295,7 @@ def finish_reply(
         cited_concepts=cited_ids,
         detected_assistance_level=assistance,
         source_state=cited_concepts.source_state if isinstance(cited_concepts, passage_safety.Grounding) else None,
+        retrieval_downgraded=isinstance(cited_concepts, passage_safety.Grounding) and cited_concepts.downgraded,
     )
 
 
