@@ -31,6 +31,7 @@ PASSAGES_PER_SOURCE_ENV = "LMS_PASSAGES_PER_SOURCE"
 TIMEOUT_ENV = "LMS_RETRIEVAL_TIMEOUT_S"
 CONCURRENCY_ENV = "LMS_RERANK_CONCURRENCY"
 HR_MIN_SCORE_ENV = "LMS_HR_MIN_SCORE"
+HR_MIN_TERMS_ENV = "LMS_HR_MIN_TERMS"
 RAGCORE_INDEX_ENV = "LMS_RAGCORE_INDEX"
 DEFAULT_RAGCORE_INDEX = "data/ragcore/index.db"
 EMBEDDER_ENV = "LMS_EMBEDDER"
@@ -130,6 +131,21 @@ def configured_hr_min_score(environ: Optional[Mapping[str, str]] = None) -> Opti
     return value
 
 
+def configured_hr_min_terms(environ: Optional[Mapping[str, str]] = None) -> Optional[int]:
+    """LMS_HR_MIN_TERMS: the term rule for hybrid search, 0 (off) to 10; unset or empty means use LMS_MIN_MATCHED_TERMS."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(HR_MIN_TERMS_ENV) or "").strip()
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        value = -1
+    if not 0 <= value <= 10:
+        raise RetrievalConfigError(f"{HR_MIN_TERMS_ENV}='{raw}' is not allowed. Use a whole number from 0 (off) to 10.")
+    return value
+
+
 def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     """Load the index once and say what was loaded. A missing folder gives NO_INDEX, not a crash (R7)."""
     env = os.environ if environ is None else environ
@@ -161,6 +177,7 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     timeout_s = configured_timeout_s(env)
     concurrency = configured_rerank_concurrency(env)
     min_score = configured_hr_min_score(env)
+    hr_terms = configured_hr_min_terms(env)
     ragcore_index = Path(env.get(RAGCORE_INDEX_ENV) or DEFAULT_RAGCORE_INDEX)
     if manifest is None:
         return retriever  # no keyword index to fall back on: the plain NO_INDEX answer is the honest one
@@ -168,7 +185,8 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
         ragcore_index, retriever,
         embedder_id=env.get(EMBEDDER_ENV) or DEFAULT_EMBEDDER,
         reranker_id=env.get(RERANKER_ENV) or DEFAULT_RERANKER,
-        timeout_s=timeout_s, concurrency=concurrency, min_matched_terms=min_terms,
+        timeout_s=timeout_s, concurrency=concurrency,
+        min_matched_terms=min_terms if hr_terms is None else hr_terms,
         min_score=min_score, passages_per_source=per_source,
     )
     if isinstance(hybrid, DowngradedRetriever):

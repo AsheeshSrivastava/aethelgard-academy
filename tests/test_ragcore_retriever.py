@@ -313,3 +313,31 @@ def test_downgrade_reaches_consult_and_stream_and_is_absent_otherwise():
         done = [d for e, d in stream_axis(Axis(g), q, SocraticGuardrail(), AssistanceClassifier()) if e == "done"][0]
         assert reply.retrieval_downgraded is downgraded
         assert done.get("retrieval_downgraded", False) is downgraded
+
+
+# 9b. LMS_HR_MIN_TERMS (SPEC-27 R9) and the tuning script's pure rules ----------------------------------
+
+def test_hr_min_terms_default_empty_and_bounds():
+    from lms.adapters.ai.rag.startup import configured_hr_min_terms
+
+    assert configured_hr_min_terms({}) is None and configured_hr_min_terms({"LMS_HR_MIN_TERMS": "0"}) == 0
+    assert configured_hr_min_terms({"LMS_HR_MIN_TERMS": "4"}) == 4
+    for bad in ("-1", "11", "x"):
+        with pytest.raises(RetrievalConfigError, match="LMS_HR_MIN_TERMS"):
+            configured_hr_min_terms({"LMS_HR_MIN_TERMS": bad})
+
+
+def test_tuning_script_rules():
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import measure_hybrid as mh
+
+    rec = {"score": -1.0, "matched": 2, "total": 4}
+    assert mh.refuses(rec, 3, None) and not mh.refuses(rec, 2, None) and not mh.refuses(rec, 0, None)
+    assert mh.refuses(rec, 0, -0.5) and not mh.refuses(rec, 0, -2.0)
+    assert mh.refuses({"score": None, "matched": 0, "total": 0}, 0, None)  # nothing found is refused by every rule
+    assert mh.rates([rec], [rec], 3, None) == (1.0, 1.0)
+    grid = mh.candidate_grid([{"score": s} for s in (-3.0, -1.0, 0.0, 2.0)])
+    assert (0, None) not in grid and (3, None) in grid
