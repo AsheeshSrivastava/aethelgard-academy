@@ -1,0 +1,37 @@
+SPEC-27 measurement: the rag-core adapter (hybrid_rerank) on the six Gemini sets
+set_version 5d5fbd741a89ee65686c3029ed4953f50a9b6e5ff0c12b78d86e7f3414cc3e19
+adapter index_version 1fc9c2f9a6ff95b316c7187ecbcd1e082daacac025d5ba507cb68c45b97aac2e
+date 2026-11-19; 240 answerable, 60 out-of-scope; offline, no paid call; no timings in this file
+
+====================================================================================================
+R11. PARITY with direct rag-core HR (2026-11-18 baseline)
+====================================================================================================
+  adapter  hit@1  47.1  hit@3  75.0  hit@5  85.8  MRR 0.617
+  direct   hit@1  47.1  hit@3  75.0  hit@5  85.8  MRR 0.617
+  parity within half a point: PASS
+
+====================================================================================================
+PARAPHRASE GAP (for the step 6b decision): hit@3 by kind
+====================================================================================================
+  plain        n=60  hit@1  66.7  hit@3  88.3  hit@5  95.0
+  error        n=60  hit@1  41.7  hit@3  81.7  hit@5  93.3
+  paraphrase   n=60  hit@1  38.3  hit@3  66.7  hit@5  78.3
+  pasted       n=60  hit@1  41.7  hit@3  63.3  hit@5  76.7
+  For comparison (2026-11-18 baseline): paraphrase hit@3 was 30.0 (lms keyword), 31.7 (rag-core L), 66.7 (HR direct).
+
+====================================================================================================
+R9. NOT-FOUND RULE for hybrid search
+====================================================================================================
+  Bar: false refusal no worse than today's 6.2% and correct refusal at least today's 43.3%; among those, lowest false refusal, then highest correct refusal.
+  Read on fastapi-docs, httpx-docs, pydantic-docs (120 answerable, 30 out-of-scope); checked untouched on the other 120 and 30.
+  Top reranker score, median: answerable 1.20, out-of-scope -1.30.
+
+  rule                                read: false/correct   check: false/correct   all six: false/correct  bar
+  both: M=2 and floor -2.85                4.2/ 43.3             5.8/ 33.3              5.0/ 38.3      meets
+  both: M=2 and floor -2.79                5.0/ 43.3             5.8/ 36.7              5.4/ 40.0      meets
+  both: M=2 and floor -2.6                 5.8/ 43.3             6.7/ 40.0              6.2/ 41.7      meets
+  term rule only: M=3                     13.3/ 53.3            17.5/ 56.7             15.4/ 55.0      no
+
+  Best on the read sets: both: M=2 and floor -2.85. On the untouched check sets: false   5.8%, correct  33.3% (DOES NOT AGREE: do not adopt without a look).
+  To use it: set LMS_HR_MIN_SCORE=-2.85 and LMS_HR_MIN_TERMS=2 (0 = term rule off).
+
