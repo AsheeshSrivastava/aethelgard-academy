@@ -32,6 +32,12 @@ TIMEOUT_ENV = "LMS_RETRIEVAL_TIMEOUT_S"
 CONCURRENCY_ENV = "LMS_RERANK_CONCURRENCY"
 HR_MIN_SCORE_ENV = "LMS_HR_MIN_SCORE"
 HR_MIN_TERMS_ENV = "LMS_HR_MIN_TERMS"
+# SPEC-27 R9, owner decision 2026-11-19: tuned on the six Gemini sets (set_version 5d5fbd741a89, index_version of the
+# rag-core index 1fc9c2f9a6ff, docs/measurements/2026-11-19-hybrid-adapter.txt). On all six: 6.2% of answerable
+# questions wrongly refused, 41.7% of out-of-scope questions refused. Slightly under the bar's 43.3%; accepted as a
+# recorded deviation (ADR-0035 5.4).
+DEFAULT_HR_MIN_SCORE = -2.6
+DEFAULT_HR_MIN_TERMS = 2
 RAGCORE_INDEX_ENV = "LMS_RAGCORE_INDEX"
 DEFAULT_RAGCORE_INDEX = "data/ragcore/index.db"
 EMBEDDER_ENV = "LMS_EMBEDDER"
@@ -117,26 +123,28 @@ def configured_rerank_concurrency(environ: Optional[Mapping[str, str]] = None) -
 
 
 def configured_hr_min_score(environ: Optional[Mapping[str, str]] = None) -> Optional[float]:
-    """LMS_HR_MIN_SCORE: floor on the top reranker score; unset or empty means no floor (SPEC-27 R9)."""
+    """LMS_HR_MIN_SCORE: floor on the top reranker score; unset or empty means -2.6, "off" means no floor (SPEC-27 R9)."""
     env = os.environ if environ is None else environ
     raw = (env.get(HR_MIN_SCORE_ENV) or "").strip()
     if not raw:
+        return DEFAULT_HR_MIN_SCORE
+    if raw.lower() == "off":
         return None
     try:
         value = float(raw)
     except ValueError:
         value = math.nan
     if not math.isfinite(value):
-        raise RetrievalConfigError(f"{HR_MIN_SCORE_ENV}='{raw}' is not allowed. Use a number, or leave it empty for no floor.")
+        raise RetrievalConfigError(f"{HR_MIN_SCORE_ENV}='{raw}' is not allowed. Use a number, 'off' for no floor, or leave it empty for the default.")
     return value
 
 
-def configured_hr_min_terms(environ: Optional[Mapping[str, str]] = None) -> Optional[int]:
-    """LMS_HR_MIN_TERMS: the term rule for hybrid search, 0 (off) to 10; unset or empty means use LMS_MIN_MATCHED_TERMS."""
+def configured_hr_min_terms(environ: Optional[Mapping[str, str]] = None) -> int:
+    """LMS_HR_MIN_TERMS: the term rule for hybrid search, 0 (off) to 10; unset or empty means 2 (SPEC-27 R9)."""
     env = os.environ if environ is None else environ
     raw = (env.get(HR_MIN_TERMS_ENV) or "").strip()
     if not raw:
-        return None
+        return DEFAULT_HR_MIN_TERMS
     try:
         value = int(raw)
     except ValueError:
@@ -186,7 +194,7 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
         embedder_id=env.get(EMBEDDER_ENV) or DEFAULT_EMBEDDER,
         reranker_id=env.get(RERANKER_ENV) or DEFAULT_RERANKER,
         timeout_s=timeout_s, concurrency=concurrency,
-        min_matched_terms=min_terms if hr_terms is None else hr_terms,
+        min_matched_terms=hr_terms,
         min_score=min_score, passages_per_source=per_source,
     )
     if isinstance(hybrid, DowngradedRetriever):

@@ -231,8 +231,9 @@ def test_concurrency_rejects_bad_values(raw):
     assert configured_rerank_concurrency({}) == 2
 
 
-def test_min_score_empty_means_off_and_bad_value_fails():
-    assert configured_hr_min_score({}) is None and configured_hr_min_score({"LMS_HR_MIN_SCORE": " "}) is None
+def test_min_score_default_is_minus_2_6_and_off_means_no_floor():
+    assert configured_hr_min_score({}) == -2.6 and configured_hr_min_score({"LMS_HR_MIN_SCORE": " "}) == -2.6
+    assert configured_hr_min_score({"LMS_HR_MIN_SCORE": "off"}) is None and configured_hr_min_score({"LMS_HR_MIN_SCORE": "OFF"}) is None
     assert configured_hr_min_score({"LMS_HR_MIN_SCORE": "-2.5"}) == -2.5
     with pytest.raises(RetrievalConfigError, match="LMS_HR_MIN_SCORE"):
         configured_hr_min_score({"LMS_HR_MIN_SCORE": "nan"})
@@ -320,7 +321,7 @@ def test_downgrade_reaches_consult_and_stream_and_is_absent_otherwise():
 def test_hr_min_terms_default_empty_and_bounds():
     from lms.adapters.ai.rag.startup import configured_hr_min_terms
 
-    assert configured_hr_min_terms({}) is None and configured_hr_min_terms({"LMS_HR_MIN_TERMS": "0"}) == 0
+    assert configured_hr_min_terms({}) == 2 and configured_hr_min_terms({"LMS_HR_MIN_TERMS": "0"}) == 0
     assert configured_hr_min_terms({"LMS_HR_MIN_TERMS": "4"}) == 4
     for bad in ("-1", "11", "x"):
         with pytest.raises(RetrievalConfigError, match="LMS_HR_MIN_TERMS"):

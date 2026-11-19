@@ -212,7 +212,7 @@ def main() -> int:
         agrees = cf <= TODAY_FALSE_REFUSAL + 0.03 and cc >= TODAY_CORRECT_REFUSAL - 0.10
         p(f"  Best on the read sets: {label(m, f)}. On the untouched check sets: false {pct(cf)}%, correct {pct(cc)}% "
           f"({'agrees within a few points' if agrees else 'DOES NOT AGREE: do not adopt without a look'}).")
-        p("  To use it: set " + (f"LMS_HR_MIN_SCORE={f:g} " if f is not None else "LMS_HR_MIN_SCORE empty ")
+        p("  To use it: set " + (f"LMS_HR_MIN_SCORE={f:g} " if f is not None else "LMS_HR_MIN_SCORE=off ")
           + f"and LMS_HR_MIN_TERMS={m} (0 = term rule off).")
     else:
         p("  No candidate meets the bar on the read sets. Per SPEC-27 R9, keep the term rule as it is (M=3, no floor) and record why.")
