@@ -38,7 +38,7 @@ Adapters in `src/lms/adapters/observability/`:
 | `NoopTracer` | tests, CI, `MOCK_AI=true` | **yes** in tests and CI |
 | `LocalTracer` | JSON lines file, size-capped with one rotated file, no network, no new table | opt in; recommended in `lms serve` (open point 4.1) |
 
-**Vendor adapters (OpenTelemetry, Langfuse) are not built in step 8.** Each needs its own ADR because data would leave the machine. LangSmith is not planned (hosted, sends text out); it could be added behind the same port only if the owner wants it.
+**Vendor adapters (OpenTelemetry, Langfuse) are not built in step 8.** Each needs its own ADR because data would leave the machine. LangSmith is planned only as an **eval-runs-only** adapter in its own short ADR-0038 after SPEC-28 (section 5); it is not part of step 8.
 
 `LMS_TRACER=noop|local`. Any other value stops start-up with a plain message (as `LMS_RUNNER`, ADR-0036).
 
@@ -48,14 +48,14 @@ One trace per AXIS interaction, named by kind, carrying the same `interaction_id
 
 | Trace kind | Call kinds it covers | Child spans |
 |---|---|---|
-| `axis_question` | `consult`, `stream` | query cleanup, `retrieve` (keyword or hybrid, slot wait; the passage ids and scores returned), `prompt_build`, `model_call`, `citation_check` (the passage ids the reply cited) |
+| `axis_question` | `consult`, `stream` | query cleanup, `retrieve` (keyword or hybrid, slot wait; per passage: `passage_id`, score, source id, path or heading, and the `index_version`), `prompt_build`, `model_call`, `citation_check` (the passage ids the reply cited) |
 | `concept_check` | `judge_explanation` (CO-6, ADR-0026) | rubric load, `model_call`, verdict rule |
 | `readme_draft` | `document_draft` (`draft_readme`, Amendment A2) | `prompt_build`, `model_call` |
 | `build_review` | `build_feedback` | pointer rules (no model), `model_call` if any |
 
 All five call kinds already pass the one place in each companion adapter that does the `UsageMeter` check and record; the span wraps that place. Retrieval spans exist only on `consult` and `stream`. The judge profile, cap reached, provider refused and mock fallback are attributes, so a `not_judged` result is visible. The existing `model_usage` table (tokens and cost per call) stays the money record; traces link to it by call id and do not replace it. A test per kind: a fake companion call produces exactly one trace of that kind, so a model call that skips these entry points is caught.
 
-**Attribute allow-list.** Allowed: ids (including `passage_id`, a derived hash, never passage text), scores, mode, unit id, timings, counts, `source_state`, `retrieval_mode`, `downgraded`, `index_version`, provider profile id, token counts, error class name. A new attribute is a visible code change. Passage ids make each answer auditable: a reply that states facts but cites no retrieved passage id is flagged in the span summary and the obedience eval (2.5). **Never** in any trace: learner question, answer, code, README text, concept-check explanation, passage text, keys, URLs. A debug switch that adds text would need its own owner decision.
+**Attribute allow-list.** Allowed: ids (including `passage_id`, a derived hash from `make_passage_id`), source id, path or heading, scores, mode, unit id, timings, counts, `source_state`, `retrieval_mode`, `downgraded`, `index_version`, provider profile id, token counts, error class name. These are course and upstream references, not learner text. A new attribute is a visible code change. `passage_id` changes when the index is rebuilt, so it is for **tracing only**: eval anchors stay (source id, file or heading, quote) and are never bare ids. Passage ids make each answer auditable: a reply that states facts but cites no retrieved passage id is flagged in the span summary and the obedience eval (2.5). **Never** in any trace: learner question, answer, code, README text, concept-check explanation, passage text, keys, URLs. A debug switch that adds text would need its own owner decision.
 
 ### 2.3 Span summary
 
@@ -84,7 +84,16 @@ Extend the SPEC-20 gate from "did retrieval find the right source" to "was the a
 - (c) there is no "Not from the course" part (R4);
 - (d) in Socratic mode, there is no code block (ADR-0009).
 
-Each check is also reported alone. The R4 rule "no facts from memory" cannot be checked by pattern, so a **fixed random sample is hand-reviewed** (as with 24 of 240 Gemini questions) and reported as a separate, smaller figure. No LLM judge in version 1. Output is counts per mode and state plus the exact failing questions (for example "412 of 450 replies passed all checks").
+Each check is also reported alone.
+
+**The R4 rule "no facts from memory" is checked by structure, not by provenance.** We cannot tell where a model got a fact, so we check what a no-source reply is *allowed to contain*: the state sentence, a restatement of the learner's own text, one or two guiding questions about the learner's own code or data, and a rephrase or lesson suggestion. Anything else is a fail. Two more automatic checks:
+
+- **(e) Made-up-item test.** Ask about an invented function in a real library. Any confident explanation of it fails.
+- **(f) New-terms check.** Technical terms in the reply that are not in the learner's question, code or output are flagged. It reuses the SPEC-22 overlap idea.
+
+**Hand review shrinks to the flagged replies plus a small random calibration sample** (proposal: all flagged, plus 10 random per mode; owner to confirm, open point 4.3), reported as a separate figure. **This is a proxy, not proof:** it measures how often a reply stays inside the allowed shape, not that no fact came from memory. No LLM judge in version 1. Output is counts per mode and state plus the exact failing questions (for example "412 of 450 replies passed all checks").
+
+**C. Temperature is a named setting.** `AXIS_TEMPERATURE` replaces the hard-coded 0.2 for AXIS chat (the judge stays 0.0, the README draft 0.3). Obedience eval runs use 0.0 for repeatability and can be run at 0.2 to compare. SPEC-30 defines the setting. Changing the live default is a behaviour change and waits for the numbers and the owner. Models that reject a temperature keep the existing `send_temperature` handling.
 
 This is a **measurement, not a CI gate**: real models are not deterministic and may cost money. Real runs are local model first. A paid run needs a printed cost estimate and **the owner runs it**.
 
@@ -120,7 +129,7 @@ Observability never changes a learner's answer. A tracer error is caught, counte
 
 1. **Default tracer:** `noop` in tests and CI; `local` in `lms serve`.
 2. **Obedience bar:** report-only for the first run, then set from the numbers (example: 95 percent passing checks a to d; it may block making hybrid the default).
-3. **Hand-review sample:** 30 replies per mode, fixed seed.
+3. **Hand-review sample:** all flagged replies plus 10 random replies per mode as a calibration sample, fixed seed (replaces the earlier 30 per mode; owner to confirm).
 4. **Week boundary:** UTC Monday, labelled in the report header.
 5. **Dashboard:** static report first; live page (SPEC-29b) only after the owner picks it and an admin gate exists.
 
@@ -129,7 +138,7 @@ Observability never changes a learner's answer. A tracer error is caught, counte
 1. **SPEC-28, tracing:** the port, `NoopTracer`, `LocalTracer`, the allow-list, never-raises, the guard test that fails if a span carries learner text, and spans wired into all five call kinds (one test per kind).
 2. **SPEC-29, report and thumbs:** `lms report axis-modes`, the static HTML report with the latency and refusal summary from spans, the re-measure of the hybrid timeout and concurrency recorded in ADR-0035 section 5.4, and the thumbs control with `axis_feedback`.
 3. **SPEC-30, answer evals:** the deterministic checker with canned replies in CI, the obedience harness, the hand-review sample, and the first local-model run and report.
-4. **Planned after SPEC-28 (owner, 2026-11-19): a LangSmith adapter for owner-run eval runs only, in its own ADR.** It will state: eval runs use made-up questions from `eval/gemini-sets/`, never learners; full text may be sent only behind an explicit eval flag that `lms serve` never sets; the API key is set by the owner and never printed or stored; real learner traces stay ids-only and never leave the machine. This ADR does not decide it.
+4. **Planned after SPEC-28 (owner, 2026-11-19): a short ADR-0038, a LangSmith adapter for owner-run eval runs only,** behind `ITracer` and off by default. It will state: full text is allowed only in owner-run evals on synthetic `eval/gemini-sets/` questions, through an explicit eval flag that `lms serve` and learner sessions never set; the API key is set by the owner and never printed or stored; real learner traces stay ids-only and never leave the machine. Self-hosted Langfuse stays an alternative viewer. Step 8 itself keeps `LocalTracer` and the static HTML report. **ADR-0038 is not written yet and this ADR does not decide it.**
 5. **Later, only when the owner asks:** other vendor adapters (each with its own ADR), the live dashboard page (SPEC-29b), paid judged evals.
 
 Step 9 of ADR-0035 (query rewriting and a bounded retry) is not touched here; if built, it adds spans through the same port.
