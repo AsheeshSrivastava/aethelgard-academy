@@ -10,6 +10,7 @@ import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import TimeoutError as FutureTimeout
 from types import SimpleNamespace
 from typing import List
 
@@ -186,13 +187,27 @@ def test_over_the_concurrency_limit_is_busy_at_once():
     assert all(x.status is RetrievalStatus.OK for x in out)
 
 
-def test_slot_is_released_after_a_timeout_only_when_the_engine_finishes():
+def test_stalled_models_downgrade_every_search_instead_of_saying_busy_forever():
     slow = FakeEngine(GOOD, delay=0.4)
     r = make(slow, concurrency=1, timeout_s=0.05)
-    assert r.search("pytest fixtures").downgraded
-    assert r.search("pytest fixtures").status is RetrievalStatus.UNAVAILABLE  # late search still running
+    first = r.search("pytest fixtures")
+    assert first.downgraded
+    started = time.perf_counter()
+    second = r.search("pytest fixtures")  # the one slot is held by the timed-out search: stalled, not busy
+    assert second.downgraded and second.status is RetrievalStatus.OK and time.perf_counter() - started < 0.05
+    assert len(slow.calls) == 1  # the stuck engine was not asked again
     time.sleep(0.5)
-    assert r.search("pytest fixtures").downgraded  # slot is free again (timeout again, not busy)
+    assert r.search("pytest fixtures").downgraded  # engine free again: tried again, times out again
+    assert len(slow.calls) == 2
+
+
+def test_startup_self_check_that_hangs_gives_the_downgrade_without_blocking():
+    from lms.adapters.ai.rag import ragcore_retriever as rr
+
+    started = time.perf_counter()
+    with pytest.raises(FutureTimeout):
+        rr._self_check(FakeEngine(GOOD, delay=1.0), 0.02)
+    assert time.perf_counter() - started < 0.5
 
 
 # 8. Import hygiene ---------------------------------------------------------------------------------

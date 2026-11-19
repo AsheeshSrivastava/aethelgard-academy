@@ -96,6 +96,9 @@ class RagcoreRetriever(IRetriever):
         self._per_source = passages_per_source
         self._slots = threading.BoundedSemaphore(concurrency)
         self._pool = ThreadPoolExecutor(max_workers=concurrency, thread_name_prefix="ragcore-search")
+        self._concurrency = concurrency
+        self._timed_out: list = []  # searches the caller gave up on that are still running
+        self._lock = threading.Lock()
 
     def index_status(self) -> RetrievalStatus:
         return RetrievalStatus.OK
@@ -121,6 +124,11 @@ class RagcoreRetriever(IRetriever):
                                 message="empty query" if not (query or "").strip() else "no searchable words")
         k = clamp_top_k(top_k)
         prefixes = tuple(p for p in source_prefixes if p)
+        with self._lock:
+            self._timed_out = [f for f in self._timed_out if not f.done()]
+            stalled = len(self._timed_out) >= self._concurrency
+        if stalled:  # every slot is held by a search that already timed out: the models are stuck, not busy
+            return self._downgrade(query, top_k, prefixes, "the ranking models are stalled")
         if not self._slots.acquire(blocking=False):
             return self._result(RetrievalStatus.UNAVAILABLE, message="busy: too many searches at once")
         try:
@@ -131,6 +139,8 @@ class RagcoreRetriever(IRetriever):
         try:
             hits = future.result(timeout=self._timeout_s)
         except FutureTimeout:
+            with self._lock:
+                self._timed_out.append(future)
             return self._downgrade(query, top_k, prefixes, f"timed out after {self._timeout_s:g}s")
         except Exception as exc:
             return self._downgrade(query, top_k, prefixes, f"model fault ({type(exc).__name__})")
@@ -161,8 +171,11 @@ class RagcoreRetriever(IRetriever):
 
 def _self_check(engine: Any, timeout_s: float) -> None:
     """One real search warms the embedder and reranker and proves both answer. Raises on any fault or timeout."""
-    with ThreadPoolExecutor(max_workers=1) as pool:
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:  # no `with`: leaving it would wait for a stuck search and the timeout would never reach the caller
         results = pool.submit(engine.search, "python function", 1, None).result(timeout=timeout_s * 6)
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
     for r in results:
         if not math.isfinite(float(r.score)):
             raise ValueError("reranker returned a non-finite score")

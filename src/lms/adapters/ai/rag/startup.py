@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 from pathlib import Path
 from typing import Mapping, Optional
@@ -19,7 +20,6 @@ from lms.adapters.ai.rag.ragcore_retriever import (
     open_ragcore_retriever,
 )
 from lms.core.retrieval import IRetriever, RetrievalMode
-import math
 
 logger = logging.getLogger(__name__)
 
