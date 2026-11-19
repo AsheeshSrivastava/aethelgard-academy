@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple
 
 from lms.adapters.ai.rag.retriever import HybridRerankedRetriever
 from lms.core.query import clean_query
+from lms.core.search_text import DEFAULT_RECIPE
 from lms.core.retrieval import (
     IndexManifest,
     IRetriever,
@@ -38,17 +39,19 @@ SOURCES_FILE = "sources.jsonl"
 PASSAGES_FILE = "passages.jsonl"
 
 
-def _manifest_from_records(records: List[SourceRecord], loader_versions: List[str], built_at: str) -> IndexManifest:
+def _manifest_from_records(
+    records: List[SourceRecord], loader_versions: List[str], built_at: str, search_recipe: str = DEFAULT_RECIPE
+) -> IndexManifest:
     loader_version = ",".join(sorted(set(loader_versions)))
     return IndexManifest(
-        index_version=compute_index_version(records, loader_version),
+        index_version=compute_index_version(records, loader_version, search_recipe),
         built_at=built_at,
         loader_version=loader_version,
         sources=tuple(sorted(records, key=lambda s: s.source_id)),
     )
 
 
-def read_manifest(index_dir: Path | str) -> IndexManifest:
+def read_manifest(index_dir: Path | str, search_recipe: str = DEFAULT_RECIPE) -> IndexManifest:
     """Build the manifest from sources.jsonl (R4). Raises on a missing or corrupt file."""
     path = Path(index_dir) / SOURCES_FILE
     records: List[SourceRecord] = []
@@ -68,7 +71,7 @@ def read_manifest(index_dir: Path | str) -> IndexManifest:
             )
             loaders.append(row["loader_version"])
     built_at = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat(timespec="seconds")
-    return _manifest_from_records(records, loaders, built_at)
+    return _manifest_from_records(records, loaders, built_at, search_recipe)
 
 
 def _source_name(source_id: str) -> str:
@@ -104,14 +107,15 @@ class KeywordRetriever(IRetriever):
         index_dir: Path | str,
         min_matched_terms: int = DEFAULT_MIN_MATCHED_TERMS,
         passages_per_source: int = DEFAULT_PASSAGES_PER_SOURCE,
+        search_recipe: str = DEFAULT_RECIPE,
     ) -> "KeywordRetriever":
         """Never raises: a missing or unreadable folder gives an adapter that answers NO_INDEX (R1, R7)."""
         folder = Path(index_dir)
         if not (folder / PASSAGES_FILE).exists() or not (folder / SOURCES_FILE).exists():
             return cls(None, None, f"{folder} has no index files", min_matched_terms, passages_per_source)
         try:
-            manifest = read_manifest(folder)
-            engine = HybridRerankedRetriever.load(folder)
+            manifest = read_manifest(folder, search_recipe)
+            engine = HybridRerankedRetriever.load(folder, search_recipe=search_recipe)
         except Exception as exc:  # corrupt JSON, missing key, unreadable file
             return cls(None, None, f"{folder} could not be read ({type(exc).__name__})", min_matched_terms, passages_per_source)
         if not engine.passages:
@@ -131,7 +135,9 @@ class KeywordRetriever(IRetriever):
         records = [
             SourceRecord(s.source_id, s.licence, s.licence_basis, s.raw_sha256) for s in engine.sources.values()
         ]
-        manifest = _manifest_from_records(records, [s.loader_version for s in engine.sources.values()], "in-memory")
+        manifest = _manifest_from_records(
+            records, [s.loader_version for s in engine.sources.values()], "in-memory", getattr(engine, "search_recipe", DEFAULT_RECIPE)
+        )
         return cls(engine, manifest, "", min_matched_terms, passages_per_source)
 
     # --- port -----------------------------------------------------------------------------------
