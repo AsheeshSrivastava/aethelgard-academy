@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Iterable, Tuple
 
+from lms.core.search_text import DEFAULT_RECIPE, SEARCH_TEXT_VERSION
+
 MIN_TOP_K = 1
 MAX_TOP_K = 10
 
@@ -118,10 +120,16 @@ def clamp_top_k(top_k: int) -> int:
     return max(MIN_TOP_K, min(MAX_TOP_K, int(top_k)))
 
 
-def compute_index_version(sources: Iterable[SourceRecord], loader_version: str) -> str:
-    """sha256 over the sorted (source_id, raw_sha256) pairs plus the loader version (R4)."""
+def compute_index_version(sources: Iterable[SourceRecord], loader_version: str, search_recipe: str = DEFAULT_RECIPE) -> str:
+    """sha256 over the sorted (source_id, raw_sha256) pairs plus the loader version (R4).
+
+    A search-text recipe other than "none" is mixed in with SEARCH_TEXT_VERSION (SPEC-26 R6); "none" adds
+    nothing, so an index built without search-only text keeps its old version byte for byte.
+    """
     digest = hashlib.sha256()
     for source_id, raw_sha256 in sorted((s.source_id, s.raw_sha256) for s in sources):
         digest.update(f"{source_id}\0{raw_sha256}\n".encode("utf-8"))
     digest.update(f"loader\0{loader_version}".encode("utf-8"))
+    if search_recipe != DEFAULT_RECIPE:
+        digest.update(f"\nsearch_text\0{SEARCH_TEXT_VERSION}\0{search_recipe}".encode("utf-8"))
     return digest.hexdigest()

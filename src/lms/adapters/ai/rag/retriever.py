@@ -17,6 +17,7 @@ from lms.adapters.ai.rag.bm25 import InvertedBM25Index
 from lms.adapters.ai.rag.chunker import HeadingSentenceSplitter
 from lms.adapters.ai.rag.fusion import reciprocal_rank_fusion
 from lms.core.rag_contracts import Passage, Source, Span, make_passages
+from lms.core.search_text import DEFAULT_RECIPE, SEARCH_TEXT_RECIPES, search_text
 
 
 @dataclass(frozen=True)
@@ -39,13 +40,18 @@ class HybridRerankedRetriever:
         embedder: Optional[Callable[[str], List[float]]] = None,
         reranker: Optional[Callable[[str, List[str]], List[float]]] = None,
         chunker_version: str = "llamaindex-sentence-v1",
+        search_recipe: str = DEFAULT_RECIPE,
     ) -> None:
+        if search_recipe not in SEARCH_TEXT_RECIPES:
+            raise ValueError(f"unknown search-text recipe '{search_recipe}'")
+        self.search_recipe = search_recipe  # SPEC-26: which search-only words join the BM25 bag of words
         self.splitter = splitter or HeadingSentenceSplitter()
         self.embedder = embedder
         self.reranker = reranker
         self.chunker_version = chunker_version
 
         self.bm25 = InvertedBM25Index()
+        self.bm25.search_recipe = search_recipe
         self.passages: Dict[str, Passage] = {}
         self.sources: Dict[str, Source] = {}
         self.dense_vectors: Dict[str, List[float]] = {}
@@ -59,7 +65,7 @@ class HybridRerankedRetriever:
         passages = make_passages(source, spans, chunker_version=self.chunker_version)
         for p in passages:
             self.passages[p.passage_id] = p
-            self.bm25.add(p.passage_id, p.text, p.headings)
+            self.bm25.add(p.passage_id, p.text, p.headings, search_text(p, self.search_recipe))
 
             if self.embedder is not None:
                 self.dense_vectors[p.passage_id] = self.embedder(p.text)
@@ -242,6 +248,7 @@ class HybridRerankedRetriever:
         embedder: Optional[Callable[[str], List[float]]] = None,
         reranker: Optional[Callable[[str, List[str]], List[float]]] = None,
         chunker_version: str = "llamaindex-sentence-v1",
+        search_recipe: str = DEFAULT_RECIPE,
     ) -> HybridRerankedRetriever:
         """Warm-loads pre-indexed artifacts in < 50ms without re-parsing text."""
         target_dir = Path(index_dir)
@@ -250,6 +257,7 @@ class HybridRerankedRetriever:
             embedder=embedder,
             reranker=reranker,
             chunker_version=chunker_version,
+            search_recipe=search_recipe,
         )
 
         sources_path = target_dir / "sources.jsonl"
@@ -291,7 +299,15 @@ class HybridRerankedRetriever:
         if bm25_path.exists():
             with open(bm25_path, "r", encoding="utf-8") as f:
                 bm25_data = json.load(f)
-                retriever.bm25 = InvertedBM25Index.from_dict(bm25_data)
+                loaded = InvertedBM25Index.from_dict(bm25_data)
+                if loaded.search_recipe == search_recipe:
+                    retriever.bm25 = loaded
+                else:
+                    # SPEC-26: the saved file was built with other search-only words; rebuild from the stored passages.
+                    retriever.bm25 = InvertedBM25Index(k1=loaded.k1, b=loaded.b)
+                    retriever.bm25.search_recipe = search_recipe
+                    for p in retriever.passages.values():
+                        retriever.bm25.add(p.passage_id, p.text, p.headings, search_text(p, search_recipe))
 
         return retriever
 

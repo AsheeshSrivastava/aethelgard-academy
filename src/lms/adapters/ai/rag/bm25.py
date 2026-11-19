@@ -24,15 +24,21 @@ class InvertedBM25Index:
         self.avg_doc_length = 0.0
         self.inverted_index: Dict[str, Dict[str, int]] = {}  # term -> {doc_id: freq}
         self.doc_headings: Dict[str, List[str]] = {}
+        self.search_recipe = "none"  # which search-only text the bag of words holds (SPEC-26)
 
     def _tokenize(self, text: str) -> List[str]:
         return [t.lower() for t in TOKEN_RE.findall(text)]
 
-    def add(self, passage_id: str, text: str, headings: List[str] | Tuple[str, ...]) -> None:
-        """Indexes a passage, repeating headings with higher weight."""
+    def add(self, passage_id: str, text: str, headings: List[str] | Tuple[str, ...], extra: str = "") -> None:
+        """Indexes a passage, repeating headings with higher weight.
+
+        `extra` is search-only text (SPEC-26): it joins the bag of words and nothing else; it is not stored.
+        """
         heading_text = " ".join(headings)
         # Give heading terms a 2x boost in the lexical bag of words
         full_text = f"{heading_text} {heading_text} {text}"
+        if extra:
+            full_text = f"{full_text} {extra}"
         tokens = self._tokenize(full_text)
         if not tokens:
             return
@@ -82,7 +88,9 @@ class InvertedBM25Index:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes index state for fast disk persistence."""
+        extra = {"search_text_recipe": self.search_recipe} if self.search_recipe != "none" else {}
         return {
+            **extra,
             "k1": self.k1,
             "b": self.b,
             "doc_count": self.doc_count,
@@ -101,5 +109,6 @@ class InvertedBM25Index:
         idx.avg_doc_length = data.get("avg_doc_length", 0.0)
         idx.doc_headings = data.get("doc_headings", {})
         idx.inverted_index = data.get("inverted_index", {})
+        idx.search_recipe = data.get("search_text_recipe", "none")
         return idx
 

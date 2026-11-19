@@ -37,8 +37,8 @@ def load_floor(set_dir: Path = SET_DIR) -> Dict:
     return json.loads((set_dir / "floor.json").read_text(encoding="utf-8"))
 
 
-def build_keyword_retriever(set_dir: Path = SET_DIR) -> HybridRerankedRetriever:
-    retriever = HybridRerankedRetriever()
+def build_keyword_retriever(set_dir: Path = SET_DIR, search_recipe: str = "none") -> HybridRerankedRetriever:
+    retriever = HybridRerankedRetriever(search_recipe=search_recipe)
     for path in sorted((set_dir / "docs").glob("*.md")):
         text = normalize_text(path.read_text(encoding="utf-8"))
         retriever.index_source(

@@ -111,6 +111,9 @@ Later, not in the nine: A7 (ConceptStore wiring), then A8 (split `app.py`). The 
 - Adding or changing this field **changes `index_version`**, because the index changes what it finds. An index built without it keeps its old version.
 - It is adopted only if the question set (2.6) shows a clear gain, the same rule as the embedder and reranker. Building it needs a model call per passage at index time, so a printed cost estimate comes first (AGENTS.md).
 
+### 5.2a Split of step 6 (owner, 2026-11-19)
+Step 6 is split. **6a** (free, offline) adds search-only words from fields the index already holds (path words and page title) to the keyword index; it is SPEC-26 and is adopted only by its measured rule. **6b** (the model-written context sentence in 5.2) is decided after the 6a numbers and gets its own spec and printed cost estimate. The 5.2 rules apply to both: search-only text never reaches the prompt, the learner or a citation, and a changed recipe changes `index_version`.
+
 ### 5.3 GraphRAG: considered and rejected
 GraphRAG (a knowledge graph built over the text) was considered for questions that need links between topics. Rejected for now: the course map's prerequisite graph already holds the links we need (what comes before what), it is authored by us, and a model-built graph would add cost, a second index to version and a new place for wrong facts. Revisit only if the question set shows a class of cross-topic questions that keyword and hybrid search cannot answer.
 

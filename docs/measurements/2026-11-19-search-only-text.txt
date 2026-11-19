@@ -1,0 +1,132 @@
+SPEC-26 measurement: search-only text recipes on the six Gemini sets and the SPEC-20 fixture
+set_version 5d5fbd741a89ee65686c3029ed4953f50a9b6e5ff0c12b78d86e7f3414cc3e19
+SEARCH_TEXT_VERSION 1; date 2026-11-19; offline, no model, no paid call; scores are rounded, no timings (R8)
+Mode lms (keyword_only): cleaned query, BM25, one passage per file (cap 1), min_matched_terms 3 on the real corpus, 2 on the fixture.
+Metrics are over answerable questions only (240 answerable, 60 out-of-scope). Baseline: docs/measurements/2026-11-18-gemini-baseline.txt.
+V0 none | V1 path | V2 title | V3 path_title | V4 path_title_x2 (SPEC-26 R5).
+
+====================================================================================================
+V0 recipe=none  index_version 121b0a31c0f680328a7fc98834247959b24e9e36c5e000e9687aadd8f6474c55  (1371 files, 13712 passages)
+====================================================================================================
+[set_version=5d5fbd741a89 index_version=121b0a31c0f6 mode=lms recipe=none (V0) min_matched_terms=3 date=2026-11-19]
+  ALL answerable             n=240  hit@1  28.3  hit@3  57.1  hit@5  67.9  MRR 0.435  nDCG@1/3/5 0.283/0.420/0.463  P@1/3/5  36.8/ 28.9/ 20.5 (n=38)
+    kind plain               n=60   hit@1  35.0  hit@3  68.3  hit@5  75.0  MRR 0.510  nDCG@1/3/5 0.350/0.529/0.552  P@1/3/5  40.0/ 26.7/ 24.0 (n=5)
+    kind error               n=60   hit@1  38.3  hit@3  71.7  hit@5  85.0  MRR 0.561  nDCG@1/3/5 0.383/0.523/0.579  P@1/3/5  33.3/ 31.5/ 22.2 (n=18)
+    kind paraphrase          n=60   hit@1  11.7  hit@3  30.0  hit@5  36.7  MRR 0.211  nDCG@1/3/5 0.117/0.216/0.243  P@1/3/5   0.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  28.3  hit@3  58.3  hit@5  75.0  MRR 0.458  nDCG@1/3/5 0.283/0.412/0.478  P@1/3/5  60.0/ 33.3/ 22.0 (n=10)
+    set fastapi-docs         n=40   hit@1  32.5  hit@3  62.5  hit@5  67.5  MRR 0.482  nDCG@1/3/5 0.325/0.468/0.496  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  30.0  hit@3  65.0  hit@5  72.5  MRR 0.458  nDCG@1/3/5 0.300/0.453/0.479  P@1/3/5  62.5/ 37.5/ 25.0 (n=8)
+    set pydantic-docs        n=40   hit@1  25.0  hit@3  57.5  hit@5  72.5  MRR 0.428  nDCG@1/3/5 0.250/0.413/0.466  P@1/3/5  18.2/ 18.2/ 18.2 (n=11)
+    set pytest-docs          n=40   hit@1  27.5  hit@3  47.5  hit@5  60.0  MRR 0.391  nDCG@1/3/5 0.275/0.353/0.404  P@1/3/5  50.0/ 25.0/ 15.0 (n=8)
+    set python-docs          n=40   hit@1  17.5  hit@3  47.5  hit@5  57.5  MRR 0.327  nDCG@1/3/5 0.175/0.339/0.379  P@1/3/5   0.0/ 44.4/ 26.7 (n=3)
+    set uv-docs              n=40   hit@1  37.5  hit@3  62.5  hit@5  77.5  MRR 0.525  nDCG@1/3/5 0.375/0.496/0.553  P@1/3/5  37.5/ 33.3/ 22.5 (n=8)
+  refusal: false-refusal   6.2% of 240 answerable; correct-refusal  43.3% of 60 out-of-scope
+
+  min_matched_terms sweep (Gemini sets): m=2: Hit@3  59.6 false-refusal   0.0 correct-refusal   3.3; m=3: Hit@3  57.1 false-refusal   6.2 correct-refusal  43.3; m=4: Hit@3  50.0 false-refusal  18.8 correct-refusal  75.0
+  fixture (SPEC-20, 41 answerable, 9 no-answer): m=2: first 36/41 top3 39/41 false-refusal   4.9 correct-refusal  88.9; m=3: first 30/41 top3 31/41 false-refusal  24.4 correct-refusal 100.0; m=4: first 23/41 top3 23/41 false-refusal  43.9 correct-refusal 100.0
+  gemini/none: 103 of 240 answerable questions miss at K=3 wording 86, vague chunk 0, multi-page 4, other 13
+
+====================================================================================================
+V1 recipe=path  index_version 7c51d1d5846f5e6554a6f84a329aedc45a74d8a8c91f65d458e2f41060063b09  (1371 files, 13712 passages)
+====================================================================================================
+[set_version=5d5fbd741a89 index_version=7c51d1d5846f mode=lms recipe=path (V1) min_matched_terms=3 date=2026-11-19]
+  ALL answerable             n=240  hit@1  29.2  hit@3  57.5  hit@5  68.3  MRR 0.442  nDCG@1/3/5 0.292/0.423/0.468  P@1/3/5  39.5/ 31.6/ 20.0 (n=38)
+    kind plain               n=60   hit@1  36.7  hit@3  68.3  hit@5  75.0  MRR 0.521  nDCG@1/3/5 0.367/0.527/0.556  P@1/3/5  60.0/ 40.0/ 24.0 (n=5)
+    kind error               n=60   hit@1  38.3  hit@3  73.3  hit@5  83.3  MRR 0.559  nDCG@1/3/5 0.383/0.527/0.575  P@1/3/5  33.3/ 33.3/ 21.1 (n=18)
+    kind paraphrase          n=60   hit@1  11.7  hit@3  30.0  hit@5  40.0  MRR 0.218  nDCG@1/3/5 0.117/0.216/0.256  P@1/3/5   0.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  30.0  hit@3  58.3  hit@5  75.0  MRR 0.469  nDCG@1/3/5 0.300/0.420/0.486  P@1/3/5  60.0/ 33.3/ 22.0 (n=10)
+    set fastapi-docs         n=40   hit@1  35.0  hit@3  62.5  hit@5  70.0  MRR 0.500  nDCG@1/3/5 0.350/0.477/0.515  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  30.0  hit@3  65.0  hit@5  72.5  MRR 0.462  nDCG@1/3/5 0.300/0.456/0.482  P@1/3/5  62.5/ 37.5/ 25.0 (n=8)
+    set pydantic-docs        n=40   hit@1  25.0  hit@3  62.5  hit@5  70.0  MRR 0.426  nDCG@1/3/5 0.250/0.425/0.461  P@1/3/5  18.2/ 24.2/ 16.4 (n=11)
+    set pytest-docs          n=40   hit@1  27.5  hit@3  45.0  hit@5  60.0  MRR 0.389  nDCG@1/3/5 0.275/0.340/0.403  P@1/3/5  50.0/ 25.0/ 15.0 (n=8)
+    set python-docs          n=40   hit@1  17.5  hit@3  45.0  hit@5  60.0  MRR 0.330  nDCG@1/3/5 0.175/0.326/0.387  P@1/3/5   0.0/ 44.4/ 26.7 (n=3)
+    set uv-docs              n=40   hit@1  40.0  hit@3  65.0  hit@5  77.5  MRR 0.544  nDCG@1/3/5 0.400/0.512/0.562  P@1/3/5  50.0/ 37.5/ 22.5 (n=8)
+  refusal: false-refusal   6.2% of 240 answerable; correct-refusal  43.3% of 60 out-of-scope
+
+  min_matched_terms sweep (Gemini sets): m=2: Hit@3  60.0 false-refusal   0.0 correct-refusal   3.3; m=3: Hit@3  57.5 false-refusal   6.2 correct-refusal  43.3; m=4: Hit@3  50.4 false-refusal  18.8 correct-refusal  75.0
+  fixture (SPEC-20, 41 answerable, 9 no-answer): m=2: first 36/41 top3 39/41 false-refusal   4.9 correct-refusal  88.9; m=3: first 30/41 top3 31/41 false-refusal  24.4 correct-refusal 100.0; m=4: first 23/41 top3 23/41 false-refusal  43.9 correct-refusal 100.0
+  gemini/path: 102 of 240 answerable questions miss at K=3 wording 86, vague chunk 0, multi-page 3, other 13
+
+====================================================================================================
+V2 recipe=title  index_version a39c4ff1de2657ea6d377201c2cf245e87bbdb8579755adb9bf5319bddfed067  (1371 files, 13712 passages)
+====================================================================================================
+[set_version=5d5fbd741a89 index_version=a39c4ff1de26 mode=lms recipe=title (V2) min_matched_terms=3 date=2026-11-19]
+  ALL answerable             n=240  hit@1  29.2  hit@3  57.1  hit@5  67.9  MRR 0.441  nDCG@1/3/5 0.292/0.424/0.466  P@1/3/5  39.5/ 28.9/ 20.5 (n=38)
+    kind plain               n=60   hit@1  36.7  hit@3  68.3  hit@5  75.0  MRR 0.519  nDCG@1/3/5 0.367/0.536/0.558  P@1/3/5  40.0/ 26.7/ 24.0 (n=5)
+    kind error               n=60   hit@1  40.0  hit@3  71.7  hit@5  83.3  MRR 0.566  nDCG@1/3/5 0.400/0.527/0.576  P@1/3/5  38.9/ 31.5/ 22.2 (n=18)
+    kind paraphrase          n=60   hit@1  10.0  hit@3  30.0  hit@5  38.3  MRR 0.212  nDCG@1/3/5 0.100/0.215/0.247  P@1/3/5   0.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  30.0  hit@3  58.3  hit@5  75.0  MRR 0.466  nDCG@1/3/5 0.300/0.418/0.484  P@1/3/5  60.0/ 33.3/ 22.0 (n=10)
+    set fastapi-docs         n=40   hit@1  35.0  hit@3  62.5  hit@5  65.0  MRR 0.490  nDCG@1/3/5 0.350/0.477/0.496  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  32.5  hit@3  65.0  hit@5  75.0  MRR 0.480  nDCG@1/3/5 0.325/0.465/0.501  P@1/3/5  62.5/ 37.5/ 25.0 (n=8)
+    set pydantic-docs        n=40   hit@1  25.0  hit@3  57.5  hit@5  72.5  MRR 0.427  nDCG@1/3/5 0.250/0.413/0.465  P@1/3/5  18.2/ 18.2/ 18.2 (n=11)
+    set pytest-docs          n=40   hit@1  27.5  hit@3  50.0  hit@5  60.0  MRR 0.393  nDCG@1/3/5 0.275/0.365/0.406  P@1/3/5  50.0/ 25.0/ 15.0 (n=8)
+    set python-docs          n=40   hit@1  17.5  hit@3  45.0  hit@5  57.5  MRR 0.325  nDCG@1/3/5 0.175/0.322/0.374  P@1/3/5  33.3/ 44.4/ 26.7 (n=3)
+    set uv-docs              n=40   hit@1  37.5  hit@3  62.5  hit@5  77.5  MRR 0.530  nDCG@1/3/5 0.375/0.499/0.557  P@1/3/5  37.5/ 33.3/ 22.5 (n=8)
+  refusal: false-refusal   6.2% of 240 answerable; correct-refusal  43.3% of 60 out-of-scope
+
+  min_matched_terms sweep (Gemini sets): m=2: Hit@3  59.6 false-refusal   0.0 correct-refusal   1.7; m=3: Hit@3  57.1 false-refusal   6.2 correct-refusal  43.3; m=4: Hit@3  49.6 false-refusal  19.2 correct-refusal  75.0
+  fixture (SPEC-20, 41 answerable, 9 no-answer): m=2: first 36/41 top3 39/41 false-refusal   4.9 correct-refusal  88.9; m=3: first 30/41 top3 31/41 false-refusal  24.4 correct-refusal 100.0; m=4: first 23/41 top3 23/41 false-refusal  43.9 correct-refusal 100.0
+  gemini/title: 103 of 240 answerable questions miss at K=3 wording 86, vague chunk 0, multi-page 4, other 13
+
+====================================================================================================
+V3 recipe=path_title  index_version 21e6e652b3bccb5fffe1b3fe6457409a27b77eb4405f30f867b8c04b5f563f67  (1371 files, 13712 passages)
+====================================================================================================
+[set_version=5d5fbd741a89 index_version=21e6e652b3bc mode=lms recipe=path_title (V3) min_matched_terms=3 date=2026-11-19]
+  ALL answerable             n=240  hit@1  30.0  hit@3  58.3  hit@5  68.3  MRR 0.448  nDCG@1/3/5 0.300/0.430/0.474  P@1/3/5  39.5/ 32.5/ 20.5 (n=38)
+    kind plain               n=60   hit@1  36.7  hit@3  68.3  hit@5  75.0  MRR 0.521  nDCG@1/3/5 0.367/0.530/0.559  P@1/3/5  40.0/ 40.0/ 24.0 (n=5)
+    kind error               n=60   hit@1  40.0  hit@3  75.0  hit@5  83.3  MRR 0.571  nDCG@1/3/5 0.400/0.541/0.586  P@1/3/5  38.9/ 33.3/ 22.2 (n=18)
+    kind paraphrase          n=60   hit@1  13.3  hit@3  30.0  hit@5  40.0  MRR 0.231  nDCG@1/3/5 0.133/0.227/0.266  P@1/3/5   0.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  30.0  hit@3  60.0  hit@5  75.0  MRR 0.468  nDCG@1/3/5 0.300/0.423/0.485  P@1/3/5  60.0/ 36.7/ 22.0 (n=10)
+    set fastapi-docs         n=40   hit@1  35.0  hit@3  62.5  hit@5  67.5  MRR 0.490  nDCG@1/3/5 0.350/0.473/0.502  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  32.5  hit@3  67.5  hit@5  75.0  MRR 0.486  nDCG@1/3/5 0.325/0.476/0.505  P@1/3/5  62.5/ 41.7/ 25.0 (n=8)
+    set pydantic-docs        n=40   hit@1  25.0  hit@3  62.5  hit@5  70.0  MRR 0.425  nDCG@1/3/5 0.250/0.425/0.460  P@1/3/5  18.2/ 24.2/ 16.4 (n=11)
+    set pytest-docs          n=40   hit@1  27.5  hit@3  45.0  hit@5  60.0  MRR 0.389  nDCG@1/3/5 0.275/0.340/0.408  P@1/3/5  50.0/ 25.0/ 17.5 (n=8)
+    set python-docs          n=40   hit@1  22.5  hit@3  47.5  hit@5  60.0  MRR 0.366  nDCG@1/3/5 0.225/0.360/0.412  P@1/3/5  33.3/ 44.4/ 26.7 (n=3)
+    set uv-docs              n=40   hit@1  37.5  hit@3  65.0  hit@5  77.5  MRR 0.532  nDCG@1/3/5 0.375/0.507/0.558  P@1/3/5  37.5/ 37.5/ 22.5 (n=8)
+  refusal: false-refusal   6.2% of 240 answerable; correct-refusal  45.0% of 60 out-of-scope
+
+  min_matched_terms sweep (Gemini sets): m=2: Hit@3  60.8 false-refusal   0.0 correct-refusal   1.7; m=3: Hit@3  58.3 false-refusal   6.2 correct-refusal  45.0; m=4: Hit@3  50.8 false-refusal  19.2 correct-refusal  75.0
+  fixture (SPEC-20, 41 answerable, 9 no-answer): m=2: first 36/41 top3 39/41 false-refusal   4.9 correct-refusal  88.9; m=3: first 30/41 top3 31/41 false-refusal  24.4 correct-refusal 100.0; m=4: first 23/41 top3 23/41 false-refusal  43.9 correct-refusal 100.0
+  gemini/path_title: 100 of 240 answerable questions miss at K=3 wording 84, vague chunk 0, multi-page 3, other 13
+
+====================================================================================================
+V4 recipe=path_title_x2  index_version 120b08def9a581cb1444601086c983c8a2763f103058ddb7e089198709c8c1ae  (1371 files, 13712 passages)
+====================================================================================================
+[set_version=5d5fbd741a89 index_version=120b08def9a5 mode=lms recipe=path_title_x2 (V4) min_matched_terms=3 date=2026-11-19]
+  ALL answerable             n=240  hit@1  31.2  hit@3  59.2  hit@5  67.5  MRR 0.455  nDCG@1/3/5 0.312/0.440/0.476  P@1/3/5  42.1/ 32.5/ 20.5 (n=38)
+    kind plain               n=60   hit@1  38.3  hit@3  70.0  hit@5  75.0  MRR 0.533  nDCG@1/3/5 0.383/0.548/0.565  P@1/3/5  60.0/ 40.0/ 24.0 (n=5)
+    kind error               n=60   hit@1  41.7  hit@3  75.0  hit@5  83.3  MRR 0.579  nDCG@1/3/5 0.417/0.547/0.592  P@1/3/5  38.9/ 33.3/ 22.2 (n=18)
+    kind paraphrase          n=60   hit@1  13.3  hit@3  31.7  hit@5  36.7  MRR 0.229  nDCG@1/3/5 0.133/0.237/0.256  P@1/3/5   0.0/ 13.3/  8.0 (n=5)
+    kind pasted              n=60   hit@1  31.7  hit@3  60.0  hit@5  75.0  MRR 0.479  nDCG@1/3/5 0.317/0.430/0.493  P@1/3/5  60.0/ 36.7/ 22.0 (n=10)
+    set fastapi-docs         n=40   hit@1  35.0  hit@3  62.5  hit@5  67.5  MRR 0.490  nDCG@1/3/5 0.350/0.479/0.502  P@1/3/5   -  /  -  /  -   (n=0)
+    set httpx-docs           n=40   hit@1  35.0  hit@3  70.0  hit@5  72.5  MRR 0.501  nDCG@1/3/5 0.350/0.500/0.510  P@1/3/5  62.5/ 41.7/ 25.0 (n=8)
+    set pydantic-docs        n=40   hit@1  27.5  hit@3  62.5  hit@5  70.0  MRR 0.441  nDCG@1/3/5 0.275/0.436/0.471  P@1/3/5  18.2/ 24.2/ 16.4 (n=11)
+    set pytest-docs          n=40   hit@1  27.5  hit@3  47.5  hit@5  57.5  MRR 0.385  nDCG@1/3/5 0.275/0.353/0.399  P@1/3/5  50.0/ 25.0/ 17.5 (n=8)
+    set python-docs          n=40   hit@1  22.5  hit@3  47.5  hit@5  60.0  MRR 0.365  nDCG@1/3/5 0.225/0.360/0.411  P@1/3/5  33.3/ 44.4/ 26.7 (n=3)
+    set uv-docs              n=40   hit@1  40.0  hit@3  65.0  hit@5  77.5  MRR 0.548  nDCG@1/3/5 0.400/0.515/0.565  P@1/3/5  50.0/ 37.5/ 22.5 (n=8)
+  refusal: false-refusal   6.2% of 240 answerable; correct-refusal  43.3% of 60 out-of-scope
+
+  min_matched_terms sweep (Gemini sets): m=2: Hit@3  61.7 false-refusal   0.0 correct-refusal   3.3; m=3: Hit@3  59.2 false-refusal   6.2 correct-refusal  43.3; m=4: Hit@3  51.7 false-refusal  18.8 correct-refusal  75.0
+  fixture (SPEC-20, 41 answerable, 9 no-answer): m=2: first 36/41 top3 39/41 false-refusal   4.9 correct-refusal  88.9; m=3: first 30/41 top3 31/41 false-refusal  24.4 correct-refusal 100.0; m=4: first 23/41 top3 23/41 false-refusal  43.9 correct-refusal 100.0
+  gemini/path_title_x2: 98 of 240 answerable questions miss at K=3 wording 82, vague chunk 0, multi-page 3, other 13
+
+====================================================================================================
+COMPARISON at min_matched_terms 3 (fixture at 2). Hit values in percent.
+====================================================================================================
+  variant            hit@1  hit@3  hit@5   MRR  nDCG@3  para@3 false-ref corr-ref | fixture first top3 | misses (wording/vague/multi/other)
+  V0 none            28.3   57.1   67.9  0.435  0.420   30.0     6.2     43.3  |    36   39      | 103 (86/0/4/13)
+  V1 path            29.2   57.5   68.3  0.442  0.423   30.0     6.2     43.3  |    36   39      | 102 (86/0/3/13)
+  V2 title           29.2   57.1   67.9  0.441  0.424   30.0     6.2     43.3  |    36   39      | 103 (86/0/4/13)
+  V3 path_title      30.0   58.3   68.3  0.448  0.430   30.0     6.2     45.0  |    36   39      | 100 (84/0/3/13)
+  V4 path_title_x2   31.2   59.2   67.5  0.455  0.440   31.7     6.2     43.3  |    36   39      | 98 (82/0/3/13)
+
+R7 adoption rule: against V0, Hit@3 gain >= 2.0 points; false-refusal and correct-refusal each no more than 1.0 point worse;
+fixture top-3 not below floor.json (39 of 41), fixture refusal rates within 1 point of V0's.
+  V1 path           Hit@3 +0.4 pts (+1 questions: 3 gained, 2 lost) -> bar not met (hit3_gain>=2)
+  V2 title          Hit@3 +0.0 pts (+0 questions: 1 gained, 1 lost) -> bar not met (hit3_gain>=2)
+  V3 path_title     Hit@3 +1.3 pts (+3 questions: 5 gained, 2 lost) -> bar not met (hit3_gain>=2)
+  V4 path_title_x2  Hit@3 +2.1 pts (+5 questions: 7 gained, 2 lost) -> bar MET
+
+  Adopted by R7: V4 (path_title_x2). A variant meets the bar; the owner decides whether to make it the default (the code keeps it behind LMS_SEARCH_TEXT).
+
+  Baseline check: SPEC-25 file says lms Hit@3  57.1; this run's V0 says  57.1 -> reproduced

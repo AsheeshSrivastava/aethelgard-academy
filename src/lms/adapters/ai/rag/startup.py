@@ -20,6 +20,7 @@ from lms.adapters.ai.rag.ragcore_retriever import (
     open_ragcore_retriever,
 )
 from lms.core.retrieval import IRetriever, RetrievalMode
+from lms.core.search_text import DEFAULT_RECIPE, SEARCH_TEXT_RECIPES
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ EMBEDDER_ENV = "LMS_EMBEDDER"
 RERANKER_ENV = "LMS_RERANKER"
 DEFAULT_EMBEDDER = "jina-v2-base-en"
 DEFAULT_RERANKER = "bge-reranker-v2-m3"
+SEARCH_TEXT_ENV = "LMS_SEARCH_TEXT"
 
 
 class RetrievalConfigError(Exception):
@@ -153,6 +155,14 @@ def configured_hr_min_terms(environ: Optional[Mapping[str, str]] = None) -> int:
         raise RetrievalConfigError(f"{HR_MIN_TERMS_ENV}='{raw}' is not allowed. Use a whole number from 0 (off) to 10.")
     return value
 
+def configured_search_text(environ: Optional[Mapping[str, str]] = None) -> str:
+    """LMS_SEARCH_TEXT: the search-only text recipe (SPEC-26); unset or empty means none (today's index)."""
+    env = os.environ if environ is None else environ
+    raw = (env.get(SEARCH_TEXT_ENV) or "").strip() or DEFAULT_RECIPE
+    if raw not in SEARCH_TEXT_RECIPES:
+        raise RetrievalConfigError(f"{SEARCH_TEXT_ENV}='{raw}' is not allowed. Choose one of: {', '.join(SEARCH_TEXT_RECIPES)}.")
+    return raw
+
 
 def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     """Load the index once and say what was loaded. A missing folder gives NO_INDEX, not a crash (R7)."""
@@ -160,8 +170,11 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
     mode = configured_mode(env)
     min_terms = configured_min_terms(env)
     per_source = configured_passages_per_source(env)
+    recipe = configured_search_text(env)
     index_dir = Path(env.get(INDEX_DIR_ENV) or DEFAULT_INDEX_DIR)
-    retriever = KeywordRetriever.from_index_dir(index_dir, min_matched_terms=min_terms, passages_per_source=per_source)
+    retriever = KeywordRetriever.from_index_dir(
+        index_dir, min_matched_terms=min_terms, passages_per_source=per_source, search_recipe=recipe
+    )
     manifest = retriever.manifest
     if manifest is None:
         logger.warning(
@@ -172,13 +185,14 @@ def build_retriever(environ: Optional[Mapping[str, str]] = None) -> IRetriever:
         )
     else:
         logger.info(
-            "Retrieval ready: mode=%s index_version=%s sources=%d index_dir=%s min_matched_terms=%d passages_per_source=%d",
+            "Retrieval ready: mode=%s index_version=%s sources=%d index_dir=%s min_matched_terms=%d passages_per_source=%d search_text=%s",
             mode.value,
             manifest.index_version,
             len(manifest.sources),
             index_dir,
             min_terms,
             per_source,
+            recipe,
         )
     if mode is not RetrievalMode.HYBRID_RERANK:
         return retriever
