@@ -39,7 +39,16 @@ Selected by `LMS_TRACER` (`noop`, `local`, `otel`). An unknown value stops start
 
 ### 2.2 What is traced (first version)
 
-One trace per AXIS question, with child spans: query cleanup, retrieval (mode, `not_found`, downgrade reason, passages returned), prompt build, model call, citation check, and the final status. Attributes are **ids, counts, timings and status**: `index_version`, `set_version`, mode, `terms_matched`, top score band, number of passages, model id, token counts, refusal reason.
+**Every model call is traced, not only chat.** One trace per AXIS interaction, named by kind, and carrying the same `interaction_id` as the ADR-0022 log so the two join:
+
+| Trace kind | Where it starts today | Child spans |
+|---|---|---|
+| `axis_question` | chat (`consult`, and `stream` in `axis_stream.py`) | query cleanup, retrieval (mode, `not_found`, downgrade reason, passages returned), prompt build, model call, citation check |
+| `concept_check` | `judge_explanation` (CO-6, ADR-0026) | rubric load, model call, verdict rule (ideas met, verdict, `not_judged` reason) |
+| `readme_draft` | `build:draft-readme` (`draft_readme`, Amendment A2) | prompt build, model call |
+| `build_review` | the build feedback call that reads the README and review note | pointer rules (no model), model call if any |
+
+Each trace ends with a final status. The judge profile, cap reached, provider refused and mock fallback are span attributes, so a `not_judged` result is visible. The existing `model_usage` table (tokens and cost per call) stays the money record; traces link to it by call id and do not replace it. A model call that bypasses these four entry points is a bug the spec's test must catch (one test per kind: a fake companion call produces exactly one trace of that kind). Attributes are **ids, counts, timings and status**: `index_version`, `set_version`, mode, `terms_matched`, top score band, number of passages, model id, token counts, refusal reason.
 
 **No learner text and no passage text in any trace by default** (a rule, not a setting). A debug switch that adds text would need its own owner decision and stays out of this ADR.
 
