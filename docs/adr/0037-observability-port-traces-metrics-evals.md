@@ -1,6 +1,6 @@
 # ADR 0037: AXIS observability behind a port: traces, mode-usage report, answer-level evals
 
-- **Status:** Proposed (merged draft for the owner's go; no spec, test or code yet)
+- **Status:** Accepted (owner, 2026-11-19: merged draft and the open points in section 4 confirmed as recommended; no spec, test or code yet)
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Date:** 2026-11-19
 - **Implements:** ADR-0035 plan step 8 (section 5.1). Owner decision of 2026-11-16 to add observability.
@@ -125,7 +125,7 @@ Observability never changes a learner's answer. A tracer error is caught, counte
 - Negative: a thin span layer in the AXIS path; a trace file to cap; R4 relies on human review; judged evals cost money and a real model, so they stay owner-run.
 - Risk: a tracer bug breaking an answer. Mitigated by the never-raises rule and the failing-tracer test. Attribute values leaking text: mitigated by the allow-list and a guard test (like `tests/test_private_seed_answers.py`) that fails if a span carries a learner field or an over-long string.
 
-## 4. Open points for the owner (recommendations from the drafts)
+## 4. Open points (confirmed by the owner, 2026-11-19, as recommended)
 
 1. **Default tracer:** `noop` in tests and CI; `local` in `lms serve`.
 2. **Obedience bar:** report-only for the first run, then set from the numbers (example: 95 percent passing checks a to d; it may block making hybrid the default).
