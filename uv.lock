@@ -1078,7 +1078,7 @@ dependencies = [
 
 [package.optional-dependencies]
 retrieval = [
-    { name = "ragcore", extra = ["embed"] },
+    { name = "ragcore", extra = ["embed", "variants"] },
 ]
 
 [package.dev-dependencies]
@@ -1098,7 +1098,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.14.2" },
     { name = "pytest", specifier = ">=9.2.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "ragcore", extras = ["embed"], marker = "extra == 'retrieval'", git = "https://github.com/AsheeshSrivastava/Content-Library-Aethelgard-Academy?rev=v0.2.0" },
+    { name = "ragcore", extras = ["embed", "variants"], marker = "extra == 'retrieval'", git = "https://github.com/AsheeshSrivastava/Content-Library-Aethelgard-Academy?rev=v0.2.0" },
     { name = "uvicorn", specifier = ">=0.30.0" },
     { name = "websockets", specifier = ">=17.4" },
 ]
@@ -1915,6 +1915,9 @@ dependencies = [
 embed = [
     { name = "torch" },
     { name = "transformers" },
+]
+variants = [
+    { name = "llama-index-core" },
 ]
 
 [[package]]
