@@ -914,8 +914,11 @@ export interface components {
             detected_assistance_level: components["schemas"]["AssistanceLevel"];
             /** Source State */
             source_state?: string | null;
-            /** Retrieval Downgraded */
-            retrieval_downgraded?: boolean;
+            /**
+             * Retrieval Downgraded
+             * @default false
+             */
+            retrieval_downgraded: boolean;
         };
         /** AxisStreamRequest */
         AxisStreamRequest: {
@@ -1048,7 +1051,7 @@ export interface components {
              * Event Type
              * @enum {string}
              */
-            event_type: "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "feedback_disputed";
+            event_type: "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "feedback_disputed" | "axis_feedback";
             /** Interaction Id */
             interaction_id?: string | null;
             /** Unit Id */
@@ -1072,6 +1075,10 @@ export interface components {
             point?: string | null;
             /** Reason */
             reason?: string | null;
+            /** Turn Id */
+            turn_id?: string | null;
+            /** Vote */
+            vote?: ("up" | "down" | "clear") | null;
         };
         /** ColdCheckFeedback */
         ColdCheckFeedback: {
@@ -1578,7 +1585,7 @@ export interface components {
              * Event Type
              * @enum {string}
              */
-            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "document_draft" | "build_feedback" | "feedback_disputed";
+            event_type: "answer_submitted" | "concept_check" | "judgement_disputed" | "run" | "verify" | "regenerate" | "reset" | "axis" | "opened" | "closed" | "hint_viewed" | "feedback_viewed" | "document_draft" | "build_feedback" | "feedback_disputed" | "axis_feedback";
             /** Payload */
             payload?: {
                 [key: string]: unknown;

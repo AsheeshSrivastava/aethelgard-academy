@@ -58,7 +58,7 @@ Ledger entries gain two nullable columns, `interaction_id` and `attempt_id`, fil
 
 ### 2.4 Failure, size and secrets
 
-- **Never breaks learning.** A failed log write is reported in the server log and swallowed; the learner's request still succeeds.
+- **Never breaks learning.** A failed log write is reported in the server log and swallowed; the learner's request still succeeds. **One exception (owner, 2026-11-20, SPEC-29):** the `axis_feedback` rating is the learner's explicit act and has no other result, so its failed write is reported to the caller as HTTP 503 ("Your vote could not be saved. Try again."), and the panel shows it. Every other client event keeps the swallow-on-failure rule.
 - **Size.** Each text field is capped at 64 KB and the whole payload at 256 KB; a cut is marked `"…[truncated]"`.
 - **No secrets.** The app logs only fields it chose. Any payload key containing `key`, `token`, `secret` or `password` is replaced with `"[redacted]"`. Environment values are never read into the log.
 

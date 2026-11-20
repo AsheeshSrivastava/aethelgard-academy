@@ -11,6 +11,7 @@ def main() -> None:
         handle_index_upstream_command,
         handle_list_command,
         handle_pull_command,
+        handle_report_command,
         handle_verify_command,
     )
 
@@ -24,6 +25,7 @@ def main() -> None:
         print("  lms explain <unit_id> <text> Submit CO-6 concept check explanation")
         print("  lms ask <unit_id> <question> Consult AXIS AI with Socratic guardrails")
         print("  lms index-upstream           Index upstream technical docs into persistent artifacts")
+        print("  lms report axis-modes|axis-latency|axis-html   Local AXIS usage and latency reports (counts only)")
         print("  lms serve [--port PORT]      Launch Web Platform Shell (default: 8000)")
         return
 
@@ -84,6 +86,11 @@ def main() -> None:
                 out_path = Path(args[i + 1])
         res = handle_index_upstream_command(corpus_dir=corpus_path, output_dir=out_path)
         print(res["message"])
+
+    elif cmd == "report":
+        code = handle_report_command(args[1:])
+        if code:
+            raise SystemExit(code)
 
     elif cmd in ("serve", "studio", "ui"):
         import uvicorn

@@ -34,6 +34,7 @@ MAX_SHORT = 80
 MAX_REFS = 10
 # Fixed sets (SPEC-28 R11): a reason is one of these words, never a provider's text.
 FAIL_REASONS = frozenset({"not_set_up", "budget", "provider_error", "empty"})
+RETRIEVAL_REASONS = frozenset({"busy", "timeout", "stalled", "start_failed", "model_fault"})  # SPEC-29 R17
 NOT_JUDGED_REASONS = frozenset({"ai_off", "no_rubric", "cap_reached", "provider_refused", "no_answer", "unreadable_reply"})
 
 _ID_KEYS = frozenset({"interaction_id"})
@@ -46,7 +47,7 @@ _COUNT_KEYS = frozenset({
     "terms_matched", "terms_total", "passages_retrieved", "passages_cited", "input_tokens", "output_tokens",
     "dropped_attributes", "latency_ms", "duration_ms",
 })
-_OTHER_KEYS = frozenset({"unit_id", "index_version", "passage_refs", "cited_passage_ids"})
+_OTHER_KEYS = frozenset({"unit_id", "index_version", "passage_refs", "cited_passage_ids", "retrieval_reason"})
 
 ALLOWED_ATTRIBUTES = frozenset(_ID_KEYS | _SHORT_KEYS | _BOOL_KEYS | _COUNT_KEYS | _OTHER_KEYS)
 
@@ -78,6 +79,8 @@ def _clean(key: str, value: Any) -> Tuple[bool, Any]:
         return value in FAIL_REASONS, value
     if key == "not_judged_reason":
         return value in NOT_JUDGED_REASONS, value
+    if key == "retrieval_reason":
+        return value in RETRIEVAL_REASONS, value
     if key in _SHORT_KEYS:
         return _short(value), value
     if key in _BOOL_KEYS:
