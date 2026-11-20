@@ -1,6 +1,6 @@
 # SPEC-29: AXIS mode-usage report, latency and refusal summary, static HTML report, and the thumbs signal (ADR-0035 plan step 8, part 2)
 
-Status: **Draft for the owner's go.** No tests and no code until the owner says go (Build order, AGENTS.md).
+Status: **Approved by the owner 2026-11-20** ("Go, all eight as recommended"): spec and the eight open points in section 7 as recommended. Next step is tests first; no code until the tests are written and shown failing.
 Implements: ADR-0037 sections 2.3 (span summary), 2.4 (mode-usage report), 2.6 (thumbs), 2.7 (static HTML report; the live page SPEC-29b stays out) and the confirmed open points 4.1 and 4.4 (UTC Monday week). Builds on SPEC-28 (merged, #63): it reads the trace file SPEC-28 writes.
 Does **not** implement: the obedience eval and `AXIS_TEMPERATURE` (SPEC-30), any live dashboard page or HTTP endpoint for the report (SPEC-29b, needs an owner/admin gate first), vendor adapters (ADR-0038).
 Governed by: AGENTS.md (no learner text outside the process, zero-cost offline), ADR-0022 (interaction log: append-only, never the evidence ledger), ADR-0035 section 5.4 (10 s timeout, 2 concurrent searches), SPEC-24 and SPEC-27 (retrieval statuses).
@@ -93,7 +93,7 @@ Frontend (vitest, in `frontend/src/lesson/`): `axisFeedback.test.tsx`: `shows_no
 - **Thumbs:** double click; click then reload; a vote while the stream is still open (the control is not shown, and the server refuses a turn that is not logged yet); a replayed POST; a forged `turn_id` of another learner or a made-up ULID; a vote on a turn from `test_mode` while the report excludes it; rapid up/down/up with out-of-order responses (the last press wins on screen, the latest row wins in the report).
 - **CLI:** `lms report` with no name, `lms report axis-modes --db <missing>`, a database that is not SQLite, a locked database (read-only open must not wait forever or write a journal), non-UTF-8 console.
 
-## 7. Open points for the owner (plain English, with my recommendation)
+## 7. Open points (decided by the owner 2026-11-20: all eight as recommended)
 1. **A structured retrieval reason (R17).** Without it the report can say "unavailable" but cannot tell a busy search from a timeout, which is the whole point of re-measuring ADR-0035 5.4. It is a small additive change to the SPEC-27 adapter and the SPEC-28 allow-list, with no change to what a learner sees. *Recommended: yes.* Alternative: infer timeouts from latency near 10 s and report `busy` inside `unavailable`, which is guesswork.
 2. **A "clear" vote (R20, R25).** Pressing the chosen button again withdraws the rating, so a mis-click is not permanent. *Recommended: yes.* Alternative: only up or down, changeable but never removable.
 3. **Where the turn id comes from (R26).** Add `interaction_id` to the stream's `done` event only. *Recommended.* Also adding it to the consult response would change the API schema for a route the panel does not use.
