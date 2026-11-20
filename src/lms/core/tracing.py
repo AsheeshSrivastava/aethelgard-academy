@@ -32,6 +32,9 @@ _SOURCE_ID = re.compile(r"^[^\s]{1,200}$")
 _BLANK_RUN = re.compile(r"\s{2,}")
 MAX_SHORT = 80
 MAX_REFS = 10
+# Fixed sets (SPEC-28 R11): a reason is one of these words, never a provider's text.
+FAIL_REASONS = frozenset({"not_set_up", "budget", "provider_error", "empty"})
+NOT_JUDGED_REASONS = frozenset({"ai_off", "no_rubric", "cap_reached", "provider_refused", "no_answer", "unreadable_reply"})
 
 _ID_KEYS = frozenset({"interaction_id"})
 _SHORT_KEYS = frozenset({
@@ -71,6 +74,10 @@ def _clean(key: str, value: Any) -> Tuple[bool, Any]:
     """(kept, value) for one attribute under the type rules of SPEC-28 R14."""
     if key in _ID_KEYS:
         return (isinstance(value, str) and bool(_ID.match(value))), value
+    if key == "reason":
+        return value in FAIL_REASONS, value
+    if key == "not_judged_reason":
+        return value in NOT_JUDGED_REASONS, value
     if key in _SHORT_KEYS:
         return _short(value), value
     if key in _BOOL_KEYS:
@@ -198,10 +205,6 @@ class _SafeSpan:
     def __init__(self, inner: Any) -> None:
         self._inner = inner
 
-    @property
-    def raw(self) -> Any:
-        return self._inner
-
     def set(self, **attributes: Any) -> None:
         try:
             self._inner.set(**attributes)
@@ -213,6 +216,14 @@ class _SafeSpan:
             self._inner.fail(reason)
         except Exception as exc:
             _fault(exc)
+
+
+def _restore(token: Any) -> None:
+    """Put the ambient span back. A generator closed from another context cannot reset; that must not lose the span."""
+    try:
+        _current.reset(token)
+    except ValueError:
+        _current.set(None)
 
 
 @contextmanager
@@ -230,7 +241,7 @@ def span(name: str, **attributes: Any) -> Iterator[_SafeSpan]:
     try:
         yield _SafeSpan(inner)
     except BaseException as caught:
-        _current.reset(token)
+        _restore(token)
         if cm is not None:
             try:
                 cm.__exit__(type(caught), caught, caught.__traceback__)
@@ -238,7 +249,7 @@ def span(name: str, **attributes: Any) -> Iterator[_SafeSpan]:
                 _fault(exc)
         raise
     else:
-        _current.reset(token)
+        _restore(token)
         if cm is not None:
             try:
                 cm.__exit__(None, None, None)

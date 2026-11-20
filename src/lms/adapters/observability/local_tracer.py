@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 TRACE_FILE = "axis-trace.jsonl"
 DEFAULT_MAX_BYTES = 10_000_000
 MAX_FAILURES_IN_A_ROW = 2
+SLOW_WRITE_SECONDS = 0.2  # SPEC-28 R18: a slower write is counted once; it is never interrupted
 
 
 def _new_id() -> str:
@@ -107,6 +108,7 @@ class LocalTracer:
         self._failures = 0
         self._disabled = False
         self._tail_checked = False
+        self._slow_noted = False
         self.directory.mkdir(parents=True, exist_ok=True)  # a folder that cannot be made is a start-up message
 
     # --- the port -----------------------------------------------------------------------------------
@@ -127,9 +129,13 @@ class LocalTracer:
         with self._lock:
             if self._disabled:
                 return
+            started = time.perf_counter()
             try:
                 self._append(data)
                 self._failures = 0
+                if not self._slow_noted and time.perf_counter() - started > SLOW_WRITE_SECONDS:
+                    self._slow_noted = True
+                    logger.warning("A trace write took longer than %.0f ms.", SLOW_WRITE_SECONDS * 1000)
             except Exception as exc:  # a trace write never breaks a turn
                 self._failures += 1
                 if self._failures >= MAX_FAILURES_IN_A_ROW:

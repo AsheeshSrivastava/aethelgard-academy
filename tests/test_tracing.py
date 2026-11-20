@@ -543,3 +543,61 @@ def test_a_pinned_stream_closes_its_spans_on_error_and_hides_the_message(tmp_pat
     assert spans["model_call"]["status"] == "error" and spans["axis_question"]["status"] == "error"
     assert spans["model_call"]["attributes"]["error_class"] == "RuntimeError"
     assert "secret-zebra" not in json.dumps(list(spans.values()))
+
+
+# --- 6. Review round 1: fixed reason sets, a span closed from another context ---
+
+
+@pytest.mark.parametrize("key, value", [
+    ("reason", "the provider said: secret sk-1"), ("reason", "other"),
+    ("not_judged_reason", "whatever the provider wrote"),
+])
+def test_a_reason_must_come_from_its_fixed_set(key, value):
+    t = core()
+
+    clean, dropped = t.sanitise_attributes({key: value})
+
+    assert clean == {} and dropped == 1
+
+
+@pytest.mark.parametrize("key, value", [
+    ("reason", "not_set_up"), ("reason", "budget"), ("reason", "provider_error"), ("reason", "empty"),
+    ("not_judged_reason", "ai_off"), ("not_judged_reason", "no_rubric"), ("not_judged_reason", "cap_reached"),
+    ("not_judged_reason", "provider_refused"), ("not_judged_reason", "no_answer"), ("not_judged_reason", "unreadable_reply"),
+])
+def test_every_fixed_reason_is_accepted(key, value):
+    t = core()
+
+    assert t.sanitise_attributes({key: value}) == ({key: value}, 0)
+
+
+def test_a_span_closed_from_another_context_is_still_written(tmp_path):
+    import contextvars
+
+    t = core()
+    t.set_tracer(local(tmp_path))
+
+    def stream():
+        with t.span("axis_question", interaction_id=ID):
+            yield "a"
+            yield "b"
+
+    gen = stream()
+    contextvars.copy_context().run(next, gen)  # opened in one context ...
+    contextvars.copy_context().run(gen.close)  # ... closed from another (a server that does not pin)
+
+    assert [s["name"] for s in read_spans(tmp_path)] == ["axis_question"]
+
+
+def test_a_slow_trace_write_is_noted_once_and_not_interrupted(tmp_path, monkeypatch, caplog):
+    import lms.adapters.observability.local_tracer as module
+
+    t = core()
+    t.set_tracer(local(tmp_path))
+    monkeypatch.setattr(module, "SLOW_WRITE_SECONDS", -1)  # every write counts as slow
+
+    with caplog.at_level(logging.WARNING):
+        spam(t, 3)
+
+    assert len([r for r in caplog.records if "took longer" in r.getMessage()]) == 1
+    assert len(read_spans(tmp_path)) == 3

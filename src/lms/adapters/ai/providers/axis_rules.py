@@ -82,7 +82,7 @@ def _ground_with_trace(
     concept_store: Optional[ConceptStore],
     unit_id: str,
     query_text: str,
-    sp: Any,
+    sp: tracing.ISpan,
 ) -> Tuple[passage_safety.Grounding, Optional[RetrievalTrace]]:
     trace: Optional[RetrievalTrace] = None
     if retriever is not None:
@@ -217,7 +217,7 @@ def build_system_prompt(mode: AxisMode, grounded_context: str, source_state: str
     return f"{base_rules}\n\n{stance}{context_block}"
 
 
-def build_prompts(query: AxisQuery, grounding: Any) -> Tuple[str, str]:
+def build_prompts(query: AxisQuery, grounding: passage_safety.Grounding) -> Tuple[str, str]:
     """The system prompt and the user message for one turn, as a `prompt_build` span (SPEC-28 R11)."""
     with tracing.span("prompt_build"):
         return (

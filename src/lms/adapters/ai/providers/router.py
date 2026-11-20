@@ -190,7 +190,7 @@ class ProviderRouter:
             return self._noted(call, judge_with(self._companion_for(profile), unit_id, prompt, explanation, rubric))
 
     @staticmethod
-    def _noted(call: Any, judgement: AiJudgement) -> AiJudgement:
+    def _noted(call: tracing.ISpan, judgement: AiJudgement) -> AiJudgement:
         """Put a not-judged outcome on the span, with a reason from the fixed set (SPEC-28 R11)."""
         if judgement.status != "judged":
             call.set(not_judged_reason=judgement.reason)
