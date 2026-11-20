@@ -302,6 +302,7 @@ def test_a_vote_that_cannot_be_saved_is_a_503_so_the_panel_can_say_so(repo, cata
 
     assert res.status_code == 503 and res.headers["content-type"].startswith("application/problem+json")
     assert "internal-detail" not in res.text
+    assert res.json()["detail"] == "Your vote could not be saved. Try again."  # the fixed plain message, nothing internal
     assert events_of(repo, "axis_feedback") == []
 
 
