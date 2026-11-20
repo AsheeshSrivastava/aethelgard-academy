@@ -105,3 +105,20 @@ Frontend (vitest, in `frontend/src/lesson/`): `axisFeedback.test.tsx`: `shows_no
 
 ## 8. Out of scope
 The obedience eval, `AXIS_TEMPERATURE` and the answer checks (SPEC-30); the live dashboard page and any report endpoint (SPEC-29b, needs an admin gate); per-learner views (the report is counts across learners only); vendor adapters and LangSmith (ADR-0038); changing what AXIS answers, how it retrieves, or any threshold; recording the re-measure result in ADR-0035 5.4 (a separate docs change after a real run).
+
+## 10. Deviations and additions made at the code step (2026-11-20)
+Found while writing and reviewing the code; each is small and recorded here so the spec matches what was built.
+1. **Read-only repository handle.** `SQLiteLearnerRepository` gained a `read_only` flag (opens the file with `mode=ro`, never creates it). The report uses it; nothing else does.
+2. **A database with no log table is an empty log.** A valid SQLite file that has never logged anything prints "No AXIS turns recorded." (R7), not a read error.
+3. **Control characters.** Plain-text tables replace control characters with `?` (a unit id comes from the client). The HTML already drops them.
+4. **Largest search latency (R13)** is the maximum over every `retrieve` span in the kept traces, including rootless ones; it uses the `latency_ms` attribute and falls back to the span's `duration_ms`.
+5. **Bad durations.** A span record whose `duration_ms` is not an integer from 0 to one day is skipped and counted with the skipped lines.
+6. **Vote validation is stricter than R21 asked:** an `axis_feedback` event also refuses `seconds_open`, `step`, `point` and `reason` (R20 says it carries only `turn_id` and `vote`).
+7. **Overwrite refusal (R19/section 3)** also protects the database's `-wal`, `-shm` and `-journal` files when they exist. Exit codes: 2 for a usage error or a refused overwrite, 1 for an unreadable log or a failed write.
+8. **`axis-latency --json`** adds a `settings` key (the timeout and concurrency in force).
+9. **Retrieval reason (R17)** reaches the trace only: `RetrievalTrace.as_log_fields()` is unchanged, so logged payloads stay exactly as they were. The reason vocabulary lives in `core/tracing.py` (the allow-list) and in `core/axis_report.py` (for table order); a test keeps the two equal.
+10. **Frontend.** The thumbs control posts with a plain `fetch` (like the stream client). After a failed save the buttons return to the **last confirmed** vote. The test file is `frontend/src/lesson/axisFeedback.test.tsx` (16 tests: the 13 named in section 5 plus no-id, network-error and rapid-press cases). `frontend/src/api/schema.d.ts` and `openapi.json` were regenerated; the regeneration also picked up one earlier drift (`retrieval_downgraded` is now typed as always present, which matches the backend default).
+11. **Known gaps, not fixed (owner to decide):**
+    - The interaction-log writer swallows write failures by design (ADR-0022), so a vote whose write fails still returns 204 and the control says "Thanks, noted." Every other client event behaves the same.
+    - `aggregate_modes` streams rows from the database but keeps one small record per turn and per latest vote in memory; a log of millions of turns uses memory in proportion. The trace reader loads the (capped, 10 MB + one rotation) trace files whole.
+    - The text and the HTML report format the same tables in two places (`core/axis_report.py` and `adapters/observability/report.py`); a new column must be added in both.

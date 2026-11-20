@@ -20,19 +20,20 @@ export function AxisFeedback({ turnId }: { turnId: string }) {
   const [chosen, setChosen] = useState<"up" | "down" | null>(null);
   const [status, setStatus] = useState("");
   const latest = useRef(0);
+  const saved = useRef<"up" | "down" | null>(null); // the last vote the server confirmed
 
   async function press(button: "up" | "down") {
-    const previous = chosen;
     const vote: Vote = chosen === button ? "clear" : button;
     const mine = ++latest.current;
     setChosen(vote === "clear" ? null : vote);
     setStatus("");
-    const saved = await postVote(turnId, vote);
+    const ok = await postVote(turnId, vote);
+    if (ok) saved.current = vote === "clear" ? null : vote;
     if (mine !== latest.current) return; // A later press superseded this one: the last press wins.
-    if (saved) {
+    if (ok) {
       setStatus("Thanks, noted.");
     } else {
-      setChosen(previous);
+      setChosen(saved.current);
       setStatus("Could not save your rating.");
     }
   }

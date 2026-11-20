@@ -334,3 +334,28 @@ def test_a_file_that_is_not_sqlite_is_a_plain_message_not_a_crash(tmp_path, caps
     code = handle_report_command(["axis-modes", "--db", str(bad)])
 
     assert code != 0 and "Could not read" in capsys.readouterr().out
+
+
+# --- 7. Review round 1 ---
+
+
+def test_a_database_with_no_log_table_is_an_empty_log_not_a_failure(tmp_path, capsys):
+    import sqlite3
+
+    from lms.cli import handle_report_command
+
+    db = tmp_path / "bare.db"
+    sqlite3.connect(db).close()  # a valid SQLite file that has never logged anything
+
+    code = handle_report_command(["axis-modes", "--db", str(db)])
+
+    assert code == 0 and "No AXIS turns recorded." in capsys.readouterr().out
+
+
+def test_control_characters_in_a_unit_id_never_reach_the_terminal_table():
+    r = report_mod()
+
+    text = r.format_modes_table(r.aggregate_modes([ev("t1", "Coach", unit="PY-0.1\n\x1b[31mevil\x07")]))
+
+    assert "\x1b" not in text and "\x07" not in text and "\r" not in text
+    assert all("evil" not in line or line.startswith("Coach") for line in text.splitlines())  # the row stays on one line

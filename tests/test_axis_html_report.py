@@ -175,3 +175,14 @@ def test_html_is_deterministic():
 
     assert html_for(events) == html_for(list(reversed(events)))
     assert not re.search(r"\b20\d\d-\d\d-\d\dT\d\d:", html_for(events))  # no generation timestamp
+
+
+def test_html_refuses_to_overwrite_the_databases_wal_file(tmp_path, capsys):
+    from lms.cli import handle_report_command
+
+    db = seed_db(tmp_path, [ev("t1")])
+    wal = db.with_name(db.name + "-wal")
+    wal.write_bytes(b"wal bytes")
+
+    assert handle_report_command(["axis-html", "--out", str(wal), "--db", str(db), "--trace-dir", str(tmp_path / "none")]) != 0
+    assert wal.read_bytes() == b"wal bytes"

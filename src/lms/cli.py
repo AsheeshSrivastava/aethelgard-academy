@@ -386,18 +386,22 @@ def _report_settings(env) -> Dict[str, Any]:
 
 
 def _read_modes(db_path: Path, include_test_mode: bool):
-    """(report, None) or (None, message). Opens the log read-only; a missing file is never created."""
+    """(report, status, message) with status "ok", "missing" or "error". Opens the log read-only; never creates a file."""
     import sqlite3
 
     from lms.core.axis_report import aggregate_modes
 
     if not db_path.exists():
-        return None, f"No interaction log found at {db_path}"
+        return aggregate_modes([], include_test_mode=include_test_mode), "missing", f"No interaction log found at {db_path}"
     try:
         repo = SQLiteLearnerRepository(str(db_path), read_only=True)
-        return aggregate_modes(repo.iter_interactions(["axis", "axis_feedback"]), include_test_mode=include_test_mode), None
+        return aggregate_modes(repo.iter_interactions(["axis", "axis_feedback"]), include_test_mode=include_test_mode), "ok", ""
+    except sqlite3.OperationalError as exc:
+        if "no such table" in str(exc):  # a database that has never logged anything: an empty log, not a failure
+            return aggregate_modes([], include_test_mode=include_test_mode), "ok", ""
+        return None, "error", f"Could not read the interaction log at {db_path} ({type(exc).__name__})."
     except (sqlite3.Error, OSError) as exc:
-        return None, f"Could not read the interaction log at {db_path} ({type(exc).__name__})."
+        return None, "error", f"Could not read the interaction log at {db_path} ({type(exc).__name__})."
 
 
 def handle_report_command(args, environ=None) -> int:
@@ -423,10 +427,10 @@ def handle_report_command(args, environ=None) -> int:
     trace_dir = Path(options.get("--trace-dir") or env.get("LMS_TRACE_DIR") or "data/traces")
 
     if name == "axis-modes":
-        report, problem = _read_modes(db_path, include)
-        if report is None:
-            print(problem)
-            return 0 if problem.startswith("No interaction log") else 1
+        report, state, message = _read_modes(db_path, include)
+        if state != "ok":
+            print(message)
+            return 0 if state == "missing" else 1
         if options.get("--json"):
             print(json.dumps(report, sort_keys=True))
         else:
@@ -445,15 +449,14 @@ def handle_report_command(args, environ=None) -> int:
 
     # axis-html
     out = Path(options.get("--out") or DEFAULT_REPORT_PATH)
-    protected = {p.resolve() for p in [db_path, *trace_files(trace_dir)] if p.exists()}
+    siblings = [db_path.with_name(db_path.name + suffix) for suffix in ("-wal", "-shm", "-journal")]
+    protected = {p.resolve() for p in [db_path, *siblings, *trace_files(trace_dir)] if p.exists()}
     if out.resolve() in protected:
         print(f"Refusing to overwrite {out}: it is the interaction log or a trace file.")
         return 2
-    report, problem = _read_modes(db_path, include)
-    if report is None and problem.startswith("No interaction log"):
-        report = aggregate_empty(include)
-    elif report is None:
-        print(problem)
+    report, state, message = _read_modes(db_path, include)
+    if state == "error":
+        print(message)
         return 1
     try:
         write_html(out, render_html(report, latency, settings))
@@ -463,8 +466,3 @@ def handle_report_command(args, environ=None) -> int:
     print(f"Report written to {out}")
     return 0
 
-
-def aggregate_empty(include_test_mode: bool):
-    from lms.core.axis_report import aggregate_modes
-
-    return aggregate_modes([], include_test_mode=include_test_mode)

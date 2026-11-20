@@ -113,8 +113,13 @@ def aggregate_modes(events: Iterable[Any], include_test_mode: bool = False) -> D
     }
 
 
+def _plain(value: Any) -> str:
+    """Text for a terminal: control characters (a unit id comes from the client) become a question mark."""
+    return "".join(ch if ch.isprintable() else "?" for ch in str(value))
+
+
 def _table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> List[str]:
-    cells = [[str(v) for v in row] for row in rows]
+    cells = [[_plain(v) for v in row] for row in rows]
     widths = [max(len(h), *(len(r[i]) for r in cells)) if cells else len(h) for i, h in enumerate(headers)]
     lines = ["  ".join(h.ljust(w) for h, w in zip(headers, widths)).rstrip()]
     lines += ["  ".join(c.ljust(w) for c, w in zip(row, widths)).rstrip() for row in cells]
@@ -197,6 +202,10 @@ def summarise_latency(records: Iterable[Any], include_test_mode: bool = False, s
     reason = {x: 0 for x in RETRIEVAL_REASONS}
     downgraded = 0
     latest = 0
+    for r in kept:
+        if r["name"] == "retrieve":
+            measured = _attrs(r).get("latency_ms")
+            latest = max(latest, measured if type(measured) is int and measured >= 0 else r["duration_ms"])
     for r in first_retrieve.values():
         a = _attrs(r)
         if a.get("retrieval_status") in status:
@@ -205,8 +214,6 @@ def summarise_latency(records: Iterable[Any], include_test_mode: bool = False, s
             downgraded += 1
         if a.get("retrieval_reason") in reason:
             reason[a["retrieval_reason"]] += 1
-        measured = a.get("latency_ms")
-        latest = max(latest, measured if type(measured) is int and measured >= 0 else r["duration_ms"])
     turns = len(first_retrieve)
     refused = sum(status[s] for s in REFUSAL_STATUSES)
 

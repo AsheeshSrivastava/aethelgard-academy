@@ -310,3 +310,19 @@ def test_latency_report_is_deterministic_and_has_no_text_or_ids():
     assert json.dumps(r.summarise_latency(records)) == json.dumps(r.summarise_latency(list(records)))
     for forbidden in ("trace-marker-9", "01JCXYZABCDEFGHJKMNPQRSTVW", "docs/a.md", "passage_id", "span_id", "sp0000"):
         assert forbidden not in shown
+
+
+# --- review round 1 ---
+
+
+def test_largest_search_latency_covers_every_retrieve_span_not_only_the_first():
+    records = make_trace("a", children=[("retrieve", 10, {"retrieval_status": "ok"}), ("retrieve", 777, {"retrieval_status": "ok"})])
+    records += [rec("retrieve", 9000, trace_id="orphan")]  # a rootless search still counts toward the largest latency
+
+    assert summarise(records)["retrieval"]["max_latency_ms"] == 9000
+
+
+def test_the_reason_vocabularies_agree():
+    import lms.core.tracing as tracing
+
+    assert set(core().RETRIEVAL_REASONS) == set(tracing.RETRIEVAL_REASONS)

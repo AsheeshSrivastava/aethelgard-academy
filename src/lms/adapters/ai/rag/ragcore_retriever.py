@@ -113,8 +113,9 @@ class RagcoreRetriever(IRetriever):
         finally:
             self._slots.release()  # held until the engine really finishes, even after a timeout
 
-    def _downgrade(self, query: str, top_k: int, prefixes: Tuple[str, ...], why: str, reason: str) -> RetrievalResult:
-        logger.warning("Hybrid search not used for this answer (%s); answering from keyword search.", why)
+    def _downgrade(self, query: str, top_k: int, prefixes: Tuple[str, ...], log_text: str, reason: str) -> RetrievalResult:
+        """`log_text` is prose for the log line; `reason` is the fixed code the trace records (SPEC-29 R17)."""
+        logger.warning("Hybrid search not used for this answer (%s); answering from keyword search.", log_text)
         return replace(self._fallback.search(query, top_k=top_k, source_prefixes=prefixes), downgraded=True, reason=reason)
 
     def search(self, query: str, *, top_k: int = 3, source_prefixes: Tuple[str, ...] = ()) -> RetrievalResult:
