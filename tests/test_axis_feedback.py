@@ -281,3 +281,34 @@ def test_the_votes_endpoint_still_accepts_the_other_client_events(repo, catalog)
     res = client.post(INTERACTIONS, json={"event_type": "opened", "unit_id": "PY-0.1", "payload": {"seconds_open": 3}})
 
     assert res.status_code == 204 and len(events_of(repo, "opened")) == 1
+
+
+# --- 5. A vote that cannot be saved says so (owner decision 2026-11-20) ---
+
+
+def test_a_vote_that_cannot_be_saved_is_a_503_so_the_panel_can_say_so(repo, catalog, monkeypatch):
+    client = make_client(repo, catalog)
+    turn, _ = ask(client)
+    real = repo.append_interaction
+
+    def failing(event):
+        if event.event_type == "axis_feedback":
+            raise RuntimeError("database is locked internal-detail")
+        return real(event)
+
+    monkeypatch.setattr(repo, "append_interaction", failing)
+
+    res = vote(client, turn, "up")
+
+    assert res.status_code == 503 and res.headers["content-type"].startswith("application/problem+json")
+    assert "internal-detail" not in res.text
+    assert events_of(repo, "axis_feedback") == []
+
+
+def test_other_client_events_still_report_success_when_the_log_write_fails(repo, catalog, monkeypatch):
+    client = make_client(repo, catalog)
+    monkeypatch.setattr(repo, "append_interaction", lambda event: (_ for _ in ()).throw(RuntimeError("locked")))
+
+    res = client.post(INTERACTIONS, json={"event_type": "opened", "unit_id": "PY-0.1", "payload": {"seconds_open": 3}})
+
+    assert res.status_code == 204  # ADR-0022: a failed log write never breaks learning; only the explicit rating says so

@@ -151,7 +151,7 @@ describe("AXIS rating (thumbs)", () => {
     expect(status()).toHaveAttribute("aria-live", "polite");
     fail = true;
     await user.click(notHelpful());
-    await waitFor(() => expect(status()).toHaveTextContent("Could not save your rating."));
+    await waitFor(() => expect(status()).toHaveTextContent("Could not save your vote. Try again."));
   });
 
   it("a_failed_save_restores_the_previous_state_and_does_not_retry", async () => {
@@ -163,11 +163,28 @@ describe("AXIS rating (thumbs)", () => {
     await waitFor(() => expect(helpful()).toHaveAttribute("aria-pressed", "true"));
     fail = true;
     await user.click(notHelpful());
-    await screen.findByText("Could not save your rating.");
+    await screen.findByText("Could not save your vote. Try again.");
     expect(helpful()).toHaveAttribute("aria-pressed", "true");
     expect(notHelpful()).toHaveAttribute("aria-pressed", "false");
     await new Promise((r) => setTimeout(r, 50));
     expect(votes(calls)).toHaveLength(2);
+  });
+
+  it("a_failed_vote_restores_the_last_confirmed_vote_and_never_says_thanks", async () => {
+    let fail = false;
+    const { user } = setup({ [VOTES]: () => (fail ? new Response("{}", { status: 503 }) : null) });
+    await askQuestion(user);
+    const group = await screen.findByRole("group", { name: "Rate this answer" });
+    const status = () => within(group.parentElement as HTMLElement).getByRole("status");
+    await user.click(helpful());
+    await waitFor(() => expect(status()).toHaveTextContent("Thanks, noted."));
+    fail = true;
+    await user.click(helpful()); // would clear the confirmed vote, but the save fails
+    await waitFor(() => expect(status()).toHaveTextContent("Could not save your vote. Try again."));
+    expect(status()).not.toHaveTextContent("Thanks");
+    expect(helpful()).toHaveAttribute("aria-pressed", "true"); // back to the last confirmed vote
+    expect(helpful().textContent).toBe("✓ Helpful");
+    expect(status()).toHaveAttribute("aria-live", "polite"); // the error is words in a polite status line, not colour
   });
 
   it("a_network_error_also_restores_the_previous_state", async () => {
@@ -179,7 +196,7 @@ describe("AXIS rating (thumbs)", () => {
     await askQuestion(user);
     await screen.findByRole("group", { name: "Rate this answer" });
     await user.click(helpful());
-    await screen.findByText("Could not save your rating.");
+    await screen.findByText("Could not save your vote. Try again.");
     expect(helpful()).toHaveAttribute("aria-pressed", "false");
   });
 

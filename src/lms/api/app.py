@@ -487,8 +487,11 @@ def create_app(
         unit_id: Optional[str] = None,
         activity: Optional[str] = None,
         item_id: Optional[str] = None,
-    ) -> None:
-        """Append to the interaction log. A failed write is reported and never breaks learning."""
+    ) -> bool:
+        """Append to the interaction log. A failed write is reported and never breaks learning (ADR-0022 2.4).
+
+        Returns whether the row was stored. Almost every caller ignores it; the rating (axis_feedback) does not.
+        """
         try:
             moment = now_ms()
             repo.append_interaction(
@@ -506,8 +509,10 @@ def create_app(
                     test_mode=test_mode,
                 )
             )
+            return True
         except Exception:
             logger.exception("Interaction log write failed.")
+            return False
 
     @app.post("/api/v1/learners/me/interactions", status_code=204, response_model=None)
     def post_my_interaction(
@@ -520,10 +525,12 @@ def create_app(
             turn = repo.get_interaction(learner_id, event.payload.turn_id or "")
             if turn is None or turn.event_type != "axis":
                 return problem(404, "Answer not found", "There is no AXIS answer with that id to rate.")
-            log_event(
+            stored = log_event(
                 learner_id, "axis_feedback", {"turn_id": event.payload.turn_id, "vote": event.payload.vote},
                 session_id=session_id, unit_id=turn.unit_id, activity=turn.activity,
             )
+            if not stored:  # the one client event whose failed write is reported, so the panel can say so (ADR-0022 2.4)
+                return problem(503, "Vote not saved", "Your vote could not be saved. Try again.")
             return None
         log_event(
             learner_id,

@@ -34,7 +34,7 @@ export function AxisFeedback({ turnId }: { turnId: string }) {
       setStatus("Thanks, noted.");
     } else {
       setChosen(saved.current);
-      setStatus("Could not save your rating.");
+      setStatus("Could not save your vote. Try again.");
     }
   }
 
