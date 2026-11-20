@@ -9,7 +9,7 @@
 | `a6-sandbox-known-gaps.md` | Docker runner gaps G1 to G10. | Snapshot; hosting gates repeated in the master plan. |
 | `after-stage0-round2.md` | Follow-ups after Stage 0 round 2. | History only. |
 
-The full text of the Fable review (`fable-independent-review-2026-11-15.md`) stays in the project folder, not here.
+The full Fable review is `docs/audits/fable-independent-review-2026-11-15.md` (copied from the project folder, `main` at `cad782a`; line numbers have drifted).
 
 ## Superseded drafts in the project folder (not in this repo)
 
