@@ -478,3 +478,68 @@ def test_a_finished_request_leaves_no_ambient_parent_behind(tmp_path):
 
     after = next(s for s in read_spans(tmp_path) if s["name"] == "retrieve")
     assert after["parent_id"] is None
+
+
+# --- 5. A stream read step by step (R10: closes at done, on error and when the reader leaves) ---
+
+
+def pinned_stream(t, fail=False):
+    def stream():
+        with t.span("axis_question", interaction_id=ID):
+            with t.span("model_call", call="stream"):
+                yield "a"
+                yield "b"
+                if fail:
+                    raise RuntimeError("model died secret-zebra")
+            t.annotate(passages_cited=1)
+
+    return t.pinned_context(stream())
+
+
+def test_a_pinned_stream_keeps_its_parent_when_each_step_runs_in_a_fresh_context(tmp_path):
+    import contextvars
+
+    t = core()
+    t.set_tracer(local(tmp_path))
+    gen = pinned_stream(t)
+
+    # a server may run each step in a copy of the caller's context; the pinned stream must not care
+    steps = [contextvars.copy_context().run(next, gen) for _ in range(2)]
+    assert steps == ["a", "b"]
+    assert list(gen) == []
+
+    spans = read_spans(tmp_path)
+    root = next(s for s in spans if s["name"] == "axis_question")
+    call = next(s for s in spans if s["name"] == "model_call")
+    assert call["parent_id"] == root["span_id"] and call["trace_id"] == root["trace_id"]
+    assert root["status"] == "ok" and call["status"] == "ok"
+
+
+def test_a_pinned_stream_closes_its_spans_when_the_reader_leaves(tmp_path):
+    t = core()
+    t.set_tracer(local(tmp_path))
+    gen = pinned_stream(t)
+    assert next(gen) == "a"
+
+    gen.close()  # the client disconnected mid-reply
+
+    spans = {s["name"]: s for s in read_spans(tmp_path)}
+    assert set(spans) == {"axis_question", "model_call"}  # both closed, none left open
+    assert spans["axis_question"]["status"] == "ok"  # leaving is not an error
+    with t.span("retrieve"):  # nothing is left open: the next span has no parent
+        pass
+    assert next(s for s in read_spans(tmp_path) if s["name"] == "retrieve")["parent_id"] is None
+
+
+def test_a_pinned_stream_closes_its_spans_on_error_and_hides_the_message(tmp_path):
+    t = core()
+    t.set_tracer(local(tmp_path))
+    gen = pinned_stream(t, fail=True)
+
+    with pytest.raises(RuntimeError):
+        list(gen)
+
+    spans = {s["name"]: s for s in read_spans(tmp_path)}
+    assert spans["model_call"]["status"] == "error" and spans["axis_question"]["status"] == "error"
+    assert spans["model_call"]["attributes"]["error_class"] == "RuntimeError"
+    assert "secret-zebra" not in json.dumps(list(spans.values()))

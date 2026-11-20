@@ -97,6 +97,7 @@ class FakeCompanion:
     def consult(self, query):
         self._maybe_fail()
         grounding, _ = axis_rules.ground_with_trace(self.retriever, None, query.unit_id, query.user_prompt)
+        axis_rules.build_prompts(query, grounding)
         cited = grounding.cited_for(CANNED_REPLY)
         self.calls.append("consult")
         return AxisResponse(reply=CANNED_REPLY, cited_concepts=cited)
@@ -104,6 +105,7 @@ class FakeCompanion:
     def stream(self, query):
         self._maybe_fail()
         grounding, _ = axis_rules.ground_with_trace(self.retriever, None, query.unit_id, query.user_prompt)
+        axis_rules.build_prompts(query, grounding)
         self.calls.append("stream")
         return iter(["Which line ", "fails?"]), grounding
 
@@ -202,7 +204,7 @@ def post_draft(client):
 
 def post_check(client):
     files = {**good_files(), "README.md": good_files()["README.md"] + f"\n{LEARNER['readme']}\n"}
-    return client.post(f"{ME}/build:check", json={
+    return client.post(f"{ME}/build:feedback", json={
         "files": files, "ownership_note": f"{NOTE} {LEARNER['ownership']}",
         "review_note": f"{REVIEW} {LEARNER['review']}", "run_checks": False})
 
@@ -244,16 +246,17 @@ def test_axis_stream_trace_closes_on_error(tmp_path, repo, catalog, traces):
     assert call["status"] == "error" and call["attributes"]["reason"] == "provider_error"
 
 
-def test_a_blocked_axis_request_is_a_root_with_no_children(tmp_path, repo, catalog, traces, monkeypatch):
-    import lms.api.app as app_module
-
-    monkeypatch.setattr(app_module, "is_cold_check_exercise", lambda exercise_id: True)
+@pytest.mark.parametrize("path, stream", [("/api/v1/axis/consult", False), ("/api/v1/axis/stream", True)])
+def test_a_blocked_axis_request_is_a_root_with_no_children(tmp_path, repo, catalog, traces, path, stream):
     client = make_client(repo, catalog, make_router(tmp_path))
+    request = consult_body(exercise_id="PY-0.1/cold-predict-1/v1")  # a Cold Check item: AXIS is off (403)
 
-    client.post("/api/v1/axis/consult", json=consult_body(exercise_id="PY-0.1/cold/v1"))
+    res = client.post(path, json=request)
 
+    assert res.status_code == 403
     (root,) = traces_of_kind(traces, "axis_question")
-    assert root["attributes"]["blocked"] is True and children(traces, root) == []
+    assert root["attributes"]["blocked"] is True and root["attributes"]["stream"] is stream
+    assert children(traces, root) == []
 
 
 def test_concept_check_makes_one_trace_with_one_model_call(tmp_path, repo, catalog, traces, answers):
@@ -520,7 +523,7 @@ def outputs(tmp_path, catalog, answers_dir, monkeypatch):
         "check": post_check(client).json(),
     }
     got["explain"].pop("interaction_id", None)  # a fresh id per run by design
-    logged = {e.event_type: e.payload for e in repo.get_interactions(LOCAL_LEARNER_ID)}
+    logged = sorted((e.event_type, json.dumps(e.payload, sort_keys=True)) for e in repo.get_interactions(LOCAL_LEARNER_ID))
     return got, logged
 
 

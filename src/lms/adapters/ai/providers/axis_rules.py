@@ -20,6 +20,7 @@ from lms.adapters.ai.socratic_guardrail import (
 from lms.core.ai_judgement import Idea
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
 from lms.core.rag_contracts import verify_passage
+from lms.core import tracing
 from lms.core.retrieval import IRetriever, RetrievalMode, RetrievalResult, RetrievalStatus, RetrievalTrace
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,21 @@ def ground_with_trace(
     unit_id: str,
     query_text: str,
 ) -> Tuple[passage_safety.Grounding, Optional[RetrievalTrace]]:
-    """The passages for this turn (cleaned, capped, labelled), plus what the retrieval did (SPEC-21 R8, SPEC-22)."""
+    """The passages for this turn (cleaned, capped, labelled), plus what the retrieval did (SPEC-21 R8, SPEC-22).
+
+    Records a `retrieve` span (SPEC-28 R16): ids, scores and counts from this turn's own RetrievalTrace, never text.
+    """
+    with tracing.span("retrieve") as sp:
+        return _ground_with_trace(retriever, concept_store, unit_id, query_text, sp)
+
+
+def _ground_with_trace(
+    retriever: Optional[IRetriever],
+    concept_store: Optional[ConceptStore],
+    unit_id: str,
+    query_text: str,
+    sp: Any,
+) -> Tuple[passage_safety.Grounding, Optional[RetrievalTrace]]:
     trace: Optional[RetrievalTrace] = None
     if retriever is not None:
         started = time.perf_counter()
@@ -86,6 +101,13 @@ def ground_with_trace(
             terms_matched=result.terms_matched,
             terms_total=result.terms_total,
             downgraded=result.downgraded,
+        )
+        sp.set(
+            retrieval_mode=trace.mode, retrieval_status=trace.status, latency_ms=trace.latency_ms,
+            passages_retrieved=trace.passages_retrieved, terms_matched=trace.terms_matched,
+            terms_total=trace.terms_total, downgraded=trace.downgraded,
+            passage_refs=tracing.passage_refs(list(result.passages)),
+            **({"index_version": trace.index_version} if trace.index_version else {}),
         )
         if result.status is RetrievalStatus.OK and result.passages:
             items = [(p.passage_id, p.source_name or p.source_id, p.text) for p in result.passages]
@@ -193,6 +215,15 @@ def build_system_prompt(mode: AxisMode, grounded_context: str, source_state: str
     else:
         context_block = "\n\n" + no_source_notice(mode, source_state)
     return f"{base_rules}\n\n{stance}{context_block}"
+
+
+def build_prompts(query: AxisQuery, grounding: Any) -> Tuple[str, str]:
+    """The system prompt and the user message for one turn, as a `prompt_build` span (SPEC-28 R11)."""
+    with tracing.span("prompt_build"):
+        return (
+            build_system_prompt(query.mode, grounding.block, grounding.source_state),
+            build_user_message(query),
+        )
 
 
 def build_user_message(query: AxisQuery) -> str:
