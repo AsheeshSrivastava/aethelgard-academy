@@ -15,6 +15,7 @@ from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.providers import axis_rules
 from lms.adapters.ai.providers.metering import BudgetExceeded, UsageMeter
 from lms.adapters.ai.providers.profiles import ProviderProfile
+from lms.core import tracing
 from lms.core.retrieval import IRetriever, RetrievalTrace
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.interfaces import AxisQuery, AxisResponse
@@ -77,9 +78,10 @@ class GeminiCompanion:
             self.meter.check(self.profile, input_chars=sum(len(t) for t in texts))
 
     def _record(self, call: str, answered: str, response: Any, input_chars: int) -> None:
+        input_tokens, output_tokens = _counts(response)
+        tracing.annotate(model_answered=answered, **tracing.token_attributes(input_tokens, output_tokens))
         if self.meter is None or self.profile is None:
             return
-        input_tokens, output_tokens = _counts(response)
         self.meter.record(self.profile, answered, call, input_tokens, output_tokens, input_chars=input_chars)
 
     def _answered(self, response: Any) -> str:
@@ -98,8 +100,7 @@ class GeminiCompanion:
 
     def consult(self, query: AxisQuery) -> AxisResponse:
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
-        user_msg = axis_rules.build_user_message(query)
+        sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
         try:
             response = self._client.models.generate_content(
@@ -117,8 +118,7 @@ class GeminiCompanion:
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
-        user_msg = axis_rules.build_user_message(query)
+        sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
         return self._stream_deltas(sys_prompt, user_msg), grounding
 

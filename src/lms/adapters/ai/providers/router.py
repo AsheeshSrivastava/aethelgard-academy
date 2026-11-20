@@ -23,6 +23,7 @@ from lms.adapters.ai.providers.profiles import (
 )
 from lms.core.retrieval import IRetriever, RetrievalStatus
 from lms.adapters.db.model_usage import UsageStore
+from lms.core import tracing
 from lms.core.ai_judgement import AiJudgement, Rubric, not_judged
 from lms.core.interfaces import AxisQuery, AxisResponse
 
@@ -180,49 +181,71 @@ class ProviderRouter:
     def judge_explanation(self, unit_id: str, prompt: str, explanation: str, rubric: Rubric) -> AiJudgement:
         """Judge with the judging profile. Never raises and never falls back to keywords."""
         if self.mock:
-            return judge_with(self._mock_companion, unit_id, prompt, explanation, rubric)
+            with tracing.span("model_call", call="concept_check", mock=True) as call:
+                return self._noted(call, judge_with(self._mock_companion, unit_id, prompt, explanation, rubric))
         profile = self.judge_profile()
         if not self.key_set(profile):
-            return not_judged("ai_off")
-        return judge_with(self._companion_for(profile), unit_id, prompt, explanation, rubric)
+            return not_judged("ai_off")  # no model is called, so there is no model_call span
+        with tracing.span("model_call", call="concept_check", mock=False, profile_id=profile.id) as call:
+            return self._noted(call, judge_with(self._companion_for(profile), unit_id, prompt, explanation, rubric))
+
+    @staticmethod
+    def _noted(call: tracing.ISpan, judgement: AiJudgement) -> AiJudgement:
+        """Put a not-judged outcome on the span, with a reason from the fixed set (SPEC-28 R11)."""
+        if judgement.status != "judged":
+            call.set(not_judged_reason=judgement.reason)
+            call.fail("budget" if judgement.reason == "cap_reached" else "provider_error")
+        return judgement
 
     # --- document drafts (SPEC-15 section 9.4, ADR-0028) ------------------------------
 
     def summarise_feedback(self, points: list, readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, str]:
         """A summary of the measured feedback points. Raises DraftFailed with a plain message; no fallback."""
         if self.mock:
-            return self._mock_companion.summarise_feedback(points, readme, note, script, run_output)
+            with tracing.span("model_call", call="build_feedback", mock=True):
+                return self._mock_companion.summarise_feedback(points, readme, note, script, run_output)
         profile = self.active_profile()
-        if not self.key_set(profile):
-            raise DraftFailed("AXIS is not set up for summaries. Check the model settings.")
-        try:
-            text, model = self._companion_for(profile).summarise_feedback(points, readme, note, script, run_output)
-        except BudgetExceeded:
-            raise DraftFailed(BUDGET_MESSAGE) from None
-        except Exception as exc:
-            logger.warning("Feedback summary call failed: %s", type(exc).__name__)
-            raise DraftFailed("AXIS could not write the summary right now. The points above still stand.") from None
-        if not text.strip():
-            raise DraftFailed("AXIS sent back an empty summary. The points above still stand.")
-        return text, model or profile.model
+        with tracing.span("model_call", call="build_feedback", mock=False, profile_id=profile.id) as call:
+            if not self.key_set(profile):
+                call.fail("not_set_up")
+                raise DraftFailed("AXIS is not set up for summaries. Check the model settings.")
+            try:
+                text, model = self._companion_for(profile).summarise_feedback(points, readme, note, script, run_output)
+            except BudgetExceeded:
+                call.fail("budget")
+                raise DraftFailed(BUDGET_MESSAGE) from None
+            except Exception as exc:
+                call.fail("provider_error")
+                logger.warning("Feedback summary call failed: %s", type(exc).__name__)
+                raise DraftFailed("AXIS could not write the summary right now. The points above still stand.") from None
+            if not text.strip():
+                call.fail("empty")
+                raise DraftFailed("AXIS sent back an empty summary. The points above still stand.")
+            return text, model or profile.model
 
     def draft_readme(self, entry: str, code: str, brief: str) -> Tuple[str, str]:
         """A README draft from the active profile. Raises DraftFailed with a plain message; no fallback."""
         if self.mock:
-            return self._mock_companion.draft_readme(entry, code, brief)
+            with tracing.span("model_call", call="document_draft", mock=True):
+                return self._mock_companion.draft_readme(entry, code, brief)
         profile = self.active_profile()
-        if not self.key_set(profile):
-            raise DraftFailed("AXIS is not set up for drafting. Check the model settings.")
-        try:
-            text, model = self._companion_for(profile).draft_readme(entry, code, brief)
-        except BudgetExceeded:
-            raise DraftFailed(BUDGET_MESSAGE) from None
-        except Exception as exc:
-            logger.warning("README draft call failed: %s", type(exc).__name__)  # a provider's text can echo a key
-            raise DraftFailed("AXIS could not draft the README right now. Try again, or write it yourself.") from None
-        if not text.strip():
-            raise DraftFailed("AXIS sent back an empty draft. Try again, or write it yourself.")
-        return text, model or profile.model
+        with tracing.span("model_call", call="document_draft", mock=False, profile_id=profile.id) as call:
+            if not self.key_set(profile):
+                call.fail("not_set_up")
+                raise DraftFailed("AXIS is not set up for drafting. Check the model settings.")
+            try:
+                text, model = self._companion_for(profile).draft_readme(entry, code, brief)
+            except BudgetExceeded:
+                call.fail("budget")
+                raise DraftFailed(BUDGET_MESSAGE) from None
+            except Exception as exc:
+                call.fail("provider_error")
+                logger.warning("README draft call failed: %s", type(exc).__name__)  # a provider's text can echo a key
+                raise DraftFailed("AXIS could not draft the README right now. Try again, or write it yourself.") from None
+            if not text.strip():
+                call.fail("empty")
+                raise DraftFailed("AXIS sent back an empty draft. Try again, or write it yourself.")
+            return text, model or profile.model
 
     def _companion_for(self, profile: ProviderProfile) -> Any:
         if profile.id not in self._companions:
@@ -237,17 +260,48 @@ class ProviderRouter:
 
     # --- IAXISCompanion -----------------------------------------------------------
 
+    def _call_attributes(self, call: str) -> Dict[str, Any]:
+        attrs: Dict[str, Any] = {"call": call, "mock": self.mock}
+        if not self.mock:
+            attrs["profile_id"] = self.active_profile().id
+        return attrs
+
     def consult(self, query: AxisQuery) -> AxisResponse:
-        try:
-            return self.current().consult(query)
-        except BudgetExceeded:
-            return AxisResponse(reply=BUDGET_MESSAGE, suggested_action="Switch to the local model in Settings.")
+        with tracing.span("model_call", **self._call_attributes("consult")) as call:
+            try:
+                return self.current().consult(query)
+            except BudgetExceeded:
+                call.fail("budget")
+                return AxisResponse(reply=BUDGET_MESSAGE, suggested_action="Switch to the local model in Settings.")
+            except Exception:
+                call.fail("provider_error")
+                raise
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], List[str]]:
+        """One `model_call` span for the whole stream: opened at the first delta, closed when the reply ends."""
+        attrs = self._call_attributes("stream")
         try:
-            return self.current().stream(query)
+            deltas, cited = self.current().stream(query)
         except BudgetExceeded:
+            with tracing.span("model_call", **attrs) as call:
+                call.fail("budget")
             return iter([BUDGET_MESSAGE]), []
+        except Exception:
+            with tracing.span("model_call", **attrs) as call:
+                call.fail("provider_error")
+            raise
+        return self._traced_deltas(deltas, attrs), cited
+
+    @staticmethod
+    def _traced_deltas(deltas: Iterator[str], attrs: Dict[str, Any]) -> Iterator[str]:
+        with tracing.span("model_call", **attrs) as call:
+            try:
+                yield from deltas
+            except GeneratorExit:
+                raise
+            except Exception:
+                call.fail("provider_error")
+                raise
 
     @property
     def course_reference(self) -> str:

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Iterator, List, Optional, Set, Tuple
 
 from lms.adapters.ai.socratic_guardrail import PROMPT_TAG_PATTERN
+from lms.core import tracing
 
 MAX_PASSAGE_CHARS = 1200
 MAX_PASSAGES_TOTAL_CHARS = 3600
@@ -107,10 +108,12 @@ class Grounding:
 
     def cited_for(self, reply: str) -> List[str]:
         """Ids of the passages the reply shares a run of CITATION_MIN_RUN words with (SPEC-22 R6)."""
-        reply_runs = _runs(_LABEL_ANY.sub(" ", reply))
-        cited = [e.passage_id for e in self.entries if reply_runs & _runs(e.text)]
-        if self.trace is not None:
-            self.trace.passages_cited = len(cited)
+        with tracing.span("citation_check") as sp:
+            reply_runs = _runs(_LABEL_ANY.sub(" ", reply))
+            cited = [e.passage_id for e in self.entries if reply_runs & _runs(e.text)]
+            if self.trace is not None:
+                self.trace.passages_cited = len(cited)
+            sp.set(passages_cited=len(cited), cited_passage_ids=cited[: tracing.MAX_REFS])
         return cited
 
 

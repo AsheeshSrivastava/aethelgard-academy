@@ -42,7 +42,7 @@ from lms.adapters.runner.run_slots import (
     RunSlots,
     max_runs_from_env,
 )
-from lms.core import ai_judgement
+from lms.core import ai_judgement, tracing
 from lms.core.ai_judgement import AiJudgement, not_judged
 from lms.core.retrieval import RetrievalTrace
 from lms.core.build_feedback import FeedbackPoint, build_feedback_points, strip_code_blocks
@@ -934,16 +934,22 @@ def create_app(
             return problem(503, "Draft unavailable", "Drafting is not available right now.")
         entry = next(f for f in build.files if f.path == build.entry)
         code = payload.files.get(build.entry, "\n".join(entry.starter))
-        try:
-            markdown, model = axis.draft_readme(build.entry, code, build.brief_markdown)
-        except DraftFailed as failure:
-            log_event(learner_id, "document_draft", {"course_id": course_id, "stage": stage, "status": "failed"})
-            return problem(502, "Draft unavailable", str(failure))
-        log_event(
-            learner_id, "document_draft",
-            {"course_id": course_id, "stage": stage, "status": "drafted", "model": model, "markdown": markdown},
-        )
-        return DraftReadmeResult(markdown=markdown, status="drafted", model=model)
+        interaction_id = new_ulid(now_ms())
+        with tracing.span("readme_draft", interaction_id=interaction_id, kind="readme_draft", test_mode=test_mode):
+            try:
+                markdown, model = axis.draft_readme(build.entry, code, build.brief_markdown)
+            except DraftFailed as failure:
+                log_event(
+                    learner_id, "document_draft", {"course_id": course_id, "stage": stage, "status": "failed"},
+                    interaction_id=interaction_id,
+                )
+                return problem(502, "Draft unavailable", str(failure))
+            log_event(
+                learner_id, "document_draft",
+                {"course_id": course_id, "stage": stage, "status": "drafted", "model": model, "markdown": markdown},
+                interaction_id=interaction_id,
+            )
+            return DraftReadmeResult(markdown=markdown, status="drafted", model=model)
 
     @app.post(
         "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:feedback",
@@ -962,30 +968,35 @@ def create_app(
             return build
         if too_large(payload.files, payload.ownership_note, payload.review_note):
             return problem(413, "Build too large", f"A build is limited to {MAX_DRAFT_CHARS} characters.")
-        results = check_requirements(
-            build, payload.files, payload.ownership_note, runner, payload.run_checks, payload.review_note
-        )
-        points = build_feedback_points(build, payload.files, results, payload.review_note)
-        summary = summary_error = model = None
-        if hasattr(axis, "summarise_feedback"):
-            readme = next(
-                (payload.files[f.path] for f in build.files if f.path.lower() == "readme.md" and f.path in payload.files), ""
-            )
-            try:
-                run_output = next((r.output for r in results if r.output), "") or ""
-                summary, model = axis.summarise_feedback(
-                    points, readme, payload.review_note or "", payload.files.get(build.entry, ""), run_output
+        interaction_id = new_ulid(now_ms())
+        with tracing.span("build_review", interaction_id=interaction_id, kind="build_review", test_mode=test_mode):
+            with tracing.span("check_requirements"):
+                results = check_requirements(
+                    build, payload.files, payload.ownership_note, runner, payload.run_checks, payload.review_note
                 )
-            except DraftFailed as failure:
-                summary_error = str(failure)
-        if summary is not None:
-            summary = strip_code_blocks(summary)       # Code stays the learner's: no code in the wording (ADR-0028)
-        log_event(
-            learner_id, "build_feedback",
-            {"course_id": course_id, "stage": stage, "run_checks": payload.run_checks,
-             "met": {p.requirement_id: p.status for p in points}, "summary": summary is not None},
-        )
-        return BuildFeedbackResult(points=points, summary=summary, summary_error=summary_error, model=model)
+            with tracing.span("feedback_points"):
+                points = build_feedback_points(build, payload.files, results, payload.review_note)
+            summary = summary_error = model = None
+            if hasattr(axis, "summarise_feedback"):
+                readme = next(
+                    (payload.files[f.path] for f in build.files if f.path.lower() == "readme.md" and f.path in payload.files), ""
+                )
+                try:
+                    run_output = next((r.output for r in results if r.output), "") or ""
+                    summary, model = axis.summarise_feedback(
+                        points, readme, payload.review_note or "", payload.files.get(build.entry, ""), run_output
+                    )
+                except DraftFailed as failure:
+                    summary_error = str(failure)
+            if summary is not None:
+                summary = strip_code_blocks(summary)       # Code stays the learner's: no code in the wording (ADR-0028)
+            log_event(
+                learner_id, "build_feedback",
+                {"course_id": course_id, "stage": stage, "run_checks": payload.run_checks,
+                 "met": {p.requirement_id: p.status for p in points}, "summary": summary is not None},
+                interaction_id=interaction_id,
+            )
+            return BuildFeedbackResult(points=points, summary=summary, summary_error=summary_error, model=model)
 
     @app.post(
         "/api/v1/learners/me/courses/{course_id}/stages/{stage}/build:reset",
@@ -1180,7 +1191,14 @@ def create_app(
 
     @app.post("/api/v1/axis/stream", response_model=None)
     def stream_axis_reply(request: AxisStreamRequest, learner_id: str = Depends(current_learner_id)):
+        interaction_id = new_ulid(now_ms())
+        trace_attrs = dict(
+            interaction_id=interaction_id, kind="axis_question", mode=request.mode.value,
+            unit_id=request.unit_id, test_mode=test_mode, stream=True,
+        )
         if is_cold_check_exercise(request.exercise_id):
+            with tracing.span("axis_question", blocked=True, **trace_attrs):
+                pass
             return axis_blocked()
         query = axis_query(request, learner_id)
 
@@ -1188,56 +1206,67 @@ def create_app(
             return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
         def events() -> Iterator[str]:
-            shown = set()
-            said: List[str] = []
-            try:
-                for event, data in stream_axis(axis, query, guardrail, classifier):
-                    if event == "token":
-                        said.append(data.get("text", ""))
-                    if event == "done":
-                        log_event(
-                            learner_id, "axis",
-                            {"mode": query.mode.value, "question": query.user_prompt, "answer": "".join(said),
-                             "assistance": data["assistance_level"], **retrieval_fields(axis)},
-                            unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
-                        )
-                    if event == "citation":
-                        citation = citation_for(data["name"])
-                        if citation["title"] not in shown:
-                            shown.add(citation["title"])
-                            yield sse(event, citation)
-                        continue
-                    if event == "done" and query.exercise_id:
-                        repo.log_assistance(
-                            learner_id,
-                            query.exercise_id,
-                            AssistanceLevel(data["assistance_level"]),
-                            clock(),
-                        )
-                    yield sse(event, data)
-            except Exception:
-                # Provider details can hold addresses or tokens, so none reach the browser.
-                logger.exception("AXIS stream failed.")
-                yield sse("error", {"message": "AXIS is unavailable right now."})
+            with tracing.span("axis_question", **trace_attrs) as root:
+                shown = set()
+                said: List[str] = []
+                try:
+                    for event, data in stream_axis(axis, query, guardrail, classifier):
+                        if event == "token":
+                            said.append(data.get("text", ""))
+                        if event == "done":
+                            log_event(
+                                learner_id, "axis",
+                                {"mode": query.mode.value, "question": query.user_prompt, "answer": "".join(said),
+                                 "assistance": data["assistance_level"], **retrieval_fields(axis)},
+                                unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
+                                interaction_id=interaction_id,
+                            )
+                        if event == "citation":
+                            citation = citation_for(data["name"])
+                            if citation["title"] not in shown:
+                                shown.add(citation["title"])
+                                yield sse(event, citation)
+                            continue
+                        if event == "done" and query.exercise_id:
+                            repo.log_assistance(
+                                learner_id,
+                                query.exercise_id,
+                                AssistanceLevel(data["assistance_level"]),
+                                clock(),
+                            )
+                        yield sse(event, data)
+                except Exception:
+                    # Provider details can hold addresses or tokens, so none reach the browser.
+                    logger.exception("AXIS stream failed.")
+                    root.fail("provider_error")
+                    yield sse("error", {"message": "AXIS is unavailable right now."})
 
-        return StreamingResponse(events(), media_type="text/event-stream")
+        # Every step of the stream runs in one context, so the root span stays the parent across yields.
+        return StreamingResponse(tracing.pinned_context(events()), media_type="text/event-stream")
 
     @app.post("/api/v1/axis/consult", response_model=AxisResponse)
     def consult_axis(query: AxisQuery, learner_id: str = Depends(current_learner_id)):
-        if is_cold_check_exercise(query.exercise_id):
-            return axis_blocked()
-        response = axis.consult(axis_query(query, learner_id))
-        log_event(
-            learner_id, "axis",
-            {"mode": query.mode.value, "question": query.user_prompt, "answer": response.reply,
-             "assistance": response.detected_assistance_level.value, **retrieval_fields(axis)},
-            unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
-        )
-        if query.exercise_id:
-            repo.log_assistance(
-                learner_id, query.exercise_id, response.detected_assistance_level, clock()
+        interaction_id = new_ulid(now_ms())  # minted first so the trace and the log row share it (SPEC-28 R9)
+        with tracing.span(
+            "axis_question", interaction_id=interaction_id, kind="axis_question", mode=query.mode.value,
+            unit_id=query.unit_id, test_mode=test_mode, stream=False,
+        ) as root:
+            if is_cold_check_exercise(query.exercise_id):
+                root.set(blocked=True)
+                return axis_blocked()
+            response = axis.consult(axis_query(query, learner_id))
+            log_event(
+                learner_id, "axis",
+                {"mode": query.mode.value, "question": query.user_prompt, "answer": response.reply,
+                 "assistance": response.detected_assistance_level.value, **retrieval_fields(axis)},
+                unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
+                interaction_id=interaction_id,
             )
-        return response
+            if query.exercise_id:
+                repo.log_assistance(
+                    learner_id, query.exercise_id, response.detected_assistance_level, clock()
+                )
+            return response
 
     # --- CO-6 Concept Check & Mental Model Route ---
     @app.post("/api/v1/units/{unit_id}/quick-checks/{check_id}", response_model=QuickCheckResult)
@@ -1258,11 +1287,8 @@ def create_app(
         correct = payload.choice == key.answer
         return QuickCheckResult(correct=correct, why=key.why if correct else None)
 
-    @app.post("/api/v1/explain", response_model=ExplainResponse)
-    def evaluate_explanation(
-        payload: ExplainRequest,
-        learner_id: str = Depends(current_learner_id),
-        session_id: Optional[str] = Depends(current_session),
+    def run_explanation(
+        payload: ExplainRequest, learner_id: str, session_id: Optional[str], interaction_id: str, root: Any
     ):
         clean_unit = payload.unit_id.upper()
         unit = catalog.get_unit(clean_unit)
@@ -1284,7 +1310,8 @@ def create_app(
             prompt = prompts[prompt_no - 1] if prompts else (unit.concept_line if unit else clean_unit)
             judgement = axis.judge_explanation(clean_unit, prompt, payload.explanation, rubric)
 
-        interaction_id = new_ulid(now_ms())
+        if judgement.status != "judged":
+            root.set(not_judged_reason=judgement.reason)
         judgement = judgement.model_copy(update={"interaction_id": interaction_id})
         is_judged = judgement.status == "judged"
         writes = is_judged and ai_judgement.CONCEPT_CHECK_WRITES_EVIDENCE
@@ -1325,6 +1352,19 @@ def create_app(
             session_id=session_id, interaction_id=interaction_id, unit_id=clean_unit, activity="explain",
         )
         return ExplainResponse(**judgement.model_dump(), unit_id=clean_unit, evidence_logged=bool(writes))
+
+    @app.post("/api/v1/explain", response_model=ExplainResponse)
+    def evaluate_explanation(
+        payload: ExplainRequest,
+        learner_id: str = Depends(current_learner_id),
+        session_id: Optional[str] = Depends(current_session),
+    ):
+        interaction_id = new_ulid(now_ms())  # minted first so the trace and the log row share it (SPEC-28 R9)
+        with tracing.span(
+            "concept_check", interaction_id=interaction_id, kind="concept_check",
+            unit_id=payload.unit_id.upper(), test_mode=test_mode,
+        ) as root:
+            return run_explanation(payload, learner_id, session_id, interaction_id, root)
 
     @app.post("/api/v1/learners/me/judgements/{interaction_id}:dispute", status_code=204, response_model=None)
     def dispute_judgement(
@@ -1911,4 +1951,9 @@ def create_default_app() -> FastAPI:
 
     Nothing is built when this module is imported (audit A5); the app is made when uvicorn calls this.
     """
+    from lms.adapters.observability.startup import build_tracer, describe
+
+    tracer = build_tracer(os.environ)  # a bad LMS_TRACER stops start-up, even with MOCK_AI=true (SPEC-28 R7)
+    tracing.set_tracer(tracer)
+    logger.info(describe(tracer))
     return create_app()

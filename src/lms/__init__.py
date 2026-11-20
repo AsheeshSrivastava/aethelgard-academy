@@ -95,6 +95,9 @@ def main() -> None:
                     port = int(args[i + 1])
                 except ValueError:
                     pass
+        import os
+
+        os.environ.setdefault("LMS_TRACER", "local")  # a developer running the app records by default (SPEC-28 R7)
         print(f"Starting Aethelgard Academy Web Shell on http://127.0.0.1:{port} ...")
         uvicorn.run("lms.api.app:create_default_app", factory=True, host="127.0.0.1", port=port, reload=True)
 

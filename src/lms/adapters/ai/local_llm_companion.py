@@ -33,6 +33,7 @@ from lms.adapters.ai.providers.axis_rules import (  # noqa: F401 (re-exports)
 )
 from lms.adapters.ai.providers.metering import UsageMeter
 from lms.adapters.ai.providers.profiles import ProviderProfile
+from lms.core import tracing
 from lms.core.retrieval import IRetriever, RetrievalTrace
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.core.interfaces import AxisQuery, AxisResponse, IAXISCompanion
@@ -170,10 +171,11 @@ class OpenAICompatibleCompanion:
             self.meter.check(self.profile, input_chars=sum(len(t) for t in texts))
 
     def _record(self, call: str, model: str, usage: Any, input_chars: int) -> None:
-        if self.meter is None or self.profile is None:
-            return
         input_tokens = getattr(usage, "prompt_tokens", None) if usage is not None else None
         output_tokens = getattr(usage, "completion_tokens", None) if usage is not None else None
+        tracing.annotate(model_answered=model, **tracing.token_attributes(input_tokens, output_tokens))
+        if self.meter is None or self.profile is None:
+            return
         self.meter.record(self.profile, model, call, input_tokens, output_tokens, input_chars=input_chars)
 
     # --- IAXISCompanion -------------------------------------------------------------
@@ -186,8 +188,7 @@ class OpenAICompatibleCompanion:
 
     def consult(self, query: AxisQuery) -> AxisResponse:
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
-        user_msg = axis_rules.build_user_message(query)
+        sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)  # BudgetExceeded is never swallowed
 
         try:
@@ -208,6 +209,7 @@ class OpenAICompatibleCompanion:
         except Exception as exc:
             if self.fallback_to_mock:
                 self.last_backend_used = f"Offline Mock (Fallback reason: {type(exc).__name__})"
+                tracing.annotate(fallback="mock")
                 return self._mock_fallback.consult(query)
             raise LocalLLMError(f"Model consultation failed: {type(exc).__name__}") from None
 
@@ -216,8 +218,7 @@ class OpenAICompatibleCompanion:
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
         """Stream the model's reply. Returns (deltas, the grounding that decides the citations once the reply is done)."""
         grounding = self._grounding(query)
-        sys_prompt = axis_rules.build_system_prompt(query.mode, grounding.block, grounding.source_state)
-        user_msg = axis_rules.build_user_message(query)
+        sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
         return self._stream_deltas(query, sys_prompt, user_msg), grounding
 
@@ -272,6 +273,7 @@ class OpenAICompatibleCompanion:
             if sent_any or not self.fallback_to_mock:
                 raise LocalLLMError(f"Model stream failed: {type(exc).__name__}") from None
             self.last_backend_used = f"Offline Mock (Fallback reason: {type(exc).__name__})"
+            tracing.annotate(fallback="mock")
             yield from self._mock_fallback.stream(query)[0]
         finally:
             # A reply cut short (the learner left, or an error) still counts. Without
