@@ -1,6 +1,6 @@
 # SPEC-28: AXIS tracing behind `ITracer` (ADR-0035 plan step 8, first of three specs)
 
-Status: **Draft for the owner's go.** No tests and no code until the owner says go (Build order, AGENTS.md).
+Status: **Approved by the owner 2026-11-20** ("Go, all six as recommended"): spec and the six open points in section 7 as recommended. Next step is tests first; no code until the tests are written and shown failing.
 Implements: ADR-0037 sections 2.1, 2.2, 2.8 and 2.9 (port, adapters, what is traced, the attribute allow-list, the failure rule); the "default tracer" part of section 4 (confirmed). Does **not** implement: the mode-usage report, the static HTML report, thumbs (SPEC-29); the obedience eval and `AXIS_TEMPERATURE` (SPEC-30); any vendor adapter (ADR-0038 later).
 Governed by: AGENTS.md (zero-cost development, `MOCK_AI=true` offline), ADR-0022 (interaction log), ADR-0025 (providers, metering), ADR-0035 section 5.4 (timeout and concurrency), ADR-0036 (start-up validation pattern).
 
@@ -105,7 +105,7 @@ ADR-0035 section 5.4 sets a ten second search limit and two concurrent searches 
 - `LMS_TRACER=LOCAL`, ` local `, `""`, `0`; `LMS_TRACE_MAX_BYTES` of `abc`, `-1`, `1e9`, `10**12`.
 - A tracer that blocks forever or raises `BaseException` subclasses such as `KeyboardInterrupt` (must not be swallowed; only `Exception` is).
 
-## 7. Open points for the owner
+## 7. Open points (decided by the owner 2026-11-20: all six as recommended)
 1. **Where `model_call` lives.** This spec puts it in `ProviderRouter` (one place for all adapters and the mock) and gets tokens from the existing `_record` site. The alternative, a span inside each of the 11 adapter sites, gives sharper timing around the SDK call but is 11 edits and misses the mock. Recommended: the router.
 2. **Heading or title in `passage_refs`.** `RetrievedPassage` has no heading field today; `source_id` already carries the path. Adding a heading needs a new field on a core contract and re-measuring. Recommended: not in SPEC-28.
 3. **Trace file location and size.** Default `data/traces/` (git-ignored), 10 MB, one rotation. Recommended as is.
