@@ -9,7 +9,7 @@ Follows Hexagonal Architecture:
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Protocol, Set, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Protocol, Sequence, Set, Tuple
 from pydantic import BaseModel, Field
 
 from lms.core.cold_check import ColdCheckTimer
@@ -166,6 +166,14 @@ class ILearnerRepository(Protocol):
         ...
 
     def get_interactions(self, learner_id: str, limit: int = 1000) -> List[InteractionEvent]:
+        ...
+
+    def get_interaction(self, learner_id: str, interaction_id: str) -> Optional[InteractionEvent]:
+        """One row of this learner's log, or None (SPEC-29 R22)."""
+        ...
+
+    def iter_interactions(self, event_types: Sequence[str]) -> Iterator[InteractionEvent]:
+        """Rows of the given types across all learners, oldest first; read-only (SPEC-29 R7)."""
         ...
 
     def claim_interaction(self, learner_id: str, interaction_id: str, claimed_at: datetime) -> bool:

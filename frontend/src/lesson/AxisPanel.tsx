@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { AxisFeedback } from "./AxisFeedback";
 import { answerNote, fetchCourseReference, KEYWORD_ONLY_NOTE, statusLine } from "./axisNotices";
 import { streamAxis, streamSafe, type SseEvent } from "./axisStream";
 import { Prose } from "./Prose";
@@ -21,6 +22,7 @@ interface Message {
   citations: Citation[];
   sourceState?: string;
   keywordOnly?: boolean;
+  turnId?: string;
   error?: string;
 }
 
@@ -65,6 +67,10 @@ export function AxisPanel({
     if (event === "done" && typeof data.source_state === "string") {
       const state = data.source_state;
       update(id, (m) => ({ ...m, sourceState: state }));
+    }
+    if (event === "done" && typeof data.interaction_id === "string") {
+      const turnId = data.interaction_id;
+      update(id, (m) => ({ ...m, turnId }));
     }
     if (event === "error") update(id, (m) => ({ ...m, error: String(data.message) }));
   }
@@ -165,6 +171,7 @@ export function AxisPanel({
                 )}
               </div>
             )}
+            {message.role === "axis" && message.turnId && !message.error && <AxisFeedback turnId={message.turnId} />}
           </div>
         ))}
       </div>

@@ -7,7 +7,7 @@ import os
 import re
 from typing import Any, Dict, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MAX_TEXT_CHARS = 64 * 1024
 MAX_PAYLOAD_CHARS = 256 * 1024
@@ -33,8 +33,10 @@ EventType = Literal[
     "document_draft",
     "build_feedback",
     "feedback_disputed",
+    "axis_feedback",
 ]
-ClientEventType = Literal["opened", "closed", "hint_viewed", "feedback_viewed", "feedback_disputed"]
+ClientEventType = Literal["opened", "closed", "hint_viewed", "feedback_viewed", "feedback_disputed", "axis_feedback"]
+Vote = Literal["up", "down", "clear"]
 
 
 class InteractionEvent(BaseModel):
@@ -60,6 +62,8 @@ class ClientPayload(BaseModel):
     step: Optional[str] = Field(None, max_length=64)
     point: Optional[str] = Field(None, max_length=64)      # feedback_disputed: the requirement id
     reason: Optional[str] = Field(None, max_length=200)    # feedback_disputed: why the learner disagrees
+    turn_id: Optional[str] = Field(None, pattern=ID_PATTERN)  # axis_feedback: the AXIS turn's interaction_id (SPEC-29 R20)
+    vote: Optional[Vote] = None                            # axis_feedback: up, down or clear; no free text
 
 
 class ClientEvent(BaseModel):
@@ -71,6 +75,20 @@ class ClientEvent(BaseModel):
     activity: Optional[str] = Field(None, max_length=32)
     item_id: Optional[str] = Field(None, max_length=128)
     payload: ClientPayload = Field(default_factory=ClientPayload)
+
+    @model_validator(mode="after")
+    def _vote_fields_belong_to_votes_only(self) -> "ClientEvent":
+        """axis_feedback carries exactly turn_id and vote; no other event may carry either (SPEC-29 R21)."""
+        payload = self.payload
+        if self.event_type == "axis_feedback":
+            if payload.turn_id is None or payload.vote is None:
+                raise ValueError("axis_feedback needs turn_id and vote")
+            others = (payload.seconds_open, payload.step, payload.point, payload.reason)
+            if any(value is not None for value in others):
+                raise ValueError("axis_feedback carries only turn_id and vote")
+        elif payload.turn_id is not None or payload.vote is not None:
+            raise ValueError("turn_id and vote belong to axis_feedback only")
+        return self
 
 
 def new_ulid(time_ms: int) -> str:

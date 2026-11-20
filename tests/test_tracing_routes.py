@@ -7,6 +7,7 @@ so the `retrieve` and `citation_check` spans come from the production code paths
 """
 
 import json
+import re
 import shutil
 import threading
 from datetime import datetime, timezone
@@ -517,7 +518,7 @@ def outputs(tmp_path, catalog, answers_dir, monkeypatch):
     client = make_client(repo, catalog, make_router(tmp_path))
     got = {
         "consult": post_consult(client).json(),
-        "stream": post_stream(client).text,
+        "stream": re.sub(r'"interaction_id": "[^"]+"', '"interaction_id": "X"', post_stream(client).text),  # a fresh id per run by design (SPEC-29 R26)
         "explain": post_explain(client).json(),
         "draft": post_draft(client).json(),
         "check": post_check(client).json(),

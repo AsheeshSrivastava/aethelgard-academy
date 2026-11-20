@@ -2426,6 +2426,11 @@
               }
             ],
             "title": "Source State"
+          },
+          "retrieval_downgraded": {
+            "type": "boolean",
+            "title": "Retrieval Downgraded",
+            "default": false
           }
         },
         "type": "object",
@@ -2818,7 +2823,8 @@
               "closed",
               "hint_viewed",
               "feedback_viewed",
-              "feedback_disputed"
+              "feedback_disputed",
+              "axis_feedback"
             ],
             "title": "Event Type"
           },
@@ -2931,6 +2937,34 @@
               }
             ],
             "title": "Reason"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{8,64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turn Id"
+          },
+          "vote": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down",
+                  "clear"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vote"
           }
         },
         "additionalProperties": false,
@@ -4310,7 +4344,8 @@
               "feedback_viewed",
               "document_draft",
               "build_feedback",
-              "feedback_disputed"
+              "feedback_disputed",
+              "axis_feedback"
             ],
             "title": "Event Type"
           },

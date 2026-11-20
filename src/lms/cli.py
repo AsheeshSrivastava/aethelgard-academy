@@ -337,3 +337,134 @@ def handle_index_upstream_command(
     }
 
 
+# --- lms report (SPEC-29) ---------------------------------------------------------------------------------
+
+REPORT_USAGE = """Usage:
+  lms report axis-modes   [--json] [--include-test-mode] [--db PATH]
+  lms report axis-latency [--json] [--include-test-mode] [--trace-dir DIR]
+  lms report axis-html    [--out FILE] [--include-test-mode] [--db PATH] [--trace-dir DIR]
+Counts and timings only: the reports never print questions, answers or learner ids."""
+_REPORT_FLAGS = {
+    "axis-modes": {"--json": False, "--include-test-mode": False, "--db": True},
+    "axis-latency": {"--json": False, "--include-test-mode": False, "--trace-dir": True},
+    "axis-html": {"--out": True, "--include-test-mode": False, "--db": True, "--trace-dir": True},
+}
+DEFAULT_REPORT_PATH = "data/reports/axis-report.html"
+
+
+def _parse_report_args(name: str, args):
+    """(options, None) or (None, reason). A flag that needs a value must have one; anything unknown is refused."""
+    allowed = _REPORT_FLAGS[name]
+    options: Dict[str, Any] = {}
+    i = 0
+    while i < len(args):
+        flag = args[i]
+        if flag not in allowed:
+            return None, f"Unknown option '{flag}' for {name}."
+        if allowed[flag]:
+            if i + 1 >= len(args) or args[i + 1].startswith("--"):
+                return None, f"{flag} needs a value."
+            options[flag] = args[i + 1]
+            i += 2
+        else:
+            options[flag] = True
+            i += 1
+    return options, None
+
+
+def _report_settings(env) -> Dict[str, Any]:
+    """The hybrid-search limits in force, read the way start-up reads them; a bad value is shown as such."""
+    from lms.adapters.ai.rag.startup import RetrievalConfigError, configured_rerank_concurrency, configured_timeout_s
+
+    settings: Dict[str, Any] = {}
+    for key, read in (("timeout_s", configured_timeout_s), ("concurrency", configured_rerank_concurrency)):
+        try:
+            settings[key] = read(env)
+        except RetrievalConfigError:
+            settings[key] = "invalid"
+    return settings
+
+
+def _read_modes(db_path: Path, include_test_mode: bool):
+    """(report, None) or (None, message). Opens the log read-only; a missing file is never created."""
+    import sqlite3
+
+    from lms.core.axis_report import aggregate_modes
+
+    if not db_path.exists():
+        return None, f"No interaction log found at {db_path}"
+    try:
+        repo = SQLiteLearnerRepository(str(db_path), read_only=True)
+        return aggregate_modes(repo.iter_interactions(["axis", "axis_feedback"]), include_test_mode=include_test_mode), None
+    except (sqlite3.Error, OSError) as exc:
+        return None, f"Could not read the interaction log at {db_path} ({type(exc).__name__})."
+
+
+def handle_report_command(args, environ=None) -> int:
+    """`lms report axis-modes | axis-latency | axis-html`. Read-only; prints counts and timings only. Returns an exit code."""
+    import json
+    import os
+
+    from lms.adapters.observability.report import ReportWriteError, read_trace_records, render_html, trace_files, write_html
+    from lms.core.axis_report import format_latency_table, format_modes_table, summarise_latency
+
+    env = os.environ if environ is None else environ
+    if not args or args[0] not in _REPORT_FLAGS:
+        print(REPORT_USAGE)
+        return 2
+    name = args[0]
+    options, problem = _parse_report_args(name, args[1:])
+    if options is None:
+        print(problem)
+        print(REPORT_USAGE)
+        return 2
+    include = bool(options.get("--include-test-mode"))
+    db_path = Path(options.get("--db") or env.get("LMS_DB_PATH") or "lms_state.db")
+    trace_dir = Path(options.get("--trace-dir") or env.get("LMS_TRACE_DIR") or "data/traces")
+
+    if name == "axis-modes":
+        report, problem = _read_modes(db_path, include)
+        if report is None:
+            print(problem)
+            return 0 if problem.startswith("No interaction log") else 1
+        if options.get("--json"):
+            print(json.dumps(report, sort_keys=True))
+        else:
+            print(format_modes_table(report), end="")
+        return 0
+
+    records, skipped = read_trace_records(trace_dir)
+    latency = summarise_latency(records, include_test_mode=include, skipped_lines=skipped)
+    settings = _report_settings(env)
+    if name == "axis-latency":
+        if options.get("--json"):
+            print(json.dumps({**latency, "settings": settings}, sort_keys=True))
+        else:
+            print(format_latency_table(latency, settings), end="")
+        return 0
+
+    # axis-html
+    out = Path(options.get("--out") or DEFAULT_REPORT_PATH)
+    protected = {p.resolve() for p in [db_path, *trace_files(trace_dir)] if p.exists()}
+    if out.resolve() in protected:
+        print(f"Refusing to overwrite {out}: it is the interaction log or a trace file.")
+        return 2
+    report, problem = _read_modes(db_path, include)
+    if report is None and problem.startswith("No interaction log"):
+        report = aggregate_empty(include)
+    elif report is None:
+        print(problem)
+        return 1
+    try:
+        write_html(out, render_html(report, latency, settings))
+    except ReportWriteError as exc:
+        print(str(exc))
+        return 1
+    print(f"Report written to {out}")
+    return 0
+
+
+def aggregate_empty(include_test_mode: bool):
+    from lms.core.axis_report import aggregate_modes
+
+    return aggregate_modes([], include_test_mode=include_test_mode)

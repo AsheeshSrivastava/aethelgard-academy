@@ -113,9 +113,9 @@ class RagcoreRetriever(IRetriever):
         finally:
             self._slots.release()  # held until the engine really finishes, even after a timeout
 
-    def _downgrade(self, query: str, top_k: int, prefixes: Tuple[str, ...], why: str) -> RetrievalResult:
+    def _downgrade(self, query: str, top_k: int, prefixes: Tuple[str, ...], why: str, reason: str) -> RetrievalResult:
         logger.warning("Hybrid search not used for this answer (%s); answering from keyword search.", why)
-        return replace(self._fallback.search(query, top_k=top_k, source_prefixes=prefixes), downgraded=True)
+        return replace(self._fallback.search(query, top_k=top_k, source_prefixes=prefixes), downgraded=True, reason=reason)
 
     def search(self, query: str, *, top_k: int = 3, source_prefixes: Tuple[str, ...] = ()) -> RetrievalResult:
         words = clean_query_words(query or "")
@@ -128,22 +128,22 @@ class RagcoreRetriever(IRetriever):
             self._timed_out = [f for f in self._timed_out if not f.done()]
             stalled = len(self._timed_out) >= self._concurrency
         if stalled:  # every slot is held by a search that already timed out: the models are stuck, not busy
-            return self._downgrade(query, top_k, prefixes, "the ranking models are stalled")
+            return self._downgrade(query, top_k, prefixes, "the ranking models are stalled", "stalled")
         if not self._slots.acquire(blocking=False):
-            return self._result(RetrievalStatus.UNAVAILABLE, message="busy: too many searches at once")
+            return replace(self._result(RetrievalStatus.UNAVAILABLE, message="busy: too many searches at once"), reason="busy")
         try:
             future = self._pool.submit(self._run, query, RERANK_DEPTH if prefixes else k)
         except Exception as exc:  # pool shut down: give the slot back
             self._slots.release()
-            return self._downgrade(query, top_k, prefixes, f"could not start ({type(exc).__name__})")
+            return self._downgrade(query, top_k, prefixes, f"could not start ({type(exc).__name__})", "start_failed")
         try:
             hits = future.result(timeout=self._timeout_s)
         except FutureTimeout:
             with self._lock:
                 self._timed_out.append(future)
-            return self._downgrade(query, top_k, prefixes, f"timed out after {self._timeout_s:g}s")
+            return self._downgrade(query, top_k, prefixes, f"timed out after {self._timeout_s:g}s", "timeout")
         except Exception as exc:
-            return self._downgrade(query, top_k, prefixes, f"model fault ({type(exc).__name__})")
+            return self._downgrade(query, top_k, prefixes, f"model fault ({type(exc).__name__})", "model_fault")
 
         if prefixes:
             hits = [h for h in hits if h.source_id.startswith(prefixes)]

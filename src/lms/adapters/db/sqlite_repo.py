@@ -7,7 +7,8 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
 import sqlite3
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple
 
 from lms.core.cold_check import ColdCheckTimer
 from lms.core.events import EVIDENCE_RECORDED, EventBus, EvidenceRecorded, LedgerWriteRefused
@@ -47,8 +48,9 @@ BUSY_TIMEOUT_MS = 5000
 class SQLiteLearnerRepository:
     """SQLite-backed repository for the Evidence Ledger and Progress Tracking."""
 
-    def __init__(self, db_path: str = "lms_state.db"):
+    def __init__(self, db_path: str = "lms_state.db", read_only: bool = False):
         self.db_path = db_path
+        self.read_only = read_only  # a reader (the report) never writes and never creates the file (SPEC-29 R7)
         self.events = EventBus()
         self._connection: Optional[sqlite3.Connection] = None
 
@@ -58,7 +60,10 @@ class SQLiteLearnerRepository:
                 self._connection = sqlite3.connect(":memory:", check_same_thread=False)
                 self._connection.row_factory = sqlite3.Row
             return self._connection
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        if self.read_only:
+            conn = sqlite3.connect(Path(self.db_path).resolve().as_uri() + "?mode=ro", uri=True, check_same_thread=False)
+        else:
+            conn = sqlite3.connect(self.db_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
         return conn
@@ -646,6 +651,40 @@ class SQLiteLearnerRepository:
                 )
                 for r in rows
             ]
+
+    @staticmethod
+    def _interaction_from_row(r: sqlite3.Row) -> InteractionEvent:
+        return InteractionEvent(
+            interaction_id=r["interaction_id"], learner_id=r["learner_id"], recorded_at_ms=r["recorded_at_ms"],
+            session_id=r["session_id"], attempt_id=r["attempt_id"], unit_id=r["unit_id"], activity=r["activity"],
+            item_id=r["item_id"], event_type=r["event_type"], payload=json.loads(r["payload"]),
+            test_mode=bool(r["test_mode"]),
+        )
+
+    def get_interaction(self, learner_id: str, interaction_id: str) -> Optional[InteractionEvent]:
+        """One row of this learner's log, or None. Another learner's row is never returned."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM interaction_log WHERE learner_id = ? AND interaction_id = ?", (learner_id, interaction_id)
+            ).fetchone()
+            return self._interaction_from_row(row) if row is not None else None
+
+    def iter_interactions(self, event_types: Sequence[str]) -> Iterator[InteractionEvent]:
+        """Rows of the given types across all learners, oldest first, read in batches (SPEC-29 R7)."""
+        types = list(event_types)
+        if not types:
+            return
+        marks = ", ".join("?" for _ in types)
+        with self._connect() as conn:
+            cursor = conn.execute(
+                f"SELECT * FROM interaction_log WHERE event_type IN ({marks}) ORDER BY recorded_at_ms, interaction_id", types
+            )
+            while True:
+                batch = cursor.fetchmany(1000)
+                if not batch:
+                    return
+                for row in batch:
+                    yield self._interaction_from_row(row)
 
     def claim_interaction(self, learner_id: str, interaction_id: str, claimed_at: datetime) -> bool:
         """Claim an idempotency key before grading; False if it was already claimed."""

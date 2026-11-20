@@ -101,6 +101,7 @@ def _ground_with_trace(
             terms_matched=result.terms_matched,
             terms_total=result.terms_total,
             downgraded=result.downgraded,
+            reason=result.reason,
         )
         sp.set(
             retrieval_mode=trace.mode, retrieval_status=trace.status, latency_ms=trace.latency_ms,
@@ -108,6 +109,7 @@ def _ground_with_trace(
             terms_total=trace.terms_total, downgraded=trace.downgraded,
             passage_refs=tracing.passage_refs(list(result.passages)),
             **({"index_version": trace.index_version} if trace.index_version else {}),
+            **({"retrieval_reason": trace.reason} if trace.reason else {}),
         )
         if result.status is RetrievalStatus.OK and result.passages:
             items = [(p.passage_id, p.source_name or p.source_id, p.text) for p in result.passages]

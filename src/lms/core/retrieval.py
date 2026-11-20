@@ -49,6 +49,7 @@ class RetrievalResult:
     terms_matched: int = 0  # query terms found in the best passage (SPEC-23 R6); 0 when not measured
     terms_total: int = 0  # distinct cleaned query terms
     downgraded: bool = False  # ranking models were not used for this answer; shown as "Keyword search only" (SPEC-27 R6)
+    reason: str = ""  # why a search was busy or downgraded (SPEC-29 R17): "", busy, timeout, stalled, start_failed, model_fault
 
 
 @dataclass(frozen=True)
@@ -83,6 +84,7 @@ class RetrievalTrace:
     terms_matched: int = 0
     terms_total: int = 0
     downgraded: bool = False
+    reason: str = ""  # SPEC-29 R17; goes to the trace, never to the interaction log fields below
 
     def as_log_fields(self) -> Dict[str, object]:
         return {
