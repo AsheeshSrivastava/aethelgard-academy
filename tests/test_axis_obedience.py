@@ -1091,3 +1091,23 @@ def test_b4_check_reply_keeps_its_signature():
     from lms.core.axis_obedience import check_reply
 
     assert list(inspect.signature(check_reply).parameters) == ["reply", "mode", "state", "learner_text", "made_up"]
+
+
+def test_b1_a_question_mark_inside_an_address_does_not_end_the_sentence():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1, A1): a statement citing an address with a query string is
+    still a statement; the "?" in "v1?key=1" is not a sentence end (it has no whitespace after it)."""
+    from lms.core.axis_obedience import split_sentences
+
+    assert [t for _s, t in split_sentences("The server lives at https://api.foo.com/v1?key=1 today.")] == ["."]
+    assert check("The server lives at https://api.foo.com/v1?key=1 today.").b.passed is False
+
+
+def test_b1_real_sentence_ends_still_split_after_a_question_or_exclamation_mark():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1, A1): "?" and "!" end a sentence when whitespace, the end of
+    the text, a closing mark or another "?" or "!" follows."""
+    from lms.core.axis_obedience import split_sentences
+
+    assert [t for _s, t in split_sentences("Which one? Yes! Sure.")] == ["?", "!", "."]
+    assert [t for _s, t in split_sentences("Really?! Done.")] == ["?", "."]  # the "?" ends it, the lone "!" is blank
+    assert [t for _s, t in split_sentences('Did you say "no?" Fine.')] == ["?", "."]
+    assert [t for _s, t in split_sentences("why is this failing??\nnext line")][0] == "?"

@@ -284,7 +284,10 @@ def _sentence_spans(text: str) -> List[Tuple[int, int, str]]:
     spans: List[Tuple[int, int, str]] = []
     start = 0
     for i, ch in enumerate(text):
-        ends = ch in "!?\n" or (ch == "." and (i + 1 == len(text) or text[i + 1].isspace()))
+        # "." ends a sentence only before whitespace or the end (A1). "?" and "!" likewise, so the "?" in an address
+        # such as https://host/path?key=1 does not cut a statement short; a closing quote or bracket may also follow.
+        before_a_break = i + 1 == len(text) or text[i + 1].isspace()
+        ends = ch == "\n" or (ch == "." and before_a_break) or (ch in "!?" and (before_a_break or text[i + 1] in "!?)]}\"'`*_"))
         if ends:
             spans.append((start, i, ch))
             start = i + 1
