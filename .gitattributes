@@ -1,0 +1,8 @@
+# One rule for line endings on every machine: text files are LF in the repo and in the working copy.
+# Why: with Windows autocrlf checkouts, files written with LF (by Linux/cloud sessions or copied over) showed up
+# as modified although their content was the same.
+* text=auto eol=lf
+
+# Git already detects these as binary (88 font files); said here so it never touches their bytes.
+*.woff binary
+*.woff2 binary
