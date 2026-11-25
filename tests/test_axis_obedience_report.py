@@ -369,3 +369,126 @@ def test_eval_out_is_git_ignored():
         result = subprocess.run(
             ["git", "check-ignore", "-q", f"eval-out/axis-obedience/some-run/{name}"], cwd=REPO, capture_output=True)
         assert result.returncode == 0, name
+
+
+# =====================================================================================================
+# ADR-0037 section 2.5 B / SPEC-30 section 11 (B5): checker_version, the "Explains flags" line, and the (g) mark in the
+# hand-review file. Rows are synthetic; no model.
+# =====================================================================================================
+
+EXPLAINS_TEXT = " Quick note, this works because the loop ends early."  # an explain cue (g), nothing else wrong
+NEW_TERMS_PREFIX = "New-terms flags, check (f):"
+
+
+def explain_rows():
+    """Five rows: two replies that explain (g), one that fails (a) only, two clean."""
+    return [
+        make_row("g-1", "Coach", "not_found", good_reply("Coach", "not_found") + EXPLAINS_TEXT),
+        make_row("g-2", "Hybrid", "no_index", good_reply("Hybrid", "no_index") + "\n" + FENCED_BLOCK),
+        make_row("a-1", "Coach", "unavailable", BODY["Coach"]),
+        make_row("ok-1", "Coach", "not_found"),
+        make_row("ok-2", "Socratic", "not_found"),
+    ]
+
+
+def test_b5_results_json_has_checker_version_b_and_the_explains_flag_count(tmp_path):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
+    results = report().build_results(explain_rows(), META)
+
+    assert results["checker_version"] == "B"
+    assert results["explains_flagged"] == 2 and isinstance(results["explains_flagged"], int)
+    for key in ("counts", "made_up", "new_terms_flagged", "exact_wording_rate", "failing_ids", "flagged_ids", "set_version"):
+        assert key in results  # the existing keys stay
+    run_dir = report().write_run(tmp_path, "run1", explain_rows(), META)
+    data = json.loads((run_dir / "results.json").read_text(encoding="utf-8"))
+    assert data["checker_version"] == "B" and data["explains_flagged"] == 2
+
+
+def test_b5_explains_flagged_counts_the_raw_replies_only():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5): over the raw replies, not the visible ones, and never a no_reply."""
+    clean = good_reply("Coach", "not_found")
+    rows = [
+        make_row("raw-explains", "Coach", "not_found", clean + EXPLAINS_TEXT, visible=clean),
+        make_row("visible-explains", "Coach", "not_found", clean, visible=clean + EXPLAINS_TEXT),
+        make_row("gone", "Coach", "not_found", raw=None, visible=None, no_reply=True, error_class="TimeoutError"),
+    ]
+
+    assert report().build_results(rows, META)["explains_flagged"] == 1
+
+
+def test_b5_explains_flagged_is_zero_for_a_clean_run():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
+    assert report().build_results(table_rows(), META)["explains_flagged"] == 0
+
+
+def test_b5_a_g_flag_does_not_change_any_pass_count():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, B5): flag only, not in the pass count."""
+    clean = [make_row("c1", "Coach", "not_found"), make_row("c2", "Coach", "not_found")]
+    explained = [make_row("c1", "Coach", "not_found", good_reply("Coach", "not_found") + EXPLAINS_TEXT), clean[1]]
+
+    before = report().build_results(clean, META)["counts"]["raw"]["Coach"]["not_found"]
+    after = report().build_results(explained, META)["counts"]["raw"]["Coach"]["not_found"]
+
+    assert before == after
+    assert "c1" in report().build_results(explained, META)["flagged_ids"]  # but it is flagged for hand review
+
+
+def test_b5_report_prints_the_explains_line_right_after_the_new_terms_line():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
+    results = report().build_results(explain_rows(), META)
+    lines = report().render_report(results).splitlines()
+
+    (at,) = [i for i, line in enumerate(lines) if line.startswith(NEW_TERMS_PREFIX)]
+    assert lines[at + 1] == (
+        "Explains flags, check (g): 2 replies explain instead of asking (flag only, not in the pass count)")
+
+
+def test_b5_the_explains_line_number_equals_explains_flagged(tmp_path):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
+    pattern = (r"^Explains flags, check \(g\): (\d+) replies explain instead of asking "
+               r"\(flag only, not in the pass count\)$")
+    for rows, expected in ((explain_rows(), 2), (table_rows(), 0)):
+        run_dir = report().write_run(tmp_path / str(expected), "run1", rows, META)
+        text = (run_dir / "report.txt").read_text(encoding="utf-8")
+        found = re.search(pattern, text, re.MULTILINE)
+        assert found is not None and int(found.group(1)) == expected
+        assert json.loads((run_dir / "results.json").read_text(encoding="utf-8"))["explains_flagged"] == expected
+
+
+def entries(sample):
+    """The review sample split into its '## id | mode | state' entries."""
+    return {block.splitlines()[0].split(" | ")[0]: block.splitlines() for block in sample.split("\n## ")[1:]}
+
+
+def test_b5_review_sample_marks_a_g_flagged_reply_and_keeps_g_out_of_the_failed_checks():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
+    found = entries(report().render_review_sample(explain_rows(), 29))
+
+    for qid in ("g-1", "g-2"):  # flagged by (g) alone: included like any flagged reply
+        assert qid in found, qid
+        lines = found[qid]
+        failed = next(line for line in lines if line.startswith("Failed checks:"))
+        assert failed == "Failed checks: none"  # (g) is a flag, not a failed check
+        assert "Explains flag: yes" in lines
+        assert lines.index("Explains flag: yes") > lines.index(failed)  # under the Failed checks line
+
+
+def test_b5_review_sample_has_no_explains_line_for_other_replies():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5): only for a reply (g) flagged."""
+    found = entries(report().render_review_sample(explain_rows(), 29))
+
+    assert "Explains flag: yes" not in found["a-1"]  # flagged by (a) only
+    assert next(line for line in found["a-1"] if line.startswith("Failed checks:")) == "Failed checks: a"
+    for qid in ("ok-1", "ok-2"):  # the calibration sample
+        assert qid in found and "Explains flag: yes" not in found[qid]
+    sample = report().render_review_sample(explain_rows(), 29)
+    assert sample.count("Explains flag: yes") == 2
+
+
+def test_b5_a_reply_that_fails_a_check_and_explains_shows_both():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
+    rows = [make_row("both", "Coach", "not_found", BODY["Coach"] + EXPLAINS_TEXT)]
+
+    lines = entries(report().render_review_sample(rows, 29))["both"]
+
+    assert "Failed checks: a" in lines and "Explains flag: yes" in lines

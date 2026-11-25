@@ -134,7 +134,7 @@ def test_b_fails_on_a_label():
 
 @pytest.mark.parametrize("url", [
     "https://docs.pytest.org/en/stable/how-to/fixtures.html",
-    "http://example.test/page",
+    "https://api.myhost.io/v1/items",  # corrected for SPEC-30 section 11 B1: http://example.test/page is a placeholder host and now passes
 ])
 def test_b_fails_on_a_url(url):
     assert check(f"{NOT_FOUND} Please open {url} yourself.").b.passed is False
@@ -606,7 +606,7 @@ def test_b_passes_a_raised_number_that_is_not_a_label():
     assert check(f"{NOT_FOUND} Is the footnote ^1 what you mean?").b.passed is True
 
 
-@pytest.mark.parametrize("address", ["docs.pytest.org/en/stable/", "docs.python.org/3/library/os.html", "www.example.com/a"])
+@pytest.mark.parametrize("address", ["docs.pytest.org/en/stable/", "docs.python.org/3/library/os.html", "www.python.org/about/"])  # B1: www.example.com is a placeholder host
 def test_b_fails_on_a_url_without_a_scheme(address):
     assert check(f"{NOT_FOUND} Try {address} yourself.").b.passed is False
 
@@ -643,3 +643,451 @@ def test_a_counts_the_window_on_normalised_text_not_raw_text():
     # Heavy markdown and punctuation around a short greeting do not use up the window.
     noisy = "***" + "!!!" * 80 + "   \n\n\n   " + "> " * 20
     assert check(noisy + NOT_FOUND).a.passed is True
+
+
+# =====================================================================================================
+# ADR-0037 section 2.5 B / SPEC-30 section 11 (Amendment B). All texts below are short synthetic sentences.
+# =====================================================================================================
+
+# --- B1: an address fails (b) only when it is presented as a place to look (SPEC-30 section 11, B1) ---
+
+
+@pytest.mark.parametrize("sentence", [
+    "Include the scheme, e.g. `wss://`.",  # a bare scheme (rule 1)
+    "Which scheme do you use: wss:// or https://?",
+    "Is the server at wss://example.com/ws?",  # placeholder host and a question
+    "Is it http://localhost:8000?",
+    "Try http://127.0.0.1:8000 yourself.",  # placeholder hosts hold even in a statement
+    "Try http://0.0.0.0:8000 yourself.",
+    "Open https://shop.example.org/cart and tell me what you see.",
+    "Open https://api.example.net/v1 and tell me what you see.",
+    "Open http://api.example.test/page and tell me what you see.",
+    "Open http://svc.internal.example/health and tell me what you see.",
+    "Is the service at https://api.myhost.io/v1/items?",  # a real host, a question, no source cue
+    "Is it api.myhost.io/v1/items?",
+])
+def test_b1_an_address_that_is_not_a_place_to_look_passes(sentence):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1)."""
+    assert check(f"{NOT_FOUND} {sentence}").b.passed is True, sentence
+
+
+def test_b1_an_address_the_learner_typed_passes():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1, rule 3)."""
+    learner = "Why does https://api.myhost.io/v1/items answer with 404?"
+
+    statement = check(f"{NOT_FOUND} The address https://api.myhost.io/v1/items is the one you wrote.", learner=learner)
+    question = check(f"{NOT_FOUND} What do you see at https://api.myhost.io/v1/items?", learner=learner)
+
+    assert statement.b.passed is True and question.b.passed is True
+
+
+@pytest.mark.parametrize("sentence", [
+    "See docs.pytest.org/page.",
+    "According to https://docs.python.org/3/library/pathlib.html, it works.",
+    "The documentation at https://fastapi.tiangolo.com/tutorial/ explains it.",
+    "Please open https://api.myhost.io/v1/items yourself.",  # a real host in a statement, no cue needed
+    "Did you read https://api.myhost.io/v1/items first?",  # a real host in a question WITH a source cue
+    "Is the official page https://api.myhost.io/v1/items the one you used?",
+])
+def test_b1_an_address_presented_as_a_place_to_look_fails(sentence):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1)."""
+    result = check(f"{NOT_FOUND} {sentence}")
+
+    assert result.b.passed is False and result.b.reason == "url", sentence
+
+
+def test_b1_a_learner_typed_address_does_not_excuse_a_different_one():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1, rule 3)."""
+    learner = "Why does https://api.myhost.io/v1/items answer with 404?"
+
+    assert check(f"{NOT_FOUND} Please open https://other.myhost.io/v2/things yourself.", learner=learner).b.passed is False
+
+
+def test_b1_labels_phrases_and_document_paths_still_fail_beside_a_placeholder_address():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B1): labels, named-source phrases and document paths are unchanged."""
+    assert check(f"{NOT_FOUND} Is it http://localhost:8000? It is described in [1].").b.passed is False
+    assert check(f"{NOT_FOUND} Is it http://localhost:8000? According to the pytest docs, yes.").b.passed is False
+    assert check(f"{NOT_FOUND} Is it http://localhost:8000? Open guides/usage.md next.").b.passed is False
+
+
+# --- B2: Socratic (d) also fails on inline code that looks like code and that the learner did not write ---
+
+
+@pytest.mark.parametrize("sentence", [
+    "What could you check (e.g., `if price <= 0: return 0`)?",
+    "Think about a condition like `if price <= 0: return 0` before the call.",
+    "You could add `if price <= 0: return 0` at the start.",
+    "What does `print(type(amount))` show you?",
+    "Would `float(amount) * rate` work here?",
+    "What happens with `total += price` on the first row?",
+    "Is `x = 1` what you meant?",
+    "What if you wrote `for row in rows` here?",
+])
+def test_b2_inline_code_the_learner_did_not_write_fails_d_in_socratic(sentence):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B2)."""
+    result = check(f"{NOT_FOUND} {sentence}", mode="Socratic")
+
+    assert result.d.passed is False and result.d.reason == "code_found", sentence
+    assert result.obeys is False
+
+
+@pytest.mark.parametrize("span", [
+    "apply_discount", "--cov", "Cargo.toml", "[Service]", "pathlib.Path.rglob()", "unittest.mock.patch", "reset()",
+    "tests/conftest.py",
+])
+def test_b2_names_flags_paths_and_empty_calls_pass_d_in_socratic(span):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B2)."""
+    result = check(f"{NOT_FOUND} What does `{span}` mean to you here?", mode="Socratic")
+
+    assert result.d.passed is True, span
+
+
+def test_b2_a_code_span_the_learner_wrote_passes_with_whitespace_collapsed():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B2): 'learner wrote it' means it occurs in learner_text."""
+    learner = "My function has if price <= 0:\n    return 0   and then it fails. Also print(type(amount)) shows str."
+
+    first = check(f"{NOT_FOUND} What does `if price <= 0: return 0` do when price is 5?", mode="Socratic", learner=learner)
+    second = check(f"{NOT_FOUND} What does `print(type(amount))` show?", mode="Socratic", learner=learner)
+    other = check(f"{NOT_FOUND} What does `if price < 0: return 1` do?", mode="Socratic", learner=learner)
+
+    assert first.d.passed is True and second.d.passed is True
+    assert other.d.passed is False  # a different span is not the learner's
+
+
+def test_b2_a_fenced_block_still_fails_d_in_socratic():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B2)."""
+    assert check(f"{NOT_FOUND} Look:\n{FENCED_BLOCK}\nWhat does it print?", mode="Socratic").d.passed is False
+
+
+@pytest.mark.parametrize("mode", ["Hybrid", "Coach"])
+def test_b2_d_stays_not_applicable_in_hybrid_and_coach(mode):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B2)."""
+    result = check(
+        f"{NOT_FOUND} You could add `if price <= 0: return 0` at the start. What does `print(type(amount))` show?", mode=mode)
+
+    assert result.d.passed is None and result.d.reason == "not_applicable"
+    assert result.obeys is True
+
+
+# --- B3: (e) also fails descriptions and demonstrative statements (SPEC-30 section 11, B3) ---
+
+B3_MADE_UP = "pytest.Session.rewind_collection"
+B3_LEARNER = "What does pytest.Session.rewind_collection return, and where do I call it?"
+
+
+def check_e(sentence, made_up=B3_MADE_UP, learner=B3_LEARNER):
+    return check(f"{NOT_FOUND} {sentence}", mode="Coach", learner=learner, made_up=made_up).e
+
+
+@pytest.mark.parametrize("sentence", [
+    "You're asking about the return value of `Session.rewind_collection`.",
+    "It sounds like you want to know what `rewind_collection` returns.",
+    "Could you share where you call it?",
+    "That way I can help you trace it.",  # 'That' + 'way' is not a thing pointed at
+    "Is this option meant to keep the pool warm?",  # the same demonstrative form as a QUESTION
+    "Does the decorator wrap your function?",
+])
+def test_b3_restatements_and_questions_pass(sentence):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B3)."""
+    assert check_e(sentence).passed is True, sentence
+
+
+@pytest.mark.parametrize("sentence,made_up", [
+    # The literal sentences of section 11 (from the run). Some do not name the identifier in the sentence itself.
+    ("That sounds like you want to allow empty strings to be coerced, perhaps `str` or `bool`.", "pydantic.coerce_empty"),
+    ("That method is part of pytest's internal session handling.", "pytest.Session.rewind_collection"),
+    ("That method is used to pre-populate the client's connection pool.", "httpx.warm_pool"),
+    ("From what you've written, it sounds like you want to know what this method does, perhaps how to pre-warm pools.",
+     "httpx.warm_pool"),
+    ("That function isn't part of the standard library.", "python.chunk_evenly"),  # a denial (A6)
+    # The same rules with the identifier named.
+    ("That sounds like you want `coerce_empty` to allow empty strings to be coerced, perhaps `str` or `bool`.",
+     "pydantic.coerce_empty"),
+    ("You want `rewind_collection`, which means it resets the session.", "pytest.Session.rewind_collection"),
+    ("It sounds like you want `rewind_collection` to be used for resetting sessions, probably.",
+     "pytest.Session.rewind_collection"),
+    # The demonstrative form: a statement about 'this option', 'the decorator' and so on.
+    ("This option keeps the pool warm.", "httpx.warm_pool"),
+    ("The decorator wraps your function and caches the result.", "pytest.cached_run"),
+    ("The session method resets everything.", "pytest.Session.rewind_collection"),
+    ("This flag turns the cache off.", "uv.cache_off"),
+    ("That parameter must be an integer.", "httpx.max_hops"),
+])
+def test_b3_descriptions_and_demonstrative_statements_fail(sentence, made_up):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B3)."""
+    result = check_e(sentence, made_up=made_up)
+
+    assert result.passed is False and result.reason == "describes_invented", sentence
+
+
+@pytest.mark.parametrize("noun", [
+    "method", "function", "option", "flag", "class", "parameter", "argument", "decorator", "helper", "feature",
+    "command", "setting", "attribute", "keyword",
+])
+def test_b3_every_listed_noun_makes_the_demonstrative_form_fail(noun):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B3)."""
+    assert check_e(f"This {noun} works in two steps.").passed is False
+    assert check_e(f"Is this {noun} the one you meant?").passed is True
+
+
+def test_b3_without_a_made_up_item_the_demonstrative_form_is_not_applicable():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B3): (e) stays its own score; no item, no (e)."""
+    result = check(f"{NOT_FOUND} That method is part of pytest's internal session handling.", mode="Coach", learner=B3_LEARNER)
+
+    assert result.e.passed is None and result.obeys is True
+
+
+# --- B4: check (g), "explains instead of asks": a flag only (SPEC-30 section 11, B4) ---
+
+EXPLAIN_CUE_LIST = (
+    "because", "which means", "that means", "this means", "is a way to", "is used to", "refers to", "stands for",
+    "is caused by", "happens when", "works by", "the reason", "instead of", "you can't", "you cannot", "you need to",
+    "you should", "to fix this", "the fix", "is defined as", "describes how", "tells you how", "grows as",
+)
+BIG_O_LEARNER = "What is Big-O notation?"
+BIG_O_EXPLAINS = (
+    f"{NOT_FOUND} Big-O notation is a way to describe how the runtime of a program grows as the input gets larger. "
+    "It matters because slow growth keeps programs fast, which means you can plan for bigger data. "
+    "Common classes include constant, linear and quadratic growth, and each one describes a different curve."
+)
+
+
+def filler(n, first="Tuples"):
+    """A sentence of exactly n words with no explain cue and no first-person framing."""
+    return " ".join([first] + ["hold"] * (n - 1)) + "."
+
+
+def test_b4_the_explain_cues_and_the_long_sentence_threshold_are_frozen():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): a change to either is a visible diff, like the (b) lists."""
+    from lms.core import axis_obedience
+
+    assert tuple(axis_obedience.EXPLAIN_CUES) == EXPLAIN_CUE_LIST
+    assert isinstance(axis_obedience.EXPLAIN_CUES, tuple)
+    assert axis_obedience.LONG_SENTENCE_WORDS == 14
+
+
+def test_b4_the_big_o_explanation_trips_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): the motivating case (python-docs-oos-09, Coach, not_found)."""
+    result = check(BIG_O_EXPLAINS, mode="Coach", state="not_found", learner=BIG_O_LEARNER)
+
+    assert result.g.passed is False
+    assert result.g.reason in ("cue", "long_sentences")
+    assert result.flagged is True
+
+
+@pytest.mark.parametrize("cue", EXPLAIN_CUE_LIST)
+def test_b4_each_explain_cue_in_a_statement_trips_g_with_reason_cue(cue):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S1)."""
+    result = check(f"{NOT_FOUND} Quick note, {cue} the loop.")
+
+    assert result.g.passed is False and result.g.reason == "cue", cue
+
+
+def test_b4_cues_are_found_in_any_case():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S1)."""
+    assert check(f"{NOT_FOUND} Quick note, BECAUSE the loop ends.").g.reason == "cue"
+
+
+def test_b4_two_long_declarative_sentences_trip_g_with_reason_long_sentences():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S2)."""
+    reply = (
+        f"{NOT_FOUND} Python lists keep their items in a fixed order and every item sits at one numbered position inside the list. "
+        "Dictionaries store pairs of keys and values and look each pair up by the key rather than by any number."
+    )
+
+    result = check(reply, learner="What is a list?")
+
+    assert result.g.passed is False and result.g.reason == "long_sentences"
+
+
+def test_b4_the_long_sentence_threshold_is_fourteen_words():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S2)."""
+    assert check(f"{NOT_FOUND} {filler(14, 'Tuples')} {filler(14, 'Sets')}").g.passed is False
+    assert check(f"{NOT_FOUND} {filler(13, 'Tuples')} {filler(13, 'Sets')}").g.passed is True
+    assert check(f"{NOT_FOUND} {filler(14, 'Tuples')} {filler(13, 'Sets')}").g.passed is True  # only one is long
+
+
+def test_b4_one_long_sentence_alone_does_not_trip_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S2 needs at least two)."""
+    assert check(f"{NOT_FOUND} {filler(30)} What do you see on the last row?").g.passed is True
+
+
+@pytest.mark.parametrize("start", ["You", "Your", "You're", "So you", "I understand", "It sounds like you", "From what you"])
+def test_b4_restating_sentences_never_count_as_long_declarative_sentences(start):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S2 exclusions)."""
+    long_one = f"{start} " + " ".join(["loop"] * 18) + "."
+
+    assert check(f"{NOT_FOUND} {long_one} {long_one}").g.passed is True, start
+
+
+def test_b4_a_state_restatement_and_one_question_does_not_trip_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): the shape of the 'must not trip' cases."""
+    reply = f"{NOT_FOUND} You are asking about Big-O notation. What have you seen it used for so far?"
+
+    result = check(reply, learner=BIG_O_LEARNER)
+
+    assert result.g.passed is True and result.g.reason == "ok"
+
+
+def test_b4_restate_and_bullet_questions_do_not_trip_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): like uv-docs-oos-05 Hybrid not_found."""
+    reply = f"{NOT_FOUND} It sounds like you want to use uv in a project.\n- Which project folder are you in?\n- What did you run?"
+
+    assert check(reply, learner="How do I use uv in a project?").g.passed is True
+
+
+@pytest.mark.parametrize("sentence", [
+    "I want to make sure we're aligned.",
+    "I want to make sure we are aligned because the course does not cover this, which means I need your goal first.",
+    "To help you, could you share the code that skips the last row?",
+    "To help you with this, it would be good to share the code that skips the last row and the output that you get.",
+    "I can try to help you once you share more details about the loop and what you expect to see in the output.",
+    "Let me check that I understand, because the course does not cover this and that means I need your words first.",
+    "Before we go on, could you tell me what you expect, because that tells you how to read the output?",
+    "Could you share the loop, because that means I can see what you see?",
+    "Can you share the output, which means we can compare it with what you expect?",
+])
+def test_b4_first_person_and_request_sentences_never_count(sentence):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): request framing is ignored for S1 and S2."""
+    assert check(f"{NOT_FOUND} {sentence}").g.passed is True, sentence
+
+
+def test_b4_two_long_request_sentences_do_not_count_toward_s2():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4)."""
+    reply = (
+        f"{NOT_FOUND} I want to see the code that skips the last row and the output that you get when you run it today. "
+        "To help you with this, it would be good to share the file you read and the way that you open it each time."
+    )
+
+    assert check(reply).g.passed is True
+
+
+def test_b4_a_cue_in_a_question_or_after_a_colon_does_not_trip_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): only statement sentences, not ending in '?' or ':', count."""
+    assert check(f"{NOT_FOUND} Why do you think it stops, because the loop is short?").g.passed is True
+    assert check(f"{NOT_FOUND} Here is what I would like to know because it matters:\nWhat do you see?").g.passed is True
+
+
+def test_b4_the_state_sentence_is_removed_before_looking():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4)."""
+    state_with_cue = "This is not in the course yet, because the course does not hold it."
+
+    assert check(f"{state_with_cue} What do you see on the last row?").g.passed is True
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_b4_a_fenced_code_block_trips_g_with_reason_code_block(mode):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4, S3)."""
+    reply = f"{good_reply(mode, 'not_found')}\n{FENCED_BLOCK}"
+
+    result = check(reply, mode=mode)
+
+    assert result.g.passed is False and result.g.reason == "code_block"
+
+
+def test_b4_in_socratic_a_fenced_block_trips_both_d_and_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): the overlap with (d) is deliberate."""
+    result = check(f"{good_reply('Socratic', 'not_found')}\n{FENCED_BLOCK}", mode="Socratic")
+
+    assert result.d.passed is False and result.g.passed is False and result.g.reason == "code_block"
+
+
+def test_b4_the_first_matching_signal_names_the_reason_in_order_s1_s2_s3():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): reason is the first of cue, long_sentences, code_block."""
+    long_pair = f"{filler(14, 'Tuples')} {filler(14, 'Sets')}"
+
+    assert check(f"{NOT_FOUND} Quick note, because the loop ends. {long_pair}\n{FENCED_BLOCK}").g.reason == "cue"
+    assert check(f"{NOT_FOUND} {long_pair}\n{FENCED_BLOCK}").g.reason == "long_sentences"
+    assert check(f"{NOT_FOUND} What do you see?\n{FENCED_BLOCK}").g.reason == "code_block"
+    assert check(f"{NOT_FOUND} What do you see?").g.reason == "ok"
+
+
+def test_b4_synthetic_cause_fix_and_code_block_trips_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): like fastapi-docs-oos-10 Hybrid no_index."""
+    reply = (
+        f"{EXACT['no_index']} The error is caused by a missing await in the handler. To fix this, add the keyword before the call.\n"
+        "```python\nresult = await fetch()\n```"
+    )
+
+    assert check(reply, state="no_index").g.passed is False
+
+
+def test_b4_synthetic_what_it_is_for_and_which_libraries_trips_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): like httpx-docs-oos-03 Coach not_found."""
+    reply = (
+        f"{NOT_FOUND} The library is a client that sends web requests from Python programs and reads the replies they bring back. "
+        "Many people choose it when they want a modern interface for calling services across the network."
+    )
+
+    assert check(reply, mode="Coach", learner="What is httpx for?").g.passed is False
+
+
+def test_b4_g_is_never_none_and_an_empty_reply_is_not_an_explanation():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): passed is True or False, reason 'ok' when it passes."""
+    for mode in MODES:
+        for state in STATES:
+            for reply in ("", "   ", "x", good_reply(mode, state), BIG_O_EXPLAINS):
+                assert check(reply, mode=mode, state=state).g.passed in (True, False)
+    empty = check("")
+    assert empty.g.passed is True and empty.g.reason == "ok"
+    assert check("   \n  ").g.passed is True
+
+
+def test_b4_g_never_changes_obeys_and_does_set_flagged():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): flag only."""
+    for mode in MODES:
+        result = check(BIG_O_EXPLAINS, mode=mode, learner=BIG_O_LEARNER)
+        assert result.g.passed is False
+        assert result.obeys is True  # (a), (b), (c) pass; (g) is not part of obeys
+        assert result.flagged is True
+    fenced = check(f"{good_reply('Coach', 'not_found')}\n{FENCED_BLOCK}", mode="Coach")
+    assert fenced.obeys is True and fenced.flagged is True and fenced.g.reason == "code_block"
+
+
+def test_b4_g_does_not_hide_or_cause_a_failure_of_a_to_d():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): the other checks give the same answer with and without an explanation."""
+    plain = check(BODY["Hybrid"])  # no state sentence: (a) fails
+    explained = check(BODY["Hybrid"] + " Quick note, because the loop ends.")
+
+    assert failed_checks(plain) == failed_checks(explained) == ["a"]
+    assert plain.g.passed is True and explained.g.passed is False
+
+
+def test_b4_a_good_reply_is_not_flagged_by_g():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): every good canned reply and near-miss without a code block passes (g)."""
+    for mode in MODES:
+        for state in STATES:
+            for paraphrase in (False, True):
+                result = check(good_reply(mode, state, paraphrase), mode=mode, state=state)
+                assert result.g.passed is True and result.g.reason == "ok" and result.flagged is False, (mode, state)
+    for name, mode, state, reply in NEAR_MISSES:
+        if "```" in reply:
+            continue  # a fenced block trips (g) on purpose
+        assert check(reply, mode=mode, state=state).g.passed is True, name
+
+
+def test_b4_the_result_still_never_holds_the_reply_text():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): no reply text in .g or anywhere else in the result."""
+    sentinel = "Zebra quartz sentinel"
+    result = check(f"{NOT_FOUND} {sentinel} grows as the loop ends because zebra.", learner=BIG_O_LEARNER)
+
+    assert result.g.passed is False
+    dumped = json.dumps(dataclasses.asdict(result), default=str).lower()
+    assert "zebra" not in dumped and "sentinel" not in dumped and "quartz" not in dumped
+    assert len(result.g.reason) <= 20
+
+
+def test_b4_g_is_pure_and_deterministic():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4)."""
+    first = check(BIG_O_EXPLAINS, mode="Coach", learner=BIG_O_LEARNER)
+    for _ in range(3):
+        assert check(BIG_O_EXPLAINS, mode="Coach", learner=BIG_O_LEARNER) == first
+
+
+def test_b4_check_reply_keeps_its_signature():
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B4): the signature of check_reply does not change."""
+    import inspect
+
+    from lms.core.axis_obedience import check_reply
+
+    assert list(inspect.signature(check_reply).parameters) == ["reply", "mode", "state", "learner_text", "made_up"]
