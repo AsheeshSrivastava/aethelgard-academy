@@ -1,6 +1,6 @@
 # SPEC-30: Answer-level evals: does a real model obey the no-source rules? (ADR-0035 plan step 8, part 3)
 
-Status: **Draft for the owner's go.** No tests and no code until the owner says go (Build order, AGENTS.md).
+Status: **Approved by the owner 2026-11-25** ("Go, all eight as recommended"): spec and the eight open points in section 7 as recommended. Next step is tests first; no code until the tests are written and shown failing.
 Implements: ADR-0037 sections 2.5 (answer-level evals: the deterministic checks and the obedience eval, with its structural rule, checks (a) to (f), the hand-review sample and "a proxy, not proof") and 2.5 C (`AXIS_TEMPERATURE`); the confirmed open points 4.2 (obedience bar: report-only on the first run) and 4.3 (hand review: all flagged replies plus 10 random per mode).
 Builds on: SPEC-24 (the no-source rules under test), SPEC-28 (tracing; eval runs are traced as test-mode), SPEC-29 (report conventions: counts only, deterministic, no timestamps).
 Does **not** implement: an LLM judge (ADR-0037 2.9), a CI gate on a real-model result, a LangSmith or any vendor adapter (ADR-0038 is planned after this and is out of scope), any change to what AXIS answers, its prompts, its retrieval, or the default temperature.
@@ -109,7 +109,7 @@ Existing suites unchanged: SPEC-24 prompt tests, the Socratic guardrail tests, t
 - **Temperature:** `AXIS_TEMPERATURE=0` (valid, zero), `-0`, `0.20`, ` 0.5 `, `1e-1`, `0x1`; a profile with `send_temperature=false` plus a setting (ignored, and the status line says so); a model that rejects `0.0`.
 - **Privacy:** a question that contains something key-shaped; a reply that echoes a URL with a token; the report path in a synced folder (the harness only warns that `replies.jsonl` holds model text).
 
-## 7. Open points for the owner (plain English, with my recommendation)
+## 7. Open points (decided by the owner 2026-11-25: all eight as recommended)
 **Depends on your machine and models:** the harness needs a running local model server (the active local profile, `LOCAL_LLM_BASE_URL`). I cannot run it from here. How long a run takes depends on your model: 720 replies (80 questions × 3 modes × 3 states) at 10 seconds each is about 2 hours; `--quick` is 240 replies (about 40 minutes). A paid run needs the estimate first and you run it yourself.
 1. **Which reply do we score: the model's raw reply or what the learner sees?** The guardrail and label stripping hide some disobedience. *Recommended: score the raw reply (it measures the model's obedience) and print the learner-visible result beside it.* This needs `last_raw_reply` on the two companions (R16), a small additive change that is never logged or returned.
 2. **How strict is check (a)?** The prompt says "in your own plain words", so an exact match would fail good paraphrases. *Recommended: match the meaning (R4) and report the exact-wording rate as information.* Alternative: exact string only (simple, but it would punish a correct reply).
@@ -122,3 +122,10 @@ Existing suites unchanged: SPEC-24 prompt tests, the Socratic guardrail tests, t
 
 ## 8. Out of scope
 An LLM judge for "no facts from memory" (ADR-0037 2.9); any CI gate on a real-model result; the LangSmith adapter and any vendor viewer (ADR-0038, planned after this); Concept Check and README prompts (SPEC-24 R4b); changing prompts, retrieval, guardrails or the live temperature; a load or concurrency run; per-learner data of any kind; a live dashboard.
+
+## 9. Run notes: which model, and where the run happens (owner discussion, 2026-11-20 to 2026-11-25)
+- **Nothing in this spec fixes the model.** The harness takes any provider profile (`--profile`); the checker is model-independent.
+- **First real run: the local model, on the owner's own machine,** `lms eval axis-obedience --quick` at temperature 0.0 (240 replies; about 40 minutes at an assumed 10 seconds a reply, a rough guess, not a measurement). It is free, private and the only profile where the temperature can be compared (0.0 against 0.2).
+- **Optional second run: one `gpt-6-luna` run,** after the printed `--estimate` and the owner's own `--paid-ok` (worst case a few tenths of a dollar at the prices in `config/providers.yaml`; the $5 monthly cap applies). That profile has `send_temperature: false`, so it cannot take a temperature and the report says so. The two runs are then compared in the report.
+- **The code step does not need a model.** The checker, the harness (with a scripted fake model), the setting and the report are built and tested offline; the owner runs the real eval later, once the code is merged, with the local model server running and `MOCK_AI=false`.
+- **Which model learners will use** was left open ("not decided yet"); the eval is run on whichever the owner intends to ship, and the report names the model that answered.
