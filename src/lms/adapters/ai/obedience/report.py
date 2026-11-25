@@ -15,7 +15,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
-from lms.core.axis_obedience import MODES, STATES, ObedienceResult, check_reply, contains_address
+from lms.core.axis_obedience import CHECKER_VERSION, MODES, STATES, ObedienceResult, check_reply, contains_address
 
 OUTPUT_FILES = ("report.txt", "results.json", "replies.jsonl", "review-sample.md")
 VIEWS = ("raw", "visible")  # raw = what the model said (the obedience measure); visible = what the learner sees
@@ -58,7 +58,8 @@ def _add(cell: Dict[str, int], row: Mapping[str, Any], result: ObedienceResult) 
     cell["n"] += 1
     cell["no_reply"] += 1 if row.get("no_reply") else 0
     cell["obeys"] += 1 if result.obeys else 0
-    cell["flagged"] += 1 if result.flagged else 0
+    # The table's flagged column keeps its old meaning; a reply flagged only by (g) is counted in the (g) line instead.
+    cell["flagged"] += 1 if (not result.obeys or result.e.passed is False or result.f.new_terms) else 0
     for name in CHECKS:
         # A check that does not apply (d outside Socratic) counts as passing, so a to d are comparable across modes.
         cell[name] += 1 if getattr(result, name).passed in (True, None) else 0
@@ -78,7 +79,7 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
     failing: Dict[str, set] = {name: set() for name in (*CHECKS, "e")}
     flagged_ids: set = set()
     made_up = {"n": 0, "e": 0}
-    new_terms = exact = replied = with_url = 0
+    new_terms = exact = replied = with_url = explains = 0
     for row, result in raw:
         qid = str(row["id"])
         for name in (*CHECKS, "e"):
@@ -89,6 +90,7 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
         if not row.get("no_reply"):
             replied += 1
             exact += 1 if result.exact_wording else 0
+            explains += 1 if result.g.passed is False else 0  # (g) is a flag only; a no_reply row is never counted
             with_url += 1 if contains_address(_text(row, "raw")) else 0
             # (e) is scored on replies that exist: a call that failed says nothing about the made-up item.
             if row.get("invented"):
@@ -100,6 +102,8 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
         counts={view: _counts(rows, view) for view in VIEWS},
         made_up=made_up,
         new_terms_flagged=new_terms,
+        explains_flagged=explains,
+        checker_version=CHECKER_VERSION,  # which rules scored this run, so two reports are not compared blindly (B5)
         exact_wording_rate=round(exact / replied, 4) if replied else 0.0,
         failing_ids={name: sorted(ids) for name, ids in failing.items()},
         flagged_ids=sorted(flagged_ids),
@@ -167,6 +171,8 @@ def render_report(results: Mapping[str, Any]) -> str:
         f"Exact wording of the state sentence (information only, no pass mark): {100 * results['exact_wording_rate']:.1f}%",
         f"Made-up items, check (e): {made['e']} of {made['n']} replies do not describe the invented name",
         f"New-terms flags, check (f): {results['new_terms_flagged']} replies hold a technical term the learner did not write",
+        f"Explains flags, check (g): {results.get('explains_flagged', 0)} replies explain instead of asking "
+        "(flag only, not in the pass count)",
         "",
         "Failing question ids per check (raw reply):",
     ]
@@ -221,6 +227,7 @@ def render_review_sample(rows: Sequence[Mapping[str, Any]], seed: int) -> str:
             f"Question: {row.get('question', '')}",
             "",
             "Failed checks: " + (", ".join(failed) if failed else "none"),
+            *(["Explains flag: yes"] if result.g.passed is False else []),  # (g) is a flag, not a failed check
             "New terms: " + (", ".join(result.f.new_terms) if result.f.new_terms else "none"),
             "Raw reply:" + (f" (no reply: {row.get('error_class') or 'empty'})" if row.get("no_reply") else ""),
             "",

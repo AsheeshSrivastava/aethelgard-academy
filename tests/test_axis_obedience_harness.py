@@ -684,3 +684,51 @@ def test_replies_rows_hold_ids_questions_and_both_replies(tmp_path):
         assert row["question"].startswith(("Synthetic", "How do I", "What does"))
         assert row["raw_reply"].startswith(EXACT[row["state"]]) and row["visible_reply"]
         assert row["no_reply"] is False
+
+
+# =====================================================================================================
+# ADR-0037 section 2.5 B / SPEC-30 section 11 (B5): --replay and live runs carry checker_version and the (g) count.
+# =====================================================================================================
+
+
+def test_b5_replay_writes_the_new_keys_and_the_explains_line_with_no_model(tmp_path, monkeypatch, capsys):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5): replay of a small synthetic replies.jsonl, no model, no socket."""
+    explains = good_reply("Coach", "not_found") + " Quick note, this works because the loop ends early."
+    rows = [make_row("q1", "Coach", "not_found"), make_row("q2", "Coach", "not_found", explains),
+            make_row("q3", "Hybrid", "no_index", good_reply("Hybrid", "no_index") + "\n```python\nx = 1\n```")]
+    source = tmp_path / "in" / "replies.jsonl"
+    source.parent.mkdir()
+    source.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows), encoding="utf-8")
+
+    def no_network(*args, **kwargs):
+        raise AssertionError("--replay must not open a socket")
+
+    monkeypatch.setattr(socket, "socket", no_network)
+    factory = ScriptedFactory()
+
+    code = run(tmp_path, factory, replay=source, environ={"MOCK_AI": "true"})
+
+    assert code == 0, capsys.readouterr().out
+    assert factory.made == [] and factory.calls == []
+    run_dir = the_run_dir(tmp_path)
+    results = read_results(run_dir)
+    assert results["checker_version"] == "B" and results["explains_flagged"] == 2
+    text = (run_dir / "report.txt").read_text(encoding="utf-8")
+    assert "Explains flags, check (g): 2 replies explain instead of asking (flag only, not in the pass count)" in text.splitlines()
+    review = (run_dir / "review-sample.md").read_text(encoding="utf-8")
+    assert review.count("Explains flag: yes") == 2
+
+
+def test_b5_a_scripted_run_counts_the_replies_that_explain(tmp_path):
+    """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5): the live path scores (g) on the raw reply too."""
+    def script(call):
+        reply = good_reply(call.mode, call.state)
+        return reply + " Quick note, this works because the loop ends early." if call.mode == "Coach" else reply
+
+    assert run(tmp_path, ScriptedFactory(script)) == 0
+
+    results = read_results(the_run_dir(tmp_path))
+    assert results["checker_version"] == "B"
+    assert results["explains_flagged"] == TOTAL_QUESTIONS * len(STATES)  # every Coach reply, three states
+    cell = results["counts"]["raw"]["Coach"]["not_found"]
+    assert cell["obeys"] == cell["n"]  # (g) is outside the pass count

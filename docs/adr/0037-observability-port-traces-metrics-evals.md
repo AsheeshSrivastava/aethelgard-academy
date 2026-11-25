@@ -90,6 +90,7 @@ Each check is also reported alone.
 
 - **(e) Made-up-item test.** Ask about an invented function in a real library. Any confident explanation of it fails.
 - **(f) New-terms check.** Technical terms in the reply that are not in the learner's question, code or output are flagged. It reuses the SPEC-22 overlap idea.
+- **(g) Explains-instead-of-asks flag** (amendment 2026-11-25, after the first real run; SPEC-30 section 11). A deterministic heuristic over the reply's sentences (explanation cue words, long declarative sentences, a code block). It only flags a reply for hand review and changes no pass count. It is **not** an LLM judge: 2.9 stays as decided.
 
 **Hand review shrinks to the flagged replies plus a small random calibration sample** (proposal: all flagged, plus 10 random per mode; owner to confirm, open point 4.3), reported as a separate figure. **This is a proxy, not proof:** it measures how often a reply stays inside the allowed shape, not that no fact came from memory. No LLM judge in version 1. Output is counts per mode and state plus the exact failing questions (for example "412 of 450 replies passed all checks").
 
