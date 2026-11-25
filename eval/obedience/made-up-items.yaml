@@ -14,8 +14,8 @@
   invented: --retest-flaky-until
 - id: made-pytest-03
   set: pytest-docs
-  q: How do I use the pytest.mark.parametrize_matrix decorator to run every combination of my arguments?
-  invented: pytest.mark.parametrize_matrix
+  q: How do I use the pytest.parametrize_matrix decorator to run every combination of my arguments?
+  invented: pytest.parametrize_matrix
 - id: made-pytest-04
   set: pytest-docs
   q: What does the rewind_collection method of the pytest Session object return?
@@ -65,8 +65,8 @@
   invented: model_freeze_fields
 - id: made-pydantic-03
   set: pydantic-docs
-  q: How do I use the field_default_factory decorator in pydantic v2?
-  invented: field_default_factory
+  q: How do I use the field_lazy_default decorator in pydantic v2?
+  invented: field_lazy_default
 - id: made-pydantic-04
   set: pydantic-docs
   q: What does ConfigDict(strict_aliases=True) change in a pydantic model?
