@@ -224,6 +224,20 @@ def test_temperature_accepts_numbers_from_0_to_2(raw, expected):
     assert isinstance(value, float) and value == expected
 
 
+@pytest.mark.parametrize("raw, expected", [("-0", 0.0), ("+0.3", 0.3), ("1e-1", 0.1), (" \t0.5\n", 0.5)])
+def test_temperature_odd_but_valid_spellings(raw, expected):
+    value = parser()({"AXIS_TEMPERATURE": raw})
+
+    assert value == expected and str(value) == str(expected)  # "-0" becomes 0.0, never -0.0
+
+
+def test_a_bad_setting_message_does_not_echo_the_value():
+    with pytest.raises(Exception) as info:
+        parser()({"AXIS_TEMPERATURE": "sk-secret-looking-9"})
+
+    assert "sk-secret" not in str(info.value)
+
+
 @pytest.mark.parametrize("raw", ["-0.1", "2.1", "abc", "nan", "NaN", "inf", "-inf", "Infinity", "0x1", "1,5", "0.2.1"])
 def test_temperature_bounds_and_bad_values_stop_startup(raw, tmp_path, monkeypatch):
     read = parser()

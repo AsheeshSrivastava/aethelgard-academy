@@ -92,6 +92,7 @@ class OpenAICompatibleCompanion:
         token_limit_field: str = "max_tokens",
         send_temperature: bool = True,
         disable_thinking: bool = False,
+        chat_temperature: float = 0.2,
     ) -> None:
         raw_url = base_url or os.environ.get("LOCAL_LLM_BASE_URL", "http://127.0.0.1:8888/v1")
         self.base_url = raw_url.rstrip("/")
@@ -112,6 +113,7 @@ class OpenAICompatibleCompanion:
         self.token_limit_field = token_limit_field
         self.send_temperature = send_temperature
         self.disable_thinking = disable_thinking
+        self.chat_temperature = chat_temperature  # AXIS chat only (consult, stream); other calls keep their own (SPEC-30 R20)
         # The key lives only inside the SDK client; it is never kept on this object.
         self._client = OpenAI(
             base_url=self.base_url,
@@ -125,6 +127,9 @@ class OpenAICompatibleCompanion:
         self.last_backend_used: str = "LocalLLM (pending)"
         self.last_retrieval: Optional[RetrievalTrace] = None
         self.last_model_answered: Optional[str] = None
+        # The model's reply after strip_think and before the guardrail, label stripping and tag removal (SPEC-30 R16).
+        # Only the eval harness reads it: no route, log or trace carries it.
+        self.last_raw_reply: Optional[str] = None
 
     # --- model and request shape -----------------------------------------------
 
@@ -187,6 +192,7 @@ class OpenAICompatibleCompanion:
         return grounding
 
     def consult(self, query: AxisQuery) -> AxisResponse:
+        self.last_raw_reply = None  # a failed call must not leave the previous reply behind
         grounding = self._grounding(query)
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)  # BudgetExceeded is never swallowed
@@ -194,7 +200,7 @@ class OpenAICompatibleCompanion:
         try:
             target_model = self.resolve_model()
             resp = self._client.chat.completions.create(
-                **self._params(target_model, sys_prompt, user_msg, 0.2, axis_rules.REPLY_MAX_TOKENS)
+                **self._params(target_model, sys_prompt, user_msg, self.chat_temperature, axis_rules.REPLY_MAX_TOKENS)
             )
             message = resp.choices[0].message
             raw_content = message.content or ""
@@ -213,10 +219,12 @@ class OpenAICompatibleCompanion:
                 return self._mock_fallback.consult(query)
             raise LocalLLMError(f"Model consultation failed: {type(exc).__name__}") from None
 
+        self.last_raw_reply = axis_rules.strip_think(str(raw_content))
         return axis_rules.finish_reply(raw_content, query, grounding, self.guardrail, self.classifier)
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
         """Stream the model's reply. Returns (deltas, the grounding that decides the citations once the reply is done)."""
+        self.last_raw_reply = None
         grounding = self._grounding(query)
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
@@ -224,6 +232,7 @@ class OpenAICompatibleCompanion:
 
     def _stream_deltas(self, query: AxisQuery, sys_prompt: str, user_msg: str) -> Iterator[str]:
         sent_any = False
+        said: List[str] = []  # everything yielded, kept as last_raw_reply when the stream ends
         reasoning: List[str] = []
         usage: Any = None
         answered: Optional[str] = None
@@ -233,7 +242,7 @@ class OpenAICompatibleCompanion:
         requested = recorded = False
         try:
             target_model = self.resolve_model()
-            params = self._params(target_model, sys_prompt, user_msg, 0.2, axis_rules.REPLY_MAX_TOKENS)
+            params = self._params(target_model, sys_prompt, user_msg, self.chat_temperature, axis_rules.REPLY_MAX_TOKENS)
             chunks = self._client.chat.completions.create(
                 **params, stream=True, stream_options={"include_usage": True}
             )
@@ -251,6 +260,7 @@ class OpenAICompatibleCompanion:
                     visible = think.feed(delta.content)
                     if visible:
                         sent_any = True
+                        said.append(visible)
                         yield visible
                 else:
                     extra = _reasoning_text(delta)
@@ -259,6 +269,7 @@ class OpenAICompatibleCompanion:
             tail = think.flush()
             if tail:
                 sent_any = True
+                said.append(tail)
                 yield tail
             answered = answered or target_model
             self.last_model_answered = answered
@@ -266,6 +277,7 @@ class OpenAICompatibleCompanion:
             recorded = True
             self._record("stream", answered, usage, input_chars)
             if not sent_any and reasoning:
+                said.append("".join(reasoning))
                 yield "".join(reasoning)
         except LocalLLMError:
             raise
@@ -276,6 +288,8 @@ class OpenAICompatibleCompanion:
             tracing.annotate(fallback="mock")
             yield from self._mock_fallback.stream(query)[0]
         finally:
+            if said:
+                self.last_raw_reply = "".join(said)
             # A reply cut short (the learner left, or an error) still counts. Without
             # counts a paid call is costed at its limit, so the cap is never undercounted.
             paid = self.profile is not None and self.profile.paid

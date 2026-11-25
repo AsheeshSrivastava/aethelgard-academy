@@ -7,6 +7,7 @@ from pathlib import Path
 def main() -> None:
     from lms.cli import (
         handle_ask_command,
+        handle_eval_command,
         handle_explain_command,
         handle_index_upstream_command,
         handle_list_command,
@@ -26,6 +27,7 @@ def main() -> None:
         print("  lms ask <unit_id> <question> Consult AXIS AI with Socratic guardrails")
         print("  lms index-upstream           Index upstream technical docs into persistent artifacts")
         print("  lms report axis-modes|axis-latency|axis-html   Local AXIS usage and latency reports (counts only)")
+        print("  lms eval axis-obedience [options]   Does the model obey the no-source rules? (owner-run; --replay needs no model)")
         print("  lms serve [--port PORT]      Launch Web Platform Shell (default: 8000)")
         return
 
@@ -89,6 +91,11 @@ def main() -> None:
 
     elif cmd == "report":
         code = handle_report_command(args[1:])
+        if code:
+            raise SystemExit(code)
+
+    elif cmd == "eval":
+        code = handle_eval_command(args[1:])
         if code:
             raise SystemExit(code)
 

@@ -261,10 +261,30 @@ def test_replies_file_has_one_row_each_and_no_key_or_url_token(tmp_path):
     assert "://" not in (run_dir / "results.json").read_text(encoding="utf-8")
 
 
-@pytest.mark.skip(reason="UNCLEAR IN SPEC-30: R14 says replies.jsonl never holds a key or a URL with a token, but it holds the "
-                         "model's own text. Is a reply that echoes 'https://x/?token=abc' redacted, or only warned about?")
-def test_a_reply_that_echoes_a_url_with_a_token():
-    raise AssertionError("placeholder")
+def test_a_reply_that_echoes_a_url_with_a_token(tmp_path):
+    # Amendment A8: the reply is stored as the model wrote it (local files only); the report only counts such replies.
+    echoed = good_reply("Hybrid", "not_found") + " Try https://api.example.test/v1/x?token=abc123 yourself."
+    rows = [make_row("q1", "Hybrid", "not_found", echoed), make_row("q2", "Hybrid", "not_found"),
+            make_row("q3", "Coach", "not_found", good_reply("Coach", "not_found") + " See docs.example.test/page/1 too.")]
+
+    run_dir = report().write_run(tmp_path, "run1", rows, META)
+
+    stored = [json.loads(line) for line in (run_dir / "replies.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert stored[0]["raw_reply"] == echoed  # as written, not redacted
+    assert "token=abc123" in (run_dir / "review-sample.md").read_text(encoding="utf-8")
+    results = json.loads((run_dir / "results.json").read_text(encoding="utf-8"))
+    assert results["replies_with_url"] == 2
+    text = (run_dir / "report.txt").read_text(encoding="utf-8")
+    assert "Warning: 2 replies hold a URL. Check replies.jsonl before sharing it." in text.splitlines()
+    for name in ("report.txt", "results.json"):  # the address itself never reaches the report or the numbers
+        body = (run_dir / name).read_text(encoding="utf-8")
+        assert "token=abc123" not in body and "example.test" not in body and "://" not in body
+
+
+def test_no_url_warning_when_no_reply_holds_one(tmp_path):
+    run_dir = report().write_run(tmp_path, "run1", table_rows(), META)
+
+    assert "hold a URL" not in (run_dir / "report.txt").read_text(encoding="utf-8")
 
 
 # --- the hand-review sample (R13) ---

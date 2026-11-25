@@ -5,6 +5,7 @@ Supports learners developing in Zed or VS Code using local `uv` environments,
 pulling exercises, running local verification, and recording Evidence Ledger entries.
 """
 
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -465,4 +466,158 @@ def handle_report_command(args, environ=None) -> int:
         return 1
     print(f"Report written to {out}")
     return 0
+
+
+EVAL_USAGE = """Usage: lms eval axis-obedience [options]
+Asks the real model every question with no course source, then checks its raw reply against the no-source rules
+(SPEC-30). A measurement, not a gate. Needs MOCK_AI=false; --replay and --estimate call no model.
+Options:
+  --profile ID          provider profile (default: the local one)
+  --temperature X       one chat temperature, 0 to 2 (default 0.0; AXIS_TEMPERATURE is not read)
+  --temperatures A,B    several temperatures, each a separate run, with a side-by-side table (for example 0.0,0.2)
+  --modes LIST          Socratic,Hybrid,Coach (default: all)
+  --states LIST         not_found,no_index,unavailable (default: all)
+  --sets LIST           only these sets, for example pytest-docs,uv-docs (default: all)
+  --quick               every third question
+  --repeat N            ask each case N times, 1 to 5 (default 1)
+  --seed N              seed for the hand-review sample (default 29)
+  --run-name NAME       folder name under the out dir (default: from the set versions, temperature and seed)
+  --out-dir DIR         where runs go (default eval-out/axis-obedience)
+  --estimate            print the worst-case size and cost, write estimate.json, make no call
+  --paid-ok             allow a paid profile, only after --estimate for the same run name
+  --replay FILE         score a saved replies.jsonl with the checker alone (no model, no network)"""
+
+_EVAL_VALUE_FLAGS = ("--profile", "--temperature", "--temperatures", "--modes", "--states", "--sets", "--repeat",
+                     "--seed", "--run-name", "--out-dir", "--replay")
+_EVAL_SWITCHES = ("--quick", "--estimate", "--paid-ok")
+
+
+def _eval_env() -> Dict[str, str]:
+    """The process environment plus the values of a local .env that are not already set; os.environ is not changed."""
+    env = dict(os.environ)
+    env_file = Path(".env")
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                env.setdefault(key.strip(), value.strip().strip("'\""))
+    return env
+
+
+def _eval_list(text: str, allowed, label: str):
+    """A comma list checked against the allowed names (any case). Returns (tuple, None) or (None, reason)."""
+    by_lower = {a.lower(): a for a in allowed}
+    chosen = []
+    for part in (p.strip() for p in text.split(",")):
+        if part.lower() not in by_lower:
+            return None, f"Unknown {label} '{part}'. Choose from {', '.join(allowed)}."
+        chosen.append(by_lower[part.lower()])
+    return tuple(chosen), None
+
+
+def _eval_temperature(text: str):
+    import math
+
+    try:
+        value = float(text)
+    except ValueError:
+        return None
+    return value + 0.0 if math.isfinite(value) and 0.0 <= value <= 2.0 else None
+
+
+def _parse_eval_args(args):
+    """(EvalOptions, None) or (None, reason). Anything unknown or malformed is refused."""
+    from lms.adapters.ai.obedience.harness import MAX_REPEAT, EvalOptions
+    from lms.core.axis_obedience import MODES, STATES
+
+    given: Dict[str, Any] = {}
+    i = 0
+    while i < len(args):
+        flag = args[i]
+        if flag in _EVAL_SWITCHES:
+            given[flag] = True
+            i += 1
+        elif flag in _EVAL_VALUE_FLAGS:
+            if i + 1 >= len(args) or args[i + 1].startswith("--"):
+                return None, f"{flag} needs a value."
+            given[flag] = args[i + 1]
+            i += 2
+        else:
+            return None, f"Unknown option '{flag}'."
+    options = EvalOptions()
+    if "--temperature" in given and "--temperatures" in given:
+        return None, "Use --temperature or --temperatures, not both."
+    for flag in ("--temperature", "--temperatures"):
+        if flag in given:
+            values = [_eval_temperature(p.strip()) for p in given[flag].split(",")]
+            if not values or any(v is None for v in values):
+                return None, f"{flag} must be numbers from 0 to 2."
+            options.temperatures = tuple(values)
+    for flag, field, allowed, label in (("--modes", "modes", MODES, "mode"), ("--states", "states", STATES, "state")):
+        if flag in given:
+            chosen, problem = _eval_list(given[flag], allowed, label)
+            if chosen is None:
+                return None, problem
+            setattr(options, field, chosen)
+    try:
+        if "--repeat" in given:
+            options.repeat = int(given["--repeat"])
+        if "--seed" in given:
+            options.seed = int(given["--seed"])
+    except ValueError:
+        return None, "--repeat and --seed must be whole numbers."
+    if not 1 <= options.repeat <= MAX_REPEAT:
+        return None, f"--repeat must be from 1 to {MAX_REPEAT}."
+    if "--sets" in given:
+        options.sets = tuple(p.strip() for p in given["--sets"].split(",") if p.strip())
+    options.profile = given.get("--profile")
+    options.run_name = given.get("--run-name")
+    if "--out-dir" in given:
+        options.out_dir = Path(given["--out-dir"])
+    if "--replay" in given:
+        options.replay = Path(given["--replay"])
+    options.quick = bool(given.get("--quick"))
+    options.estimate = bool(given.get("--estimate"))
+    options.paid_ok = bool(given.get("--paid-ok"))
+    return options, None
+
+
+def _eval_profiles_and_meter(profile_id, env):
+    """(profiles, meter). The usage meter (and its database file) is made only for a paid profile, the one that needs a cap."""
+    from lms.adapters.ai.providers.metering import UsageMeter
+    from lms.adapters.ai.providers.profiles import DEFAULT_PROFILE_ID, DEFAULT_PROFILES_PATH, load_profiles
+    from lms.adapters.db.model_usage import UsageStore
+
+    profiles = load_profiles(DEFAULT_PROFILES_PATH)
+    chosen = profiles.get(profile_id or (DEFAULT_PROFILE_ID if DEFAULT_PROFILE_ID in profiles else ""))
+    if chosen is None or not chosen.paid:
+        return profiles, None
+    store = UsageStore(env.get("LMS_DB_PATH") or "lms_state.db")
+    store.initialize()
+    return profiles, UsageMeter(store)
+
+
+def handle_eval_command(args, environ=None) -> int:
+    """`lms eval axis-obedience`. Returns the exit code of the run, or 2 for a usage problem."""
+    from lms.adapters.ai.obedience import harness
+    from lms.adapters.ai.providers.profiles import ProfileError
+
+    if not args or args[0] != "axis-obedience":
+        print(EVAL_USAGE)
+        return 2
+    options, problem = _parse_eval_args(args[1:])
+    if options is None:
+        print(problem)
+        print(EVAL_USAGE)
+        return 2
+    env = _eval_env() if environ is None else environ
+    try:
+        profiles, meter = _eval_profiles_and_meter(options.profile, env)
+    except ProfileError as exc:
+        print(str(exc))
+        return 2
+    # run_eval is read from the module at call time so a test can replace it.
+    return harness.run_eval(options, companion_factory=harness.default_companion_factory, profiles=profiles,
+                            meter=meter, environ=env)
 

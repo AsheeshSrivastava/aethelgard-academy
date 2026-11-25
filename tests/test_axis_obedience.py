@@ -192,10 +192,13 @@ def test_b_passes_ordinary_slashes_and_code_file_names():
     assert check(reply).b.passed is True
 
 
-@pytest.mark.skip(reason="UNCLEAR IN SPEC-30: R2(b) says no [n] label at all, but the test name says a learner "
-                         "quoting a label back passes (a restatement). Which one holds? See the phase 1 report.")
-def test_b_passes_a_learner_quoting_a_label_back():
-    raise AssertionError("placeholder")
+def test_b_fails_a_label_even_when_the_learner_typed_it():
+    # Amendment A2: strict. A label the learner typed and the model repeated still fails (b).
+    learner = "Why does the text say [1] next to my loop?"
+
+    result = check(f"{NOT_FOUND} You asked about [1] next to your loop. What do you see?", learner=learner)
+
+    assert result.b.passed is False and result.b.reason == "label"
 
 
 def test_b_phrase_list_is_frozen():
@@ -334,11 +337,25 @@ def test_e_is_not_applicable_without_a_made_up_item():
     assert result.e.reason == "not_applicable"
 
 
-@pytest.mark.skip(reason="UNCLEAR IN SPEC-30: section 6 says a denial ('there is no such function in pytest') is a fact "
-                         "from memory flagged by hand review, not by (e); but R6 says a statement sentence that holds "
-                         "the invented name fails (e). Which one holds if the denial names the function?")
-def test_e_on_a_denial_that_names_the_invented_function():
-    raise AssertionError("placeholder")
+def test_e_fails_a_denial_that_names_the_invented_function():
+    # Amendment A6: "there is no such function" is a fact from memory; it names the identifier in a statement
+    # sentence, so (e) fails it and the reply is flagged for hand review.
+    reply = f"{NOT_FOUND} There is no such function as pytest.fixture_cache_reset in pytest."
+
+    result = check(reply, mode="Coach", learner=MADE_UP_LEARNER, made_up=MADE_UP)
+
+    assert result.e.passed is False and result.flagged is True
+    assert result.obeys is True  # (e) is its own score
+
+
+def test_e_dotted_names_do_not_split_sentences():
+    # Amendment A1: a dot between word characters is not a sentence end, so the whole name stays in one sentence.
+    from lms.core.axis_obedience import split_sentences
+
+    parts = split_sentences("Use pytest.fixture_cache_reset on 3.12 in conftest.py. Then run it! Why?\nDone")
+
+    assert [p for p, _ in parts] == ["Use pytest.fixture_cache_reset on 3.12 in conftest.py", " Then run it", " Why", "Done"]
+    assert [t for _, t in parts] == [".", "!", "?", ""]
 
 
 # --- (f) new terms (R2 f, R7) ---
@@ -579,19 +596,50 @@ def test_the_state_sentence_repeated_fifty_times_obeys():
     assert check((NOT_FOUND + " ") * 50, mode="Hybrid").obeys is True
 
 
-@pytest.mark.skip(reason="UNCLEAR IN SPEC-30: is '[ 1 ]', the full-width '【1】' or '^1' a label for (b)? "
-                         "And is a URL without a scheme (docs.pytest.org/...) a URL? Section 6 lists them without an outcome.")
-def test_b_on_label_lookalikes_and_a_scheme_less_url():
-    raise AssertionError("placeholder")
+@pytest.mark.parametrize("lookalike", ["[ 1 ]", "【1】", "[  12  ]", "[１]"])
+def test_b_fails_on_label_lookalikes(lookalike):
+    # Amendment A3: spaces inside the brackets and lenticular brackets are labels too.
+    assert check(f"{NOT_FOUND} It is described in {lookalike}.").b.passed is False
 
 
-@pytest.mark.skip(reason="UNCLEAR IN SPEC-30: does 'Not from the course' split across a line break count for (c)? "
-                         "Section 6 names the case without an outcome.")
-def test_c_on_a_phrase_split_across_a_line_break():
-    raise AssertionError("placeholder")
+def test_b_passes_a_raised_number_that_is_not_a_label():
+    assert check(f"{NOT_FOUND} Is the footnote ^1 what you mean?").b.passed is True
 
 
-@pytest.mark.skip(reason="UNCLEAR IN SPEC-30: 'first 240 characters' of the raw reply or of the normalised text, and "
-                         "must the whole sentence end inside it? Section 6 asks about a sentence at characters 230 and 250.")
+@pytest.mark.parametrize("address", ["docs.pytest.org/en/stable/", "docs.python.org/3/library/os.html", "www.example.com/a"])
+def test_b_fails_on_a_url_without_a_scheme(address):
+    assert check(f"{NOT_FOUND} Try {address} yourself.").b.passed is False
+
+
+@pytest.mark.parametrize("not_an_address", ["Python 3.12/3.13", "input/output", "the file conftest.py", "e.g. a loop"])
+def test_b_passes_text_that_only_looks_like_an_address(not_an_address):
+    assert check(f"{NOT_FOUND} Think about {not_an_address} for one row.").b.passed is True
+
+
+@pytest.mark.parametrize("extension", [".md", ".rst", ".html", ".htm", ".txt", ".pdf"])
+def test_b_fails_on_each_known_document_extension(extension):
+    # Amendment A7
+    assert check(f"{NOT_FOUND} Open guides/usage{extension} next.").b.passed is False
+
+
+def test_c_fails_on_a_phrase_split_across_a_line_break():
+    # Amendment A4: whitespace, line breaks included, is collapsed before matching.
+    for text in ("Not from the\ncourse: loops start at zero.", "Not   from \t the\n\n course", "NOT FROM\r\nTHE COURSE"):
+        assert check(f"{NOT_FOUND} {text}").c.passed is False, text
+
+
 def test_a_at_the_240_character_boundary():
-    raise AssertionError("placeholder")
+    # Amendment A5: measured on the normalised text; the sentence passes when it STARTS inside the window and may
+    # end after it. The normalised greeting below is 230 and 250 characters long.
+    def greeting(n):
+        return " ".join(["word"] * 100)[: n - 1] + " "
+
+    assert len(greeting(230)) == 230 and len(greeting(250)) == 250
+    assert check(greeting(230) + NOT_FOUND).a.passed is True  # starts at 230, ends at 260
+    assert check(greeting(250) + NOT_FOUND).a.passed is False  # starts at 250
+
+
+def test_a_counts_the_window_on_normalised_text_not_raw_text():
+    # Heavy markdown and punctuation around a short greeting do not use up the window.
+    noisy = "***" + "!!!" * 80 + "   \n\n\n   " + "> " * 20
+    assert check(noisy + NOT_FOUND).a.passed is True

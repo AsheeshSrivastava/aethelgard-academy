@@ -49,6 +49,7 @@ class GeminiCompanion:
         classifier: Optional[AssistanceClassifier] = None,
         profile: Optional[ProviderProfile] = None,
         meter: Optional[UsageMeter] = None,
+        chat_temperature: float = 0.2,
     ) -> None:
         if client is None:
             from google import genai  # imported here so tests never build a real client
@@ -65,6 +66,10 @@ class GeminiCompanion:
         self.last_model_answered: Optional[str] = None
         self.last_backend_used: str = "Gemini (pending)"
         self.last_retrieval: Optional[RetrievalTrace] = None
+        self.chat_temperature = chat_temperature  # AXIS chat only (consult, stream); other calls keep their own (SPEC-30 R20)
+        # The model's reply before the guardrail, label stripping and tag removal (SPEC-30 R16). Only the eval harness
+        # reads it: no route, log or trace carries it.
+        self.last_raw_reply: Optional[str] = None
 
     # --- helpers -------------------------------------------------------------
 
@@ -99,6 +104,7 @@ class GeminiCompanion:
     # --- IAXISCompanion ----------------------------------------------------------
 
     def consult(self, query: AxisQuery) -> AxisResponse:
+        self.last_raw_reply = None  # a failed call must not leave the previous reply behind
         grounding = self._grounding(query)
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
@@ -106,7 +112,7 @@ class GeminiCompanion:
             response = self._client.models.generate_content(
                 model=self.model,
                 contents=user_msg,
-                config=self._config(sys_prompt, 0.2, axis_rules.REPLY_MAX_TOKENS),
+                config=self._config(sys_prompt, self.chat_temperature, axis_rules.REPLY_MAX_TOKENS),
             )
             raw = response.text or ""
         except BudgetExceeded:
@@ -114,9 +120,11 @@ class GeminiCompanion:
         except Exception as exc:
             raise GeminiError(f"Gemini consultation failed: {type(exc).__name__}") from None
         self._record("consult", self._answered(response), response, len(sys_prompt) + len(user_msg))
+        self.last_raw_reply = axis_rules.strip_think(raw)
         return axis_rules.finish_reply(raw, query, grounding, self.guardrail, self.classifier)
 
     def stream(self, query: AxisQuery) -> Tuple[Iterator[str], Any]:
+        self.last_raw_reply = None
         grounding = self._grounding(query)
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
@@ -127,11 +135,12 @@ class GeminiCompanion:
         usage_chunk: Any = None
         input_chars = len(sys_prompt) + len(user_msg)
         requested = False
+        said: List[str] = []  # everything yielded, kept as last_raw_reply when the stream ends
         try:
             stream = self._client.models.generate_content_stream(
                 model=self.model,
                 contents=user_msg,
-                config=self._config(sys_prompt, 0.2, axis_rules.REPLY_MAX_TOKENS),
+                config=self._config(sys_prompt, self.chat_temperature, axis_rules.REPLY_MAX_TOKENS),
             )
             requested = True
             for chunk in stream:
@@ -139,12 +148,15 @@ class GeminiCompanion:
                 if getattr(chunk, "usage_metadata", None) is not None:
                     usage_chunk = chunk
                 if chunk.text:
+                    said.append(chunk.text)
                     yield chunk.text
         except GeneratorExit:
             raise
         except Exception as exc:
             raise GeminiError(f"Gemini stream failed: {type(exc).__name__}") from None
         finally:
+            if said:
+                self.last_raw_reply = axis_rules.strip_think("".join(said))
             # Always counted, even when the learner leaves mid-reply: without counts
             # the call is costed at its limit, so the cap is never undercounted.
             if requested:

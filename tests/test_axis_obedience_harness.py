@@ -116,7 +116,8 @@ def test_each_state_builds_the_real_no_source_prompt(state):
     assert response.source_state == state
     assert "NO COURSE SOURCE IS AVAILABLE FOR THIS ANSWER" in system
     assert axis_rules.NO_SOURCE_SENTENCES[state] in system
-    assert "<reference_passages>" not in system + user and "<passage" not in system + user
+    # The rule text always names the <reference_passages> tag; a real passage block opens with it plus a newline.
+    assert "<reference_passages>\n" not in system + user and "<passage" not in system + user
 
 
 # --- the questions (R10, R11) ---
@@ -377,10 +378,10 @@ def test_paid_profile_needs_estimate_then_paid_ok(tmp_path, capsys):
     assert code != 0 and refused.made == [] and refused.calls == []
     assert "--estimate" in out and "--paid-ok" in out
 
-    # the owner prints the estimate first, then runs with --paid-ok
-    assert run(tmp_path, refused, profile="paid", environ=PAID_ENV, estimate=True, run_name="est",
-               meter=meter_for(tmp_path)) == 0
+    # the owner prints the estimate first, then runs with --paid-ok for the SAME run name (amendment A9)
+    assert run(tmp_path, refused, profile="paid", environ=PAID_ENV, estimate=True, meter=meter_for(tmp_path)) == 0
     assert refused.calls == []
+    assert (tmp_path / "out" / "run1" / "estimate.json").is_file()
     capsys.readouterr()
 
     paid = ScriptedFactory()
@@ -388,6 +389,33 @@ def test_paid_profile_needs_estimate_then_paid_ok(tmp_path, capsys):
     assert len(paid.calls) == FULL
     assert FAKE_PAID_KEY not in capsys.readouterr().out
     assert FAKE_PAID_KEY not in "".join(all_text(d) for d in run_dirs(tmp_path))
+
+
+def test_paid_ok_needs_an_estimate_for_the_same_run_name(tmp_path, capsys):
+    # Amendment A9: an estimate written under another run name does not unlock this run.
+    assert run(tmp_path, ScriptedFactory(), profile="paid", environ=PAID_ENV, estimate=True, run_name="other",
+               meter=meter_for(tmp_path)) == 0
+    capsys.readouterr()
+    factory = ScriptedFactory()
+
+    code = run(tmp_path, factory, profile="paid", environ=PAID_ENV, paid_ok=True, run_name="run1", meter=meter_for(tmp_path))
+
+    assert code != 0 and factory.made == [] and factory.calls == []
+    assert "--estimate" in capsys.readouterr().out
+    assert not (tmp_path / "out" / "run1").exists()
+
+
+def test_estimate_json_holds_the_numbers_and_no_timestamp(tmp_path, capsys):
+    # Amendment A9: reply count, upper-bound input and output tokens, worst-case cost, profile id; no timestamp.
+    assert run(tmp_path, ScriptedFactory(), profile="paid", environ=PAID_ENV, estimate=True, meter=meter_for(tmp_path)) == 0
+
+    path = tmp_path / "out" / "run1" / "estimate.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["replies"] == FULL and data["profile_id"] == "paid"
+    assert data["output_tokens"] == FULL * axis_rules.REPLY_MAX_TOKENS
+    assert data["input_tokens_upper_bound"] > 0 and data["worst_case_cost_usd"] > 0
+    assert not re.search(r"\d{4}-\d{2}-\d{2}|timestamp", path.read_text(encoding="utf-8").lower())
+    assert FAKE_PAID_KEY not in path.read_text(encoding="utf-8")
 
 
 def test_a_free_profile_needs_no_paid_flag(tmp_path):
@@ -491,6 +519,8 @@ def test_two_temperatures_give_two_runs_and_a_comparison(tmp_path, capsys):
 
 
 def test_status_line_says_when_the_profile_sends_no_temperature(tmp_path, capsys):
+    assert run(tmp_path, ScriptedFactory(), profile="paid", environ=PAID_ENV, estimate=True, quick=True,
+               meter=meter_for(tmp_path)) == 0  # the estimate comes first (amendment A9)
     assert run(tmp_path, ScriptedFactory(), profile="paid", environ=PAID_ENV, paid_ok=True, quick=True,
                meter=meter_for(tmp_path)) == 0
 
@@ -530,6 +560,106 @@ def test_out_dir_inside_a_tracked_folder_is_refused(tmp_path, capsys):
     assert code != 0 and factory.calls == []
     assert not target.exists()
     assert capsys.readouterr().out.strip()
+
+
+def test_a_down_server_gives_no_reply_not_a_mock_reply(tmp_path):
+    # Amendment A10: the harness builds companions with fallback_to_mock=False.
+    factory = ScriptedFactory()
+
+    assert run(tmp_path, factory, quick=True) == 0
+
+    assert factory.made and all(made["fallback_to_mock"] is False for made in factory.made)
+
+
+def test_the_real_companion_factory_never_falls_back_to_the_mock(tmp_path):
+    from lms.adapters.ai.obedience.harness import default_companion_factory
+
+    companion = default_companion_factory(profile=PROFILES["local"], chat_temperature=0.0,
+                                          retriever=retriever_cls()("not_found"), meter=None, fallback_to_mock=False)
+
+    assert companion.fallback_to_mock is False and companion.chat_temperature == 0.0
+
+
+def test_a_duplicated_question_id_or_an_empty_question_is_refused(tmp_path):
+    from lms.adapters.ai.obedience.harness import load_questions
+
+    prepare(tmp_path)
+    twice = [dict(MADE_UP_ITEMS[0]), dict(MADE_UP_ITEMS[0])]
+    (tmp_path / "made-up-items.yaml").write_text(yaml.safe_dump(twice), encoding="utf-8")
+    with pytest.raises(ValueError, match="m1"):
+        load_questions(tmp_path / "sets", tmp_path / "made-up-items.yaml")
+    blank = [dict(MADE_UP_ITEMS[0], q="   ")]
+    (tmp_path / "made-up-items.yaml").write_text(yaml.safe_dump(blank), encoding="utf-8")
+    with pytest.raises(ValueError, match="m1"):
+        load_questions(tmp_path / "sets", tmp_path / "made-up-items.yaml")
+
+
+def test_an_unknown_profile_is_refused_with_the_known_names(tmp_path, capsys):
+    factory = ScriptedFactory()
+
+    assert run(tmp_path, factory, profile="nope") != 0
+
+    out = capsys.readouterr().out
+    assert "nope" in out and "local" in out and factory.made == []
+
+
+def test_ctrl_c_keeps_the_partial_run_and_marks_it_partial(tmp_path):
+    factory = ScriptedFactory(lambda call: KeyboardInterrupt() if call.n == 5 else good_reply(call.mode, call.state))
+
+    code = run(tmp_path, factory)
+
+    assert code == 130
+    run_dir = the_run_dir(tmp_path)
+    assert len(read_rows(run_dir)) == 4
+    assert read_results(run_dir)["stopped_early"] is True
+    assert "STOPPED EARLY" in (run_dir / "report.txt").read_text(encoding="utf-8")
+
+
+def test_a_finished_run_is_not_marked_partial(tmp_path):
+    assert run(tmp_path, ScriptedFactory(), quick=True) == 0
+
+    run_dir = the_run_dir(tmp_path)
+    assert "stopped_early" not in read_results(run_dir)
+    assert "STOPPED EARLY" not in (run_dir / "report.txt").read_text(encoding="utf-8")
+
+
+def test_repeat_five_with_two_temperatures(tmp_path):
+    factory = ScriptedFactory()
+
+    assert run(tmp_path, factory, temperatures=(0.0, 0.2), repeat=5, quick=True, run_name="cmp") == 0
+
+    assert len(factory.calls) == 2 * 5 * (TOTAL_QUESTIONS // 3) * CASES_PER_QUESTION
+    assert sorted(d.name for d in run_dirs(tmp_path)) == ["cmp-t0.0", "cmp-t0.2"]
+
+
+def test_a_changed_model_name_mid_run_is_recorded(tmp_path):
+    names = iter(["model-a"] * 3 + ["model-b"] * 1000)
+
+    class Switching(ScriptedFactory):
+        def __call__(self, **kwargs):
+            companion = super().__call__(**kwargs)
+            original = companion.consult
+
+            def consult(query):
+                companion.last_model_answered = next(names)
+                return original(query)
+
+            companion.consult = consult
+            return companion
+
+    assert run(tmp_path, Switching(), quick=True) == 0
+
+    assert read_results(the_run_dir(tmp_path))["model_answered"] == "model-a, model-b"
+
+
+def test_a_missing_profiles_file_is_a_plain_message(monkeypatch, tmp_path, capsys):
+    from lms.cli import handle_eval_command
+
+    monkeypatch.chdir(tmp_path)  # no config/providers.yaml here
+
+    code = handle_eval_command(["axis-obedience", "--quick"], environ={"MOCK_AI": "false"})
+
+    assert code != 0 and capsys.readouterr().out.strip()
 
 
 def test_the_run_writes_only_into_its_out_dir(tmp_path, monkeypatch):
