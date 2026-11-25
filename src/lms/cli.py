@@ -519,11 +519,13 @@ def _eval_list(text: str, allowed, label: str):
 def _eval_temperature(text: str):
     import math
 
+    from lms.adapters.ai.providers.router import MAX_AXIS_TEMPERATURE  # one place for the upper bound (SPEC-30 R20)
+
     try:
         value = float(text)
     except ValueError:
         return None
-    return value + 0.0 if math.isfinite(value) and 0.0 <= value <= 2.0 else None
+    return value + 0.0 if math.isfinite(value) and 0.0 <= value <= MAX_AXIS_TEMPERATURE else None
 
 
 def _parse_eval_args(args):

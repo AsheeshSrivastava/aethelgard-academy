@@ -238,7 +238,7 @@ def test_a_bad_setting_message_does_not_echo_the_value():
     assert "sk-secret" not in str(info.value)
 
 
-@pytest.mark.parametrize("raw", ["-0.1", "2.1", "abc", "nan", "NaN", "inf", "-inf", "Infinity", "0x1", "1,5", "0.2.1"])
+@pytest.mark.parametrize("raw", ["-0.1", "2.1", "abc", "nan", "NaN", "inf", "-inf", "Infinity", "0x1", "1,5", "0.2.1", "0_5", "1_0"])
 def test_temperature_bounds_and_bad_values_stop_startup(raw, tmp_path, monkeypatch):
     read = parser()
     with pytest.raises(Exception, match="AXIS_TEMPERATURE"):
