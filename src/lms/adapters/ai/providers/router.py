@@ -8,6 +8,7 @@ in the app knows which provider answers.
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Tuple
@@ -53,9 +54,37 @@ class DraftFailed(Exception):
     """A README draft could not be made. The message is plain and safe to show."""
 
 
+DEFAULT_AXIS_TEMPERATURE = 0.2  # the value AXIS chat has always used; AXIS_TEMPERATURE unset keeps it (SPEC-30 R20)
+MAX_AXIS_TEMPERATURE = 2.0
+
+
+class TemperatureConfigError(ValueError):
+    """AXIS_TEMPERATURE is not a number from 0 to 2. The message is plain and safe to show."""
+
+
+def configured_axis_temperature(env: Optional[Mapping[str, str]] = None) -> float:
+    """AXIS_TEMPERATURE as a float: unset or empty means 0.2; anything else must be a finite number from 0 to 2.
+
+    A bad value stops start-up with a plain message, like LMS_TRACER (SPEC-30 R20). The value is not echoed back.
+    """
+    source = os.environ if env is None else env
+    text = (source.get("AXIS_TEMPERATURE") or "").strip()
+    if not text:
+        return DEFAULT_AXIS_TEMPERATURE
+    try:
+        value = float(text)
+    except ValueError:
+        value = float("nan")
+    # float() also accepts "nan", "inf" and "1e-1"; only a finite number in range is allowed ("0x1" and "1,5" fail above).
+    if not math.isfinite(value) or not 0.0 <= value <= MAX_AXIS_TEMPERATURE:
+        raise TemperatureConfigError("AXIS_TEMPERATURE must be a number from 0 to 2 (for example 0.2), or left empty.")
+    return value + 0.0  # turns -0 into 0.0
+
+
 def default_factory(
     concept_store: Optional[ConceptStore] = None,
     retriever: Optional[IRetriever] = None,
+    chat_temperature: float = DEFAULT_AXIS_TEMPERATURE,
 ) -> Factory:
     def make(profile: ProviderProfile, api_key: Optional[str], meter: UsageMeter) -> Any:
         if profile.kind is ProviderKind.GEMINI:
@@ -63,7 +92,7 @@ def default_factory(
 
             return GeminiCompanion(
                 model=profile.model, api_key=api_key, concept_store=concept_store,
-                retriever=retriever, profile=profile, meter=meter,
+                retriever=retriever, profile=profile, meter=meter, chat_temperature=chat_temperature,
             )
         from lms.adapters.ai.local_llm_companion import OpenAICompatibleCompanion
 
@@ -75,6 +104,7 @@ def default_factory(
             token_limit_field=profile.token_limit_field,
             send_temperature=profile.send_temperature,
             disable_thinking=profile.disable_thinking,
+            chat_temperature=chat_temperature,
         )
 
     return make
@@ -361,10 +391,11 @@ def build_default_router(db_path: str, profiles_path: Optional[str] = None) -> P
     store = UsageStore(db_path)
     store.initialize()
     configured_mode()  # a bad LMS_RETRIEVAL_MODE stops startup even with MOCK_AI=true (SPEC-21 R6)
+    chat_temperature = configured_axis_temperature(os.environ)  # read once, here; a bad value stops startup too (SPEC-30 R20)
     retriever = None if mock else build_retriever()
     return ProviderRouter(
         profiles, store, environ=os.environ, mock=mock,
-        factory=default_factory(retriever=retriever), retriever=retriever,
+        factory=default_factory(retriever=retriever, chat_temperature=chat_temperature), retriever=retriever,
     )
 
 
@@ -377,6 +408,7 @@ __all__ = [
     "ProviderRouter",
     "UnknownProfile",
     "build_default_router",
+    "configured_axis_temperature",
     "course_reference_for",
     "course_reference_of",
     "default_factory",
