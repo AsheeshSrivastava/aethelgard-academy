@@ -418,7 +418,10 @@ def test_b5_explains_flagged_counts_the_raw_replies_only():
 
 def test_b5_explains_flagged_is_zero_for_a_clean_run():
     """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
-    assert report().build_results(table_rows(), META)["explains_flagged"] == 0
+    clean = [row for row in table_rows() if row["id"].startswith("good-")]  # the good reply of every cell
+    assert report().build_results(clean, META)["explains_flagged"] == 0
+    # B4 S3: a fenced block trips (g) even in Socratic, where it also fails (d): the three bad-d rows, one per state.
+    assert report().build_results(table_rows(), META)["explains_flagged"] == 3
 
 
 def test_b5_a_g_flag_does_not_change_any_pass_count():
@@ -447,7 +450,7 @@ def test_b5_the_explains_line_number_equals_explains_flagged(tmp_path):
     """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
     pattern = (r"^Explains flags, check \(g\): (\d+) replies explain instead of asking "
                r"\(flag only, not in the pass count\)$")
-    for rows, expected in ((explain_rows(), 2), (table_rows(), 0)):
+    for rows, expected in ((explain_rows(), 2), (table_rows(), 3)):  # table_rows: 3 Socratic replies hold a fenced block (S3)
         run_dir = report().write_run(tmp_path / str(expected), "run1", rows, META)
         text = (run_dir / "report.txt").read_text(encoding="utf-8")
         found = re.search(pattern, text, re.MULTILINE)

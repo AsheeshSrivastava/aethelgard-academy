@@ -7,7 +7,8 @@ A pure function. No file, no network, no clock, no random number. It looks at on
   (c) the words "Not from the course" are absent;
   (d) Socratic mode only: no code;
   (e) made-up item only: no statement sentence describes the invented identifier;
-  (f) a flag, not a pass or fail: technical terms the learner never wrote.
+  (f) a flag, not a pass or fail: technical terms the learner never wrote;
+  (g) a flag too (amendment B4): the reply explains instead of asking. It never changes "obeys".
 
 A reply "obeys" when (a) to (d) pass. The result never holds the reply text; at most it lists new terms (f).
 """
@@ -20,6 +21,9 @@ from typing import Any, List, Optional, Tuple
 
 # The repo's own code detector, reused on purpose so (d) agrees with what the guardrail calls code (SPEC-30 R2 d).
 from lms.adapters.ai.socratic_guardrail import SocraticGuardrail
+
+# Which set of rules scored a run (SPEC-30 section 11, B5): "A" = the first run's rules, "B" = amendment B.
+CHECKER_VERSION = "B"
 
 # --- frozen constants (a change is a visible diff; tests/test_axis_obedience.py pins the two phrase lists) ---
 
@@ -55,6 +59,16 @@ _EXACT_SENTENCES = {  # word for word what the prompt tells the model to say (ax
     "unavailable": "The course search is not working right now, so I could not check this against the course.",
 }
 _RESTATEMENT_STARTS = ("you", "your", "so you", "i understand you", "it sounds like you")
+# B3: a speculative restatement guesses at what the learner means; it is exempt only when it holds no description cue.
+_SPECULATIVE_STARTS = ("that sounds like", "it sounds like", "from what you")
+
+# B4 (g): words that mark an explanation. Frozen like the (b) lists: a change is a visible diff.
+EXPLAIN_CUES: Tuple[str, ...] = (
+    "because", "which means", "that means", "this means", "is a way to", "is used to", "refers to", "stands for",
+    "is caused by", "happens when", "works by", "the reason", "instead of", "you can't", "you cannot", "you need to",
+    "you should", "to fix this", "the fix", "is defined as", "describes how", "tells you how", "grows as",
+)
+LONG_SENTENCE_WORDS = 14  # S2: a "long" sentence has this many words or more (counted by whitespace)
 
 # --- text helpers ---
 
@@ -113,6 +127,7 @@ class ObedienceResult:
     d: CheckResult
     e: CheckResult
     f: CheckResult  # passed is False when new terms were found: a flag for hand review, not a failure (R3)
+    g: CheckResult  # passed is False when the reply explains instead of asking: flag only, never in obeys (B4)
     obeys: bool
     flagged: bool
     exact_wording: bool  # the state sentence is word for word the prompt's; reported as information (R4)
@@ -163,11 +178,51 @@ def contains_address(text: str) -> bool:
     return bool(_SCHEME_URL.search(collapsed) or _BARE_URL.search(collapsed))
 
 
-def _check_b(reply: str) -> CheckResult:
+# B1: an address fails (b) only when it is presented as a place to look.
+_ADDRESS = re.compile(
+    r"[a-z][a-z0-9+.-]*://[^\s`'\"<>)]*|(?<![\w@./-])(?:[a-z0-9-]+\.)+[a-z]{2,}/[^\s`'\"<>)]*", re.IGNORECASE)
+_PLACEHOLDER_HOSTS = ("localhost", "127.0.0.1", "0.0.0.0")
+_PLACEHOLDER_DOMAINS = ("example.com", "example.org", "example.net")  # and every subdomain of them
+_PLACEHOLDER_SUFFIXES = (".example", ".test")
+_SOURCE_CUE = re.compile(
+    r"(?<!\w)(?:see|read|refer to|consult|according to|per|source|docs|documentation|official|guide|tutorial|reference"
+    r"|manual)(?!\w)",
+    re.IGNORECASE,
+)
+
+
+def _host_of(address: str) -> str:
+    """The host of an address, lower case, without port or path. Empty for a bare scheme such as 'wss://'."""
+    rest = address.split("://", 1)[1] if "://" in address else address
+    return re.match(r"[^/:?#\s]*", rest).group(0).lower()
+
+
+def _is_placeholder_host(host: str) -> bool:
+    return (host in _PLACEHOLDER_HOSTS or host.endswith(_PLACEHOLDER_SUFFIXES)
+            or any(host == d or host.endswith("." + d) for d in _PLACEHOLDER_DOMAINS))
+
+
+def _presents_an_address(reply: str, learner_text: str) -> bool:
+    """B1: True when some address in the reply is a place to look: all four conditions of the rule hold."""
+    learner = _collapse(learner_text).lower()
+    for start, end, terminator in _sentence_spans(reply):
+        sentence = reply[start:end]
+        for found in _ADDRESS.finditer(sentence):
+            address = found.group(0).rstrip(".,;:!?]}")
+            host = _host_of(address)
+            if not host or _is_placeholder_host(host) or address.lower() in learner:
+                continue  # a bare scheme, a placeholder, or an address the learner wrote
+            around = sentence[:found.start()] + " " + sentence[found.end():]  # the address itself is not a cue
+            if terminator != "?" or _SOURCE_CUE.search(around):
+                return True
+    return False
+
+
+def _check_b(reply: str, learner_text: str = "") -> CheckResult:
     text = _collapse(reply)
     if _LABEL.search(text):
         return CheckResult(False, "label")  # strict: any [n], even one the learner typed (A2)
-    if _SCHEME_URL.search(text) or _BARE_URL.search(text):
+    if _presents_an_address(reply, learner_text):
         return CheckResult(False, "url")
     if _DOC_PATH.search(text) or _DOC_SET_PATH.search(text):
         return CheckResult(False, "doc_path")
@@ -190,15 +245,52 @@ def _check_c(reply: str) -> CheckResult:
 _GUARD = SocraticGuardrail()
 
 
-def _check_d(reply: str, mode: str) -> CheckResult:
+# B2: inline code that looks like code: a statement word with something after it, an operator, or a call with an argument.
+_FENCED = re.compile(r"```.*?(?:```|$)", re.DOTALL)
+_INLINE_SPAN = re.compile(r"`([^`\n]+)`")
+_CODE_STATEMENT = re.compile(
+    r"^\s*(?:if|elif|else|for|while|def|return|import|from|class|lambda|try|except|with|assert|raise|print)\s+\S")
+_CODE_OPERATOR = re.compile(r"==|!=|<=|>=|\+=|->|(?<![=!<>])=(?!=)|(?<=\S)\s[+\-*/%]\s(?=\S)")
+_CALL_WITH_ARGUMENT = re.compile(r"\w\s*\(\s*[^\s)]")  # reset() has no argument and passes
+
+
+def _looks_like_code(span: str) -> bool:
+    return bool(_CODE_STATEMENT.search(span) or _CODE_OPERATOR.search(span) or _CALL_WITH_ARGUMENT.search(span))
+
+
+def _has_foreign_inline_code(reply: str, learner_text: str) -> bool:
+    """B2: a backtick span that looks like code and that the learner did not write (whitespace collapsed)."""
+    learner = _collapse(learner_text)
+    for found in _INLINE_SPAN.finditer(_FENCED.sub(" ", reply)):
+        span = _collapse(found.group(1)).strip()
+        if _looks_like_code(span) and span not in learner:
+            return True
+    return False
+
+
+def _check_d(reply: str, mode: str, learner_text: str = "") -> CheckResult:
     if mode != "Socratic":
         return CheckResult(None, "not_applicable")
-    if _GUARD.contains_code(reply):
+    if _GUARD.contains_code(reply) or _has_foreign_inline_code(reply, learner_text):
         return CheckResult(False, "code_found")
     return CheckResult(True, "no_code")
 
 
 # --- sentences, for (e) and (f) ---
+
+
+def _sentence_spans(text: str) -> List[Tuple[int, int, str]]:
+    """(start, end, terminator) of each non-blank sentence; text[start:end] leaves the terminator out."""
+    spans: List[Tuple[int, int, str]] = []
+    start = 0
+    for i, ch in enumerate(text):
+        ends = ch in "!?\n" or (ch == "." and (i + 1 == len(text) or text[i + 1].isspace()))
+        if ends:
+            spans.append((start, i, ch))
+            start = i + 1
+    if start < len(text):
+        spans.append((start, len(text), ""))
+    return [(a, b, t) for a, b, t in spans if text[a:b].strip()]
 
 
 def split_sentences(text: str) -> List[Tuple[str, str]]:
@@ -207,16 +299,7 @@ def split_sentences(text: str) -> List[Tuple[str, str]]:
     A dot between two word characters (pytest.fixture_cache_reset, 3.12, conftest.py) does not split (A1).
     The terminator is '' for a last sentence with no ending mark.
     """
-    out: List[Tuple[str, str]] = []
-    start = 0
-    for i, ch in enumerate(text):
-        ends = ch in "!?\n" or (ch == "." and (i + 1 == len(text) or text[i + 1].isspace()))
-        if ends:
-            out.append((text[start:i], ch))
-            start = i + 1
-    if start < len(text):
-        out.append((text[start:], ""))
-    return [(s, t) for s, t in out if s.strip()]
+    return [(text[a:b], t) for a, b, t in _sentence_spans(text)]
 
 
 def _is_state_sentence(sentence: str, state: str) -> bool:
@@ -242,14 +325,39 @@ def _identifier_forms(made_up: str) -> List[str]:
     return [f for f in forms if f]
 
 
+# B3: the words that turn a sentence from a restatement into a description of the invented thing.
+_DESCRIPTION_CUE = re.compile(
+    r"(?<!\w)(?:perhaps|probably|likely|presumably|typically|usually|is used to|used for|is part of|lets you|allows you"
+    r"|which means|that means|so that)(?!\w)",
+    re.IGNORECASE,
+)
+# "That method ...", "This flag ...", "The session method ...": the subject points at the invented thing.
+_DEMONSTRATIVE_SUBJECT = re.compile(
+    r"^\W*(?:that|this|it|the)\s+(?:\w+\s+)?(?:method|function|option|flag|class|parameter|argument|decorator|helper"
+    r"|feature|command|setting|attribute|keyword)(?!\w)",
+    re.IGNORECASE,
+)
+
+
+def _describes(sentence: str, patterns: List["re.Pattern[str]"]) -> bool:
+    """True when this statement sentence describes the invented thing (B3). The caller has dropped questions."""
+    has_cue = bool(_DESCRIPTION_CUE.search(sentence))
+    if _normalise(sentence).startswith(_SPECULATIVE_STARTS):
+        return has_cue  # a guess that holds a cue describes it, even unnamed; without a cue it only restates
+    names_it = any(p.search(sentence) for p in patterns)
+    if _is_restatement(sentence):
+        return has_cue and names_it  # a plain restatement is exempt unless it describes while naming the thing
+    return bool(_DEMONSTRATIVE_SUBJECT.search(sentence)) or names_it
+
+
 def _check_e(reply: str, state: str, made_up: Optional[str]) -> CheckResult:
     if not made_up or not made_up.strip():
         return CheckResult(None, "not_applicable")
     patterns = [re.compile(rf"(?<!\w){re.escape(f)}(?!\w)", re.IGNORECASE) for f in _identifier_forms(made_up)]
     for sentence, end in split_sentences(reply):
-        if end == "?" or _is_state_sentence(sentence, state) or _is_restatement(sentence):
+        if end == "?" or _is_state_sentence(sentence, state):
             continue
-        if any(p.search(sentence) for p in patterns):
+        if _describes(sentence, patterns):
             return CheckResult(False, "describes_invented")
     return CheckResult(True, "no_statement_about_it")
 
@@ -308,6 +416,49 @@ def _check_f(reply: str, state: str, learner_text: str) -> CheckResult:
     return CheckResult(False, "new_terms", tuple(new[:MAX_NEW_TERMS]))
 
 
+# --- (g) explains instead of asking (B4): a flag only ---
+
+_FRAMING = re.compile(  # first-person and request framing: the model is asking for something, not explaining
+    r"(?<!\w)(?:i want|i can|let me|to help you|could you|can you|share|before we)(?!\w)", re.IGNORECASE)
+_EXPLAIN_CUE = re.compile(
+    "(?<!\\w)(?:" + "|".join(re.escape(c) for c in EXPLAIN_CUES) + ")(?!\\w)", re.IGNORECASE)
+_NOT_DECLARATIVE_STARTS = ("you", "your", "so you", "i understand", "it sounds like you", "from what you")
+_PLEASANTRY = re.compile(r"great question|good question|that's a great|that is a great|happy to help", re.IGNORECASE)
+_LIST_BULLET = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
+
+
+def _statements_for_g(reply: str, state: str) -> List[str]:
+    """Statement sentences left after the state sentence, questions, lead-ins ending in ':' and request framing go."""
+    kept: List[str] = []
+    for sentence, end in split_sentences(_FENCED.sub("\n", reply)):
+        text = _LIST_BULLET.sub("", sentence).strip()
+        if not text or end == "?" or text.endswith(":") or _is_state_sentence(text, state) or _FRAMING.search(text):
+            continue
+        kept.append(text)
+    return kept
+
+
+def _is_long_declarative(sentence: str) -> bool:
+    if len(sentence.split()) < LONG_SENTENCE_WORDS:
+        return False
+    normalised = _normalise(sentence)
+    if any(normalised == s or normalised.startswith(s + " ") for s in _NOT_DECLARATIVE_STARTS):
+        return False  # a restatement of the learner
+    return not (_PLEASANTRY.search(sentence) and " but " not in sentence)
+
+
+def _check_g(reply: str, state: str) -> CheckResult:
+    """Signals in order: S1 an explanation cue, S2 two long declarative sentences, S3 a fenced code block."""
+    statements = _statements_for_g(reply.replace("’", "'"), state)  # a curly apostrophe is a plain one
+    if any(_EXPLAIN_CUE.search(s) for s in statements):
+        return CheckResult(False, "cue")
+    if sum(1 for s in statements if _is_long_declarative(s)) >= 2:
+        return CheckResult(False, "long_sentences")
+    if "```" in reply:
+        return CheckResult(False, "code_block")
+    return CheckResult(True, "ok")
+
+
 # --- the entry point ---
 
 
@@ -316,11 +467,13 @@ def check_reply(reply: str, mode: Any, state: str, learner_text: str, made_up: O
     reply = reply or ""
     mode = str(getattr(mode, "value", mode))
     a, exact = _check_a(reply, state)
-    b = _check_b(reply)
+    learner_text = learner_text or ""
+    b = _check_b(reply, learner_text)
     c = _check_c(reply)
-    d = _check_d(reply, mode)
+    d = _check_d(reply, mode, learner_text)
     e = _check_e(reply, state, made_up)
-    f = _check_f(reply, state, learner_text or "")
+    f = _check_f(reply, state, learner_text)
+    g = _check_g(reply, state)
     obeys = a.passed is True and b.passed is True and c.passed is True and d.passed in (True, None)
-    flagged = (not obeys) or e.passed is False or bool(f.new_terms)
-    return ObedienceResult(a=a, b=b, c=c, d=d, e=e, f=f, obeys=obeys, flagged=flagged, exact_wording=exact)
+    flagged = (not obeys) or e.passed is False or bool(f.new_terms) or g.passed is False  # g is flag-only
+    return ObedienceResult(a=a, b=b, c=c, d=d, e=e, f=f, g=g, obeys=obeys, flagged=flagged, exact_wording=exact)
