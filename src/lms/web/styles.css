@@ -978,7 +978,7 @@ body.resizing-panes {
   outline: 2px solid var(--color-primary);
 }
 
-/* Socratic Error Diagnostic Box */
+/* Runtime Diagnostic Box */
 .error-box {
   background-color: #1a0d11;
   border: 1px solid #4d181e;
@@ -992,7 +992,6 @@ body.resizing-panes {
   justify-content: space-between;
   align-items: center;
 }
-
 
 /* Code Snippet Action Bar in Reading Pane */
 .code-block-wrapper {
