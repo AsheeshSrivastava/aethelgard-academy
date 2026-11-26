@@ -19,6 +19,7 @@ from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.socratic_guardrail import (
     AssistanceClassifier,
     SocraticGuardrail,
+    learner_text_of,
     remove_prompt_tags,
 )
 from lms.core.ai_judgement import Idea
@@ -159,7 +160,7 @@ NO_SOURCE_SENTENCES = {
 
 
 def no_source_notice(mode: AxisMode, source_state: str) -> str:
-    """The rule for a turn where no course passage reached the model (SPEC-24 R1 to R3, SPEC-31 section 3.4).
+    """The rule for a turn where no course passage reached the model (SPEC-24 R1 to R3, SPEC-31 sections 3.4, 9.1).
 
     One memory rule for every mode, so `mode` does not change the text.
     """
@@ -174,9 +175,13 @@ def no_source_notice(mode: AxisMode, source_state: str) -> str:
         "Do not say what a name you do not recognise is or does, and do not guess. "
         "Write no code, not even inside a sentence. "
         "Work only from what the learner wrote (the question, the code and the run output): "
-        "restate their question in their words, ask what they already know or have tried, "
+        "restate what they asked for, ask what they already know or have tried, "
         "with at most two questions, or suggest they rephrase or reread this step's lesson text. "
-        "A question may point at a line of their code; it never states the cause or the fix."
+        "A question may point at a line of their code; it never states the cause or the fix. "
+        "When their question, code or run output shows an error or a traceback, do not say what the error or its "
+        'message means, what caused it, or what the values in it must be. Do not write "means" or "because" about it. '
+        "Point at one line number or function name to look at, then ask what they expected to happen there and what "
+        "they have checked. Do not copy their code or the traceback into your reply; point at it by line number or name."
     )
 
 
@@ -333,7 +338,7 @@ def finish_reply(
 ) -> AxisResponse:
     """Guardrail and classifier applied the same way after every model."""
     cleaned = remove_prompt_tags(strip_think(str(raw_reply))).strip()
-    enforced = guardrail.enforce(cleaned, query.mode, strict=False)
+    enforced = guardrail.enforce(cleaned, query.mode, strict=False, learner_text=learner_text_of(query))
     if isinstance(cited_concepts, passage_safety.Grounding):
         enforced = passage_safety.strip_unknown_labels(enforced, cited_concepts.labels)
         cited_ids = cited_concepts.cited_for(enforced)

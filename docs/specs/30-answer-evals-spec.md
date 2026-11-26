@@ -18,6 +18,8 @@ Governed by: AGENTS.md (zero-cost offline development, `MOCK_AI=true`, no learne
 8. **Existing helpers to reuse, not rewrite:** `SocraticGuardrail.contains_code` (the code detector), `scripts/measure_lib.py` (`set_version`, `load_gemini_sets`), `UsageMeter.worst_case_cost` (the upper-bound cost used for the paid-run estimate), SPEC-28 `tracing.span`, `eval-out/` (already git-ignored) for outputs.
 9. **`MOCK_AI` defaults to true** (`router`, `local_llm_companion`), so a harness run on a fresh clone calls no model unless asked.
 
+Amended 2026-11-27 by SPEC-31 section 9.3 (checker version C): in (b), `[n]` written directly after a name, `]` or `)` is an index, not a label; (d) uses the detector of SPEC-31 9.2 with the learner's text; and the error-message questions of `eval/obedience/error-items.yaml` are asked too, reported apart from the totals, with every such reply in the hand-review file.
+
 ## 1. Why
 
 SPEC-24 made "no facts from memory" a rule in the prompt and a visible note in the panel. Nothing measures whether a real model follows it. The panel note and the guardrail hide some disobedience, so the only honest measure is the model's raw reply. This spec adds a checker (deterministic, offline, in CI) and a harness (local, owner-run) that produces counts, the exact failing questions and a small hand-review sample, plus the named `AXIS_TEMPERATURE` setting so the same run can be repeated at 0.0 and 0.2. It is a **measurement, not a gate**.

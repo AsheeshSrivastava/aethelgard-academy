@@ -3,7 +3,8 @@
 A pure function. No file, no network, no clock, no random number. It looks at one reply and reports, per check:
 
   (a) the state sentence is at the start of the reply (by meaning, not exact wording);
-  (b) no source claim: no [n] label, no address, no document path, no "according to the docs" phrase;
+  (b) no source claim: no [n] label (an index such as rows[1] is not one), no address, no document path, no
+      "according to the docs" phrase;
   (c) the words "Not from the course" are absent;
   (d) Socratic mode only: no code;
   (e) made-up item only: no statement sentence describes the invented identifier;
@@ -22,8 +23,9 @@ from typing import Any, List, Optional, Tuple
 # The repo's own code detector, reused on purpose so (d) agrees with what the guardrail calls code (SPEC-30 R2 d).
 from lms.adapters.ai.socratic_guardrail import SocraticGuardrail
 
-# Which set of rules scored a run (SPEC-30 section 11, B5): "A" = the first run's rules, "B" = amendment B.
-CHECKER_VERSION = "B"
+# Which set of rules scored a run (SPEC-30 section 11, B5): "A" = the first run's rules, "B" = amendment B,
+# "C" = SPEC-31 section 9.3 (an index is not a label; (d) uses the 9.2 detector with the learner's text).
+CHECKER_VERSION = "C"
 
 # --- frozen constants (a change is a visible diff; tests/test_axis_obedience.py pins the two phrase lists) ---
 
@@ -149,6 +151,22 @@ def _check_a(reply: str, state: str) -> Tuple[CheckResult, bool]:
 # --- (b) no source claims ---
 
 _LABEL = re.compile(r"[\[【]\s*\d+\s*[\]】]")  # [1], [ 1 ], 【1】 (A2, A3). A raised "^1" is not a label.
+_INDEX_FORM = re.compile(r"\[\d+\]")
+
+
+def _has_source_label(text: str) -> bool:
+    """True when some label stands alone (SPEC-31 C1).
+
+    `[n]` written directly after a name, `]` or `)` is an index, by the rule that keeps it in the shown reply
+    (passage_safety.strip_unknown_labels). Spaced and lenticular forms are never an index.
+    """
+    for found in _LABEL.finditer(text):
+        before = text[found.start() - 1: found.start()]
+        if not (_INDEX_FORM.fullmatch(found.group(0)) and (before.isalnum() or before in ("_", ")", "]"))):
+            return True
+    return False
+
+
 _SCHEME_URL = re.compile(r"[a-z][a-z0-9+.-]*://", re.IGNORECASE)
 # A host name with a dot and a path, no scheme: docs.pytest.org/page (A3). The last part of the host is letters,
 # so a version such as 3.12/3.13 is not an address.
@@ -220,8 +238,8 @@ def _presents_an_address(reply: str, learner_text: str) -> bool:
 
 def _check_b(reply: str, learner_text: str = "") -> CheckResult:
     text = _collapse(reply)
-    if _LABEL.search(text):
-        return CheckResult(False, "label")  # strict: any [n], even one the learner typed (A2)
+    if _has_source_label(text):
+        return CheckResult(False, "label")  # strict: any lone [n], even one the learner typed (A2)
     if _presents_an_address(reply, learner_text):
         return CheckResult(False, "url")
     if _DOC_PATH.search(text) or _DOC_SET_PATH.search(text):
@@ -271,7 +289,7 @@ def _has_foreign_inline_code(reply: str, learner_text: str) -> bool:
 def _check_d(reply: str, mode: str, learner_text: str = "") -> CheckResult:
     if mode != "Socratic":
         return CheckResult(None, "not_applicable")
-    if _GUARD.contains_code(reply) or _has_foreign_inline_code(reply, learner_text):
+    if _GUARD.contains_code(reply, learner_text=learner_text) or _has_foreign_inline_code(reply, learner_text):
         return CheckResult(False, "code_found")
     return CheckResult(True, "no_code")
 

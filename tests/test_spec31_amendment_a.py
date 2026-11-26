@@ -27,6 +27,7 @@ All text here is made up. No model, no network.
 import hashlib
 import json
 import re
+import time
 from pathlib import Path
 
 import httpx
@@ -807,3 +808,35 @@ def test_a_foreign_span_that_starts_with_a_statement_is_withheld_mid_sentence(sp
 @pytest.mark.parametrize("span", ["import", "return", "class", "total", "pathlib.Path.rglob()"])
 def test_a_foreign_span_that_is_only_a_name_is_not_code(span):
     assert GUARD.contains_code(f"What do you expect `{span}` to do here?") is False
+
+
+# --- review of the code: forms that a first version of A2 let through, and 9.7 readings 5 and 6 ---
+
+
+@pytest.mark.parametrize("sentence", [
+    "You could return `float(amount) * rate` there.",
+    "Then return `len(rows)` from it.",
+    "Try to return `total` * rate instead.",
+    "Just return **float(amount)** there.",
+    "The last step is return: float(amount) here.",
+    "Then return rows[0] to the caller.",
+])
+def test_return_with_something_in_between_is_still_code(sentence):
+    assert GUARD.contains_code(sentence) is True
+
+
+@pytest.mark.parametrize("line", ["- import os", "> import os", "**import os**", "1. import os", "# from a import b"])
+def test_an_import_behind_a_markdown_mark_is_code(line):
+    reply = f"Look at this.\n{line}\nWhat do you expect?"
+
+    assert GUARD.contains_code(reply) is True
+    assert "import" not in GUARD.enforce(reply, AxisMode.SOCRATIC)
+
+
+@pytest.mark.parametrize("text", ["-" * 5000 + " x", "* " * 3000 + "x", "1. " * 2000 + "x"])
+def test_a_long_run_of_marks_is_checked_quickly(text):
+    started = time.perf_counter()
+
+    GUARD.contains_code(text)
+
+    assert time.perf_counter() - started < 1.0

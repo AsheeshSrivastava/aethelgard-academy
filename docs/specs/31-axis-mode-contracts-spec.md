@@ -123,7 +123,7 @@ The app streams replies, and there only the offending sentence is dropped before
 ### 9.4 Tests first
 `test_no_source_contract_has_the_error_rule_in_every_mode`, `test_no_source_contract_no_longer_asks_to_restate_their_question`, `test_plain_english_with_class_import_or_return_is_not_code`, `test_return_followed_by_an_expression_is_code`, `test_def_and_class_headers_are_code`, `test_a_quoted_learner_span_is_kept`, `test_a_span_the_learner_did_not_write_is_withheld`, `test_a_fenced_copy_of_learner_code_is_still_withheld`, `test_the_stream_keeps_a_quoted_learner_span`, `test_classifier_does_not_mark_plain_english_as_supplied_reasoning`, `test_b_passes_an_index_and_still_fails_a_lone_label`, `test_checker_version_is_c`, `test_error_items_are_reported_apart`. All strings are made up. Two existing SPEC-30 and SPEC-07 expectations may need to change; each change is listed in the PR.
 
-The real replies from the run stay on the owner's machine. A scratch prototype of A1 to A4 (not repo code, run on them 2026-11-27): 16 of the 23 withheld replies pass, the 7 with a code block stay withheld, and no reply that passes today becomes withheld, in these two runs and the two earlier ones. The tests and a replay after the code must confirm this.
+The real replies from the run stay on the owner's machine. A scratch prototype of A1 to A4 (not repo code, run on them 2026-11-27): 16 of the 23 withheld replies pass, the 7 with a code block stay withheld, and no reply that passes today becomes withheld, in these two runs and the two earlier ones. **Confirmed with the code** on the same stored replies: 23 withheld before, 7 now, all with a code block, none newly withheld.
 
 ### 9.5 Chaos check
 A learner span of one character; a span that matches only after whitespace is collapsed; an indentation change quoted inline; unbalanced backticks; a span split across stream pieces; learner text holding backticks; `return` at the end of a reply; a non-Python traceback.
@@ -140,3 +140,5 @@ A learner span of one character; a span that matches only after whitespace is co
 2. The streamed path does not cut a sentence inside a backtick span, or A4 could not apply there.
 3. A2's "operator" is an operator in the expression after `return` (`return total * rate`).
 4. The error-item table holds totals only. Those replies are also kept out of the failing and flagged id lists and the per-mode calibration sample. `--sets error-items` selects them.
+5. An import after a list, quote, heading or bold mark is still at the start of its line (`- import os`).
+6. After `return`, a subscript counts like a call (`return rows[0]`). A tight `-` or `/` does not count, so that "well-known" and "True/False" stay plain English; `return a/b` is therefore let through. So are `return None`, `return -1` and `return a, b`, which have neither a call nor an operator.

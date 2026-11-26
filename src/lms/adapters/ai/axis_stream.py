@@ -16,6 +16,8 @@ from lms.adapters.ai.socratic_guardrail import (
     REFLECTION_PROMPT,
     AssistanceClassifier,
     SocraticGuardrail,
+    code_spans,
+    learner_text_of,
     remove_prompt_tags,
 )
 from lms.core.interfaces import AxisMode, AxisQuery
@@ -65,11 +67,31 @@ def citation_title(cited: str) -> Optional[str]:
     return f"{source}: {_readable(page)}" if page else source
 
 
+def _next_cut(buffer: str, final: bool) -> Optional[int]:
+    """Where the first complete sentence or line of `buffer` ends, or None to wait for more text.
+
+    A sentence is not cut inside a backtick span (SPEC-31 9.7 reading 2). After a backtick that nothing has closed
+    yet, a sentence end waits until the line is complete: the span may still close.
+    """
+    newline = buffer.find("\n")
+    spans, unclosed = code_spans(buffer if newline < 0 else buffer[:newline])
+    for match in _BOUNDARY.finditer(buffer):
+        at = match.start()
+        if buffer[at] != "\n":
+            if any(start < at < end for start, _inner, _inner_end, end in spans):
+                continue
+            if newline < 0 and not final and any(start < at for start in unclosed):
+                return None
+        return match.end()
+    return None
+
+
 class SocraticStreamFilter:
     """Releases only complete sentences that hold no code."""
 
-    def __init__(self, guardrail: SocraticGuardrail):
+    def __init__(self, guardrail: SocraticGuardrail, learner_text: str = ""):
         self.guardrail = guardrail
+        self.learner_text = learner_text
         self._buffer = ""
         self._in_fence = False
         self._withheld = False
@@ -77,16 +99,11 @@ class SocraticStreamFilter:
 
     def feed(self, delta: str) -> List[str]:
         self._buffer += delta
-        out: List[str] = []
-        while True:
-            match = _BOUNDARY.search(self._buffer)
-            if match is None:
-                return out
-            chunk, self._buffer = self._buffer[: match.end()], self._buffer[match.end() :]
-            out.extend(self._check(chunk))
+        return self._drain(final=False)
 
     def finish(self) -> List[str]:
-        out = self._check(self._buffer)
+        out = self._drain(final=True)
+        out.extend(self._check(self._buffer))
         self._buffer = ""
         if self._withheld:
             out.append(GUIDING_INQUIRY)
@@ -96,6 +113,23 @@ class SocraticStreamFilter:
             self._released += REFLECTION_PROMPT
         return out
 
+    def _drain(self, final: bool) -> List[str]:
+        out: List[str] = []
+        while True:
+            cut = _next_cut(self._buffer, final)
+            if cut is None:
+                return out
+            chunk, self._buffer = self._buffer[:cut], self._buffer[cut:]
+            out.extend(self._check(chunk))
+
+    def _holds_code(self, chunk: str) -> bool:
+        if self.guardrail.contains_code(chunk, learner_text=self.learner_text):
+            return True
+        # A chunk kept whole around a span is still read sentence by sentence, so a span the learner did not write
+        # cannot carry a code line past the check by sharing its chunk with the sentence before.
+        masked = self.guardrail.mask_learner_spans(chunk, self.learner_text)
+        return any(self.guardrail.contains_code(piece) for piece in _BOUNDARY.split(masked) if piece)
+
     def _check(self, chunk: str) -> List[str]:
         fences = sum(chunk.count(fence) for fence in _FENCES)
         if fences:
@@ -103,7 +137,7 @@ class SocraticStreamFilter:
             if fences % 2:
                 self._in_fence = not self._in_fence
             return []
-        if self._in_fence or self.guardrail.contains_code(chunk):
+        if self._in_fence or self._holds_code(chunk):
             self._withheld = True
             return []
         if not chunk:
@@ -148,7 +182,7 @@ def stream_axis(
     """Yield (event, data) pairs: tokens, then citations, then done."""
     deltas, cited = axis.stream(query)
     grounding = cited if isinstance(cited, passage_safety.Grounding) else None
-    gate = SocraticStreamFilter(guardrail) if query.mode == AxisMode.SOCRATIC else None
+    gate = SocraticStreamFilter(guardrail, learner_text_of(query)) if query.mode == AxisMode.SOCRATIC else None
     sent: List[str] = []
 
     clean_deltas = strip_prompt_tags(deltas)
