@@ -401,6 +401,20 @@ describe("SPEC-33 section 12 reading 2: reset actions clear the held error", () 
     await waitFor(async () => expect(await page.note()).not.toBeInTheDocument());
   });
 
+  it("a run still going at Reset unit attaches nothing", async () => {
+    const page = await onStep("playground", { [`POST ${BASE}/units/PY-0.1/reset`]: null });
+    await page.run([]);
+    const socket = FakeSocket.all.at(-1)!;
+
+    await page.user.click(screen.getByRole("button", { name: "Reset unit" }));
+    await page.user.click(screen.getByRole("button", { name: "Yes, reset" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Reset unit" })).toBeInTheDocument());
+    deliver(socket, failed("NameError: late\n"));
+
+    expect(await page.note()).not.toBeInTheDocument();
+    none(await page.ask());
+  });
+
   it("Reset build clears it", async () => {
     const page = open("/courses/python/stages/0/build", { [`POST ${BUILD_ME}/build:reset`]: null });
     await page.panel();

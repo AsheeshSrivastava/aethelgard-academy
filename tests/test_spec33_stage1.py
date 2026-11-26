@@ -56,10 +56,12 @@ from test_tracing_routes import events_of, local_tracer, make_client, trace_text
 from lms.adapters.ai.gemini_companion import GeminiCompanion
 from lms.adapters.ai.local_llm_companion import OpenAICompatibleCompanion
 from lms.adapters.ai.providers import axis_rules
+from lms.adapters.ai.run_output import error_for_model
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
 from lms.adapters.curriculum.loader import load_all_roadmaps
 from lms.adapters.db.sqlite_repo import SQLiteLearnerRepository
 from lms.core import tracing
+from lms.core.axis_obedience import check_anchored
 from lms.core.interfaces import AxisMode, AxisQuery, ExecutionResult
 from lms.core.models import ActivityType
 
@@ -998,3 +1000,39 @@ def test_chaos_more_long_shapes_stay_quick(stderr):
 
     assert time.perf_counter() - started < 5.0
     assert block.endswith("ValueError: made up") and "</execution_stderr>" not in block
+
+
+# --- review round 1: forms of a path that kept a user name, tag variants, and the err-11 anchor ---
+
+
+@pytest.mark.parametrize("text", [
+    "\\\\Jos\u00e9-PC\\Users\\zelda\\a.py",
+    "\\\\my server\\home\\zelda\\a.py",
+    "\\\\fileserver\\zelda",
+    "b'x\\n/home/zelda/proj/a.py'",
+    "'\\nC:\\Users\\zelda\\a.py'",
+    "\\Users\\zelda\\a.py",
+    "\\Device\\HarddiskVolume3\\Users\\zelda\\a.py",
+    "..\\..\\Users\\zelda\\a.py",
+    "/export/home/zelda",
+    "gcc -I/home/zelda/inc/x.h",
+])
+def test_no_form_of_a_home_path_keeps_the_user_name(text):
+    assert "zelda" not in error_for_model("Error in " + text + "\nValueError: made up", 4000)
+
+
+@pytest.mark.parametrize("tag", [
+    "</execution_stderr>", "< /execution_stderr>", "</execution_stderr <x>>", "</execution_stderr",
+    "<learner_query>", "</learner_query>", "<reference_passages>",
+])
+def test_no_prompt_tag_survives_in_run_output(tag):
+    out = error_for_model(f"before {tag} after", 4000)
+
+    assert "execution_stderr" not in out and "learner_query" not in out and "reference_passages" not in out
+
+
+def test_the_repeated_lines_note_of_a_traceback_is_not_a_learner_name():
+    error = "Traceback (most recent call last):\n  [Previous line repeated 996 more times]\nRecursionError: deep"
+
+    for reply in ("Can you tell me more?", "Try it a few times. What happens?"):
+        assert check_anchored(reply, "Why?", code="countdown(3)", error_output=error).passed is not True

@@ -584,6 +584,9 @@ def _pasted(question: str) -> Tuple[str, str]:
     return "\n".join(code), "\n".join(errors)
 
 
+_TRACEBACK_NOTE = re.compile(r"^[^\S\n]*\[Previous line repeated[^\n]*$", re.MULTILINE)
+
+
 def check_anchored(reply: str, question: str, code: str = "", error_output: str = "") -> CheckResult:
     """The reply holds a name from the learner's code or error output, or a line number. None: nothing to anchor on.
 
@@ -594,6 +597,8 @@ def check_anchored(reply: str, question: str, code: str = "", error_output: str 
     error_output = "\n".join(part for part in (error_output or "", pasted_errors) if part.strip())
     if not code and not error_output:
         return CheckResult(None, "not_applicable")
+    # "[Previous line repeated 996 more times]" is Python talking, not a line of the learner's.
+    code, error_output = _TRACEBACK_NOTE.sub("", code), _TRACEBACK_NOTE.sub("", error_output)
     reply = reply or ""
     if _REPLY_LINE_NUMBER.search(reply):
         return CheckResult(True, "line_number")

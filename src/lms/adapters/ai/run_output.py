@@ -12,8 +12,14 @@ from __future__ import annotations
 
 import re
 
+from lms.adapters.ai.socratic_guardrail import remove_prompt_tags
+
 # Windows and network paths: `C:\...`, `C:/...`, `\\server\share\...`, also with the doubled backslashes of a repr.
-_WINDOWS_START = r"(?:(?<![A-Za-z])[A-Za-z]:(?=[\\/])|(?<![\w\\])(?=\\\\++[A-Za-z0-9._$-]{2,}+\\))"
+_AFTER_ESCAPE = r"(?<=\\[ntr])"  # the letter of a literal "\n" is not part of a word
+_WINDOWS_START = (
+    rf"(?:(?:(?<![A-Za-z])|{_AFTER_ESCAPE})[A-Za-z]:(?=[\\/])"
+    r"|(?<![\w\\])(?=\\\\++[^\\/\r\n\"'<>|*?:]{2,}+\\))"
+)
 # Inside double quotes a name may hold an apostrophe. A name never runs on into a second drive letter.
 _WINDOWS_QUOTED = r"(?:[^\\/:*?\"<>|\r\n \t]|[ \t](?![ \t]{0,7}[A-Za-z]:[\\/]))"
 # Elsewhere an apostrophe belongs to the name only inside a word (O'Brien) or before a separator, and a name stops
@@ -27,7 +33,7 @@ _WINDOWS_PATH = re.compile(
 )
 
 # POSIX paths. The start is never inside a word, a relative path or a web address (`file://` is the exception).
-_POSIX_START = r"(?:(?<![\w./\\~)\]}-])|(?<=file://))(?=/[^\s/])"
+_POSIX_START = rf"(?:(?<![\w./\\~)\]}}-])|(?<=file://)|{_AFTER_ESCAPE})(?=/[^\s/])"
 _POSIX_QUOTED = r"[^/\\:*?\"<>|\r\n]"
 _POSIX_PLAIN = r"(?:[^/\\:*?\"<>|'\r\n \t]|[ \t](?![ \t]{0,7}/)|(?<=\w)'(?=\w)|'(?=/))"
 _POSIX_PATH = re.compile(
@@ -45,7 +51,17 @@ _SYSTEM_FOLDERS = frozenset({
 _HOME_PARENTS = frozenset({"home", "homes", "users", "documents and settings"})
 _FILE_NAME = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,9}$")
 _SEPARATORS = re.compile(r"[\\/]++")
-_CLOSING_TAG = re.compile(r"</\s*+execution_stderr\b[^<>]*+>", re.IGNORECASE)
+_CLOSING_TAG = re.compile(r"<\s*+/\s*+execution_stderr\b[^<>]*+>?", re.IGNORECASE)
+# A second, independent pass over whatever the path rules missed (no drive, "..\\..", "-I/home/..", a device path):
+# the name after a home folder is blanked however the path was written.
+_HOME_NAME = re.compile(
+    r"([\\/](?:users|home|homes|documents and settings)[\\/]++)"
+    r"(?!~)(?:[^\\/\r\n\"':<>|]{1,64}+(?=[\\/])|[^\\/\s\"':<>|,;()]++)",
+    re.IGNORECASE,
+)
+
+
+_WEB_ADDRESS = re.compile(r"(https?://[^\s\"'<>]++)", re.IGNORECASE)
 
 
 def _last_part(parts: list) -> str:
@@ -57,6 +73,8 @@ def _last_part(parts: list) -> str:
 
 def _windows(found: "re.Match[str]") -> str:
     parts = [p for p in _SEPARATORS.split(found.group(0)) if p]
+    if len(parts) == 2 and found.group(0).startswith("\\\\"):
+        return "~"  # a share and nothing under it is often named after its user
     return _last_part(parts) if len(parts) >= 2 else found.group(0)
 
 
@@ -79,11 +97,18 @@ def _ends_in_a_file_name(last: str, found: "re.Match[str]") -> bool:
     return bounded and bool(_FILE_NAME.search(last))
 
 
+def _blank_home_names(text: str) -> str:
+    """The home-folder pass, everywhere but inside a web address (that is not a path on this machine)."""
+    pieces = _WEB_ADDRESS.split(text)  # odd positions are the addresses
+    return "".join(piece if i % 2 else _HOME_NAME.sub(r"\1~", piece) for i, piece in enumerate(pieces))
+
+
 def error_for_model(stderr: str, limit: int) -> str:
     """The run's error output as any model may see it, at most `limit` characters from its end."""
-    text = _POSIX_PATH.sub(_posix, _WINDOWS_PATH.sub(_windows, stderr))[-limit:]
+    text = _POSIX_PATH.sub(_posix, _WINDOWS_PATH.sub(_windows, stderr))
+    text = _blank_home_names(text)[-limit:]
     while True:  # until none is left, so a tag split by a tag cannot rebuild itself; the cap bounds the passes
-        cleaned = _CLOSING_TAG.sub("", text)
+        cleaned = remove_prompt_tags(_CLOSING_TAG.sub("", text))
         if cleaned == text:
             return text
         text = cleaned

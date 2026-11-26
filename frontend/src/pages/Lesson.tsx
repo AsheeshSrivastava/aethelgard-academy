@@ -527,6 +527,7 @@ export function Lesson() {
   const layout = useRef<HTMLDivElement>(null);
   const [axisWidth, setAxisWidth] = useState(loadAxisWidth);
   // The latest run's error belongs to one step of one unit (SPEC-33 section 12 reading 2).
+  const [unitResets, setUnitResets] = useState(0);
   const stepKey = `${unitId}/${step}`;
   const [held, setHeld] = useState<{ stepKey: string; error?: RunError }>({ stepKey });
   if (held.stepKey !== stepKey) setHeld({ stepKey }); // forget it, so returning does not bring it back
@@ -609,7 +610,13 @@ export function Lesson() {
             {steps.filter((name) => doneSteps.includes(name)).length} of {steps.length} steps done
           </span>
         </span>
-        <ResetUnit unitId={unitId} onReset={() => reportRunError(undefined)} />
+        <ResetUnit
+          unitId={unitId}
+          onReset={() => {
+            reportRunError(undefined);
+            setUnitResets((n) => n + 1); // a run still going is closed with the step it belongs to
+          }}
+        />
       </div>
 
       {!stepKnown ? (
@@ -617,7 +624,7 @@ export function Lesson() {
       ) : (
         <div ref={layout} className="lesson-layout" style={{ "--axis-width": `${axisWidth}px` } as CSSProperties}>
           <section className="lesson-content" aria-label="Lesson content">
-            <RunErrorContext.Provider value={reportRunError}>
+            <RunErrorContext.Provider key={unitResets} value={reportRunError}>
               {step === "video" && <VideoStep unit={data} next={next} onDone={finish} done={doneSteps.includes("video")} />}
               {step === "explain" && <ExplainStep unit={data} next={next} onDone={finish} />}
               {step === "playground" && <PlaygroundStep unit={data} next={next} onDone={finish} onCode={onCode} />}
