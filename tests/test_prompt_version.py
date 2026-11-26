@@ -227,10 +227,16 @@ def test_version_is_12_hex_and_stable():
 
 
 def test_each_mode_and_state_has_its_own_version():
-    versions = [axis_rules.chat_prompt_version(m, s) for m in MODES for s in ALL_STATES]
+    versions = {(m, s): axis_rules.chat_prompt_version(m, s) for m in MODES for s in ALL_STATES}
 
-    assert all(is_version(v) for v in versions)
-    assert len(set(versions)) == len(versions) == 12
+    assert all(is_version(v) for v in versions.values())
+    # One version per assembled static prompt (R12). With no source, Hybrid and Coach have the same prompt
+    # (R3: the same neutral header and contract; only Socratic adds the ADR-0009 line), so they share it.
+    by_mode = {m.value: m for m in MODES}
+    for state in ALL_STATES:
+        if state != "course":
+            assert versions[(by_mode["Hybrid"], state)] == versions[(by_mode["Coach"], state)]
+    assert len(set(versions.values())) == 9  # 3 grounded, and (Socratic, Hybrid or Coach) for each of 3 states
 
 
 def test_version_changes_when_wording_changes_not_when_learner_text_changes(tmp_path, traces, monkeypatch):

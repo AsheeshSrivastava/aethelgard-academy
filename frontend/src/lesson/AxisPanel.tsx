@@ -9,6 +9,19 @@ import { activityFor } from "./steps";
 const MODES = ["Socratic", "Hybrid", "Coach"] as const;
 type Mode = (typeof MODES)[number];
 
+// The mode a step starts in, by its activity (ADR-0039, SPEC-31 R6). Any other activity: Socratic.
+const START_MODES: Record<string, Mode> = {
+  Explain: "Coach",
+  Specify: "Hybrid",
+  Decompose: "Hybrid",
+  Modify: "Hybrid",
+  Evaluate: "Hybrid",
+  Direct: "Hybrid",
+  Predict: "Socratic",
+  Trace: "Socratic",
+  "Debug & Validate": "Socratic",
+};
+
 interface Citation {
   concept_id: string;
   title: string;
@@ -39,7 +52,11 @@ export function AxisPanel({
   getCode: () => string | undefined;
   socraticOnly?: boolean;
 }) {
-  const [mode, setMode] = useState<Mode>("Socratic");
+  // The learner's own choice lasts while they stay on this step of this unit (SPEC-31 R7).
+  const stepKey = `${unitId}/${step}`;
+  const [choice, setChoice] = useState<{ stepKey: string; mode?: Mode }>({ stepKey });
+  if (choice.stepKey !== stepKey) setChoice({ stepKey }); // forget it, so returning does not bring it back
+  const mode = (choice.stepKey === stepKey && choice.mode) || (START_MODES[activityFor(step)] ?? "Socratic");
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [busy, setBusy] = useState(false);
@@ -122,7 +139,7 @@ export function AxisPanel({
           <div className="mode-picker" role="group" aria-label="Facilitation mode">
             {MODES.map((name) => (
               <label key={name} className={mode === name ? "mode mode-chosen" : "mode"}>
-                <input type="radio" name="axis-mode" checked={mode === name} onChange={() => setMode(name)} />
+                <input type="radio" name="axis-mode" checked={mode === name} onChange={() => setChoice({ stepKey, mode: name })} />
                 {name}
               </label>
             ))}

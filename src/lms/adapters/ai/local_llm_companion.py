@@ -219,6 +219,7 @@ class OpenAICompatibleCompanion:
                 return self._mock_fallback.consult(query)
             raise LocalLLMError(f"Model consultation failed: {type(exc).__name__}") from None
 
+        axis_rules.note_sent(axis_rules.chat_prompt_version(query.mode, grounding.source_state))
         self.last_raw_reply = axis_rules.strip_think(str(raw_content))
         return axis_rules.finish_reply(raw_content, query, grounding, self.guardrail, self.classifier)
 
@@ -228,9 +229,10 @@ class OpenAICompatibleCompanion:
         grounding = self._grounding(query)
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
-        return self._stream_deltas(query, sys_prompt, user_msg), grounding
+        version = axis_rules.chat_prompt_version(query.mode, grounding.source_state)
+        return self._stream_deltas(query, sys_prompt, user_msg, version), grounding
 
-    def _stream_deltas(self, query: AxisQuery, sys_prompt: str, user_msg: str) -> Iterator[str]:
+    def _stream_deltas(self, query: AxisQuery, sys_prompt: str, user_msg: str, version: str) -> Iterator[str]:
         sent_any = False
         said: List[str] = []  # everything yielded, kept as last_raw_reply when the stream ends
         reasoning: List[str] = []
@@ -239,7 +241,7 @@ class OpenAICompatibleCompanion:
         think = ThinkFilter()
         input_chars = len(sys_prompt) + len(user_msg)
         target_model: Optional[str] = None
-        requested = recorded = False
+        requested = recorded = fell_back = False
         try:
             target_model = self.resolve_model()
             params = self._params(target_model, sys_prompt, user_msg, self.chat_temperature, axis_rules.REPLY_MAX_TOKENS)
@@ -286,8 +288,11 @@ class OpenAICompatibleCompanion:
                 raise LocalLLMError(f"Model stream failed: {type(exc).__name__}") from None
             self.last_backend_used = f"Offline Mock (Fallback reason: {type(exc).__name__})"
             tracing.annotate(fallback="mock")
+            fell_back = True  # that reply came from no prompt
             yield from self._mock_fallback.stream(query)[0]
         finally:
+            if requested and not fell_back:
+                axis_rules.note_sent(version)
             if said:
                 self.last_raw_reply = "".join(said)
             # A reply cut short (the learner left, or an error) still counts. Without
@@ -333,6 +338,7 @@ class OpenAICompatibleCompanion:
         answered = resp.model or target_model
         self.last_model_answered = answered
         self._record("document_draft", answered, resp.usage, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.prompt_version(*axis_rules.readme_draft_templates()))
         return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
 
     def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, Optional[str]]:
@@ -346,6 +352,7 @@ class OpenAICompatibleCompanion:
         answered = resp.model or target_model
         self.last_model_answered = answered
         self._record("build_feedback", answered, resp.usage, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.prompt_version(*axis_rules.feedback_summary_templates()))
         return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
 
     def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
@@ -363,6 +370,7 @@ class OpenAICompatibleCompanion:
         answered = resp.model or target_model
         self.last_model_answered = answered
         self._record("concept_check", answered, resp.usage, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.prompt_version(*axis_rules.judge_templates()))
         return axis_rules.strip_think(str(resp.choices[0].message.content)), answered
 
 

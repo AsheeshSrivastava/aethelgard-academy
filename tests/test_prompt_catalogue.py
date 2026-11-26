@@ -67,8 +67,9 @@ def test_catalogue_has_every_model_prompt():
     assert feedback_system in text and "<points>" in text
     assert axis_rules.PING_SYSTEM_PROMPT in text and axis_rules.PING_USER_MESSAGE in text
     assert axis_rules.prompt_version(axis_rules.PING_SYSTEM_PROMPT, axis_rules.PING_USER_MESSAGE) in text
-    # A version beside each: 12 chat prompts, judge, README, feedback and ping.
-    assert len(set(VERSION.findall(text))) >= 16
+    # A version beside each: 9 distinct chat prompts (Hybrid and Coach share the no-source one, R3 and R12),
+    # then the judge, README, build feedback and ping.
+    assert len(set(VERSION.findall(text))) >= 13
 
 
 def test_the_runtime_error_question_is_listed_only_while_its_route_exists():

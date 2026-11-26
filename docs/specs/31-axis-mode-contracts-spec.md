@@ -86,3 +86,11 @@ Before and after, the SPEC-30 eval on the local model at the live temperature 0.
 2. The Socratic invariant sentence **stays** in the no-source case (a refinement of ADR-0039 2.4, which says the mode contract is replaced: this keeps that one ADR-0009 sentence).
 3. The 150 words for Coach is **guidance**, not a hard limit; the with-source quality eval (plan step 5c) measures it.
 4. The concept-check judge, README draft and build-feedback prompts **get a `prompt_version` too** (one function covers all).
+
+### Clarifications (2026-11-26, taken as recommended; owner to confirm at review)
+1. A `--replay` run's `results.json` carries no `prompt_versions` (no prompt was sent).
+2. A concept check that is not judged records no `prompt_version` in the interaction-log event; the `model_call` span may carry it, since the call happened. The same rule holds for a draft or build-feedback summary that fails after the call.
+3. An eval run where every call fails still lists the versions of the modes and states that ran.
+4. The same step name in a different unit is a new step: the suggested starting mode applies again.
+5. A concept check with more or fewer ideas gets the same version.
+6. The catalogue does not list the retired explain-error question.

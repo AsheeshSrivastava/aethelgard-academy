@@ -50,11 +50,15 @@ Ledger entries gain two nullable columns, `interaction_id` and `attempt_id`, fil
 | `event_type` | When | Payload |
 | --- | --- | --- |
 | `answer_submitted` | Any attempt: practice, Cold Check, stage review, recheck, build | The exact answer fields and the outcome (passed, score, evidence entry id) |
-| `concept_check` | `POST /explain` | The explanation text and the Solid / Shaky result |
+| `concept_check` | `POST /explain` | The explanation text and the Solid / Shaky result; `prompt_version` when judged (SPEC-31 R13, R14) |
 | `run`, `verify` | A sandbox run, a playground verify, a build check | The code (capped) and an outcome summary: exit code, passed, timed out |
 | `regenerate`, `reset` | Those actions | What was served next, or what was cleared |
-| `axis` | An AXIS question and its answer | Mode, question, answer (capped), assistance level |
+| `axis` | An AXIS question and its answer | Mode, question, answer (capped), assistance level; `prompt_version` when a model answered (SPEC-31 R13, R14) |
+| `document_draft` | A README draft (SPEC-15 section 9.4) | Module, status, the draft and the model; `prompt_version` when a draft was made (SPEC-31 R13, R14) |
+| `build_feedback` | Build feedback (SPEC-15 section 10) | Module, requirement statuses, whether a summary was made; `prompt_version` when it was (SPEC-31 R13, R14) |
 | `opened`, `closed`, `hint_viewed`, `feedback_viewed` | Sent by the client to `POST /learners/me/interactions` | Only allow-listed types and fields; the server stamps learner and time |
+
+Amended 2026-11-26 (SPEC-31 section 4): `prompt_version` added to the `axis` and `concept_check` rows; the `document_draft` and `build_feedback` rows added.
 
 ### 2.4 Failure, size and secrets
 
