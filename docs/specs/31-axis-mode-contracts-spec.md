@@ -1,6 +1,6 @@
 # SPEC-31: AXIS mode contracts and a record of every prompt (ADR-0035 plan step 8b)
 
-Status: **Draft 2026-11-26, waiting for the owner's go.** No test or code until then.
+Status: **Approved by the owner 2026-11-26**, with the four open points of section 8 decided as recommended. Next step: tests first (section 5), then code. No test or code is part of the docs change that adds this file.
 Implements: ADR-0039 sections 2.1 to 2.6 and its decisions 1 to 6.
 Builds on: ADR-0009 (Socratic boundary), ADR-0022 (interaction log), SPEC-24 (no-source rules), SPEC-28 (tracing), SPEC-30 (eval).
 Does **not** implement: the with-source quality eval (plan step 5c, its own spec), any change to grading (ADR-0039 decision 4), turn history or the offer to switch mode after stalls, retrieval, guardrails, the live temperature.
@@ -78,8 +78,8 @@ Unknown activity or mode; the activity changes mid-reply; the learner switches m
 ## 7. Measuring the effect
 Before and after, the SPEC-30 eval on the local model at the live temperature 0.2 (free, about 25 minutes a pass). No pass mark unless the owner sets one. The prompts change, so the old and new runs are told apart by `prompt_versions`.
 
-## 8. Open points for the owner
-1. The wording of section 3 (recommended as drafted; edit any of it).
-2. The Socratic invariant stays in the no-source case (recommended: yes). ADR-0039 2.4 says the mode contract is replaced; this keeps the one ADR-0009 sentence.
-3. The 150-word guide for Coach is guidance, not a hard limit; it is measured by step 5c later (recommended).
-4. Versions for the judge, README and build-feedback prompts too (recommended: yes, one function covers all).
+## 8. Open points (decided by the owner 2026-11-26: all as recommended)
+1. The wording of section 3 is used **as drafted**.
+2. The Socratic invariant sentence **stays** in the no-source case (a refinement of ADR-0039 2.4, which says the mode contract is replaced: this keeps that one ADR-0009 sentence).
+3. The 150 words for Coach is **guidance**, not a hard limit; the with-source quality eval (plan step 5c) measures it.
+4. The concept-check judge, README draft and build-feedback prompts **get a `prompt_version` too** (one function covers all).
