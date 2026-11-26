@@ -8,6 +8,7 @@
 | `independent-audit-plan.md` | Steps A0 to A8 from the 9 Nov audit. | Snapshot; status in the master plan. |
 | `a6-sandbox-known-gaps.md` | Docker runner gaps G1 to G10. | Snapshot; hosting gates repeated in the master plan. |
 | `after-stage0-round2.md` | Follow-ups after Stage 0 round 2. | History only. |
+| `axis-cold-check-known-gaps.md` | What is still open about AXIS during Cold Checks (ADR-0040). | Live backlog, recorded 2026-11-26. |
 
 The full Fable review is `docs/audits/fable-independent-review-2026-11-15.md` (copied from the project folder, `main` at `cad782a`; line numbers have drifted).
 
