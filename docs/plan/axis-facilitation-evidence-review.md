@@ -56,7 +56,7 @@ The coding study tested a general assistant that could write the code, which is 
 | **D5** same rubric for the with-source eval | **Leaves open** | No evidence either way |
 | **A1** send AXIS the error output | **Supports, indirectly** | Step-based support; debugging is where the coding study names a loss |
 | **A2** server builds the history | Not an evidence question | Security |
-| **A3** clear history during a Cold Check | Not an evidence question | Keeps the unaided measure unaided |
+| **A3** clear history during a Cold Check | Not an evidence question | A Cold Check is meant to show what the learner can do alone |
 | **A4** record the highest help level | **Supports, indirectly** | How help is used decides the result, so it must be visible |
 | **A5** teach with an example when a novice is stuck | **Supports** (secondary source) | Expertise reversal; the physics tutor used step-by-step solutions |
 | **A6** no memory before the freeze | Not an evidence question | Time and risk |
@@ -64,7 +64,7 @@ The coding study tested a general assistant that could write the code, which is 
 
 ### Two things the evidence suggests that neither paper had
 1. **Ask for an attempt before stepping up.** Otherwise the ladder rewards asking again.
-2. **Judge by unaided performance.** Cold Checks do this. They are not yet airtight: the server-side block on AXIS during a Cold Check (SPEC-32) is approved but **not built**, so a second tab can still reach AXIS.
+2. **Judge by what the learner can do without AXIS.** Cold Checks are the nearest signal. The LMS is not an exam, so they need only be a fair signal. (The server-side AXIS block of SPEC-32 is approved and not yet built.)
 
 ## 5. Limits of this review
 Not systematic; mostly abstracts and summaries; several sources are preprints; most learners studied are school pupils or undergraduates; models change quickly, so a result for one model may not hold for another. Effects from different studies cannot be compared with each other.

@@ -1,6 +1,8 @@
 # AXIS facilitation: what a good turn is, conversation memory, and how we judge it
 
-Status: **DRAFT** for the owner's decision. Date: 2026-11-27. Not an ADR yet. If the owner agrees, it becomes an ADR and a spec (build order: decision, ADR, spec, tests, code).
+Status: **Decided** by the owner 2026-11-27: yes to D1 to D5 and additions A1 to A7, plus "ask for an attempt before giving more help". Recorded in [ADR-0041](../adr/0041-axis-facilitation.md); the build is described in SPEC-33 (draft).
+
+**The owner's principle:** this LMS is not an exam. Cold Checks give some resistance to cheating, but learners are adults responsible for their own learning, and we provide the platform. Facilitating learning, feedback and guiding questions matter more than policing.
 Labels: **CONFIRMED** (seen in code or eval), **INFERRED** (reasoning), **UNKNOWN**.
 
 ## 1. The problem
@@ -57,16 +59,16 @@ Four layers. Only the last speaks to learning.
 1. **Rules (exists):** the obedience eval. Keep it.
 2. **Turn quality**, deterministic where possible (no model judge, ADR-0037 2.9): anchored (the reply contains a word from the learner's code or error), one question, one process action, no leaked cause (existing flag). The owner scores a small sample by hand with a five-line rubric.
 3. **Scripted dialogues:** about 10 made-up scenarios of 3 turns with scripted learner replies, including a stuck learner. Checks: turn 2 uses a word from the learner's turn 1 answer; support steps up after two stuck turns; the strict rules hold on every turn. Made-up content only.
-4. **Learning (the real test): judged by what the learner can do unaided,** which here means Cold Checks on the same skill, later and without AXIS. Doing well while AXIS is available is not evidence of learning (see Evidence). Supporting signals only: after a hint, does the learner fix it without more help; hints per item; does the next attempt pass; thumbs. Cold Checks are not yet airtight: the server-side block (SPEC-32) is approved and not built. Needs real learners; with a demo target only a very small pilot. Do not claim learning before it is measured.
+4. **Learning (the real test): judged by what the learner can do without AXIS,** with Cold Checks on the same skill, later, as the nearest signal. This is for knowing whether the help works, not for catching anyone. Doing well while AXIS is available is not evidence of learning (see Evidence). Supporting signals only: after a hint, does the learner fix it without more help; hints per item; does the next attempt pass; thumbs. Needs real learners; with a demo target only a very small pilot. Do not claim learning before it is measured.
 
-## 6. Decisions needed (recommendation in brackets)
+## 6. Decisions (accepted 2026-11-27, as recommended in brackets)
 - **D1:** allow process moves in the no-source rule (yes).
 - **D2:** memory M1, last 4 exchanges on the same step (yes).
 - **D3:** the five-point turn rubric and scripted dialogues as the quality bar (yes).
 - **D4:** the fixed reply for error turns with no source: hold it back, build D1 to D3 first, measure on the local model and OpenAI, keep the fixed reply only as a safety net if the local model still leaks (yes).
 - **D5:** the with-source reply eval (tracker item 5c) uses the same rubric.
 
-## 7. Proposed additions (for decision with D1 to D5)
+## 7. Additions (accepted 2026-11-27, with "attempt before more help")
 - **A1:** send AXIS the run's error output.
 - **A2:** the server builds the history from the log; it is never accepted from the browser.
 - **A3:** history is cleared while a Cold Check round is open.

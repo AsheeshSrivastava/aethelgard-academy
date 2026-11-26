@@ -38,3 +38,4 @@
 | [ADR-0037](0037-observability-port-traces-metrics-evals.md) | AXIS observability behind a port: traces, mode-usage report, answer-level evals | Accepted | 2026-11-19 |
 | [ADR-0039](0039-axis-mode-contracts-and-prompt-record.md) | AXIS mode contracts, one no-source contract, and a record of every prompt | Accepted | 2026-11-26 |
 | [ADR-0040](0040-cold-check-block-on-the-server.md) | The server, not the request, decides that AXIS is off during a Cold Check | Accepted | 2026-11-26 |
+| [ADR-0041](0041-axis-facilitation.md) | AXIS facilitates: the shape of a turn, conversation memory, and how it is judged | Accepted | 2026-11-27 |
