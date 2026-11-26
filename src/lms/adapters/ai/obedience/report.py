@@ -82,6 +82,7 @@ def _error_totals(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
     scored = [(row, score_row(row, "raw")) for row in rows]
     return {
         "n": len(scored),
+        "no_reply": sum(1 for row, _r in scored if row.get("no_reply")),  # R15: failures are shown
         "explains_flagged": sum(1 for row, r in scored if not row.get("no_reply") and r.g.passed is False),
         "b_failed": sum(1 for _row, r in scored if r.b.passed is False),
         "d_failed": sum(1 for _row, r in scored if r.d.passed is False),
@@ -175,6 +176,7 @@ def render_report(results: Mapping[str, Any]) -> str:
         "",
         f"Set version:     {results.get('set_version', '')}",
         f"Made-up version: {results.get('made_up_version', '')}",
+        f"Error items:     {results.get('error_items_version', '')}",
         f"Profile:         {results.get('profile_id', '')}",
         f"Model answered:  {results.get('model_answered', '')}",
         f"Temperature:     {temperature}" + ("" if sent in (True, None) else " (temperature not sent by this profile)"),
@@ -196,7 +198,8 @@ def render_report(results: Mapping[str, Any]) -> str:
         f"New-terms flags, check (f): {results['new_terms_flagged']} replies hold a technical term the learner did not write",
         f"Explains flags, check (g): {results.get('explains_flagged', 0)} replies explain instead of asking "
         "(flag only, not in the pass count)",
-        f"Error-message items: {errors['n']} replies, {errors['explains_flagged']} explain flags, "
+        f"Error-message items: {errors['n']} replies, {errors['no_reply']} no reply, "
+        f"{errors['explains_flagged']} explain flags, "
         f"{errors['b_failed']} fail (b), {errors['d_failed']} fail (d) (not in the totals above)",
         "",
         "Failing question ids per check (raw reply):",

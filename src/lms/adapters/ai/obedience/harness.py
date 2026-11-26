@@ -327,8 +327,9 @@ def _replay(options: EvalOptions) -> int:
     temperature = float(rows[0].get("temperature", options.temperatures[0])) if rows else options.temperatures[0]
     name = options.run_name or report_module.default_run_name(set_v, made_v, temperature, options.seed)
     meta = {"set_version": set_v, "made_up_version": made_v, "profile_id": "replay", "model_answered": None,
-            "error_items_version": error_items_version(_error_items_path(options)),
             "temperature": temperature, "send_temperature": None, "seed": options.seed, "repeat": options.repeat}
+    if any(row.get("kind") == "error" for row in rows):  # an old file has none, so no version is claimed for it
+        meta["error_items_version"] = error_items_version(_error_items_path(options))
     folder = report_module.write_run(Path(options.out_dir), name, rows, meta)
     print(f"Replayed {len(rows)} replies with the checker only; no model was called.")
     print((folder / "report.txt").read_text(encoding="utf-8"))
@@ -443,6 +444,8 @@ def _run(options: EvalOptions, factory: CompanionFactory, profiles: Mapping[str,
     errors_path = _error_items_path(options)
     main = load_questions(sets_dir, made_up_path)
     errors = load_error_items(errors_path) if errors_path.is_file() else []
+    if not errors:
+        print(f"No error-message questions ({ERROR_ITEMS_FILE} is missing or empty): they are not asked.")
     _check_questions([*main, *errors])
     # Selected apart, so adding error items never changes which of the others --quick takes.
     questions = [q for part in (main, errors) for q in select_questions(part, options.sets, options.quick)]

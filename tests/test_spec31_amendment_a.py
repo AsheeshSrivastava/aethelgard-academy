@@ -18,8 +18,9 @@ Interface names these tests fix (the spec leaves them open; all are additive):
   The harness reads "error-items.yaml" beside the made-up items file, when that file exists (no new option).
   replies.jsonl rows of these questions have kind "error".
   results.json: "error_items_version" (sha256 of the file's bytes, like made_up_version) and
-      "error_items": {"n", "explains_flagged", "b_failed", "d_failed"} counted on the raw replies.
-  report.txt line: "Error-message items: N replies, E explain flags, B fail (b), D fail (d) (not in the totals above)"
+      "error_items": {"n", "no_reply", "explains_flagged", "b_failed", "d_failed"} counted on the raw replies.
+  report.txt line: "Error-message items: N replies, X no reply, E explain flags, B fail (b), D fail (d)
+      (not in the totals above)"
 
 All text here is made up. No model, no network.
 """
@@ -521,7 +522,8 @@ def other_rows():
     return rows
 
 
-ERROR_LINE = "Error-message items: 5 replies, 2 explain flags, 1 fail (b), 1 fail (d) (not in the totals above)"
+ERROR_LINE = ("Error-message items: 5 replies, 1 no reply, 2 explain flags, 1 fail (b), 1 fail (d) "
+              "(not in the totals above)")
 EXISTING_KEYS = ("counts", "made_up", "new_terms_flagged", "explains_flagged", "exact_wording_rate", "failing_ids",
                  "flagged_ids")
 META = {"seed": 29}
@@ -535,7 +537,7 @@ def test_error_items_are_reported_apart():
 
     for key in EXISTING_KEYS:
         assert mixed[key] == alone[key], key
-    assert mixed["error_items"] == {"n": 5, "explains_flagged": 2, "b_failed": 1, "d_failed": 1}
+    assert mixed["error_items"] == {"n": 5, "no_reply": 1, "explains_flagged": 2, "b_failed": 1, "d_failed": 1}
     assert ERROR_LINE in report.render_report(mixed).splitlines()
 
 
@@ -617,7 +619,7 @@ def test_error_items_are_asked_in_every_mode_and_state(tmp_path):
     run_dir = ob.the_run_dir(tmp_path)
     results = ob.read_results(run_dir)
     errors = len(ERROR_ITEMS) * ob.CASES_PER_QUESTION
-    assert results["error_items"] == {"n": errors, "explains_flagged": 0, "b_failed": 0, "d_failed": 0}
+    assert results["error_items"] == {"n": errors, "no_reply": 0, "explains_flagged": 0, "b_failed": 0, "d_failed": 0}
     assert sum(c["n"] for m in results["counts"]["raw"].values() for c in m.values()) == (
         ob.TOTAL_QUESTIONS * ob.CASES_PER_QUESTION)
     assert results["error_items_version"] == hashlib.sha256((tmp_path / "error-items.yaml").read_bytes()).hexdigest()
@@ -671,7 +673,7 @@ def test_replay_reports_error_rows_the_same_way(tmp_path):
 
     run_dir = ob.the_run_dir(tmp_path)
     results = ob.read_results(run_dir)
-    assert results["error_items"] == {"n": 5, "explains_flagged": 2, "b_failed": 1, "d_failed": 1}
+    assert results["error_items"] == {"n": 5, "no_reply": 1, "explains_flagged": 2, "b_failed": 1, "d_failed": 1}
     assert results["error_items_version"] == hashlib.sha256(path.read_bytes()).hexdigest()
     assert sum(c["n"] for m in results["counts"]["raw"].values() for c in m.values()) == len(other_rows())
     assert ERROR_LINE in (run_dir / "report.txt").read_text(encoding="utf-8").splitlines()
@@ -683,7 +685,8 @@ def test_old_replies_without_error_rows_still_replay(tmp_path):
     assert ob.run(tmp_path, ob.BoomFactory(), replay=source, environ={"MOCK_AI": "true"}) == 0
 
     results = ob.read_results(ob.the_run_dir(tmp_path))
-    assert results["error_items"] == {"n": 0, "explains_flagged": 0, "b_failed": 0, "d_failed": 0}
+    assert results["error_items"] == {"n": 0, "no_reply": 0, "explains_flagged": 0, "b_failed": 0, "d_failed": 0}
+    assert "error_items_version" not in results
     assert sum(c["n"] for m in results["counts"]["raw"].values() for c in m.values()) == len(other_rows())
 
 
@@ -840,3 +843,61 @@ def test_a_long_run_of_marks_is_checked_quickly(text):
     GUARD.contains_code(text)
 
     assert time.perf_counter() - started < 1.0
+
+
+# --- review round 1: a quoted span must not carry other code through (A4, REVIEW.md item 3) ---
+
+QUOTED = "def total(rows):\n    return sum(rows) len\nr = 1\nfor x in rows: import"
+
+
+@pytest.mark.parametrize("reply", [
+    "You should return `sum(rows)` / len(rows).",
+    "Then return `sum`(rows) now.",
+    "Try this: return `total` + tax, ok?",
+    "Next, return `r` * 2.",
+    "Just return `len`(rows) here.",
+    "`total` = sum(rows) / len(rows)",
+    "`def` total(a):",
+    "`return` total * 2",
+    "`import` os",
+])
+def test_quoting_a_word_does_not_carry_other_code_through(reply):
+    q = query(code=QUOTED)
+
+    for shown in (whole(reply, q), streamed(reply, q)):
+        assert WITHHELD in shown and reply not in shown, shown
+
+
+@pytest.mark.parametrize("reply", [
+    "`r = 1` is on line 3, right?",
+    "What does `return sum(rows)` hand back (and to whom)?",
+    "Which value does `total` hold when it is empty?",
+])
+def test_talking_about_a_quoted_span_is_still_kept(reply):
+    q = query(code=QUOTED)
+
+    assert whole(reply, q) == reply
+    assert streamed(reply, q) == reply
+
+
+@pytest.mark.parametrize("reply", [
+    "~~~\nif ok: import os\n~~~",
+    "~~~python\ndata = 1\nif data: from os import system\n~~~",
+    "Look:\n~~~\nfor r in rows: print(r)",
+])
+def test_nothing_inside_a_tilde_fence_reaches_the_learner(reply):
+    shown = whole(reply, query())
+
+    assert WITHHELD in shown
+    assert "import" not in shown and "print(r)" not in shown
+
+
+@pytest.mark.parametrize("sentence", ["Try return a%b there.", "Then return x<y here.", "So return total//2 now."])
+def test_a_tight_operator_other_than_minus_or_slash_is_code(sentence):
+    assert GUARD.contains_code(sentence) is True
+
+
+def test_a_run_without_the_error_items_file_says_so(tmp_path, capsys):
+    assert ob.run(tmp_path) == 0
+
+    assert "No error-message questions" in capsys.readouterr().out

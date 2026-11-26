@@ -142,3 +142,5 @@ A learner span of one character; a span that matches only after whitespace is co
 4. The error-item table holds totals only. Those replies are also kept out of the failing and flagged id lists and the per-mode calibration sample. `--sets error-items` selects them.
 5. An import after a list, quote, heading or bold mark is still at the start of its line (`- import os`).
 6. After `return`, a subscript counts like a call (`return rows[0]`). A tight `-` or `/` does not count, so that "well-known" and "True/False" stay plain English; `return a/b` is therefore let through. So are `return None`, `return -1` and `return a, b`, which have neither a call nor an operator.
+7. A quoted learner span excuses only itself: code written around it, including a keyword split off by the backticks (`` `def` total(a): ``), is still withheld. Everything inside a `~~~` fence is dropped, as inside a backtick fence.
+8. Failed calls on error items are shown as `no reply` beside the explain flags, so they cannot flatter the target. Word operators (`or`, `and`, `in`) after `return` are not counted.

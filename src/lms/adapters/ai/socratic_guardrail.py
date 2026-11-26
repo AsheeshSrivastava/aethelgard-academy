@@ -49,7 +49,9 @@ def learner_text_of(query: AxisQuery) -> str:
 
 
 _BACKTICK_RUN = re.compile(r"`+")
-_NEUTRAL_SPAN = "\u2026"  # stands in for a quoted learner span: no letter, bracket or sign for a pattern to match
+# Stands in for a quoted learner span. A word, so that code written around it ("`total` = sum(rows)",
+# "return `len`(rows)") still reads as code.
+_NEUTRAL_SPAN = "Q"
 
 
 def code_spans(line: str) -> Tuple[List[Tuple[int, int, int, int]], List[int]]:
@@ -89,6 +91,7 @@ class SocraticGuardrail:
 
     # Patterns indicating executable Python constructs (what counts: SPEC-31 section 9.2 A1 to A3)
     CODE_FENCE_PATTERN = re.compile(r"```[\w]*\n?(.*?)```", re.DOTALL)
+    TILDE_FENCE_PATTERN = re.compile(r"~~~.*?(?:~~~|\Z)", re.DOTALL)  # dropped whole, closed or not
     FENCE_MARKERS = ("```", "~~~")
     # A1: an import only at the start of a line. A2: so is a `return` followed by anything.
     # A list, quote, heading or bold mark does not move an import off the start of its line (9.7 reading 5). One mark
@@ -105,7 +108,7 @@ class SocraticGuardrail:
     )
     _OPERATOR = (
         r"(?:[^\S\n]+(?:\*\*|//|==|!=|<=|>=|[-+*/%<>])[^\S\n]+(?=\S)"  # spaced: total - tax
-        r"|(?:\*\*|==|!=|<=|>=|[+*])(?=[\w(\[{\"']))"  # tight: total*rate. Not "-" or "/": well-known, True/False
+        r"|(?:\*\*|//|==|!=|<=|>=|[+*%<>])(?=[\w(\[{\"']))"  # tight: total*rate. Not "-" or "/": well-known, True/False
     )
     _RETURN_EXPRESSION = (
         r"\breturn(?=[^\S\n]|[\[({`*:])"
@@ -154,12 +157,12 @@ class SocraticGuardrail:
         for line in text.splitlines():
             pieces: List[str] = []
             done = 0
-            for _start, inner, inner_end, _end in code_spans(line)[0]:
+            for start, inner, inner_end, end in code_spans(line)[0]:
                 content = line[inner:inner_end]
                 quoted = " ".join(content.split())
                 if quoted and quoted in learner:
-                    pieces += [line[done:inner], _NEUTRAL_SPAN]
-                    done = inner_end
+                    pieces += [line[done:start], _NEUTRAL_SPAN]  # backticks too, or "`total` = x" would hide
+                    done = end
                 elif self.SPAN_START_PATTERN.match(content):
                     statement = True
             lines.append("".join(pieces) + line[done:])
@@ -171,7 +174,38 @@ class SocraticGuardrail:
         return statement or any(
             pattern.search(masked)
             for pattern in (self.STATEMENT_PATTERN, self.CODE_LINE_PATTERN, self.ASSIGNMENT_PATTERN)
-        )
+        ) or self._statement_outside_a_quote(text, learner_text)
+
+    def _statement_outside_a_quote(self, text: str, learner_text: str) -> bool:
+        """A statement that is not wholly inside one span the learner wrote, read with the words left in place.
+
+        The stand-in word alone would hide a keyword: "`def` total(a):".
+        """
+        learner = " ".join(learner_text.split())
+        if not learner:
+            return False
+        for line in text.splitlines():
+            plain, quotes, done = "", [], 0
+            for start, inner, inner_end, end in code_spans(line)[0]:
+                content = line[inner:inner_end]
+                quoted = " ".join(content.split())
+                if quoted and quoted in learner:
+                    plain += line[done:start]
+                    quotes.append((len(plain), len(plain) + len(content)))
+                    plain += content
+                    done = end
+            plain += line[done:]
+            at = 0
+            while quotes:
+                found = self.STATEMENT_PATTERN.search(plain, at)
+                if found is None:
+                    break
+                first = found.start() + len(found.group(0)) - len(found.group(0).lstrip(" \t-*+>#_"))
+                last = found.start() + len(found.group(0).rstrip())
+                if not any(a <= first and last <= b for a, b in quotes):
+                    return True
+                at = found.start() + 1
+        return False
 
     def _drop_code_lines(self, text: str, learner_text: str) -> str:
         kept: List[str] = []
@@ -206,7 +240,7 @@ class SocraticGuardrail:
                 )
 
             # Sanitize: Strip code blocks and code lines
-            sanitized = self.CODE_FENCE_PATTERN.sub("", reply)
+            sanitized = self.TILDE_FENCE_PATTERN.sub("", self.CODE_FENCE_PATTERN.sub("", reply))
             reply = self._drop_code_lines(sanitized, learner_text) + GUIDING_INQUIRY
 
         # Socratic mode must always provoke learner reflection
