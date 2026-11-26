@@ -30,6 +30,9 @@ from lms.core.models import ActivityType
 
 DEFAULT_SETS_DIR = Path("eval/gemini-sets")
 DEFAULT_MADE_UP_PATH = Path("eval/obedience/made-up-items.yaml")
+ERROR_ITEMS_FILE = "error-items.yaml"  # read from beside the made-up items file, when it is there (SPEC-31 9.3 E1)
+DEFAULT_ERROR_ITEMS_PATH = DEFAULT_MADE_UP_PATH.parent / ERROR_ITEMS_FILE
+ERROR_SET = "error-items"
 DEFAULT_OUT_DIR = Path("eval-out/axis-obedience")
 MOCK_REFUSAL = "Set MOCK_AI=false to run against a real model. The checker alone runs with --replay."
 MAX_REPEAT = 5
@@ -49,7 +52,7 @@ class Question:
     id: str
     text: str
     set: str  # a file stem of eval/gemini-sets, such as "pytest-docs"
-    kind: str  # "out_of_scope" or "made_up"
+    kind: str  # "out_of_scope", "made_up" or "error"
     invented: Optional[str] = None  # the invented identifier of a made-up item
 
 
@@ -69,6 +72,11 @@ def set_version(sets_dir: Path) -> str:
 def made_up_version(path: Path) -> str:
     """A hash of the made-up items file's bytes (R11)."""
     return _bytes_hash(Path(path).read_bytes())
+
+
+def error_items_version(path: Path) -> str:
+    """A hash of the error items file's bytes, or "" when there is no such file."""
+    return _bytes_hash(Path(path).read_bytes()) if Path(path).is_file() else ""
 
 
 def _made_up_items(data: Any) -> List[Mapping[str, Any]]:
@@ -92,6 +100,23 @@ def load_questions(sets_dir: Optional[Path] = None, made_up_path: Optional[Path]
     items = _made_up_items(yaml.safe_load(made_up_path.read_text(encoding="utf-8")))
     for item in items:
         questions.append(Question(str(item["id"]), str(item.get("q", "")), str(item["set"]), "made_up", str(item["invented"])))
+    _check_questions(questions)
+    return questions
+
+
+def load_error_items(path: Optional[Path] = None) -> List[Question]:
+    """The made-up error-message questions: a YAML list of {id, q} (SPEC-31 9.3 E1)."""
+    path = Path(path) if path is not None else DEFAULT_ERROR_ITEMS_PATH
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list) or not all(isinstance(item, dict) and "id" in item for item in data):
+        raise ValueError("The error items file must be a YAML list of {id, q}.")
+    questions = [Question(str(item["id"]), str(item.get("q", "")), ERROR_SET, "error") for item in data]
+    _check_questions(questions)
+    return questions
+
+
+def _check_questions(questions: Sequence[Question]) -> None:
+    """No empty question, and every id once."""
     seen = set()
     for q in questions:
         if not q.text.strip():
@@ -99,7 +124,6 @@ def load_questions(sets_dir: Optional[Path] = None, made_up_path: Optional[Path]
         if q.id in seen:
             raise ValueError(f"The question id '{q.id}' appears twice.")
         seen.add(q.id)
-    return questions
 
 
 def select_questions(questions: Sequence[Question], sets: Sequence[str], quick: bool) -> List[Question]:
@@ -283,9 +307,17 @@ def _read_rows(path: Path) -> List[Dict[str, Any]]:
     return rows
 
 
+def _made_up_path(options: EvalOptions) -> Path:
+    return Path(options.made_up_path) if options.made_up_path is not None else DEFAULT_MADE_UP_PATH
+
+
+def _error_items_path(options: EvalOptions) -> Path:
+    return _made_up_path(options).parent / ERROR_ITEMS_FILE
+
+
 def _versions(options: EvalOptions) -> Tuple[str, str]:
     sets_dir = Path(options.sets_dir) if options.sets_dir is not None else DEFAULT_SETS_DIR
-    made_up = Path(options.made_up_path) if options.made_up_path is not None else DEFAULT_MADE_UP_PATH
+    made_up = _made_up_path(options)
     return (set_version(sets_dir) if sets_dir.is_dir() else "", made_up_version(made_up) if made_up.is_file() else "")
 
 
@@ -296,6 +328,8 @@ def _replay(options: EvalOptions) -> int:
     name = options.run_name or report_module.default_run_name(set_v, made_v, temperature, options.seed)
     meta = {"set_version": set_v, "made_up_version": made_v, "profile_id": "replay", "model_answered": None,
             "temperature": temperature, "send_temperature": None, "seed": options.seed, "repeat": options.repeat}
+    if any(row.get("kind") == "error" for row in rows):  # an old file has none, so no version is claimed for it
+        meta["error_items_version"] = error_items_version(_error_items_path(options))
     folder = report_module.write_run(Path(options.out_dir), name, rows, meta)
     print(f"Replayed {len(rows)} replies with the checker only; no model was called.")
     print((folder / "report.txt").read_text(encoding="utf-8"))
@@ -406,8 +440,15 @@ def _run(options: EvalOptions, factory: CompanionFactory, profiles: Mapping[str,
     if profile is None:
         raise ValueError(f"Unknown profile '{profile_id}'. Known profiles: {', '.join(sorted(profiles))}.")
     sets_dir = Path(options.sets_dir) if options.sets_dir is not None else DEFAULT_SETS_DIR
-    made_up_path = Path(options.made_up_path) if options.made_up_path is not None else DEFAULT_MADE_UP_PATH
-    questions = select_questions(load_questions(sets_dir, made_up_path), options.sets, options.quick)
+    made_up_path = _made_up_path(options)
+    errors_path = _error_items_path(options)
+    main = load_questions(sets_dir, made_up_path)
+    errors = load_error_items(errors_path) if errors_path.is_file() else []
+    if not errors:
+        print(f"No error-message questions ({ERROR_ITEMS_FILE} is missing or empty): they are not asked.")
+    _check_questions([*main, *errors])
+    # Selected apart, so adding error items never changes which of the others --quick takes.
+    questions = [q for part in (main, errors) for q in select_questions(part, options.sets, options.quick)]
     if not questions:
         raise ValueError("No question matches the --sets filter.")
     set_v, made_v = set_version(sets_dir), made_up_version(made_up_path)
@@ -431,6 +472,7 @@ def _run(options: EvalOptions, factory: CompanionFactory, profiles: Mapping[str,
         print("temperature not sent by this profile: the server's own default is used, so runs at different "
               "temperatures will not differ.")
     meta_base = {"set_version": set_v, "made_up_version": made_v, "profile_id": profile.id,
+                 "error_items_version": error_items_version(errors_path),
                  "send_temperature": profile.send_temperature, "seed": options.seed, "repeat": options.repeat}
     finished: List[Tuple[float, Dict[str, Any]]] = []
     exit_code = 0

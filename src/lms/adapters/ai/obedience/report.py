@@ -73,13 +73,36 @@ def _counts(rows: Sequence[Mapping[str, Any]], view: str) -> Dict[str, Dict[str,
     return table
 
 
+def _is_error_item(row: Mapping[str, Any]) -> bool:
+    return row.get("kind") == "error"
+
+
+def _error_totals(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
+    """The error-message replies, totals only, on the raw replies (SPEC-31 9.3 E1, 9.7 reading 4)."""
+    scored = [(row, score_row(row, "raw")) for row in rows]
+    return {
+        "n": len(scored),
+        "no_reply": sum(1 for row, _r in scored if row.get("no_reply")),  # R15: failures are shown
+        "explains_flagged": sum(1 for row, r in scored if not row.get("no_reply") and r.g.passed is False),
+        "b_failed": sum(1 for _row, r in scored if r.b.passed is False),
+        "d_failed": sum(1 for _row, r in scored if r.d.passed is False),
+    }
+
+
 def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) -> Dict[str, Any]:
-    """The numbers of one run (R14 results.json). Counts and question ids only; never a question or a reply."""
+    """The numbers of one run (R14 results.json). Counts and question ids only; never a question or a reply.
+
+    Error-message replies are counted apart (SPEC-31 9.3 E1), so the other totals stay comparable with older runs.
+    """
+    # Over every reply: the warning is about sharing replies.jsonl, which holds them all (A8).
+    with_url = sum(1 for row in rows if not row.get("no_reply") and contains_address(_text(row, "raw")))
+    errors = [row for row in rows if _is_error_item(row)]
+    rows = [row for row in rows if not _is_error_item(row)]
     raw = [(row, score_row(row, "raw")) for row in rows]
     failing: Dict[str, set] = {name: set() for name in (*CHECKS, "e")}
     flagged_ids: set = set()
     made_up = {"n": 0, "e": 0}
-    new_terms = exact = replied = with_url = explains = 0
+    new_terms = exact = replied = explains = 0
     for row, result in raw:
         qid = str(row["id"])
         for name in (*CHECKS, "e"):
@@ -91,7 +114,6 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
             replied += 1
             exact += 1 if result.exact_wording else 0
             explains += 1 if result.g.passed is False else 0  # (g) is a flag only; a no_reply row is never counted
-            with_url += 1 if contains_address(_text(row, "raw")) else 0
             # (e) is scored on replies that exist: a call that failed says nothing about the made-up item.
             if row.get("invented"):
                 made_up["n"] += 1
@@ -108,6 +130,7 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
         failing_ids={name: sorted(ids) for name, ids in failing.items()},
         flagged_ids=sorted(flagged_ids),
         replies_with_url=with_url,
+        error_items=_error_totals(errors),
     )
     return results
 
@@ -153,6 +176,7 @@ def render_report(results: Mapping[str, Any]) -> str:
         "",
         f"Set version:     {results.get('set_version', '')}",
         f"Made-up version: {results.get('made_up_version', '')}",
+        f"Error items:     {results.get('error_items_version', '')}",
         f"Profile:         {results.get('profile_id', '')}",
         f"Model answered:  {results.get('model_answered', '')}",
         f"Temperature:     {temperature}" + ("" if sent in (True, None) else " (temperature not sent by this profile)"),
@@ -166,6 +190,7 @@ def render_report(results: Mapping[str, Any]) -> str:
         obeys, n = total_obeys(counts)
         lines += ["", title, *_table(counts), f"All: {obeys} of {n} obey ({percent(obeys, n)})"]
     made = results["made_up"]
+    errors = results["error_items"]
     lines += [
         "",
         f"Exact wording of the state sentence (information only, no pass mark): {100 * results['exact_wording_rate']:.1f}%",
@@ -173,6 +198,9 @@ def render_report(results: Mapping[str, Any]) -> str:
         f"New-terms flags, check (f): {results['new_terms_flagged']} replies hold a technical term the learner did not write",
         f"Explains flags, check (g): {results.get('explains_flagged', 0)} replies explain instead of asking "
         "(flag only, not in the pass count)",
+        f"Error-message items: {errors['n']} replies, {errors['no_reply']} no reply, "
+        f"{errors['explains_flagged']} explain flags, "
+        f"{errors['b_failed']} fail (b), {errors['d_failed']} fail (d) (not in the totals above)",
         "",
         "Failing question ids per check (raw reply):",
     ]
@@ -197,16 +225,19 @@ def _sort_key(row: Mapping[str, Any]) -> Tuple[Any, ...]:
 
 
 def render_review_sample(rows: Sequence[Mapping[str, Any]], seed: int) -> str:
-    """Every flagged reply, plus 10 random unflagged replies per mode (R13).
+    """Every flagged reply, plus 10 random unflagged replies per mode (R13), and every error-message reply (E1).
 
     The rows are sorted first, so the same replies and seed give the same sample whatever order they arrive in.
     """
     ordered = sorted(rows, key=_sort_key)
     scored = [(row, score_row(row, "raw")) for row in ordered]
-    chosen = {id(row) for row, result in scored if result.flagged}
+    # Every error-message reply is read; the others are picked as if there were none.
+    errors = {id(row) for row in ordered if _is_error_item(row)}
+    others = [(row, result) for row, result in scored if id(row) not in errors]
+    chosen = errors | {id(row) for row, result in others if result.flagged}
     rng = random.Random(seed)
-    for mode in sorted({str(row["mode"]) for row in ordered}):
-        calm = [row for row, result in scored if not result.flagged and row["mode"] == mode]
+    for mode in sorted({str(row["mode"]) for row, _result in others}):
+        calm = [row for row, result in others if not result.flagged and row["mode"] == mode]
         chosen.update(id(row) for row in rng.sample(calm, min(REVIEW_PER_MODE, len(calm))))
     lines = [
         "# Hand review",
@@ -214,6 +245,7 @@ def render_review_sample(rows: Sequence[Mapping[str, Any]], seed: int) -> str:
         PROXY_LINE,
         "",
         f"Every flagged reply is here, plus up to {REVIEW_PER_MODE} unflagged replies per mode picked with seed {seed}.",
+        *(["Every error-message reply is here too."] if errors else []),
         "Local only: this file holds model text. Do not share it without reading it first.",
         "",
     ]

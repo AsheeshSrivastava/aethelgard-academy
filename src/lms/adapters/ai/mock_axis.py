@@ -9,7 +9,7 @@ import re
 from typing import Any, Iterator, List, Tuple
 from lms.core.interfaces import AxisMode, AxisQuery, AxisResponse
 from lms.adapters.ai.providers.judging import judge_with
-from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
+from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail, learner_text_of
 from lms.core.ai_judgement import AiJudgement, Rubric
 
 
@@ -117,7 +117,9 @@ class MockAxisCompanion:
             cited.append("Data Contracts")
 
         # Pass reply through Socratic Guardrail
-        enforced_reply = self.guardrail.enforce(reply, query.mode, strict=False)
+        enforced_reply = self.guardrail.enforce(
+            reply, query.mode, strict=False, learner_text=learner_text_of(query)
+        )
 
         # Classify assistance level
         assistance = self.classifier.classify(query.user_prompt, enforced_reply, query.mode)

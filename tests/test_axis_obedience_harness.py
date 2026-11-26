@@ -712,7 +712,7 @@ def test_b5_replay_writes_the_new_keys_and_the_explains_line_with_no_model(tmp_p
     assert factory.made == [] and factory.calls == []
     run_dir = the_run_dir(tmp_path)
     results = read_results(run_dir)
-    assert results["checker_version"] == "B" and results["explains_flagged"] == 2
+    assert results["checker_version"] == "C" and results["explains_flagged"] == 2
     text = (run_dir / "report.txt").read_text(encoding="utf-8")
     assert "Explains flags, check (g): 2 replies explain instead of asking (flag only, not in the pass count)" in text.splitlines()
     review = (run_dir / "review-sample.md").read_text(encoding="utf-8")
@@ -728,7 +728,7 @@ def test_b5_a_scripted_run_counts_the_replies_that_explain(tmp_path):
     assert run(tmp_path, ScriptedFactory(script)) == 0
 
     results = read_results(the_run_dir(tmp_path))
-    assert results["checker_version"] == "B"
+    assert results["checker_version"] == "C"  # SPEC-31 9.3 C3
     assert results["explains_flagged"] == TOTAL_QUESTIONS * len(STATES)  # every Coach reply, three states
     cell = results["counts"]["raw"]["Coach"]["not_found"]
     assert cell["obeys"] == cell["n"]  # (g) is outside the pass count

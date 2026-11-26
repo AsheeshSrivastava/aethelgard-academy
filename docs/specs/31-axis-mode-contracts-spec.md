@@ -95,7 +95,7 @@ Before and after, the SPEC-30 eval on the local model at the live temperature 0.
 5. A concept check with more or fewer ideas gets the same version.
 6. The catalogue does not list the retired explain-error question.
 
-## 9. Amendment A (**Proposed** 2026-11-27; no test or code until the owner says go)
+## 9. Amendment A (**Approved** by the owner 2026-11-27: option A on all five choices of 9.6)
 Implements ADR-0039 section 8. Amends section 3.4, SPEC-07 section 2.1 (what counts as code) and SPEC-30 checks (b) and (d).
 
 ### 9.1 No-source contract wording (replaces part of section 3.4; all three modes)
@@ -123,7 +123,7 @@ The app streams replies, and there only the offending sentence is dropped before
 ### 9.4 Tests first
 `test_no_source_contract_has_the_error_rule_in_every_mode`, `test_no_source_contract_no_longer_asks_to_restate_their_question`, `test_plain_english_with_class_import_or_return_is_not_code`, `test_return_followed_by_an_expression_is_code`, `test_def_and_class_headers_are_code`, `test_a_quoted_learner_span_is_kept`, `test_a_span_the_learner_did_not_write_is_withheld`, `test_a_fenced_copy_of_learner_code_is_still_withheld`, `test_the_stream_keeps_a_quoted_learner_span`, `test_classifier_does_not_mark_plain_english_as_supplied_reasoning`, `test_b_passes_an_index_and_still_fails_a_lone_label`, `test_checker_version_is_c`, `test_error_items_are_reported_apart`. All strings are made up. Two existing SPEC-30 and SPEC-07 expectations may need to change; each change is listed in the PR.
 
-The real replies from the run stay on the owner's machine. A scratch prototype of A1 to A4 (not repo code, run on them 2026-11-27): 16 of the 23 withheld replies pass, the 7 with a code block stay withheld, and no reply that passes today becomes withheld, in these two runs and the two earlier ones. The tests and a replay after the code must confirm this.
+The real replies from the run stay on the owner's machine. A scratch prototype of A1 to A4 (not repo code, run on them 2026-11-27): 16 of the 23 withheld replies pass, the 7 with a code block stay withheld, and no reply that passes today becomes withheld, in these two runs and the two earlier ones. **Confirmed with the code** on the same stored replies: 23 withheld before, 7 now, all with a code block, none newly withheld.
 
 ### 9.5 Chaos check
 A learner span of one character; a span that matches only after whitespace is collapsed; an indentation change quoted inline; unbalanced backticks; a span split across stream pieces; learner text holding backticks; `return` at the end of a reply; a non-Python traceback.
@@ -134,3 +134,14 @@ A learner span of one character; a span that matches only after whitespace is co
 3. **Quoting the learner's code:** (a) allowed inline (A4), blocks still withheld; (b) never allowed, fix only the English false hits.
 4. **Checker C:** (a) in this amendment; (b) separately, later.
 5. **Plan item 8c** (move the detector from `adapters` into `core`): it is the same code. (a) a separate move-only PR afterwards, so the behaviour change stays easy to review; (b) do both together.
+
+### 9.7 Readings fixed when the tests were written (owner to confirm at review)
+1. A backtick span the learner did **not** write is also checked as if it started a line, so a span such as `import os` or `return total` stays withheld. Without this, A1 would let through what is blocked today.
+2. The streamed path does not cut a sentence inside a backtick span, or A4 could not apply there.
+3. A2's "operator" is an operator in the expression after `return` (`return total * rate`).
+4. The error-item table holds totals only. Those replies are also kept out of the failing and flagged id lists and the per-mode calibration sample. `--sets error-items` selects them.
+5. An import after a list, quote, heading or bold mark is still at the start of its line (`- import os`).
+6. After `return`, a subscript counts like a call (`return rows[0]`). A tight `-` or `/` does not count, so that "well-known" and "True/False" stay plain English; `return a/b` is therefore let through. So are `return None`, `return -1` and `return a, b`, which have neither a call nor an operator.
+7. A quoted learner span excuses only itself: code written around it, including a keyword split off by the backticks (`` `def` total(a): ``), is still withheld, and a quoted statement is excused only when plain words or sentence punctuation follow it. Anything else counts as code carrying on, so a bracketed aside such as `` `return total` (line 3) `` is withheld too. Everything inside a `~~~` fence is dropped, as inside a backtick fence.
+8. Failed calls on error items are shown as `no reply` beside the explain flags, so they cannot flatter the target. Word operators (`or`, `and`, `in`) after `return` are not counted.
+9. Mid-sentence, `return` before a comprehension, a conditional expression or a spaced call (`return [r for r in rows]`, `return x if x else y`, `return rows.sort ()`) is let through: A2 names only `name(` and operators.

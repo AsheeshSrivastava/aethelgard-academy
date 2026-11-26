@@ -22,6 +22,8 @@ To prevent generative AI hallucinations and unearned capability inflation, AXIS 
 
 ### 2.1 Socratic Guardrail (`SocraticGuardrail`)
 
+Amended by SPEC-31 section 9.2 (2026-11-27): what counts as code (`def`, `class`, `import` and `return` are narrower, and a backtick span the learner wrote is allowed inline; fenced blocks are still withheld).
+
 ```python
 class SocraticViolationError(Exception):
     """Raised when an AI response violates the Socratic zero-code boundary."""
