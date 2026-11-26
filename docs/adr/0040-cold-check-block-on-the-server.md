@@ -1,6 +1,6 @@
 # ADR-0040: The server, not the request, decides that AXIS is off during a Cold Check
 
-- **Status:** Accepted by the owner 2026-11-26: option A, with a message that AXIS is unavailable until the round ends or expires. The follow-up in section 8 is recorded for later. No test or code yet.
+- **Status:** Accepted by the owner 2026-11-26: option A, with a message that AXIS is unavailable until the round ends or expires, and **a Leave button, which the owner requires** (later the same day). What happens to a left item (section 5.2) is **proposed and awaits the owner**. The follow-up in section 8 is recorded for later. No test or code yet.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Number:** 0038 is reserved (LangSmith, ADR-0037).
 - **Builds on:** ADR-0003 ("Cold Checks stay free of AXIS"), ADR-0019 (unit Cold Check: AXIS off), ADR-0028, ADR-0032 (Cold Check rounds), SPEC-12 sections 7 and 8, SPEC-16 (stage review and rechecks also run AXIS off), ADR-0022 (interaction log).
@@ -40,21 +40,41 @@ A server rule keeps **this product's** AXIS out of a Cold Check. It cannot stop 
 - **UI (decided 2026-11-26):** wherever AXIS is refused, the learner sees that **AXIS is unavailable until the Cold Check round ends or expires**, with the time it expires, that **finishing the Cold Check brings AXIS back sooner**, and a way back to it. Other tabs show the same message. Exact wording is set in SPEC-32. The refusal carries the expiry time so the panel can show it.
 
 ## 5. Decision
-Option **A**: the server decides, for every AXIS route, from its own state; the request's `exercise_id` check stays as a second guard. The learner is told AXIS is unavailable until the round ends or expires.
+### 5.1 The block (accepted)
+Option **A**: the server decides, for every AXIS chat route, from its own state; the request's `exercise_id` check stays as a second guard. Scope: the whole learner; stage reviews and rechecks too. An abandoned round expires after 60 minutes. The learner is told AXIS is unavailable, when it returns, and how to get it back sooner.
 
-## 6. Open points: what was decided and what was assumed
-1. Option A: **decided by the owner**.
-2. A message that says AXIS is unavailable until it expires: **decided by the owner**.
-3. **Confirmed (2026-11-26):** an abandoned round expires after 60 minutes (shorter in test mode); a served stage review or recheck also closes AXIS; the scope is the whole learner; the `exercise_id` check stays as a second guard.
-4. A "leave the Cold Check" button is **not** in the first version (the owner asked only for the message); it is future work.
+### 5.2 Leaving a round (button required; semantics proposed)
+**The problem.** A learner could leave, ask AXIS about the question they just saw, return to the same question, and be recorded as unaided.
+
+**What the code shows (checked 2026-11-26).** Each unit that has a Cold Check holds 6 eligible items; a round uses 3 (TW-0.2: 7 items, 3 used), so there are 3 or 4 spares, at least one per target skill. Unanswered items are not recorded, so today a left item would be served again. The round choice already prefers never-answered items (`cold_round`, `core/exercises.py:410-441`). Stage reviews and rechecks use the same seed pools (SPEC-16); their spare counts were not checked.
+
+| Option | What happens to a left item | Gain | Cost |
+|---|---|---|---|
+| L1 | **Set aside and delayed:** the served, unanswered item is marked left; the next round takes another item of that skill first; the round reopens after the normal retry wait (24 hours) | Closes the loophole while spares last; no penalty | One new stored fact; spares run out after about one leave per skill |
+| L2 | Same item stays; its later result is marked assisted or void | Simple; no spares needed | Punishes honest leavers; changes grading; against Invisible Assessment |
+| L3 | AXIS stays off for a cool-down after leaving | No new data | The button then gives nothing, which is not what the owner asked |
+| L4 | Nothing: leave and return to the same item | Simplest | The loophole stays open |
+
+**Recommendation: L1.** Leaving is **not an attempt**: no evidence entry, no penalty, the concept-check soft gate unaffected; answers already given in the round stay as recorded. AXIS returns at once. The round reopens after the same wait as a retry. When a skill has no unused item left, the least recently left item is served after the wait and graded normally (a recorded limit, not a penalty). The leave is written to the interaction log (a new event type, ADR-0022) so a progress decision stays traceable.
+**Expiry must follow the same rule:** an expired round is treated as left. Otherwise waiting 60 minutes would be the same loophole.
+**Reviews and rechecks:** leaving is allowed with the same rule (a recheck moves to a later day).
+**Test mode:** the retry wait and expiry follow test timing, so tests stay quick.
+
+## 6. Decisions and open points
+1. Option A: **decided**.
+2. A message that says AXIS is unavailable until it ends or expires: **decided**.
+3. Expiry 60 minutes (shorter in test mode), reviews and rechecks included, whole-learner scope, `exercise_id` check kept: **confirmed**.
+4. A **Leave button is required**: **decided** (2026-11-26).
+5. What leaving does to the item (L1 to L4): **open** (recommended L1).
+6. When a skill has no unused item: serve the least recently left one after the wait: **open** (recommended).
+7. Leaving allowed on stage reviews and rechecks: **open** (recommended yes).
 
 ## 7. After the go
 SPEC-32 (round-open definition, expiry, messages, which routes, tests first), then tests, then code.
 
 ## 8. Recorded follow-up (owner, 2026-11-26: "we need to work to resolve this issue in future")
-Option A closes the second-tab gap, but a learner who leaves a Cold Check open is **without AXIS until it expires**. To resolve later, for example:
-- an explicit "leave the Cold Check" action that ends the round (and says what that does to the attempt);
-- ending the block when the learner moves on, instead of waiting out a fixed time;
-- a better definition of "round open" once learners use it (is 60 minutes right?).
+The Leave button (decided) removes the lock-out for a learner who wants AXIS back. Still to watch later:
+- what leaving should do once real learners use it (spares run out; is the 24-hour wait right?);
+- whether 60 minutes is the right expiry.
 It does not and cannot stop help from outside the product (section 2).
 The full list, with when to revisit each item, is in `docs/plan/axis-cold-check-known-gaps.md`.
