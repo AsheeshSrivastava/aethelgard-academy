@@ -92,10 +92,15 @@ class SocraticGuardrail:
     # Patterns indicating executable Python constructs (what counts: SPEC-31 section 9.2 A1 to A3)
     CODE_FENCE_PATTERN = re.compile(r"```[\w]*\n?(.*?)```", re.DOTALL)
     TILDE_FENCE_PATTERN = re.compile(r"~~~.*?(?:~~~|\Z)", re.DOTALL)  # dropped whole, closed or not
-    # What shows that code goes on after a quoted statement: an operator, a bracket, ";", ".name", another name
-    # in a list ("`import os`, sys"), or "if ... else".
-    CONTINUES_PATTERN = re.compile(
-        r"[^\S\n]*(?:[-+*/%<>=|&^;\[({]|\.\w|,[^\S\n]*[\w.]+[^\S\n]*(?:$|[,;(])|if\b[^\n]*\belse\b)"
+    # What may follow a quoted statement for the quote to be excused: the end of the line, sentence punctuation,
+    # a plain word, or a comma and a word that starts a clause. Anything else is read as code carrying on. A list
+    # of what code looks like was tried first and kept missing forms, so this says what English looks like.
+    PLAIN_AFTER_PATTERN = re.compile(
+        r"\)?(?:[^\S\n]*$"
+        r"|[.?!:](?=\s|$)"
+        r"|[^\S\n]*[\u2013\u2014](?=\s)"
+        r"|,[^\S\n]+(?:and|but|so|then|what|which|why|how|where|when|do|does|is|can|have)\b(?![^\S\n]*[(\[=.])"
+        r"|[^\S\n]+(?!(?:if|as|for)\b)[A-Za-z]+(?=[\s,.?!:]|$))"
     )
     FENCE_MARKERS = ("```", "~~~")
     # A1: an import only at the start of a line. A2: so is a `return` followed by anything.
@@ -182,12 +187,12 @@ class SocraticGuardrail:
         ) or self._statement_outside_a_quote(text, learner_text)
 
     def _code_goes_on(self, line: str, start: int, end: int) -> bool:
-        """Whether code carries on after the span at line[start:end] (its own bold marks do not count)."""
+        """Whether something other than plain words follows line[start:end] (its own bold marks do not count)."""
         rest = line[end:]
         for mark in ("**", "__"):
             if line[:start].endswith(mark) and rest.startswith(mark):
                 rest = rest[len(mark):]
-        return bool(self.CONTINUES_PATTERN.match(rest.replace("`", "")))
+        return not self.PLAIN_AFTER_PATTERN.match(rest.replace("`", ""))
 
     def _statement_outside_a_quote(self, text: str, learner_text: str) -> bool:
         """A statement that is not wholly inside one span the learner wrote, read with the words left in place.

@@ -937,3 +937,38 @@ def test_plain_words_after_a_quoted_statement_are_kept(reply):
 
     assert whole(reply, q) == reply
     assert streamed(reply, q) == reply
+
+
+# --- review round 3: only plain words after a quoted statement excuse it ---
+
+
+@pytest.mark.parametrize("reply", [
+    "`return total` != len(rows)",
+    "`return total` @ len(rows)",
+    "`return total`, a + b(c)",
+    "`return total`, rows[0]",
+    "`return total`, *sorted(rows)",
+    "`return total`, -len(rows)",
+    "`import os` as o; o.system('x')",
+    "`return s`um(rows) is the line.",
+    "`return total`.strip()",
+])
+def test_anything_but_plain_words_after_a_quoted_statement_is_withheld(reply):
+    q = query(code="def total(rows): return total / return sum(rows)\nimport os")
+
+    for size in (1, 3, 7, 999):
+        assert WITHHELD in streamed(reply, q, size) and reply not in streamed(reply, q, size)
+    assert WITHHELD in whole(reply, q) and reply not in whole(reply, q)
+
+
+@pytest.mark.parametrize("reply", [
+    "What does `return total`?",
+    "You wrote `return total` \u2014 what comes back?",
+    "Look at your last line (`return total`). What is in it?",
+    "`return total`, so what do you expect?",
+])
+def test_ordinary_sentences_around_a_quoted_statement_are_kept(reply):
+    q = query(code="return total")
+
+    assert whole(reply, q) == reply
+    assert streamed(reply, q) == reply
