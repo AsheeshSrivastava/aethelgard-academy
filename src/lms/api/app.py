@@ -1176,7 +1176,9 @@ def create_app(
             finally:
                 sender.cancel()
                 receiver.cancel()
-                await asyncio.to_thread(interactive.stop)
+                # SPEC-12 section 7: shielded, because cancelling the request would also cancel a stop that no
+                # worker had picked up yet, and the program would be left running.
+                await asyncio.shield(asyncio.get_running_loop().run_in_executor(None, interactive.stop))
             if sender.done() and not sender.cancelled():
                 await websocket.close()
         finally:
