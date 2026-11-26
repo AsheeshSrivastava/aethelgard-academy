@@ -8,7 +8,7 @@
 ## 1. Context: how the block works today
 - AXIS is refused only when the **request carries** a Cold Check `exercise_id`: `is_cold_check_exercise` (`api/app.py:1184-1188`), used by the stream (`:1216-1219`) and consult (`:1273-1275`) routes.
 - The panel is hidden on the Cold Check page (`frontend/src/pages/Lesson.tsx:615`).
-- Evidence from a Cold Check is always recorded with assistance `none` (`api/app.py:1826`).
+- Evidence from a Cold Check is always recorded with assistance `none` (`api/app.py:1809`).
 
 **The gap, tested** with a temporary test (not kept) on `main` after PR #71: a learner who has a Cold Check item served (`PY-0.1/cold-predict-1/v1`) sends AXIS a question **without** an `exercise_id`, as a second browser tab on a lesson step would. `consult` returned **200** and `stream` returned **200**; the same request with the Cold Check id returned 403; the Cold Check state stayed `available`. So the block depends on the client saying which exercise it is. The Cold Check is then graded as unassisted.
 Read in code, not tested: stage reviews and rechecks use the same Cold Check seeds with AXIS off (SPEC-16), so the same gap applies to them. The legacy `explain-error` route had no block at all and is retired separately (PR #73).
@@ -18,9 +18,9 @@ A server rule keeps **this product's** AXIS out of a Cold Check. It cannot stop 
 
 ## 3. Options
 **A. Server-side "Cold Check open" state (recommended).** A Cold Check round is *open* from the first time one of its items is served until the round finishes (or expires). While a learner has an open round, every AXIS route refuses with the same 403 and plain message, whatever the request carries.
-- *What the server already has:* the `exercise_pointer` table (`learner_id, unit_id, activity, exercise_id, served_at`, `adapters/db/sqlite_repo.py:384-408`), the check that an item was attempted since it was served (`attempted_since_served`, `api/app.py:1589`), round selection (`learner_cold_round`, `:1538`) and the end of a round (`finish_cold_item`, `:1560`). The round state needs no new table, but "round finished" must be defined precisely in the spec.
+- *What the server already has:* the `exercise_pointer` table (`learner_id, unit_id, activity, exercise_id, served_at`, `adapters/db/sqlite_repo.py:384-408`), the check that an item was attempted since it was served (`attempted_since_served`, `api/app.py:1572`), round selection (`learner_cold_round`, `:1521`) and the end of a round (`finish_cold_item`, `:1543`). **These are not enough on their own:** a unit's served-item pointer is cleared after each answer (`:1546`), so between two items a round would look closed, and review pointers are keyed by unit and kind, not by round. The spec therefore stores an **open-round record** on the server (and which items were left).
 - *Scope:* the whole learner, not only the unit (a second tab on another unit can answer the same question).
-- *Abandoned rounds:* the round expires after a fixed time from the last served item (proposal: 60 minutes, configurable, shorter under test mode), so a learner is never locked out for long. An explicit "leave the Cold Check" action could end it early (optional).
+- *Abandoned rounds:* the round expires after a fixed time from the last item served or attempted (proposal: 60 minutes, configurable, shorter under test mode), so a learner is never locked out for long. An explicit "leave the Cold Check" action could end it early (optional).
 - *Reviews and rechecks:* the same rule applies to a served stage review or recheck item.
 - *Cost:* a learner who walks away is without AXIS until expiry; one more state to reason about and test.
 
@@ -33,7 +33,7 @@ A server rule keeps **this product's** AXIS out of a Cold Check. It cannot stop 
 ## 4. Consequences (option A)
 - **Evidence ledger:** unchanged. Cold Check entries stay `none`; with the block that label is now true for product AXIS. Nothing is rewritten.
 - **Soft gate (concept check):** unaffected; it never blocks, and AXIS is not part of grading it.
-- **Builds:** builds stay Socratic as today; they are not Cold Checks and are not blocked.
+- **Builds:** builds keep their Socratic rule. They are not Cold Checks, but while a round is open AXIS is refused everywhere (scope: the whole learner), build pages included.
 - **Interaction log (ADR-0022):** a refused request is logged like today's 403s (no change in what is stored); the spec should say whether a refused attempt writes a row (recommend: no).
 - **Test mode:** delays are zero (ADR-0019 amendment); the expiry also shortens, so tests are quick and learners' test runs are not locked.
 - **Single learner today (ADR-0015):** the learner id is the server's current learner, so no new identity is needed.
