@@ -87,6 +87,7 @@ class Transport:
     def __init__(self):
         self.status = 200
         self.sent: list = []
+        self.text = None  # set to answer every call with this
 
     def __call__(self, request):
         body = json.loads(request.content)
@@ -95,6 +96,8 @@ class Transport:
             return httpx.Response(self.status, json={"error": {"message": "synthetic"}})
         system = body["messages"][0]["content"]
         text = GOOD if system == axis_rules.JUDGE_SYSTEM_PROMPT else "Which line fails?"
+        if self.text is not None:
+            text = self.text
         if body.get("stream"):
             chunk = {"id": "c", "object": "chat.completion.chunk", "created": 0, "model": "fake-model-1",
                      "choices": [{"index": 0, "delta": {"content": text}, "finish_reason": "stop"}]}
@@ -298,6 +301,8 @@ def test_version_ignores_unit_activity_rubric_brief_and_optional_blocks(tmp_path
     judge = versions_of(
         lambda: router.judge_explanation("PY-0.4", "first question", "first explanation", two),
         lambda: router.judge_explanation("PY-1.2", "second question", "second explanation", other),
+        # more ideas than the first rubric: the version covers the static text only (section 8, clarification 5)
+        lambda: router.judge_explanation("PY-0.4", "q", "e", SimpleNamespace(ideas=two.ideas + [Idea(id="third-idea", text="three")])),
     )
     draft = versions_of(
         lambda: router.draft_readme("first.py", "x = 1", "first brief"),
@@ -532,3 +537,71 @@ def test_unjudged_failed_and_fallback_calls_record_no_version(tmp_path, repo, ca
         (event,) = events_of(repo, kind)
         assert "prompt_version" not in event.payload
     assert span_versions(traces)[-1] is None
+
+
+# --- review round 1: R14 and the SPEC-31 section 8 clarifications ---
+
+
+def test_a_gemini_stream_that_fails_before_anything_arrives_records_no_version(tmp_path, traces, monkeypatch):
+    """The SDK stream is lazy: nothing is sent until it is first read."""
+
+    def refused(self, **kwargs):
+        raise ConnectionError("synthetic: refused")
+        yield  # makes this a generator, like the SDK's
+
+    monkeypatch.setattr(FakeGeminiModels, "generate_content_stream", refused)
+    router = make_router(tmp_path, active="gemini")
+
+    with pytest.raises(Exception):
+        "".join(router.stream(query())[0])
+
+    assert model_calls(traces)
+    assert all(v is None for v in span_versions(traces))
+
+
+def test_a_check_that_was_sent_but_not_judged_logs_no_version(tmp_path, repo, catalog, traces, monkeypatch):
+    write_rubric(tmp_path / "answers", unit="py-0.4")
+    monkeypatch.setenv("LMS_ANSWERS_DIR", str(tmp_path / "answers"))
+    transport = Transport()
+    transport.text = "not the shape the judge asks for"
+
+    res = post_explain(make_client(repo, catalog, make_router(tmp_path, transport=transport)))
+
+    assert transport.sent and res.json()["status"] != "judged"
+    (event,) = events_of(repo, "concept_check")
+    assert "prompt_version" not in event.payload
+
+
+def test_an_unusable_draft_or_summary_after_a_call_logs_no_version(tmp_path, repo, catalog, traces, answers):
+    pass_cold_checks(repo)
+    transport = Transport()
+    transport.text = ""
+    client = make_client(repo, catalog, make_router(tmp_path, transport=transport))
+
+    assert post_draft(client).status_code == 502
+    assert post_check(client).status_code == 200
+
+    assert len(transport.sent) == 2
+    for kind in ("document_draft", "build_feedback"):
+        (event,) = events_of(repo, kind)
+        assert "prompt_version" not in event.payload, kind
+
+
+def test_a_replay_writes_no_prompt_versions(tmp_path):
+    source = tmp_path / "in" / "replies.jsonl"
+    source.parent.mkdir()
+    source.write_text(json.dumps(ob.make_row("q1", "Coach", "not_found")) + "\n", encoding="utf-8")
+
+    assert ob.run(tmp_path, replay=source, environ={"MOCK_AI": "true"}) == 0
+
+    assert "prompt_versions" not in ob.read_results(ob.the_run_dir(tmp_path))
+
+
+def test_a_run_where_every_call_failed_still_lists_what_ran(tmp_path):
+    factory = ob.ScriptedFactory(lambda call: RuntimeError("down"))
+
+    ob.run(tmp_path, factory, modes=("Coach",), states=("no_index",))
+
+    assert ob.read_results(ob.the_run_dir(tmp_path))["prompt_versions"] == {
+        "Coach/no_index": axis_rules.chat_prompt_version(AxisMode.COACH, "no_index")
+    }

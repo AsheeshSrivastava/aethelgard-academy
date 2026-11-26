@@ -161,3 +161,19 @@ describe("SPEC-31 R9: the request carries the mode the learner chose", () => {
     await waitFor(() => expect(sent()[0]).toMatchObject({ mode, current_activity: "Specify" }));
   });
 });
+
+describe("SPEC-31 R7: the same step name in another unit is a new step", () => {
+  it("forgets the choice when the unit changes", async () => {
+    stubApi({ "GET /api/v1/axis/status": { course_reference: "ready" } });
+    const panel = (unit: string) => <AxisPanel unitId={unit} step="explain" getCode={() => undefined} />;
+    const view = render(panel("PY-0.1"));
+    const user = userEvent.setup();
+
+    await user.click(radio("Socratic"));
+    expect(chosen()).toEqual(["Socratic"]);
+    view.rerender(panel("PY-0.2"));
+    expect(chosen()).toEqual(["Coach"]);
+    view.rerender(panel("PY-0.1"));
+    expect(chosen()).toEqual(["Coach"]);
+  });
+});

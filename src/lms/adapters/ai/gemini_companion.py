@@ -137,6 +137,7 @@ class GeminiCompanion:
         usage_chunk: Any = None
         input_chars = len(sys_prompt) + len(user_msg)
         requested = False
+        taken = False  # the SDK stream is lazy: nothing is sent until it is first read
         said: List[str] = []  # everything yielded, kept as last_raw_reply when the stream ends
         try:
             stream = self._client.models.generate_content_stream(
@@ -146,12 +147,14 @@ class GeminiCompanion:
             )
             requested = True
             for chunk in stream:
+                taken = True
                 last = chunk
                 if getattr(chunk, "usage_metadata", None) is not None:
                     usage_chunk = chunk
                 if chunk.text:
                     said.append(chunk.text)
                     yield chunk.text
+            taken = True  # the request ran to its end, even with no chunk
         except GeneratorExit:
             raise
         except Exception as exc:
@@ -164,6 +167,7 @@ class GeminiCompanion:
             if requested:
                 answered = self._answered(last) if last is not None else self.model
                 self._record("stream", answered, usage_chunk, input_chars)
+            if taken:
                 axis_rules.note_sent(version)
 
     def ping(self) -> Tuple[str, Optional[int], Optional[int]]:
