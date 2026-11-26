@@ -67,8 +67,12 @@ def test_no_mode_may_answer_from_memory_or_use_the_old_label(mode, state):
     lowered = notice.lower()
     assert "own memory" in lowered
     assert "ask" in lowered and "question" in lowered  # guiding questions are the way forward
-    # The rule beats the mode stance, so Coach's "explain error messages" cannot win.
-    assert "overrides any mode instruction" in lowered
+    # SPEC-31 R3 (amends SPEC-24 R4): with no source there is no mode instruction to override at all.
+    assert "overrides any mode instruction" not in lowered
+    prompt = axis_rules.build_system_prompt(mode, "", state)
+    assert "MODE: NO COURSE SOURCE." in prompt
+    for stance in ("SOCRATIC FACILITATOR", "COACH", "HYBRID", "Explain standard library", "decompose the requirement"):
+        assert stance not in prompt
 
 
 def test_coach_no_longer_gets_a_general_knowledge_path():
