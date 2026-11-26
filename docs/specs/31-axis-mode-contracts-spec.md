@@ -94,3 +94,43 @@ Before and after, the SPEC-30 eval on the local model at the live temperature 0.
 4. The same step name in a different unit is a new step: the suggested starting mode applies again.
 5. A concept check with more or fewer ideas gets the same version.
 6. The catalogue does not list the retired explain-error question.
+
+## 9. Amendment A (**Proposed** 2026-11-27; no test or code until the owner says go)
+Implements ADR-0039 section 8. Amends section 3.4, SPEC-07 section 2.1 (what counts as code) and SPEC-30 checks (b) and (d).
+
+### 9.1 No-source contract wording (replaces part of section 3.4; all three modes)
+- "restate their question in their words" becomes "restate what they asked for".
+- Added at the end:
+> When their question, code or run output shows an error or a traceback, do not say what the error or its message means, what caused it, or what the values in it must be. Do not write "means" or "because" about it. Point at one line number or function name to look at, then ask what they expected to happen there and what they have checked. Do not copy their code or the traceback into your reply; point at it by line number or name.
+
+With a course source nothing changes (not measured yet; plan step 5c). Every no-source `prompt_version` changes, and the catalogue is regenerated.
+
+### 9.2 What the guard counts as code
+- A1. `def` counts only as `def name(`; `class` only as `class Name:` or `class Name(`; `import x` and `from x import y` only at the start of a line.
+- A2. The rule "the word return and a bracket anywhere" is replaced: `return` counts at the start of a line followed by something, or inside a sentence only when followed by a call (`name(`) or an operator.
+- A3. Fenced blocks (three backticks or `~~~`), code lines and assignments count as today.
+- A4. **The learner's own words.** A backtick span that occurs in the learner's text (question, code or error output; whitespace collapsed) is left out before A1 to A3 are applied, and is shown unchanged. It does not apply to fenced blocks or to code written without backticks. So the guard receives the learner's text, both for a whole reply and for the streamed one.
+- A5. `AssistanceClassifier` uses the A1 to A3 detector (so English no longer counts as code) and does **not** use A4. What counts as supplied reasoning is otherwise unchanged (ADR-0039 decision 4).
+
+The app streams replies, and there only the offending sentence is dropped before the notice; the eval scores the whole-reply path, where more can be lost. Both paths follow A1 to A4.
+
+### 9.3 Eval: checker version C and more error questions
+- C1. (b): `[n]` written directly after a name, `]` or `)` is an index, not a source label, by the same rule that already keeps it in the shown reply. A label standing alone still fails, including one the learner typed (Amendment A2 of SPEC-30 is unchanged). All 10 (b) failures of the new run were indexes in the learner's own code.
+- C2. (d): uses the detector of 9.2 with the learner's text. SPEC-30 B2 (foreign inline code fails) is unchanged, and a fenced block still fails.
+- C3. `results.json` says `checker_version: "C"`. Old runs are not rewritten. `--replay` of an old `replies.jsonl` rescores the raw replies under C for a like-for-like comparison (free, no model); the learner-visible text stored then was made by the old guard and cannot be recomputed.
+- E1. New file `eval/obedience/error-items.yaml`: 18 made-up error-message questions (invented code and traceback; questions only, no answers). It has its own version and its own table (replies, explains flags, (b), (d)), kept **out** of the existing totals, so those stay comparable. Every one of these replies goes into `review-sample.md`. The run grows from 756 to 918 replies per temperature.
+
+### 9.4 Tests first
+`test_no_source_contract_has_the_error_rule_in_every_mode`, `test_no_source_contract_no_longer_asks_to_restate_their_question`, `test_plain_english_with_class_import_or_return_is_not_code`, `test_return_followed_by_an_expression_is_code`, `test_def_and_class_headers_are_code`, `test_a_quoted_learner_span_is_kept`, `test_a_span_the_learner_did_not_write_is_withheld`, `test_a_fenced_copy_of_learner_code_is_still_withheld`, `test_the_stream_keeps_a_quoted_learner_span`, `test_classifier_does_not_mark_plain_english_as_supplied_reasoning`, `test_b_passes_an_index_and_still_fails_a_lone_label`, `test_checker_version_is_c`, `test_error_items_are_reported_apart`. All strings are made up. Two existing SPEC-30 and SPEC-07 expectations may need to change; each change is listed in the PR.
+
+The real replies from the run stay on the owner's machine. A scratch prototype of A1 to A4 (not repo code, run on them 2026-11-27): 16 of the 23 withheld replies pass, the 7 with a code block stay withheld, and no reply that passes today becomes withheld, in these two runs and the two earlier ones. The tests and a replay after the code must confirm this.
+
+### 9.5 Chaos check
+A learner span of one character; a span that matches only after whitespace is collapsed; an indentation change quoted inline; unbalanced backticks; a span split across stream pieces; learner text holding backticks; `return` at the end of a reply; a non-Python traceback.
+
+### 9.6 Open choices for the owner (recommendation first)
+1. **Error messages:** (a) wording only, then measure; (b) also have the server send a fixed question whenever there is no source and an error is present (certain, but robotic).
+2. **Target after the re-run:** (a) the explains flag on at most 5 percent of error-message replies, else return to 1(b); (b) no pass mark. The flag is a word-based heuristic, so the replies are also read by hand.
+3. **Quoting the learner's code:** (a) allowed inline (A4), blocks still withheld; (b) never allowed, fix only the English false hits.
+4. **Checker C:** (a) in this amendment; (b) separately, later.
+5. **Plan item 8c** (move the detector from `adapters` into `core`): it is the same code. (a) a separate move-only PR afterwards, so the behaviour change stays easy to review; (b) do both together.
