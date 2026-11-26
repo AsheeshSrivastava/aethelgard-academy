@@ -11,7 +11,7 @@
 | `axis-cold-check-known-gaps.md` | What is still open about AXIS during Cold Checks (ADR-0040). | Live backlog, recorded 2026-11-26. |
 | `owner-console-evals-traces.md` | The proposed owner console for evals, traces and observability, and the deferred demo mode. | Backlog, Proposed for after the freeze, recorded 2026-11-26. |
 | `axis-facilitation-evidence-review.md` | Short desk review of machine-led tutoring, for the paper below. | Quick and non-systematic, 2026-11-27. |
-| `axis-facilitation-decision-paper.md` | What a good AXIS turn is, conversation memory, and how we would judge it. | DRAFT 2026-11-27, waiting for the owner's decisions. |
+| `axis-facilitation-decision-paper.md` | What a good AXIS turn is, conversation memory, and how we would judge it. | Decided 2026-11-27 (ADR-0041); SPEC-33 is a draft. |
 
 The full Fable review is `docs/audits/fable-independent-review-2026-11-15.md` (copied from the project folder, `main` at `cad782a`; line numbers have drifted).
 
