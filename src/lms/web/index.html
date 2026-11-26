@@ -432,16 +432,12 @@
               <textarea id="studio-editor" class="code-textarea" spellcheck="false" oninput="updateLineNumbers()"></textarea>
             </div>
 
-            <!-- Socratic Error Diagnostic Box -->
+            <!-- Runtime Diagnostic Box -->
             <div id="error-explanation-box" class="error-box" style="display: none;">
               <div class="error-box-header">
                 <span style="color: var(--color-danger); font-weight: 700;">⚠️ Runtime Diagnostic</span>
-                <button id="btn-explain-error" onclick="explainCurrentError()" class="btn btn-small btn-primary">
-                  💡 Explain this error with AXIS AI
-                </button>
               </div>
               <div id="error-text-display" style="font-family: var(--font-mono); font-size: 0.75rem; color: #fca5a5; margin-block: 0.35rem;"></div>
-              <div id="error-diag-container" style="display: none; margin-block-start: 0.5rem;"></div>
             </div>
 
             <!-- Interactive Terminal (Live stdin / stdout) -->

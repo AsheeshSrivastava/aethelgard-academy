@@ -1407,23 +1407,6 @@ def create_app(
         )
         return None
 
-    # --- Socratic Error Diagnostic Route ---
-    @app.post("/api/v1/explain-error")
-    def explain_runtime_error(payload: Dict[str, Any], learner_id: str = Depends(current_learner_id)):
-        unit_id = payload.get("unit_id", "PY-0.1").upper()
-        code = payload.get("code", "")
-        error_msg = payload.get("error", "")
-        query = AxisQuery(
-            learner_id=learner_id,
-            unit_id=unit_id,
-            mode=AxisMode.SOCRATIC,
-            current_activity=ActivityType.DEBUG_VALIDATE,
-            user_prompt=f"I ran my code and received this runtime error:\n{error_msg}\nCan you guide me Socratically to inspect my own logic and find where the error came from?",
-            learner_code=code,
-        )
-        resp = axis.consult(query)
-        return {"unit_id": unit_id, "explanation": resp.reply}
-
     # --- Learner-Scoped /me Routes (SPEC-12, ADR-0015) ---
     @app.get("/api/v1/learners/me", response_model=LearnerProfile)
     def get_me(learner_id: str = Depends(current_learner_id)):

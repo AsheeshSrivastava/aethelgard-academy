@@ -118,19 +118,22 @@ def test_execute_endpoint_with_stdin(test_client):
     assert "HELLO Kofi Mensah" in body["stdout"]
 
 
-def test_explain_error_endpoint(test_client):
+def test_explain_error_route_is_retired(test_client):
+    """SPEC-12 (retired routes, 2026-11-26): POST /api/v1/explain-error is gone. It had no Cold Check block
+    (ADR-0003: Cold Checks stay free of AXIS) and wrote no interaction-log row (ADR-0022 section 2.3)."""
     client, _ = test_client
-    payload = {
-        "unit_id": "PY-0.1",
-        "code": "pritn('Hello')",
-        "error": "NameError: name 'pritn' is not defined",
-        "learner_id": "test_learner",
-    }
-    res = client.post("/api/v1/explain-error", json=payload)
-    assert res.status_code == 200
-    data = res.json()
-    assert "explanation" in data
-    assert len(data["explanation"]) > 0
+    payload = {"unit_id": "PY-0.1", "code": "pritn('Hello')", "error": "NameError: name 'pritn' is not defined"}
+    assert client.post("/api/v1/explain-error", json=payload).status_code in (404, 405)
+    assert "/api/v1/explain-error" not in client.get("/openapi.json").json()["paths"]
+
+
+def test_the_old_page_no_longer_offers_the_retired_error_explanation():
+    """SPEC-12 (retired routes, 2026-11-26): the legacy page has no button or script for it."""
+    web = Path(__file__).resolve().parents[1] / "src" / "lms" / "web"
+    for name in ("index.html", "app.js", "styles.css"):
+        text = (web / name).read_text(encoding="utf-8")
+        for gone in ("explain-error", "explainCurrentError", "btn-explain-error", "error-diag-container", "socratic-advice"):
+            assert gone not in text, f"{name} still mentions {gone}"
 
 
 
