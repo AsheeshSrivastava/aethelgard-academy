@@ -1,6 +1,8 @@
 """Tests for interactive runs over WebSocket (SPEC-12 section 7)."""
 
+import asyncio
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi.testclient import TestClient
@@ -220,3 +222,30 @@ def test_disconnecting_stops_the_program():
         assert ws.receive_json()["type"] == "awaiting_input"
 
     assert InteractiveRun.active_count() == 0
+
+
+def test_the_program_is_stopped_even_when_no_worker_is_free_as_the_request_is_cancelled(monkeypatch):
+    """SPEC-12 section 7: a started run is stopped however the connection ends.
+
+    The test client cancels the request right after it disconnects. With one worker thread the stop is still queued
+    when that happens, which used to cancel it before it ran. Left alone the program waited for the wall limit.
+    """
+    one = ThreadPoolExecutor(max_workers=1)
+    real = asyncio.base_events.BaseEventLoop.run_in_executor
+    monkeypatch.setattr(asyncio.base_events.BaseEventLoop, "run_in_executor",
+                        lambda self, executor, func, *args: real(self, executor or one, func, *args))
+    try:
+        client, _ = make_client()
+        with client.websocket_connect("/api/v1/runs") as ws:
+            ws.send_json({"type": "start", "files": {"solution.py": "input()"}, "entry": "solution.py"})
+            assert ws.receive_json()["type"] == "awaiting_input"
+
+        deadline = time.monotonic() + 5
+        while InteractiveRun.active_count() and time.monotonic() < deadline:
+            time.sleep(0.05)
+
+        assert InteractiveRun.active_count() == 0, "the program was left running after its connection ended"
+    finally:
+        for run in list(InteractiveRun._active):
+            run.stop()
+        one.shutdown(wait=True)

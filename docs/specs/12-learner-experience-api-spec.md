@@ -283,6 +283,7 @@ The cap is per server process; with several workers it applies to each worker.
 
 - `files` keys must be plain file names ending in `.py`, and `entry` must be one of them. A bad `start` gets `{type: "error", message}` and the socket closes.
 - A run exceeding a limit is stopped and reports `timed_out: true`. Output past 64 KB is cut off with a final `stderr` notice.
+- A started run is stopped when its connection ends, however it ends (the client leaves, or the server cancels the request). The stop must not be lost to that cancellation, so no program is left waiting (added 2026-11-27).
 - Learner code runs with a minimal environment, so it never sees API keys or `.env` values.
 - On this subprocess runner, the network limit blocks Python sockets. It is not an OS sandbox. Hosting other people's code needs the Docker runner (ADR-0005).
 
