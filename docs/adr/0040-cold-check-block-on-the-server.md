@@ -1,6 +1,6 @@
 # ADR-0040: The server, not the request, decides that AXIS is off during a Cold Check
 
-- **Status:** Proposed (draft 2026-11-26, waiting for the owner's go). No test or code.
+- **Status:** Accepted by the owner 2026-11-26: option A, with a message that AXIS is unavailable until the round expires. The follow-up in section 8 is recorded for later. No test or code yet.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Number:** 0038 is reserved (LangSmith, ADR-0037), 0039 is in PR #72 (not yet merged).
 - **Builds on:** ADR-0003 ("Cold Checks stay free of AXIS"), ADR-0019 (unit Cold Check: AXIS off), ADR-0028, ADR-0032 (Cold Check rounds), SPEC-12 sections 7 and 8, SPEC-16 (stage review and rechecks also run AXIS off), ADR-0022 (interaction log).
@@ -37,16 +37,23 @@ A server rule keeps **this product's** AXIS out of a Cold Check. It cannot stop 
 - **Interaction log (ADR-0022):** a refused request is logged like today's 403s (no change in what is stored); the spec should say whether a refused attempt writes a row (recommend: no).
 - **Test mode:** delays are zero (ADR-0019 amendment); the expiry also shortens, so tests are quick and learners' test runs are not locked.
 - **Single learner today (ADR-0015):** the learner id is the server's current learner, so no new identity is needed.
-- **UI:** the AXIS panel on other tabs should show "AXIS is off while your Cold Check is open" and offer to go back to it.
+- **UI (decided 2026-11-26):** wherever AXIS is refused, the learner sees that **AXIS is unavailable until the Cold Check round ends or expires**, with the time it expires, and a way back to the Cold Check. Exact wording is set in the spec. The refusal carries the expiry time so the panel can show it.
 
-## 5. Decision (proposed)
-Option **A**: the server decides, for every AXIS route, from its own state; the request's `exercise_id` check stays as a second guard.
+## 5. Decision
+Option **A**: the server decides, for every AXIS route, from its own state; the request's `exercise_id` check stays as a second guard. The learner is told AXIS is unavailable until the round ends or expires.
 
-## 6. Open points for the owner
-1. Option A, B, C or D (recommended A).
-2. Expiry of an abandoned round: 60 minutes (recommended), or another value; and whether to add a "leave the Cold Check" button.
-3. Does a served stage review or recheck also close AXIS (recommended yes)?
-4. Scope: the whole learner (recommended) or the unit only.
+## 6. Open points: what was decided and what was assumed
+1. Option A: **decided by the owner**.
+2. A message that says AXIS is unavailable until it expires: **decided by the owner**.
+3. Taken as recommended, **to be confirmed in the spec**: an abandoned round expires after 60 minutes (shorter in test mode); a served stage review or recheck also closes AXIS; the scope is the whole learner. No "leave the Cold Check" button in the first version.
 
 ## 7. After the go
 A spec (round-open definition, expiry, messages, which routes, tests first), then tests, then code. The index row in `docs/adr/README.md` is added after PR #72 merges, to avoid a conflicting edit.
+
+## 8. Recorded follow-up (owner, 2026-11-26: "we need to work to resolve this issue in future")
+Option A closes the second-tab gap, but a learner who leaves a Cold Check open is **without AXIS until it expires**. To resolve later, for example:
+- an explicit "leave the Cold Check" action that ends the round (and says what that does to the attempt);
+- ending the block when the learner moves on, instead of waiting out a fixed time;
+- a better definition of "round open" once learners use it (is 60 minutes right?).
+It does not and cannot stop help from outside the product (section 2).
+**Assumption to confirm:** "this issue" is read here as that lock-out until expiry.
