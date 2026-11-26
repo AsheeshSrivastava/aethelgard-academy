@@ -36,4 +36,4 @@
 | [ADR-0035](0035-axis-retrieval-strategy.md) | AXIS retrieval strategy (production grade) | **Proposed** (amended 2026-11-15) | 2026-11-14 |
 | [ADR-0036](0036-docker-runner-fail-closed.md) | The Docker runner is the default, and the app fails closed | Accepted | 2026-11-14 |
 | [ADR-0037](0037-observability-port-traces-metrics-evals.md) | AXIS observability behind a port: traces, mode-usage report, answer-level evals | Accepted | 2026-11-19 |
-| [ADR-0039](0039-axis-mode-contracts-and-prompt-record.md) | AXIS mode contracts, one no-source contract, and a record of every prompt | Proposed | 2026-11-26 |
+| [ADR-0039](0039-axis-mode-contracts-and-prompt-record.md) | AXIS mode contracts, one no-source contract, and a record of every prompt | Accepted | 2026-11-26 |

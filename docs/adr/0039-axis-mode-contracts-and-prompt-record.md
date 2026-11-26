@@ -1,6 +1,9 @@
+---
+modified: 2026-11-26T14:07:12+05:30
+---
 # ADR-0039: AXIS mode contracts, one no-source contract, and a record of every prompt
 
-- **Status:** Proposed (draft 2026-11-26, waiting for the owner's go). No test or code is written.
+- **Status:** Accepted by the owner 2026-11-26 (the decisions are listed in section 5). No test or code is written yet.
 - **Decider:** Platform Architect & Owner (Asheesh Ranjan Srivastava)
 - **Number:** 0038 is reserved for the LangSmith adapter named in ADR-0037, so this is 0039.
 - **Builds on:** ADR-0009 (Socratic boundary), ADR-0034 as amended 2026-11-18 and SPEC-24 R4 (no answer from memory), ADR-0022 (interaction log), ADR-0037 (tracing and evals), SPEC-30 (no-source eval).
@@ -40,7 +43,7 @@ The panel preselects a mode from the step's activity; the learner can change it;
 | Explain (also the video step) | Coach | owner accepted |
 | Specify, Decompose | Hybrid | owner accepted |
 | Predict, Trace, Debug & Validate | Socratic | owner accepted |
-| Modify (also the playground), Evaluate, Direct | Hybrid | **proposed, not yet asked** |
+| Modify (also the playground), Evaluate, Direct | Hybrid | owner accepted 2026-11-26 |
 | Build | Socratic (forced) | existing |
 
 ### 2.6 Every prompt is recorded
@@ -74,11 +77,13 @@ The panel preselects a mode from the step's activity; the learner can change it;
 - Unchanged: retrieval, guardrails, the live temperature, grading.
 - Follow-ups already known: the offer to switch modes after stalls needs turn history; the `core` to `adapters` import (SPEC-30 follow-up).
 
-## 5. Open questions for the owner
-1. **Does a Coach explanation count as `supplied_reasoning`?** Today: no. The classifier marks `supplied` only for code (`socratic_guardrail.py:127-158`), and only replies tied to an exercise reach evidence. Options: (a) leave grading as it is in this ADR and decide in a separate one (**recommended**: it changes evidence honesty and needs its own tests); (b) count any grounded Coach explanation on an exercise as supplied; (c) count only explanations of the exercise itself.
-2. **Suggested start for Modify, Evaluate and Direct:** Hybrid (recommended), Socratic, or no suggestion.
-3. **Prompt version scope:** one version per assembled static prompt (recommended), or one per prompt file.
-4. **Rename "Hybrid" for learners** (for example "Plan"): optional; code names stay.
+## 5. Decisions (owner, 2026-11-26)
+1. **One tutor with a contract per mode**, not three agents.
+2. **Starting mode suggested by activity**, the learner can override, builds stay Socratic. Modify (and the playground), Evaluate and Direct start in Hybrid.
+3. **Strict no-source rule kept:** a question may point at a line, it never states the cause (the 2026-11-18 rule).
+4. **Grading is not changed by this ADR.** A Coach explanation in words, with no code, is still not tagged `supplied_reasoning` (the classifier marks only code, `socratic_guardrail.py:127-158`), which is narrower than AGENTS.md. A **separate ADR with its own tests** decides whether worded explanations count.
+5. **`prompt_version` is one per assembled static prompt** (not one per prompt file).
+6. **No rename** of Hybrid for learners.
 
 ## 6. Found while checking (not decided here)
 - `/api/v1/axis/consult` logs the requested mode, not the forced one on builds (`api/app.py:1276-1280`).

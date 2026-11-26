@@ -99,11 +99,11 @@ Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follow
 | 3 | Query cleanup and `not_found` | done (SPEC-23, #53) | 4 (4b) |
 | 4 | Prompt rules and the "no index" message | done (SPEC-24, #54) | 5 |
 | 5 | Measurement: the six Gemini sets, P@K, MRR and nDCG at K=1, 3 and 5, and the per-file passage limit test | done (SPEC-25, #55); the mode stress test (5b) was skipped by the owner 2026-11-19, to be re-run later | 2 (extended) |
-| 5c | With-source reply quality eval (240 answerable questions, three modes, structural checks and hand review, no LLM judge; ADR-0039 2.7) | **Proposed** 2026-11-26 | |
+| 5c | With-source reply quality eval (240 answerable questions, three modes, structural checks and hand review, no LLM judge; ADR-0039 2.7) | ADR accepted 2026-11-26; spec not yet written | |
 | 6 | Contextual retrieval: heading path first, then an LLM-written context in a search-only field (5.2); local against cheap paid on a small trial. A paid run needs a printed estimate and the owner runs it | 6a measured, small gain, default stays off (SPEC-26, on a separate unmerged branch); **6b skipped by the owner 2026-11-19, to be revisited after real use** (5.5) | not numbered before |
 | 7 | rag-core adapter and model wiring, with `not_found` re-tuned for the reranker (2.4, 2.7) | done (SPEC-27, #56, merged 2026-11-19) | 6 |
 | 8 | Tracing, metrics and answer-level evals behind a hexagonal port (local adapter, no-op in CI, vendors optional); its ADR comes first | after 7 | not numbered before |
-| 8b | AXIS mode contracts and a record of every prompt (catalogue, `prompt_version`; ADR-0039) | **Proposed** 2026-11-26 | |
+| 8b | AXIS mode contracts and a record of every prompt (catalogue, `prompt_version`; ADR-0039) | ADR accepted 2026-11-26; SPEC-31 drafted | |
 | 8c | Follow-up from SPEC-30: move the code detector from `adapters` into `core` | **Proposed** 2026-11-26 | |
 | 9 | Learner-style questions: query rewriting and at most one bounded agentic retry, only if measured to help (2.8) | last, optional | 7 |
 
