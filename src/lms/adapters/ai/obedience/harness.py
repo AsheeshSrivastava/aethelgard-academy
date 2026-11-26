@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,7 +26,7 @@ from lms.adapters.ai.providers.metering import MONTHLY_CAP_USD, BudgetExceeded
 from lms.adapters.ai.providers.profiles import DEFAULT_PROFILE_ID, ProviderKind, ProviderProfile
 from lms.core import tracing
 from lms.core.axis_obedience import MODES, STATES
-from lms.core.interfaces import AxisMode, AxisQuery
+from lms.core.interfaces import AxisMode, AxisQuery, ExecutionResult
 from lms.core.models import ActivityType
 
 DEFAULT_SETS_DIR = Path("eval/gemini-sets")
@@ -39,7 +40,9 @@ MAX_REPEAT = 5
 CALL_TIMEOUT_SECONDS = 180.0  # a hung local model must not hang the whole run
 PROGRESS_EVERY = 25
 
-# The calls are fixed and neutral: the eval asks about the question only, with no code and no run output.
+# The calls are fixed and neutral: the eval asks about the question only, with no code and no run output. The one
+# exception is the second pass over the error items (SPEC-33 section 7).
+_TRACE_START = re.compile(r'^(?:Traceback \(most recent call last\)|\s*File "[^"]*", line \d+)')
 _UNIT_ID = "PY-0.1"
 _ACTIVITY = ActivityType.TRACE
 
@@ -52,8 +55,10 @@ class Question:
     id: str
     text: str
     set: str  # a file stem of eval/gemini-sets, such as "pytest-docs"
-    kind: str  # "out_of_scope", "made_up" or "error"
+    kind: str  # "out_of_scope", "made_up", "error" or "run_output"
     invented: Optional[str] = None  # the invented identifier of a made-up item
+    code: Optional[str] = None  # "run_output" only: sent as the learner's code
+    stderr: Optional[str] = None  # "run_output" only: sent as the run's error output
 
 
 def _bytes_hash(data: bytes) -> str:
@@ -113,6 +118,35 @@ def load_error_items(path: Optional[Path] = None) -> List[Question]:
     questions = [Question(str(item["id"]), str(item.get("q", "")), ERROR_SET, "error") for item in data]
     _check_questions(questions)
     return questions
+
+
+def split_error_item(text: str) -> Optional[Tuple[str, str, str]]:
+    """(code, run error output, question) of an error item, or None when there is nothing to split it by.
+
+    The error output starts at the first Traceback or File line; the question is the closing paragraph.
+    """
+    lines = [line.rstrip() for line in text.strip("\n").splitlines()]
+    start = next((i for i, line in enumerate(lines) if _TRACE_START.match(line)), None)
+    if start is None:
+        return None
+    cut = max((i for i in range(start, len(lines)) if not lines[i]), default=None)
+    if cut is None:  # no closing paragraph: no question to ask apart
+        return None
+    code = "\n".join(lines[:start]).strip("\n")
+    stderr = "\n".join(lines[start:cut]).strip("\n")
+    question = "\n".join(lines[cut + 1:]).strip()
+    return code, stderr, question
+
+
+def run_output_questions(errors: Sequence[Question]) -> List[Question]:
+    """Each error item that splits, asked again with its error passed as run output (SPEC-33 section 7)."""
+    seconds = []
+    for item in errors:
+        parts = split_error_item(item.text)
+        if parts:
+            code, stderr, question = parts
+            seconds.append(Question(f"{item.id}-run", question, item.set, "run_output", code=code, stderr=stderr))
+    return seconds
 
 
 def _check_questions(questions: Sequence[Question]) -> None:
@@ -202,15 +236,21 @@ def _cases(questions: Sequence[Question], options: EvalOptions) -> List[Tuple[in
 
 
 def _query(question: Question, mode: str) -> AxisQuery:
+    result = None
+    if question.stderr:
+        result = ExecutionResult(success=False, stdout="", stderr=question.stderr, exit_code=1, duration_ms=0.0)
     return AxisQuery(learner_id="eval", unit_id=_UNIT_ID, current_activity=_ACTIVITY, user_prompt=question.text,
-                     mode=AxisMode(mode))
+                     mode=AxisMode(mode), learner_code=question.code, execution_result=result)
 
 
 def _row(q: Question, mode: str, state: str, temperature: float, repeat: int, raw: Optional[str], visible: Optional[str],
          no_reply: bool, error_class: Optional[str]) -> Dict[str, Any]:
-    return {"id": q.id, "set": q.set, "kind": q.kind, "mode": mode, "state": state, "question": q.text,
-            "invented": q.invented, "raw_reply": raw, "visible_reply": visible, "no_reply": no_reply,
-            "error_class": error_class, "temperature": temperature, "repeat": repeat}
+    row = {"id": q.id, "set": q.set, "kind": q.kind, "mode": mode, "state": state, "question": q.text,
+           "invented": q.invented, "raw_reply": raw, "visible_reply": visible, "no_reply": no_reply,
+           "error_class": error_class, "temperature": temperature, "repeat": repeat}
+    if q.kind == "run_output":  # --replay needs them to score the row
+        row.update(learner_code=q.code, stderr=q.stderr)
+    return row
 
 
 # --- one call ---
@@ -328,7 +368,7 @@ def _replay(options: EvalOptions) -> int:
     name = options.run_name or report_module.default_run_name(set_v, made_v, temperature, options.seed)
     meta = {"set_version": set_v, "made_up_version": made_v, "profile_id": "replay", "model_answered": None,
             "temperature": temperature, "send_temperature": None, "seed": options.seed, "repeat": options.repeat}
-    if any(row.get("kind") == "error" for row in rows):  # an old file has none, so no version is claimed for it
+    if any(row.get("kind") in ("error", "run_output") for row in rows):  # an old file has none, so no version is claimed for it
         meta["error_items_version"] = error_items_version(_error_items_path(options))
     folder = report_module.write_run(Path(options.out_dir), name, rows, meta)
     print(f"Replayed {len(rows)} replies with the checker only; no model was called.")
@@ -446,9 +486,11 @@ def _run(options: EvalOptions, factory: CompanionFactory, profiles: Mapping[str,
     errors = load_error_items(errors_path) if errors_path.is_file() else []
     if not errors:
         print(f"No error-message questions ({ERROR_ITEMS_FILE} is missing or empty): they are not asked.")
-    _check_questions([*main, *errors])
+    _check_questions([*main, *errors, *run_output_questions(errors)])
     # Selected apart, so adding error items never changes which of the others --quick takes.
-    questions = [q for part in (main, errors) for q in select_questions(part, options.sets, options.quick)]
+    chosen_errors = select_questions(errors, options.sets, options.quick)
+    questions = [*select_questions(main, options.sets, options.quick), *chosen_errors,
+                 *run_output_questions(chosen_errors)]
     if not questions:
         raise ValueError("No question matches the --sets filter.")
     set_v, made_v = set_version(sets_dir), made_up_version(made_up_path)

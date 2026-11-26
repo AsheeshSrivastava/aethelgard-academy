@@ -4,13 +4,14 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { ErrorNote } from "./common";
 
-export function ResetUnit({ unitId }: { unitId: string }) {
+export function ResetUnit({ unitId, onReset }: { unitId: string; onReset?: () => void }) {
   const [confirming, setConfirming] = useState(false);
   const client = useQueryClient();
   const reset = useMutation({
     mutationFn: () => api.resetUnit(unitId),
     onSuccess: () => {
       setConfirming(false);
+      onReset?.();
       return client.invalidateQueries();
     },
   });

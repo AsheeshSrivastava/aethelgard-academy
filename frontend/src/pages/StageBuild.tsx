@@ -10,6 +10,7 @@ import { CodeEditor } from "../lesson/CodeEditor";
 import { languageOf } from "../lib/fileLanguage";
 import { Prose } from "../lesson/Prose";
 import { RunTerminal } from "../lesson/RunTerminal";
+import { RunErrorContext, type RunError } from "../lesson/runError";
 import { maturityLabel } from "../lib/format";
 import { buildPath } from "../lib/backPath";
 import { useInteractionId } from "../lib/interaction";
@@ -183,6 +184,16 @@ function Workspace({
   const started = useRef(false);
   const liveRound = useRef(0);
   const codeEdits = useRef(0);
+  // The latest run's error belongs to this build (SPEC-33 section 4); Reset build clears it.
+  const buildKey = build.exercise_id;
+  const [held, setHeld] = useState<{ buildKey: string; error?: RunError }>({ buildKey });
+  if (held.buildKey !== buildKey) setHeld({ buildKey });
+  const runError = held.buildKey === buildKey ? held.error : undefined;
+  const reportRunError = useCallback(
+    (error: RunError | undefined) => setHeld((now) => (now.buildKey === buildKey ? { buildKey, error } : now)),
+    [buildKey],
+  );
+  const [resets, setResets] = useState(0);
 
   const stageArgs = { courseId, stage };
 
@@ -301,6 +312,8 @@ function Workspace({
       setSubmitted(null);
       setConfirming(false);
       setVersion(version + 1);
+      reportRunError(undefined);
+      setResets((count) => count + 1);
     },
   });
 
@@ -415,7 +428,9 @@ function Workspace({
               label={`${open} code`}
               language={languageOf(open)}
             />
-            <RunTerminal getFiles={getFiles} exerciseId={build.exercise_id} entry={build.entry} />
+            <RunErrorContext.Provider value={reportRunError}>
+              <RunTerminal key={buildKey} getFiles={getFiles} exerciseId={build.exercise_id} entry={build.entry} resets={resets} />
+            </RunErrorContext.Provider>
           </div>
           {feedback.isError && <ErrorNote error={feedback.error} />}
           {feedback.data && <FeedbackPanel feedback={feedback.data} />}
@@ -458,6 +473,7 @@ function Workspace({
             step="build"
             exerciseId={build.exercise_id}
             getCode={getCode}
+            runError={runError}
             socraticOnly
           />
           <section className="card panel" aria-labelledby="build-proves">

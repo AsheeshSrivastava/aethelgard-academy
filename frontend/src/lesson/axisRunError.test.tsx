@@ -129,7 +129,7 @@ const build = {
   submitted: false,
 };
 
-function open(path: string) {
+function open(path: string, extra: Record<string, unknown> = {}) {
   const calls = stubApi({
     ...unitRoutes("PY-0.1"),
     ...unitRoutes("PY-0.2"),
@@ -139,6 +139,7 @@ function open(path: string) {
     [`POST ${BUILD_ME}/build:check`]: { requirements: [] },
     "GET /api/v1/axis/status": { course_reference: "ready" },
     [`POST ${STREAM}`]: done,
+    ...extra,
   });
   const user = userEvent.setup();
   const router = renderAt(path);
@@ -173,8 +174,8 @@ function open(path: string) {
   return { user, ask, run, go, note, panel };
 }
 
-async function onStep(step: keyof typeof ITEMS) {
-  const page = open(`/units/PY-0.1/${step}`);
+async function onStep(step: keyof typeof ITEMS, extra: Record<string, unknown> = {}) {
+  const page = open(`/units/PY-0.1/${step}`, extra);
   await screen.findByText(`Made-up task ${step}`);
   await page.panel();
   return page;
@@ -339,5 +340,132 @@ describe("SPEC-33 section 9: chaos", () => {
     expect(body.learner_code).toBe("total = 1");
     expect(body.execution_result).toMatchObject(result("NameError: made up\n"));
     expect(await page.note()).toBeInTheDocument();
+  });
+});
+
+// =====================================================================================================
+// Section 12 reading 2: Regenerate and Reset clear it; a run that finishes late attaches to nothing
+// =====================================================================================================
+
+const deliver = (socket: FakeSocket, events: object[]) =>
+  act(() => {
+    for (const event of events) socket.onmessage?.({ data: JSON.stringify(event) });
+  });
+
+describe("SPEC-33 section 12 reading 2: reset actions clear the held error", () => {
+  it("Regenerate clears it", async () => {
+    const id = "PY-0.1/debug-validate-2/v1";
+    const page = open("/units/PY-0.1/debug-validate", {
+      [`POST ${BASE}/units/PY-0.1/activities/debug-validate/exercises:regenerate`]: {
+        exercise_id: id,
+        unit_id: "PY-0.1",
+        activity: "debug-validate",
+        origin: "generated",
+        variant_no: 2,
+        prompt_markdown: "Made-up second variant",
+        ...ITEMS["debug-validate"],
+      },
+      [`GET ${BASE}/drafts/${id}`]: { files: {} },
+      [`PUT ${BASE}/drafts/${id}`]: null,
+    });
+    await screen.findByText("Made-up task debug-validate");
+    await page.run(failed("NameError: made up\n"));
+    expect(await page.note()).toBeInTheDocument();
+
+    await page.user.click(screen.getByRole("button", { name: "Regenerate" }));
+    await screen.findByText("Made-up second variant");
+
+    expect(await page.note()).not.toBeInTheDocument();
+    none(await page.ask());
+  });
+
+  it("Reset code clears it", async () => {
+    const page = await onStep("playground");
+    await page.run(failed("NameError: made up\n"));
+    expect(await page.note()).toBeInTheDocument();
+
+    await page.user.click(screen.getByRole("button", { name: "Reset code" }));
+
+    expect(await page.note()).not.toBeInTheDocument();
+    none(await page.ask());
+  });
+
+  it("Reset unit clears it", async () => {
+    const page = await onStep("playground", { [`POST ${BASE}/units/PY-0.1/reset`]: null });
+    await page.run(failed("NameError: made up\n"));
+    expect(await page.note()).toBeInTheDocument();
+
+    await page.user.click(screen.getByRole("button", { name: "Reset unit" }));
+    await page.user.click(screen.getByRole("button", { name: "Yes, reset" }));
+
+    await waitFor(async () => expect(await page.note()).not.toBeInTheDocument());
+  });
+
+  it("Reset build clears it", async () => {
+    const page = open("/courses/python/stages/0/build", { [`POST ${BUILD_ME}/build:reset`]: null });
+    await page.panel();
+    await page.run(failed("ValueError: made up\n"));
+    expect(await page.note()).toBeInTheDocument();
+
+    await page.user.click(screen.getByRole("button", { name: "Reset build" }));
+    const dialog = screen.getByRole("alertdialog", { name: "Reset this build" });
+    await page.user.click(within(dialog).getByRole("button", { name: "Reset build" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+
+    expect(await page.note()).not.toBeInTheDocument();
+    none(await page.ask());
+  });
+
+  it("a run still going when the code is reset attaches nothing", async () => {
+    const page = await onStep("playground");
+    await page.run([]);
+    const socket = FakeSocket.all.at(-1)!;
+    await page.user.click(screen.getByRole("button", { name: "Reset code" }));
+
+    deliver(socket, failed("NameError: late\n"));
+
+    expect(await page.note()).not.toBeInTheDocument();
+    none(await page.ask());
+  });
+});
+
+describe("SPEC-33 section 12 reading 2: a late run", () => {
+  it("does not attach to the new unit, even on the same step", async () => {
+    const page = await onStep("playground");
+    await page.go("PY-0.2", "playground");
+    await page.go("PY-0.1", "playground");
+    await page.run([]);
+    const socket = FakeSocket.all.at(-1)!;
+
+    await page.go("PY-0.2", "playground");
+    deliver(socket, failed("NameError: late\n"));
+
+    expect(await page.note()).not.toBeInTheDocument();
+    none(await page.ask());
+  });
+
+  it("does not attach to a new step, nor replace that step's own error", async () => {
+    const page = await onStep("playground");
+    await page.run([]);
+    const socket = FakeSocket.all.at(-1)!;
+
+    await page.go("PY-0.1", "debug-validate");
+    await page.run(failed("KeyError: current\n"));
+    deliver(socket, failed("NameError: late\n"));
+
+    expect((await page.ask()).execution_result).toMatchObject(result("KeyError: current\n"));
+  });
+});
+
+describe("SPEC-33 section 4: the client holds a bounded error", () => {
+  it("keeps the end, at most 20000 characters, starting on a whole line", async () => {
+    const page = await onStep("playground");
+
+    await page.run([err("made-up frame\n".repeat(10_000)), err("ValueError: last\n"), exit(1)]);
+
+    const { stderr } = (await page.ask()).execution_result as { stderr: string };
+    expect(stderr.length).toBeLessThanOrEqual(20_000);
+    expect(stderr.startsWith("made-up frame\n")).toBe(true);
+    expect(stderr.endsWith("ValueError: last\n")).toBe(true);
   });
 });

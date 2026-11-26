@@ -4,6 +4,7 @@ import { AxisFeedback } from "./AxisFeedback";
 import { answerNote, fetchCourseReference, KEYWORD_ONLY_NOTE, statusLine } from "./axisNotices";
 import { streamAxis, streamSafe, type SseEvent } from "./axisStream";
 import { Prose } from "./Prose";
+import type { RunError } from "./runError";
 import { activityFor } from "./steps";
 
 const MODES = ["Socratic", "Hybrid", "Coach"] as const;
@@ -44,12 +45,15 @@ export function AxisPanel({
   step,
   exerciseId,
   getCode,
+  runError,
   socraticOnly = false,
 }: {
   unitId: string;
   step: string;
   exerciseId?: string;
   getCode: () => string | undefined;
+  /** What the latest run on this step left, if it failed (SPEC-33 section 4). */
+  runError?: RunError;
   socraticOnly?: boolean;
 }) {
   // The learner's own choice lasts while they stay on this step of this unit (SPEC-31 R7).
@@ -97,10 +101,13 @@ export function AxisPanel({
     const question = draft.trim();
     if (!question || busy) return;
     setDraft("");
-    await ask(question, { learner_code: getCode(), exercise_id: exerciseId, page: step });
+    await ask(question, { learner_code: getCode(), execution_result: runError, exercise_id: exerciseId, page: step });
   }
 
-  async function ask(shown: string, request: { user_prompt?: string; learner_code?: string; exercise_id?: string; page: string }) {
+  async function ask(
+    shown: string,
+    request: { user_prompt?: string; learner_code?: string; execution_result?: RunError; exercise_id?: string; page: string },
+  ) {
     const askId = nextId.current++;
     const replyId = nextId.current++;
     setBusy(true);
@@ -117,6 +124,7 @@ export function AxisPanel({
           current_activity: activityFor(step),
           user_prompt: request.user_prompt ?? shown,
           learner_code: request.learner_code,
+          execution_result: request.execution_result,
           exercise_id: request.exercise_id,
           page: request.page,
         },
@@ -201,6 +209,7 @@ export function AxisPanel({
           Send
         </button>
       </form>
+      {runError && <p className="axis-note">Your last run error is sent with your question.</p>}
       <p className="axis-note">
         Help is logged against this exercise. Looking up syntax is fine. If AXIS gives you the reasoning, the work counts as practice, not as proof.
       </p>

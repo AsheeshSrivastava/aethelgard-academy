@@ -2,7 +2,9 @@ import "@xterm/xterm/css/xterm.css";
 
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+
+import { addRunError, endOfRunError, RunErrorContext } from "./runError";
 
 /** The terminal's colours from the theme tokens (tokens.css); fallbacks keep it dark if a token is missing. */
 export function terminalTheme() {
@@ -33,12 +35,20 @@ export function RunTerminal({
   getFiles,
   exerciseId,
   entry = "solution.py",
+  resets = 0,
 }: {
   getCode?: () => string;
   getFiles?: () => Record<string, string>;
   exerciseId: string;
   entry?: string;
+  /** How often the code was reset: a run started before a reset no longer reports its error. */
+  resets?: number;
 }) {
+  const report = useContext(RunErrorContext);
+  const resetsNow = useRef(resets);
+  useEffect(() => {
+    resetsNow.current = resets;
+  }, [resets]);
   const host = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal | null>(null);
   const socket = useRef<WebSocket | null>(null);
@@ -94,17 +104,28 @@ export function RunTerminal({
       observer.disconnect();
       watcher.disconnect();
       scheme?.removeEventListener?.("change", retheme);
+      terminal.current = null; // nothing still on its way is shown or reported
       socket.current?.close();
       term.dispose();
     };
   }, []);
 
-  function handle(event: RunEvent, ws: WebSocket) {
+  function handle(event: RunEvent, ws: WebSocket, run: { errors: string; resets: number }) {
     const term = terminal.current;
-    if (!term) return;
+    if (!term || socket.current !== ws) return;
     if (event.type === "stdout") term.write(event.data);
-    else if (event.type === "stderr") term.write(`\x1b[31m${event.data}\x1b[0m`);
-    else if (event.type === "exit") {
+    else if (event.type === "stderr") {
+      run.errors = addRunError(run.errors, event.data);
+      term.write(`\x1b[31m${event.data}\x1b[0m`);
+    } else if (event.type === "exit") {
+      const failed = event.code !== 0 || event.timed_out;
+      if (run.resets === resetsNow.current) {
+        report(
+          failed && run.errors
+            ? { success: false, stdout: "", stderr: endOfRunError(run.errors), exit_code: event.code, duration_ms: event.duration_ms }
+            : undefined,
+        );
+      }
       const note = event.timed_out ? "Stopped at a limit." : `Finished with exit code ${event.code}.`;
       term.writeln(`\r\n\x1b[90m${note}\x1b[0m`);
       ws.close();
@@ -125,6 +146,8 @@ export function RunTerminal({
     term.reset();
     line.current = "";
     waiting.current = false;
+    report(undefined); // only the latest run counts, and this one has not ended
+    const latest = { errors: "", resets };
     const ws = new WebSocket(socketUrl());
     socket.current = ws;
     setRunning(true);
@@ -137,7 +160,7 @@ export function RunTerminal({
           exercise_id: exerciseId,
         }),
       );
-    ws.onmessage = (message) => handle(JSON.parse(String(message.data)) as RunEvent, ws);
+    ws.onmessage = (message) => handle(JSON.parse(String(message.data)) as RunEvent, ws, latest);
     ws.onclose = () => {
       waiting.current = false;
       setNeedsInput(false);

@@ -15,12 +15,25 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
-from lms.core.axis_obedience import CHECKER_VERSION, MODES, STATES, ObedienceResult, check_reply, contains_address
+from lms.core.axis_obedience import (
+    CHECKER_VERSION,
+    MODES,
+    STATES,
+    ObedienceResult,
+    check_anchored,
+    check_one_action,
+    check_one_question,
+    check_reply,
+    contains_address,
+)
 
 OUTPUT_FILES = ("report.txt", "results.json", "replies.jsonl", "review-sample.md")
 VIEWS = ("raw", "visible")  # raw = what the model said (the obedience measure); visible = what the learner sees
 CHECKS = ("a", "b", "c", "d")
 REVIEW_PER_MODE = 10
+# The turn-quality checks (SPEC-33 section 7) and the blocks they are counted in: key in results.json, label.
+TURN_CHECKS = ("anchored", "one_question", "one_action")
+TURN_BLOCKS = (("main", "main"), ("error_items", "error items"), ("run_output_items", "run-output items"))
 BAR_LINE = "Obedience bar: report only on the first run; no pass mark is applied (ADR-0037 4.2)."
 PROXY_LINE = (
     "A person reads each reply and asks: did it answer, or did it refuse? "
@@ -47,7 +60,10 @@ def _text(row: Mapping[str, Any], view: str) -> str:
 def score_row(row: Mapping[str, Any], view: str = "raw") -> ObedienceResult:
     """Run the checker on one row. A reply that never came is scored as an empty reply, so it fails (a)."""
     reply = "" if row.get("no_reply") else _text(row, view)
-    return check_reply(reply, row["mode"], row["state"], str(row.get("question") or ""), row.get("invented"))
+    # Everything the learner wrote this turn; a run-output row also carries the code and the error (SPEC-33 7).
+    parts = (row.get("question"), row.get("learner_code"), row.get("stderr"))
+    learner = "\n\x00\n".join(str(part) for part in parts if part)
+    return check_reply(reply, row["mode"], row["state"], learner, row.get("invented"))
 
 
 def _empty_cell() -> Dict[str, int]:
@@ -77,8 +93,34 @@ def _is_error_item(row: Mapping[str, Any]) -> bool:
     return row.get("kind") == "error"
 
 
+def _is_run_output_item(row: Mapping[str, Any]) -> bool:
+    return row.get("kind") == "run_output"
+
+
+def _turn_counts(rows: Sequence[Mapping[str, Any]]) -> Dict[str, Dict[str, Dict[str, int]]]:
+    """Per mode, for each turn check: the raw replies it applies to and how many pass. A no_reply row is left out."""
+    table: Dict[str, Dict[str, Dict[str, int]]] = {}
+    for row in rows:
+        if row.get("no_reply"):
+            continue
+        reply = _text(row, "raw")
+        outcomes = (
+            check_anchored(reply, str(row.get("question") or ""), str(row.get("learner_code") or ""),
+                           str(row.get("stderr") or "")),
+            check_one_question(reply),
+            check_one_action(reply),
+        )
+        cells = table.setdefault(row["mode"], {name: {"n": 0, "passed": 0} for name in TURN_CHECKS})
+        for name, outcome in zip(TURN_CHECKS, outcomes):
+            if outcome.passed is not None:
+                cells[name]["n"] += 1
+                cells[name]["passed"] += 1 if outcome.passed else 0
+    return table
+
+
 def _error_totals(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
-    """The error-message replies, totals only, on the raw replies (SPEC-31 9.3 E1, 9.7 reading 4)."""
+    """Totals only, on the raw replies, for the error-message replies (SPEC-31 9.3 E1, 9.7 reading 4) and, apart,
+    for their second pass with the run output (SPEC-33 section 7)."""
     scored = [(row, score_row(row, "raw")) for row in rows]
     return {
         "n": len(scored),
@@ -92,12 +134,14 @@ def _error_totals(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
 def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) -> Dict[str, Any]:
     """The numbers of one run (R14 results.json). Counts and question ids only; never a question or a reply.
 
-    Error-message replies are counted apart (SPEC-31 9.3 E1), so the other totals stay comparable with older runs.
+    Error-message replies are counted apart (SPEC-31 9.3 E1), so the other totals stay comparable with older runs;
+    so is their second pass with the run output (SPEC-33 section 7).
     """
     # Over every reply: the warning is about sharing replies.jsonl, which holds them all (A8).
     with_url = sum(1 for row in rows if not row.get("no_reply") and contains_address(_text(row, "raw")))
     errors = [row for row in rows if _is_error_item(row)]
-    rows = [row for row in rows if not _is_error_item(row)]
+    run_output = [row for row in rows if _is_run_output_item(row)]
+    rows = [row for row in rows if not (_is_error_item(row) or _is_run_output_item(row))]
     raw = [(row, score_row(row, "raw")) for row in rows]
     failing: Dict[str, set] = {name: set() for name in (*CHECKS, "e")}
     flagged_ids: set = set()
@@ -131,6 +175,9 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
         flagged_ids=sorted(flagged_ids),
         replies_with_url=with_url,
         error_items=_error_totals(errors),
+        run_output_items=_error_totals(run_output),
+        turn_checks={key: _turn_counts(block)
+                     for (key, _label), block in zip(TURN_BLOCKS, (rows, errors, run_output))},
     )
     return results
 
@@ -166,6 +213,19 @@ def _ids_line(label: str, ids: Sequence[str]) -> str:
     return f"{label} ({len(ids)}): " + (", ".join(ids) if ids else "none")
 
 
+def _turn_lines(turn: Mapping[str, Mapping[str, Mapping[str, Mapping[str, int]]]]) -> List[str]:
+    lines = ["Turn checks (flag only, not in the pass count):"]
+    for key, label in TURN_BLOCKS:
+        for mode in MODES:
+            cells = turn[key].get(mode)
+            if cells:
+                counts = ", ".join(
+                    f"{name.replace('_', ' ')} {cells[name]['passed']} of {cells[name]['n']}"
+                    for name in TURN_CHECKS)
+                lines.append(f"  {label}, {mode}: {counts}")
+    return lines
+
+
 def render_report(results: Mapping[str, Any]) -> str:
     """report.txt (R14): counts per mode and state, each check alone, the made-up score, flags and failing ids."""
     temperature = results.get("temperature")
@@ -191,6 +251,7 @@ def render_report(results: Mapping[str, Any]) -> str:
         lines += ["", title, *_table(counts), f"All: {obeys} of {n} obey ({percent(obeys, n)})"]
     made = results["made_up"]
     errors = results["error_items"]
+    runs = results["run_output_items"]
     lines += [
         "",
         f"Exact wording of the state sentence (information only, no pass mark): {100 * results['exact_wording_rate']:.1f}%",
@@ -201,6 +262,11 @@ def render_report(results: Mapping[str, Any]) -> str:
         f"Error-message items: {errors['n']} replies, {errors['no_reply']} no reply, "
         f"{errors['explains_flagged']} explain flags, "
         f"{errors['b_failed']} fail (b), {errors['d_failed']} fail (d) (not in the totals above)",
+        f"Run-output items: {runs['n']} replies, {runs['no_reply']} no reply, "
+        f"{runs['explains_flagged']} explain flags, "
+        f"{runs['b_failed']} fail (b), {runs['d_failed']} fail (d) (not in the totals above)",
+        "",
+        *_turn_lines(results["turn_checks"]),
         "",
         "Failing question ids per check (raw reply):",
     ]
@@ -225,14 +291,15 @@ def _sort_key(row: Mapping[str, Any]) -> Tuple[Any, ...]:
 
 
 def render_review_sample(rows: Sequence[Mapping[str, Any]], seed: int) -> str:
-    """Every flagged reply, plus 10 random unflagged replies per mode (R13), and every error-message reply (E1).
+    """Every flagged reply, plus 10 random unflagged replies per mode (R13), and every error-message reply (E1),
+    with or without the run output (SPEC-33 section 7).
 
     The rows are sorted first, so the same replies and seed give the same sample whatever order they arrive in.
     """
     ordered = sorted(rows, key=_sort_key)
     scored = [(row, score_row(row, "raw")) for row in ordered]
     # Every error-message reply is read; the others are picked as if there were none.
-    errors = {id(row) for row in ordered if _is_error_item(row)}
+    errors = {id(row) for row in ordered if _is_error_item(row) or _is_run_output_item(row)}
     others = [(row, result) for row, result in scored if id(row) not in errors]
     chosen = errors | {id(row) for row, result in others if result.flagged}
     rng = random.Random(seed)
