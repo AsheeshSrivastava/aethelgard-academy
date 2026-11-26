@@ -395,13 +395,13 @@ def test_b5_results_json_has_checker_version_b_and_the_explains_flag_count(tmp_p
     """ADR-0037 section 2.5 B / SPEC-30 section 11 (B5)."""
     results = report().build_results(explain_rows(), META)
 
-    assert results["checker_version"] == "B"
+    assert results["checker_version"] == "C"  # SPEC-31 9.3 C3
     assert results["explains_flagged"] == 2 and isinstance(results["explains_flagged"], int)
     for key in ("counts", "made_up", "new_terms_flagged", "exact_wording_rate", "failing_ids", "flagged_ids", "set_version"):
         assert key in results  # the existing keys stay
     run_dir = report().write_run(tmp_path, "run1", explain_rows(), META)
     data = json.loads((run_dir / "results.json").read_text(encoding="utf-8"))
-    assert data["checker_version"] == "B" and data["explains_flagged"] == 2
+    assert data["checker_version"] == "C" and data["explains_flagged"] == 2
 
 
 def test_b5_explains_flagged_counts_the_raw_replies_only():

@@ -1,3 +1,6 @@
+---
+modified: 2026-11-27T01:02:14+05:30
+---
 # SPEC-31: AXIS mode contracts and a record of every prompt (ADR-0035 plan step 8b)
 
 Status: **Approved by the owner 2026-11-26**, with the four open points of section 8 decided as recommended. Next step: tests first (section 5), then code. No test or code is part of the docs change that adds this file.
@@ -95,7 +98,7 @@ Before and after, the SPEC-30 eval on the local model at the live temperature 0.
 5. A concept check with more or fewer ideas gets the same version.
 6. The catalogue does not list the retired explain-error question.
 
-## 9. Amendment A (**Proposed** 2026-11-27; no test or code until the owner says go)
+## 9. Amendment A (**Approved** by the owner 2026-11-27: option A on all five choices of 9.6)
 Implements ADR-0039 section 8. Amends section 3.4, SPEC-07 section 2.1 (what counts as code) and SPEC-30 checks (b) and (d).
 
 ### 9.1 No-source contract wording (replaces part of section 3.4; all three modes)
@@ -134,3 +137,9 @@ A learner span of one character; a span that matches only after whitespace is co
 3. **Quoting the learner's code:** (a) allowed inline (A4), blocks still withheld; (b) never allowed, fix only the English false hits.
 4. **Checker C:** (a) in this amendment; (b) separately, later.
 5. **Plan item 8c** (move the detector from `adapters` into `core`): it is the same code. (a) a separate move-only PR afterwards, so the behaviour change stays easy to review; (b) do both together.
+
+### 9.7 Readings fixed when the tests were written (owner to confirm at review)
+1. A backtick span the learner did **not** write is also checked as if it started a line, so a span such as `import os` or `return total` stays withheld. Without this, A1 would let through what is blocked today.
+2. The streamed path does not cut a sentence inside a backtick span, or A4 could not apply there.
+3. A2's "operator" is an operator in the expression after `return` (`return total * rate`).
+4. The error-item table holds totals only. Those replies are also kept out of the failing and flagged id lists and the per-mode calibration sample. `--sets error-items` selects them.

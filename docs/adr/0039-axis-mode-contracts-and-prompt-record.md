@@ -1,6 +1,3 @@
----
-modified: 2026-11-26T14:07:12+05:30
----
 # ADR-0039: AXIS mode contracts, one no-source contract, and a record of every prompt
 
 - **Status:** Accepted by the owner 2026-11-26 (the decisions are listed in section 5). No test or code is written yet.
@@ -94,10 +91,10 @@ The panel preselects a mode from the step's activity; the learner can change it;
 ## 7. What happens after the go
 Spec amendments (SPEC-24, SPEC-28, SPEC-30 or a new spec for the contracts and the grounded eval), tests first, then code, each as its own small PR.
 
-## 8. Amendment A (**Proposed** 2026-11-27, waiting for the owner's go)
+## 8. Amendment A (**Accepted** by the owner 2026-11-27)
 The first run of the new contracts (SPEC-31 section 7; local model, 756 replies at 0.0 and 0.2, no course source) cut memory explanations sharply, and showed two faults.
 
 1. **A pasted error still draws out the cause.** The explains flag (g) was on in 27 of 54 error-message replies at 0.0 and 17 of 54 at 0.2, against 2 and 4 of 702 for other questions. There are only six error-message questions.
 2. **The Socratic code guard replaces harmless replies** with "direct code solutions are withheld": 15 of 252 at 0.0 and 8 of 252 at 0.2. Of those 23: 6 because the word "return" and a bracket both appear; 5 because "class" is followed by a word in plain English ("a named class in Python"); 5 because the learner's own code is quoted in backticks; 7 because it is copied in a code block (one of them changed). The same detector feeds `AssistanceClassifier`, so a false hit in Coach or Hybrid can mark help as `supplied_reasoning` and count against the learner's evidence.
 
-Decision (proposed): keep the strict rules of section 2; say them more exactly in the no-source contract; make the code detector match code and not English; and let a Socratic reply quote the learner's own code inline (refines how ADR-0009's boundary is checked: nothing new is given to the learner). Details, tests and open choices: SPEC-31 section 9.
+Decision: keep the strict rules of section 2; say them more exactly in the no-source contract; make the code detector match code and not English; and let a Socratic reply quote the learner's own code inline (refines how ADR-0009's boundary is checked: nothing new is given to the learner). Details, tests and open choices: SPEC-31 section 9.
