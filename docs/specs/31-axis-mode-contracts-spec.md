@@ -1,6 +1,3 @@
----
-modified: 2026-11-27T01:02:14+05:30
----
 # SPEC-31: AXIS mode contracts and a record of every prompt (ADR-0035 plan step 8b)
 
 Status: **Approved by the owner 2026-11-26**, with the four open points of section 8 decided as recommended. Next step: tests first (section 5), then code. No test or code is part of the docs change that adds this file.
