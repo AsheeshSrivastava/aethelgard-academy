@@ -18,19 +18,19 @@ Today the system prompt is base + mode sentence + (course reference or no-source
 - R5. The user message is unchanged. The concept-check, README, build-feedback and ping prompts are unchanged (SPEC-24 R4b stays).
 
 ### B. Starting mode by activity
-- R6. The panel preselects a mode from the step's activity: Explain **Coach**; Specify, Decompose, Modify (also the playground), Evaluate, Direct **Hybrid**; Predict, Trace, Debug & Validate **Socratic**. An unknown activity falls back to Socratic.
+- R6. The panel preselects a mode from the step's activity: Explain **Coach**; Specify, Decompose, Modify (also the playground), Evaluate, Direct **Hybrid**; Predict, Trace, Debug & Validate **Socratic**. The suggestion keys on the activity name. An unknown **step** is already mapped to `Explain` by `activityFor` (`frontend/src/lesson/steps.ts:17`), so it gets Coach; only an activity name outside the list above falls back to Socratic.
 - R7. The learner can change it; their choice holds while they stay on that step; a new step applies that step's suggestion.
 - R8. Builds stay Socratic and cannot be changed (as today, panel and server).
 - R9. No server behaviour depends on the suggestion: the request still carries the mode the learner sent.
 
 ### C. Prompt catalogue
-- R10. `scripts/make_prompt_catalogue.py` renders every model prompt (AXIS chat for the three modes, grounded and each no-source state; the user message template; concept-check judge; README draft; build feedback summary; ping) into `docs/prompts/prompt-catalogue.md`, with placeholders for passages and learner text and no learner data, answer keys or rubric content.
+- R10. `scripts/make_prompt_catalogue.py` renders every model prompt (AXIS chat for the three modes, grounded and each no-source state; the user message template; concept-check judge; README draft; build feedback summary; ping; and the fixed runtime-error question of `POST /api/v1/explain-error` while that route exists, which a separate change retires) into `docs/prompts/prompt-catalogue.md`, with placeholders for passages and learner text and no learner data, answer keys or rubric content.
 - R11. A test renders it again and fails if the file differs (drift). The output has no date or timestamp, so it only changes when the wording changes.
 
 ### D. Prompt version
-- R12. `prompt_version` = the first 12 hex characters of SHA-256 over the **static** text of one call: the system prompt with passages replaced by `<passages>`, a newline, and the user-message template with every learner value replaced by its placeholder. One version per assembled static prompt (so Socratic no-source `not_found` and `no_index` differ). It is computed by one function that both the catalogue and the callers use; the catalogue prints it beside each prompt.
+- R12. `prompt_version` = the first 12 hex characters of SHA-256 over the **static** text of one call: the system prompt and the user-message template with **every variable value** replaced by a fixed placeholder: passages (`<passages>`), learner question, code and stderr, unit and activity, the concept-check question and idea list, the README brief and entry file name, and the build-feedback points and texts. The optional `<learner_code>` and `<execution_stderr>` blocks are always present in the template, so a version does not depend on whether a learner sent code. One version per assembled static prompt (so Socratic no-source `not_found` and `no_index` differ). It is computed by one function that both the catalogue and the callers use; the catalogue prints it beside each prompt.
 - R13. It is written to: (a) a new allow-listed attribute `prompt_version` (exactly 12 lowercase hex) on the `model_call` span (amends SPEC-28 R14); (b) a `prompt_version` field in the payload of the interaction-log events that follow a model call: `axis`, `concept_check`, `document_draft`, `build_feedback` (amends ADR-0022 section 2.3); (c) a `prompt_versions` map (mode/state to version) in the eval `results.json` (amends SPEC-30 R14).
-- R14. Never the prompt text, never learner text, in any of these places (SPEC-28 R15 unchanged). A mock reply records no version (no prompt was sent).
+- R14. Never the prompt text, never learner text, in any of these places (SPEC-28 R15 unchanged). A version is recorded **only when a prompt was actually sent to a model**: no field for a mock reply, for a concept check that was not judged, for a draft that failed before a call, or for a mock fallback after a failed real call (that reply came from no prompt).
 
 ## 3. Contract wording (learner-facing behaviour: owner approval needed)
 
@@ -56,20 +56,23 @@ Source block:
 
 State sentences are unchanged (SPEC-24 R3).
 
+### 3.5 What these contracts leave for later (not in this spec)
+ADR-0039 2.2 also asks Socratic to follow up and close with a short check of what the learner concluded, and Hybrid to compare the learner's plan with their stated inputs, outputs and criteria. Both need **turn history** (AXIS answers one turn at a time today), so the wording above does not ask for them and no test in section 5 checks them. They belong with the later step that adds history.
+
 ## 4. Existing text this changes (amendments, made in the same PR as the code)
 | Place | Today | Becomes |
 |---|---|---|
 | SPEC-24 R4, last sentence | "The tone differences between modes stay in the mode stance text; only the memory rule is shared." | With no source the mode stance is replaced by the neutral header; the tone differences apply with a source (SPEC-31 R3). |
 | SPEC-24 test list item 2 and `tests/test_no_source_rules.py` | asserts "overrides any mode instruction" | asserts that no mode instruction is present with no source |
 | SPEC-28 R14 | attribute allow-list | adds `prompt_version` (12 lowercase hex) |
-| ADR-0022 section 2.3 | payloads of `axis`, `concept_check`, `document_draft`, `build_feedback` | each adds `prompt_version` |
+| ADR-0022 section 2.3 table | rows for `axis` and `concept_check`; the code also logs `document_draft` and `build_feedback`, which the table does not list | the `axis` and `concept_check` rows add `prompt_version`; two rows are **added** for `document_draft` and `build_feedback`, each with `prompt_version` |
 | SPEC-30 R14 | `results.json` keys | adds `prompt_versions` |
 
 ## 5. Tests first (written and failing before any code)
 - R1 to R5, `tests/test_mode_contracts.py`: `test_grounded_prompt_has_base_mode_contract_and_reference_in_order` (3 modes); `test_no_source_prompt_has_no_mode_contract` (9); `test_no_source_prompt_has_no_instruction_to_explain` (9); `test_socratic_keeps_the_no_code_invariant_with_and_without_a_source`; `test_no_source_contract_forbids_error_explanations_guessing_names_and_inline_code` (9); `test_coach_with_a_source_asks_for_a_task_and_citations`; `test_hybrid_forbids_implementation_code`; `test_socratic_limits_to_two_questions`; `test_other_prompts_are_byte_for_byte_unchanged`.
 - R6 to R9, frontend `AxisPanel.test.tsx`: suggested mode per activity (all ten, plus unknown), override holds on the step, a new step re-suggests, builds locked to Socratic, the request carries the chosen mode.
 - R10, R11, `tests/test_prompt_catalogue.py`: `test_catalogue_matches_the_code`, `test_catalogue_has_every_model_prompt`, `test_catalogue_holds_no_learner_or_answer_text`, `test_catalogue_has_no_date`.
-- R12 to R14, `tests/test_prompt_version.py`: `test_version_is_12_hex_and_stable`, `test_version_changes_when_wording_changes_not_when_learner_text_changes`, `test_each_mode_and_state_has_its_own_version`, `test_model_call_span_carries_prompt_version_and_no_text`, `test_interaction_log_events_carry_prompt_version`, `test_results_json_carries_prompt_versions`, `test_mock_records_no_version`.
+- R12 to R14, `tests/test_prompt_version.py`: `test_version_is_12_hex_and_stable`, `test_version_changes_when_wording_changes_not_when_learner_text_changes`, `test_each_mode_and_state_has_its_own_version`, `test_model_call_span_carries_prompt_version_and_no_text`, `test_interaction_log_events_carry_prompt_version`, `test_results_json_carries_prompt_versions`, `test_mock_records_no_version`, `test_unjudged_failed_and_fallback_calls_record_no_version`, `test_version_ignores_unit_activity_rubric_brief_and_optional_blocks`.
 - Existing suites: SPEC-24 prompt tests updated only where section 4 says; the SPEC-30 checker is unchanged.
 
 ## 6. Chaos check (each a test or a recorded finding)
