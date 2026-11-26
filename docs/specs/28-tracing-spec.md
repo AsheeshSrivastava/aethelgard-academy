@@ -64,6 +64,7 @@ ADR-0035 section 5.4 sets a ten second search limit and two concurrent searches 
   | `latency_ms`, `duration_ms` | non-negative integer |
   | `passage_refs` | list of at most 10 objects `{passage_id, source_id, score}`; `passage_id` of 8 to 200 characters from `A-Za-z0-9._/@#~-` (the real shape is `source@version#c0-120~digest`), `source_id` a course or upstream path (at most 200 characters, no spaces), `score` a finite number rounded to 4 places |
   | `cited_passage_ids` | list of at most 10 passage ids (same rule as `passage_id`) |
+  | `prompt_version` | exactly 12 lowercase hex characters (added 2026-11-26, SPEC-31 R13) |
 
 - R15. **Never in any span:** the learner's question, answer, explanation, code, README or review note; passage text; model reply text; keys, tokens, URLs, file paths on the learner's machine. This holds even with `test_mode` and even if a caller passes such a key (R14 drops it). A `unit_id` or `source_id` value is a course reference, not learner text.
 - R16. **Passage refs.** The `retrieve` span lists, per returned passage, `passage_id` (the `make_passage_id` hash), `source_id` and `score`, plus the turn's `index_version`, `retrieval_mode`, `retrieval_status`, `terms_matched`, `terms_total`, `downgraded` and `latency_ms`, **taken from the `RetrievalTrace` returned for that turn** (finding 5). The `citation_check` span lists `cited_passage_ids` from `Grounding.cited_for` and `passages_cited`. `passage_id` changes when the index is rebuilt and is for tracing only; nothing in the eval anchors reads it (ADR-0037 2.2).

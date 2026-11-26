@@ -22,7 +22,7 @@ Governed by: ADR-0009 (Socratic boundary, unchanged), SPEC-17 section 3.1 (share
   - restate what the learner seems to be asking, in the learner's own terms;
   - ask one or two guiding questions about the learner's own code or data (this is the whole of Socratic's reply, and Coach and Hybrid may do the same);
   - suggest they rephrase, or look at the step's lesson text.
-  No mode may write a "Not from the course:" part. The Socratic no-code invariant (ADR-0009) is unchanged and still applies on top. The tone differences between modes stay in the mode stance text; only the memory rule is shared.
+  No mode may write a "Not from the course:" part. The Socratic no-code invariant (ADR-0009) is unchanged and still applies on top. With no source the mode stance is replaced by the neutral header; the tone differences apply with a source (SPEC-31 R3). *(Amended 2026-11-26, SPEC-31 section 4.)*
 - R4a. The same rule, with a source: the stance text for each mode says answers come from the numbered course passages only; anything the passages do not say is "not in the course yet". (The grounded notice is a one-line addition to the existing reference-passages instruction.)
 - R4b. **Not in scope of R4: Concept Check judging and README feedback.** Those two jobs compare the learner's text with data we supply (the authored idea list, SPEC-18; the measured checklist points, SPEC-15 section 10.2) and must not add facts. They keep their current prompts. A test pins that they are untouched.
 - R5. When a passage reaches the prompt, none of this text is added. The grounded path is unchanged (SPEC-22 R1 to R7).
@@ -58,6 +58,7 @@ Standing status line (section 4):
 Backend:
 1. `no_source_notice` for each of the 3 states x 3 modes (9) contains the R3 state sentence and the R2 rules.
 2. All three modes' no-source notices forbid facts, syntax and error explanations from the model's own memory, allow only questions and restating the learner's own text, and none of them contains or permits "Not from the course" (R4).
+   *(Amended 2026-11-26, SPEC-31 section 4: item 2's test no longer asserts "overrides any mode instruction"; it asserts that no mode instruction is present with no source.)*
 2a. The grounded prompt tells every mode to answer only from the numbered passages (R4a). The Concept Check judge prompt and the README feedback prompt are byte-for-byte unchanged (R4b).
 3. The Socratic system prompt with a no-source notice still contains the ADR-0009 no-code invariant, unchanged (R4, ADR-0009).
 4. With a passage in the prompt, no notice is present (R5). With a concept-store rescue, no notice is present (R6).

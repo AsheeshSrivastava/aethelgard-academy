@@ -120,6 +120,7 @@ class GeminiCompanion:
         except Exception as exc:
             raise GeminiError(f"Gemini consultation failed: {type(exc).__name__}") from None
         self._record("consult", self._answered(response), response, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.chat_prompt_version(query.mode, grounding.source_state))
         self.last_raw_reply = axis_rules.strip_think(raw)
         return axis_rules.finish_reply(raw, query, grounding, self.guardrail, self.classifier)
 
@@ -128,13 +129,15 @@ class GeminiCompanion:
         grounding = self._grounding(query)
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
-        return self._stream_deltas(sys_prompt, user_msg), grounding
+        version = axis_rules.chat_prompt_version(query.mode, grounding.source_state)
+        return self._stream_deltas(sys_prompt, user_msg, version), grounding
 
-    def _stream_deltas(self, sys_prompt: str, user_msg: str) -> Iterator[str]:
+    def _stream_deltas(self, sys_prompt: str, user_msg: str, version: str) -> Iterator[str]:
         last: Any = None
         usage_chunk: Any = None
         input_chars = len(sys_prompt) + len(user_msg)
         requested = False
+        taken = False  # the SDK stream is lazy: nothing is sent until it is first read
         said: List[str] = []  # everything yielded, kept as last_raw_reply when the stream ends
         try:
             stream = self._client.models.generate_content_stream(
@@ -144,12 +147,14 @@ class GeminiCompanion:
             )
             requested = True
             for chunk in stream:
+                taken = True
                 last = chunk
                 if getattr(chunk, "usage_metadata", None) is not None:
                     usage_chunk = chunk
                 if chunk.text:
                     said.append(chunk.text)
                     yield chunk.text
+            taken = True  # the request ran to its end, even with no chunk
         except GeneratorExit:
             raise
         except Exception as exc:
@@ -162,6 +167,8 @@ class GeminiCompanion:
             if requested:
                 answered = self._answered(last) if last is not None else self.model
                 self._record("stream", answered, usage_chunk, input_chars)
+            if taken:
+                axis_rules.note_sent(version)
 
     def ping(self) -> Tuple[str, Optional[int], Optional[int]]:
         """One short call for the Settings page: (model that answered, input tokens, output tokens)."""
@@ -193,6 +200,7 @@ class GeminiCompanion:
         )
         answered = self._answered(response)
         self._record("document_draft", answered, response, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.prompt_version(*axis_rules.readme_draft_templates()))
         return response.text or "", answered
 
     def summarise_feedback(self, points: List[Any], readme: str, note: str, script: str = "", run_output: str = "") -> Tuple[str, Optional[str]]:
@@ -206,6 +214,7 @@ class GeminiCompanion:
         )
         answered = self._answered(response)
         self._record("build_feedback", answered, response, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.prompt_version(*axis_rules.feedback_summary_templates()))
         return response.text or "", answered
 
     def judge(self, unit_id: str, prompt: str, explanation: str, ideas: List[Any]) -> Tuple[str, Optional[str]]:
@@ -223,4 +232,5 @@ class GeminiCompanion:
         )
         answered = self._answered(response)
         self._record("concept_check", answered, response, len(sys_prompt) + len(user_msg))
+        axis_rules.note_sent(axis_rules.prompt_version(*axis_rules.judge_templates()))
         return response.text or "", answered

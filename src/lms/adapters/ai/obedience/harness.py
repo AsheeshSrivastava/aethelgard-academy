@@ -341,6 +341,10 @@ def _one_temperature(options: EvalOptions, profile: ProviderProfile, key: Option
         print("Stopped with Ctrl-C. The partial results are kept and marked as partial.")
         stopped, code = True, 130
     meta = dict(meta_base, temperature=temperature, model_answered=", ".join(sorted(models)) or None)
+    meta["prompt_versions"] = {  # the modes and states that ran, whether or not a reply came (SPEC-31 R13)
+        f"{row['mode']}/{row['state']}": axis_rules.chat_prompt_version(AxisMode(row["mode"]), row["state"])
+        for row in rows
+    }
     if stopped:
         meta["stopped_early"] = True
     folder = report_module.write_run(Path(options.out_dir), name, rows, meta)

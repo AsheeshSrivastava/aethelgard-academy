@@ -23,6 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from lms.adapters.ai.axis_stream import citation_title, stream_axis
+from lms.adapters.ai.providers import axis_rules
 from lms.adapters.ai.providers.router import DraftFailed, ProviderRouter, build_default_router, course_reference_of
 from lms.api.model_settings import model_settings_routes
 from lms.adapters.ai.socratic_guardrail import AssistanceClassifier, SocraticGuardrail
@@ -954,7 +955,8 @@ def create_app(
         interaction_id = new_ulid(now_ms())
         with tracing.span("readme_draft", interaction_id=interaction_id, kind="readme_draft", test_mode=test_mode):
             try:
-                markdown, model = axis.draft_readme(build.entry, code, build.brief_markdown)
+                with axis_rules.sent_prompt() as sent:
+                    markdown, model = axis.draft_readme(build.entry, code, build.brief_markdown)
             except DraftFailed as failure:
                 log_event(
                     learner_id, "document_draft", {"course_id": course_id, "stage": stage, "status": "failed"},
@@ -963,7 +965,7 @@ def create_app(
                 return problem(502, "Draft unavailable", str(failure))
             log_event(
                 learner_id, "document_draft",
-                {"course_id": course_id, "stage": stage, "status": "drafted", "model": model, "markdown": markdown},
+                {"course_id": course_id, "stage": stage, "status": "drafted", "model": model, "markdown": markdown, **sent},
                 interaction_id=interaction_id,
             )
             return DraftReadmeResult(markdown=markdown, status="drafted", model=model)
@@ -994,15 +996,18 @@ def create_app(
             with tracing.span("feedback_points"):
                 points = build_feedback_points(build, payload.files, results, payload.review_note)
             summary = summary_error = model = None
+            sent: Dict[str, str] = {}
             if hasattr(axis, "summarise_feedback"):
                 readme = next(
                     (payload.files[f.path] for f in build.files if f.path.lower() == "readme.md" and f.path in payload.files), ""
                 )
                 try:
                     run_output = next((r.output for r in results if r.output), "") or ""
-                    summary, model = axis.summarise_feedback(
-                        points, readme, payload.review_note or "", payload.files.get(build.entry, ""), run_output
-                    )
+                    with axis_rules.sent_prompt() as noted:
+                        summary, model = axis.summarise_feedback(
+                            points, readme, payload.review_note or "", payload.files.get(build.entry, ""), run_output
+                        )
+                    sent = noted  # only a summary that was made records a version
                 except DraftFailed as failure:
                     summary_error = str(failure)
             if summary is not None:
@@ -1010,7 +1015,7 @@ def create_app(
             log_event(
                 learner_id, "build_feedback",
                 {"course_id": course_id, "stage": stage, "run_checks": payload.run_checks,
-                 "met": {p.requirement_id: p.status for p in points}, "summary": summary is not None},
+                 "met": {p.requirement_id: p.status for p in points}, "summary": summary is not None, **sent},
                 interaction_id=interaction_id,
             )
             return BuildFeedbackResult(points=points, summary=summary, summary_error=summary_error, model=model)
@@ -1223,7 +1228,7 @@ def create_app(
             return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
         def events() -> Iterator[str]:
-            with tracing.span("axis_question", **trace_attrs) as root:
+            with tracing.span("axis_question", **trace_attrs) as root, axis_rules.sent_prompt() as sent:
                 shown = set()
                 said: List[str] = []
                 try:
@@ -1236,7 +1241,7 @@ def create_app(
                             log_event(
                                 learner_id, "axis",
                                 {"mode": query.mode.value, "question": query.user_prompt, "answer": "".join(said),
-                                 "assistance": data["assistance_level"], **retrieval_fields(axis)},
+                                 "assistance": data["assistance_level"], **retrieval_fields(axis), **sent},
                                 unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
                                 interaction_id=interaction_id,
                             )
@@ -1273,11 +1278,12 @@ def create_app(
             if is_cold_check_exercise(query.exercise_id):
                 root.set(blocked=True)
                 return axis_blocked()
-            response = axis.consult(axis_query(query, learner_id))
+            with axis_rules.sent_prompt() as sent:
+                response = axis.consult(axis_query(query, learner_id))
             log_event(
                 learner_id, "axis",
                 {"mode": query.mode.value, "question": query.user_prompt, "answer": response.reply,
-                 "assistance": response.detected_assistance_level.value, **retrieval_fields(axis)},
+                 "assistance": response.detected_assistance_level.value, **retrieval_fields(axis), **sent},
                 unit_id=query.unit_id, activity=query.current_activity, item_id=query.exercise_id,
                 interaction_id=interaction_id,
             )
@@ -1321,13 +1327,15 @@ def create_app(
             )
         prompt_no = prompt_ids.index(prompt_id) + 1
         rubric = load_rubric(answers_dir_from_env(), clean_unit, prompt_no)
+        sent: Dict[str, str] = {}
         if rubric is None:
             judgement = not_judged("no_rubric")
         elif not hasattr(axis, "judge_explanation"):
             judgement = not_judged("ai_off")
         else:
             prompt = prompts[prompt_no - 1] if prompts else (unit.concept_line if unit else clean_unit)
-            judgement = axis.judge_explanation(clean_unit, prompt, payload.explanation, rubric)
+            with axis_rules.sent_prompt() as sent:
+                judgement = axis.judge_explanation(clean_unit, prompt, payload.explanation, rubric)
 
         if judgement.status != "judged":
             root.set(not_judged_reason=judgement.reason)
@@ -1367,6 +1375,7 @@ def create_app(
                 "reason": judgement.reason,
                 "model": judgement.model,
                 "ideas": [{"id": i.id, "met": i.met} for i in judgement.ideas],
+                **(sent if is_judged else {}),
             },
             session_id=session_id, interaction_id=interaction_id, unit_id=clean_unit, activity="explain",
         )

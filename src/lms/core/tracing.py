@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 _ID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 _UNIT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$")
 _HEX_INDEX = re.compile(r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$")
+_PROMPT_VERSION = re.compile(r"[0-9a-f]{12}")  # SPEC-31 R13
 # A passage id looks like `source@version#c0-120~digest` (make_passage_id): path characters, no spaces.
 _PASSAGE_ID = re.compile(r"^[A-Za-z0-9._/@#~-]{8,200}$")
 _SOURCE_ID = re.compile(r"^[^\s]{1,200}$")
@@ -47,7 +48,9 @@ _COUNT_KEYS = frozenset({
     "terms_matched", "terms_total", "passages_retrieved", "passages_cited", "input_tokens", "output_tokens",
     "dropped_attributes", "latency_ms", "duration_ms",
 })
-_OTHER_KEYS = frozenset({"unit_id", "index_version", "passage_refs", "cited_passage_ids", "retrieval_reason"})
+_OTHER_KEYS = frozenset({
+    "unit_id", "index_version", "passage_refs", "cited_passage_ids", "retrieval_reason", "prompt_version",
+})
 
 ALLOWED_ATTRIBUTES = frozenset(_ID_KEYS | _SHORT_KEYS | _BOOL_KEYS | _COUNT_KEYS | _OTHER_KEYS)
 
@@ -91,6 +94,8 @@ def _clean(key: str, value: Any) -> Tuple[bool, Any]:
         return (isinstance(value, str) and bool(_UNIT.match(value))), value
     if key == "index_version":
         return (isinstance(value, str) and bool(_HEX_INDEX.match(value))), value
+    if key == "prompt_version":
+        return (isinstance(value, str) and bool(_PROMPT_VERSION.fullmatch(value))), value
     if key == "passage_refs":
         if not isinstance(value, list) or len(value) > MAX_REFS:
             return False, None
