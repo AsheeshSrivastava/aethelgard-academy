@@ -993,15 +993,6 @@ body.resizing-panes {
   align-items: center;
 }
 
-.socratic-advice {
-  background-color: #101625;
-  border: 1px solid #1f293d;
-  border-radius: 4px;
-  padding: 0.75rem;
-  color: #e2e8f0;
-  font-size: 0.825rem;
-  line-height: 1.5;
-}
 
 /* Code Snippet Action Bar in Reading Pane */
 .code-block-wrapper {

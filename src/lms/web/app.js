@@ -23,9 +23,6 @@ const STATE = {
     verify: "not_yet",
     wrapup: "not_yet"
   },
-  explanationCache: new Map(),
-  isExplainingError: false,
-  lastExecution: null
 };
 
 // --- Initialization ---
@@ -588,7 +585,6 @@ async function runSandboxExecution(code, stdinInput) {
 
     if (res.ok) {
       const result = await res.json();
-      STATE.lastExecution = { code, result };
       status.innerText = result.success ? "Exit Code 0" : "Execution Error";
 
       let outputHtml = `<div class="term-line-meta">$ python solution.py</div>`;
@@ -611,60 +607,6 @@ async function runSandboxExecution(code, stdinInput) {
   } catch (err) {
     status.innerText = "Runner Error";
     terminal.innerHTML += `<div class="term-line-err">Failed to connect to execution runner: ${err.message}</div>`;
-  }
-}
-
-// Socratic AI Error Explanation with Cache and Lock
-async function explainCurrentError() {
-  if (STATE.isExplainingError || !STATE.lastExecution) return;
-  const btn = document.getElementById("btn-explain-error");
-  const diagContainer = document.getElementById("error-diag-container");
-  if (!btn || !diagContainer) return;
-
-  const code = STATE.lastExecution.code;
-  const stderr = STATE.lastExecution.result.stderr || "";
-
-  // Check cache to prevent duplicate tokens / slow requests
-  const cacheKey = JSON.stringify({ code, stderr });
-  if (STATE.explanationCache.has(cacheKey)) {
-    const cached = STATE.explanationCache.get(cacheKey);
-    diagContainer.innerHTML = `<div class="socratic-advice">${renderProductionMarkdown(cached)}</div>`;
-    diagContainer.style.display = "block";
-    return;
-  }
-
-  STATE.isExplainingError = true;
-  btn.disabled = true;
-  btn.innerText = "Explaining error with AXIS AI...";
-  diagContainer.style.display = "block";
-  diagContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.825rem;"><span>⏳</span> Consulting AXIS Socratic Mentor...</div>`;
-
-  try {
-    const res = await fetch("/api/v1/explain-error", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        unit_id: STATE.activeUnitId,
-        code: code,
-        error: stderr,
-        learner_id: "default_learner"
-      })
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const reply = data.explanation || "Inspect the line numbers shown in the traceback and verify your syntax.";
-      STATE.explanationCache.set(cacheKey, reply);
-      diagContainer.innerHTML = `<div class="socratic-advice">${renderProductionMarkdown(reply)}</div>`;
-    } else {
-      diagContainer.innerHTML = `<div style="color: var(--color-warning);">Diagnostic unavailable: Socratic companion offline.</div>`;
-    }
-  } catch (err) {
-    diagContainer.innerHTML = `<div style="color: var(--color-danger);">Error requesting explanation: ${err.message}</div>`;
-  } finally {
-    STATE.isExplainingError = false;
-    btn.disabled = false;
-    btn.innerText = "💡 Explain this error with AXIS AI";
   }
 }
 

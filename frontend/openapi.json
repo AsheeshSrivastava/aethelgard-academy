@@ -1225,44 +1225,6 @@
         }
       }
     },
-    "/api/v1/explain-error": {
-      "post": {
-        "summary": "Explain Runtime Error",
-        "operationId": "explain_runtime_error_api_v1_explain_error_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Payload"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/learners/me": {
       "get": {
         "summary": "Get Me",

@@ -310,6 +310,7 @@ The Socratic guardrail (ADR-0009) runs on the full reply before `done`; in Socra
 - A request whose `exercise_id` is a Cold Check item returns `403`, on this route and on `/axis/consult`.
 - `citation` events go out before `done`, built from the finished reply: only passages the reply actually uses (SPEC-22 R6, R7). Token events are sent as before. A cited passage id becomes a readable source name, such as `Python docs: Expressions`, and each title is sent once (ADR-0003 section 4).
 - If the local model cannot be reached and fallback is on, the mock companion answers. If fallback is off, the stream sends `error` and stops.
+- **Retired (owner, 2026-11-26):** `POST /api/v1/explain-error` and its button on the `/legacy` page ("Explain this error with AXIS AI") are removed. The route took no `exercise_id`, so it had no Cold Check block (ADR-0003: Cold Checks stay free of AXIS), and it wrote no interaction-log row (ADR-0022 section 2.3). The app's AXIS panel does not call it. This closes those two gaps for this route only; a separate ADR covers the Cold Check block for the other AXIS routes.
 
 ---
 
