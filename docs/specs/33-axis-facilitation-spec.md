@@ -1,6 +1,6 @@
 # SPEC-33: AXIS facilitation: the turn, the error output, conversation memory
 
-Status: **Draft 2026-11-27, waiting for the owner's go** on this spec and the choices of section 10. No test or code.
+Status: **Stage 1 approved** by the owner 2026-11-27: option A on all six choices of section 10, and on the two points of section 3.1. Stage 2 is not started.
 Implements: ADR-0041. Amends (when approved) SPEC-31 sections 3 and 9.1, SPEC-30 section 3 (new items and checks), ADR-0022 section 2.3 (log fields), and ADR-0034 (process actions).
 
 | Stage | Contents | When |
@@ -22,14 +22,21 @@ For governance, change and design questions: state the decision you lean to, one
 
 ## 3. Contract wording (stage 1; owner approval needed)
 **No course source** (replaces the end of SPEC-31 3.4 as amended by 9.1, from "Work only from what the learner wrote"):
-> Work only from what the learner wrote (the question, the code and the run output). Name one thing of theirs, such as a name or a line number. Ask one question they can answer by looking or running. Then suggest one of these actions, in your own words and with no code: print a value and read it; read the last line of the error; run one line or try a smaller input; say what they expected and what they saw; check what type a value is; reread this step's lesson text. For a question about a decision, design, policy or change, ask them to state the decision they lean to, one reason and one risk. A question may point at a line of their code; it never states the cause or the fix. When there is an error or a traceback, do not say what it means, what caused it, or what the values must be. Do not copy their code or the traceback into your reply.
+> Work only from what the learner wrote (the question, the code and the run output). Name one thing of theirs, such as a name or a line number. Ask one question they can answer by looking or running. Then suggest one of these actions, in your own words and with no code: print a value and read it; read the last line of the error; run one line or try a smaller input; say what they expected and what they saw; check what type a value is; reread this step's lesson text. For a question about a decision, design, policy or change, ask them to state the decision they lean to, one reason and one risk. A question may point at a line of their code; it never states the cause or the fix. When there is an error or a traceback, do not say what it means, what caused it, or what the values must be. Do not write "means" or "because" about it. Do not copy their code or the traceback into your reply.
 
 The sentences before it (no pretended source, the state sentence, no facts, no code) are unchanged. "Advice from your own memory" stays banned; the listed actions are the stated exception.
 
-**With a course source**, one sentence is added to each of the Socratic, Hybrid and Coach contracts:
+**With a course source** (choice 4A: every mode asks exactly one question):
+- Socratic: "Never ask more than two questions." becomes "Ask exactly one question.", and this sentence is added:
 > Name something from the learner's own code, question or run output, and end with one small action they can take now.
+- Hybrid and Coach: this sentence is added:
+> Name something from the learner's own code, question or run output, ask exactly one question they can answer by looking or running, and end with one small action they can take now.
 
 Every changed prompt gets a new `prompt_version` and the catalogue is regenerated.
+
+### 3.1 Two points settled before the tests (owner, 2026-11-27)
+1. Choice 4A applies to every mode, with a source too (the wording above).
+2. The sentence "Do not write "means" or "because" about it" of SPEC-31 9.1, left out of the first draft by mistake, stays.
 
 ## 4. The run's error output (stage 1)
 - E1. The run terminal keeps the error output of the **latest** run on the step; a new successful run clears it. The AXIS panel sends it as `execution_result` (the field exists; the server already puts `stderr` in the user message, capped at 4000 characters).
@@ -79,3 +86,11 @@ A very long or binary error output; a path with spaces or backslashes; a traceba
 
 ## 11. Out of scope
 The fixed reply (held back, ADR-0041 section 5); model-written summaries; any model grading a model; changes to retrieval, grading or Cold Check rules.
+
+## 12. Readings fixed while testing stage 1 (owner to confirm at review)
+1. The turn checks follow section 7: an anchor counts from the code or error output (or code pasted into the question), not from the words of the question. The action phrase list and the ignored common words are frozen constants, to be read in the code.
+2. E1: Regenerate, Reset and moving to another unit or step also clear the held error. An error stays after the code is edited, until the next run.
+3. E3: Windows and network paths are always cut to the last part. A POSIX path is cut when it starts at a usual system folder or ends in a file name, so a web route such as `/api/v1/items` is left alone. A path ending at a home folder does not keep the user's name. Only the run output is rewritten, not the question or the code.
+4. A closing `</execution_stderr>` tag inside the output is removed.
+5. The second pass of the error items has its own totals, and its replies go into the review sample.
+

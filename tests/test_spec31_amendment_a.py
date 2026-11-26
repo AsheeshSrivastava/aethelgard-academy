@@ -93,11 +93,10 @@ def streamed(reply, q, size=7):
 # SPEC-31 section 9.1: no-source contract wording (all three modes)
 # =====================================================================================================
 
+# As amended by SPEC-33 section 3.
 ERROR_RULE = (
-    "When their question, code or run output shows an error or a traceback, do not say what the error or its message "
-    'means, what caused it, or what the values in it must be. Do not write "means" or "because" about it. Point at one '
-    "line number or function name to look at, then ask what they expected to happen there and what they have checked. "
-    "Do not copy their code or the traceback into your reply; point at it by line number or name."
+    "When there is an error or a traceback, do not say what it means, what caused it, or what the values must be. "
+    'Do not write "means" or "because" about it. Do not copy their code or the traceback into your reply.'
 )
 # The versions recorded before Amendment A (checked on the branch before any code).
 OLD_NO_SOURCE_VERSIONS = {
@@ -125,21 +124,21 @@ def test_no_source_contract_no_longer_asks_to_restate_their_question(mode, state
     notice = norm(axis_rules.no_source_notice(mode, state))
 
     assert "restate their question in their words" not in notice
-    assert "restate what they asked for" in notice
+    assert "restate" not in notice  # SPEC-33 section 3 replaced this part
 
 
 @pytest.mark.parametrize("mode", ALL_MODES)
 def test_every_no_source_prompt_version_changes_and_course_versions_do_not(mode):
     for state, old in OLD_NO_SOURCE_VERSIONS[mode.value].items():
         assert axis_rules.chat_prompt_version(mode, state) != old, state
-    assert axis_rules.chat_prompt_version(mode, "course") == COURSE_VERSIONS[mode.value]
+    assert axis_rules.chat_prompt_version(mode, "course") != COURSE_VERSIONS[mode.value]  # SPEC-33 section 3
 
 
 @pytest.mark.parametrize("mode", ALL_MODES)
 def test_a_prompt_with_a_source_does_not_carry_the_error_rule(mode):
     prompt = norm(axis_rules.build_system_prompt(mode, "<reference_passages>x</reference_passages>", "course"))
 
-    assert "do not say what the error or its message means" not in prompt
+    assert "do not say what it means, what caused it" not in prompt
 
 
 # =====================================================================================================
@@ -451,9 +450,9 @@ def test_checker_version_is_c(tmp_path):
     from lms.adapters.ai.obedience import report
     from lms.core import axis_obedience
 
-    assert axis_obedience.CHECKER_VERSION == "C"
+    assert axis_obedience.CHECKER_VERSION == "D"  # SPEC-33 section 7
     folder = report.write_run(tmp_path, "run1", [ob.make_row("q1", "Coach")], {"seed": 29})
-    assert json.loads((folder / "results.json").read_text(encoding="utf-8"))["checker_version"] == "C"
+    assert json.loads((folder / "results.json").read_text(encoding="utf-8"))["checker_version"] == "D"
 
 
 def write_replies(tmp_path, rows):
@@ -472,7 +471,7 @@ def test_replay_rescores_old_raw_replies_under_c_and_keeps_the_stored_visible_re
 
     run_dir = ob.the_run_dir(tmp_path)
     results = ob.read_results(run_dir)
-    assert results["checker_version"] == "C"
+    assert results["checker_version"] == "D"
     assert results["failing_ids"]["b"] == []
     (row,) = ob.read_rows(run_dir)
     assert row["visible_reply"] == old_visible and row["raw_reply"] == raw
