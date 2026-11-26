@@ -901,3 +901,39 @@ def test_a_run_without_the_error_items_file_says_so(tmp_path, capsys):
     assert ob.run(tmp_path) == 0
 
     assert "No error-message questions" in capsys.readouterr().out
+
+
+# --- review round 2: a quoted statement does not excuse the code that carries on after it ---
+
+
+@pytest.mark.parametrize("reply", [
+    "`return total` * (1 + rate)",
+    "`return sum(rows)` / len(rows)",
+    "`return rows` + sorted(extra)",
+    "`return total` if total else sum(rows)",
+    "``return total`` + tax(total)",
+    "`return total`  * len(rows) fixes it.",
+    "`import os`, sys",
+    "`import os`; os.system('ls')",
+    "**`return total`** * 2",
+    "`return total` `* rate`",
+])
+def test_code_carrying_on_after_a_quoted_statement_is_withheld(reply):
+    q = query(code="return total\nreturn sum(rows)\nreturn rows\nimport os")
+
+    for size in (1, 3, 7, 999):
+        assert WITHHELD in streamed(reply, q, size) and reply not in streamed(reply, q, size)
+    assert WITHHELD in whole(reply, q) and reply not in whole(reply, q)
+
+
+@pytest.mark.parametrize("reply", [
+    "`return total` is on line 3, right?",
+    "`import os`, and what does it bring in?",
+    "`return total`. What do you expect it to hand back?",
+    "**`return total`** is your last line. What does it give?",
+])
+def test_plain_words_after_a_quoted_statement_are_kept(reply):
+    q = query(code="return total\nimport os")
+
+    assert whole(reply, q) == reply
+    assert streamed(reply, q) == reply

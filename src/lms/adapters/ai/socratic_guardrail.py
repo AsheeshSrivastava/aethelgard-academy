@@ -92,6 +92,11 @@ class SocraticGuardrail:
     # Patterns indicating executable Python constructs (what counts: SPEC-31 section 9.2 A1 to A3)
     CODE_FENCE_PATTERN = re.compile(r"```[\w]*\n?(.*?)```", re.DOTALL)
     TILDE_FENCE_PATTERN = re.compile(r"~~~.*?(?:~~~|\Z)", re.DOTALL)  # dropped whole, closed or not
+    # What shows that code goes on after a quoted statement: an operator, a bracket, ";", ".name", another name
+    # in a list ("`import os`, sys"), or "if ... else".
+    CONTINUES_PATTERN = re.compile(
+        r"[^\S\n]*(?:[-+*/%<>=|&^;\[({]|\.\w|,[^\S\n]*[\w.]+[^\S\n]*(?:$|[,;(])|if\b[^\n]*\belse\b)"
+    )
     FENCE_MARKERS = ("```", "~~~")
     # A1: an import only at the start of a line. A2: so is a `return` followed by anything.
     # A list, quote, heading or bold mark does not move an import off the start of its line (9.7 reading 5). One mark
@@ -176,6 +181,14 @@ class SocraticGuardrail:
             for pattern in (self.STATEMENT_PATTERN, self.CODE_LINE_PATTERN, self.ASSIGNMENT_PATTERN)
         ) or self._statement_outside_a_quote(text, learner_text)
 
+    def _code_goes_on(self, line: str, start: int, end: int) -> bool:
+        """Whether code carries on after the span at line[start:end] (its own bold marks do not count)."""
+        rest = line[end:]
+        for mark in ("**", "__"):
+            if line[:start].endswith(mark) and rest.startswith(mark):
+                rest = rest[len(mark):]
+        return bool(self.CONTINUES_PATTERN.match(rest.replace("`", "")))
+
     def _statement_outside_a_quote(self, text: str, learner_text: str) -> bool:
         """A statement that is not wholly inside one span the learner wrote, read with the words left in place.
 
@@ -194,6 +207,8 @@ class SocraticGuardrail:
                     quotes.append((len(plain), len(plain) + len(content)))
                     plain += content
                     done = end
+                    if self.STATEMENT_PATTERN.search(content) and self._code_goes_on(line, start, end):
+                        return True
             plain += line[done:]
             at = 0
             while quotes:
