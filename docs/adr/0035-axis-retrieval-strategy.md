@@ -105,6 +105,7 @@ Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follow
 | 8 | Tracing, metrics and answer-level evals behind a hexagonal port (local adapter, no-op in CI, vendors optional); its ADR comes first | after 7 | not numbered before |
 | 8b | AXIS mode contracts and a record of every prompt (catalogue, `prompt_version`; ADR-0039) | ADR accepted 2026-11-26; SPEC-31 drafted | |
 | 8c | Follow-up from SPEC-30: move the code detector from `adapters` into `core` | **Proposed** 2026-11-26 | |
+| 8d | Owner console (GUI) for evals, traces and observability ([backlog](../plan/owner-console-evals-traces.md); builds on ADR-0037 section 2.7) | **Proposed** 2026-11-26, after the 5 Dec 2026 freeze | |
 | 9 | Learner-style questions: query rewriting and at most one bounded agentic retry, only if measured to help (2.8) | last, optional | 7 |
 
 Later, not in the nine: A7 (ConceptStore wiring), then A8 (split `app.py`). The old section 4 items 1 and 2 (fixture set, first local measurement) were done before this list began (SPEC-20, #47 and #48). GraphRAG stays rejected (5.3).
