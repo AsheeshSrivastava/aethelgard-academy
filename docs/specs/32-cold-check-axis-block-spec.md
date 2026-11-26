@@ -1,6 +1,6 @@
 # SPEC-32: AXIS is unavailable while a Cold Check round is open (ADR-0040)
 
-Status: **Draft 2026-11-26, waiting for the owner's go.** No test or code.
+Status: **Approved by the owner 2026-11-26** (ADR-0040 decisions: L1, least recently left item when no spare, reviews and rechecks leavable, wording as written, concept-check feedback stays available, refusals not logged). Tests first, then code, after the owner's go.
 Implements: ADR-0040 option A. Builds on: ADR-0003, ADR-0019, ADR-0028, ADR-0032 (rounds), SPEC-12 sections 7 and 8, SPEC-16 (stage review and rechecks), ADR-0022.
 Includes the **Leave button** (required by the owner). Does **not** implement: multi-learner identity, blocking concept-check feedback or draft/feedback features (open point 1), anything about tools outside the product.
 
@@ -28,7 +28,7 @@ Includes the **Leave button** (required by the owner). Does **not** implement: m
 - R13. A refused request writes **no** interaction-log row (as today's 403) and no assistance row. Tracing records the existing `blocked` attribute.
 - R14. Unchanged: evidence is recorded `none` for Cold Checks; builds stay Socratic and are not blocked; the concept-check soft gate; the ledger is never rewritten.
 
-### E. Leaving a round (semantics L1 of ADR-0040 5.2: **proposed, awaiting the owner**)
+### E. Leaving a round (semantics L1 of ADR-0040 5.2, accepted)
 - R15. `POST` a leave action for an open round (path set at build time, learner-scoped). The round ends, AXIS is available at once, and the response says when the round opens again. Leaving a round that is not open is refused.
 - R16. A left item is **not an attempt**: no evidence entry, no assistance row, no effect on the concept check. Answers already given in the round stay.
 - R17. The served, unanswered item is recorded as **left**. The next round takes another eligible item of that skill first; when a skill has none, the least recently left item is used after the wait. An expired round is treated the same way.
@@ -49,8 +49,9 @@ Includes the **Leave button** (required by the owner). Does **not** implement: m
 ## 3. Chaos check
 An item served and never answered; the server restarts mid-round; the clock moves back; two tabs finishing at once; a round reopened after expiry; an attempt arriving after expiry or after leaving; two tabs leaving at once; leaving with no spare item; a very old pointer from before this change (must not close AXIS for ever); `progress reset` mid-round; unknown unit or stage in a stored pointer.
 
-## 4. Open points for the owner (recommendations)
-0. What leaving does to the item: **L1** (set aside, wait, spare item); alternatives L2 to L4 in ADR-0040 5.2. Also: with no spare, serve the least recently left item after the wait (**yes**); reviews and rechecks can be left (**yes**).
-1. Also refuse concept-check feedback while a round is open? **No for the first version** (recorded as gap 4).
-2. Test-mode expiry of 2 minutes (**yes**).
-3. Count refusals anywhere? **No** (no new log row); tracing already marks them blocked.
+## 4. Decisions (owner, 2026-11-26)
+0. Leaving: **L1**; with no spare, serve the least recently left item after the wait; reviews and rechecks can be left; the R11 and R21 wording **as written**.
+1. Concept-check feedback **stays available** during a round (gap 4).
+2. Test-mode expiry of 2 minutes.
+3. Refusals are **not** logged; tracing already marks them blocked.
+4. **Content note:** the supply of spare items per skill is content, not code; adding curator-approved items (answers kept outside this repository) widens it.

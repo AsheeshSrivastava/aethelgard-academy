@@ -11,7 +11,7 @@ The server refuses every AXIS chat route while a learner has an open Cold Check,
 ## What still remains after it
 | # | Gap | Why it matters | Likely fix | Revisit when |
 |---|-----|----------------|-----------|--------------|
-| 1 | Leaving closes the loophole only while a skill has an unused item (about one leave per skill today: 6 items, round of 3). After that the least recently left item returns | A determined learner could leave, ask AXIS and meet the same item | More Cold Check items per skill; or a longer wait after repeated leaves | When items are authored, and after first real use |
+| 1 | Leaving closes the loophole only while a skill has an unused item (about one leave per skill today: 6 items, round of 3). After that the least recently left item returns | A determined learner could leave, ask AXIS and meet the same item | **Content task:** author more Cold Check items per skill (curator-approved, answers kept outside this repo; today 6 per unit, 3 used, in PY-0.1 to PY-0.4, TW-0.1, TW-0.2 only); or a longer wait after repeated leaves | When items are authored, and after first real use |
 | 2 | The 60-minute expiry and the 24-hour wait are guesses. | Too long annoys; too short weakens the check | Tune from real use (count expiries and returns) | After first real use |
 | 3 | It protects only this product's AXIS, not other tools or people. | An open-book risk remains | None in the product; state it honestly | n/a |
 | 4 | Other model features (concept-check feedback, README draft, build feedback) are not refused. | A learner could get hints about a skill from them | Decide per feature (SPEC-32 open question) | Before a pilot |
