@@ -57,7 +57,7 @@ Four layers. Only the last speaks to learning.
 1. **Rules (exists):** the obedience eval. Keep it.
 2. **Turn quality**, deterministic where possible (no model judge, ADR-0037 2.9): anchored (the reply contains a word from the learner's code or error), one question, one process action, no leaked cause (existing flag). The owner scores a small sample by hand with a five-line rubric.
 3. **Scripted dialogues:** about 10 made-up scenarios of 3 turns with scripted learner replies, including a stuck learner. Checks: turn 2 uses a word from the learner's turn 1 answer; support steps up after two stuck turns; the strict rules hold on every turn. Made-up content only.
-4. **Learning (the real test):** after a hint, does the learner fix it without more help; hints per item; does the next attempt pass; thumbs. Needs real learners; with a demo target only a very small pilot. Do not claim learning before it is measured.
+4. **Learning (the real test): judged by what the learner can do unaided,** which here means Cold Checks on the same skill, later and without AXIS. Doing well while AXIS is available is not evidence of learning (see Evidence). Supporting signals only: after a hint, does the learner fix it without more help; hints per item; does the next attempt pass; thumbs. Cold Checks are not yet airtight: the server-side block (SPEC-32) is approved and not built. Needs real learners; with a demo target only a very small pilot. Do not claim learning before it is measured.
 
 ## 6. Decisions needed (recommendation in brackets)
 - **D1:** allow process moves in the no-source rule (yes).
@@ -66,7 +66,33 @@ Four layers. Only the last speaks to learning.
 - **D4:** the fixed reply for error turns with no source: hold it back, build D1 to D3 first, measure on the local model and OpenAI, keep the fixed reply only as a safety net if the local model still leaks (yes).
 - **D5:** the with-source reply eval (tracker item 5c) uses the same rubric.
 
-## 7. Limits
+## 7. Proposed additions (for decision with D1 to D5)
+- **A1:** send AXIS the run's error output.
+- **A2:** the server builds the history from the log; it is never accepted from the browser.
+- **A3:** history is cleared while a Cold Check round is open.
+- **A4:** a conversation records the highest level of help it reached.
+- **A5:** with a course source, a stuck beginner is taught with an example, not only given a quote.
+- **A6:** memory is not attempted before the 5 Dec 2026 freeze.
+- **A7:** for governance, change and design topics, the small action is stating a decision, its reason and a risk.
+
+## 8. Evidence
+A quick desk review, mostly from abstracts and summaries: [axis-facilitation-evidence-review.md](axis-facilitation-evidence-review.md).
+
+- Help that keeps the learner doing the thinking did better than help that does it for them. A guardrail removed harm in one large study without showing a gain.
+- Doing better with the tool can go with doing worse without it, including for adults learning a Python library.
+- No randomised trial of a guard-railed tutor for adults learning programming was found.
+
+| Item | Evidence |
+| :--- | :--- |
+| D1, D4, A1, A4 | supports, indirectly or weakly |
+| A5 | supports (secondary source) |
+| D2, D3, D5, A7 | leaves open |
+| A2, A3, A6 | not evidence questions (security, integrity, time) |
+| Weakened by the evidence | none |
+
+The review also suggests asking for an attempt before the ladder steps up.
+
+## 9. Limits
 - The turn contracts are inference from human-led training sources.
 - One run, error questions with no course source, one cloud model. With-source replies are untested.
 - A pattern- and word-based check cannot prove a reply is good.
