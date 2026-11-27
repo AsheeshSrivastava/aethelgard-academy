@@ -5,7 +5,7 @@ Implements: ADR-0041. Amends (when approved) SPEC-31 sections 3 and 9.1, SPEC-30
 
 | Stage | Contents | When |
 | :--- | :--- | :--- |
-| 1 | The turn's first three parts, process actions, run error output, decision subjects, turn-quality checks, eval | **Before** the 5 Dec freeze, if the go comes in time |
+| 1 | The turn's first three parts with a course source, run error output, turn-quality checks, eval (process actions and decision subjects with no source are deferred, section 3.3) | **Before** the 5 Dec freeze, if the go comes in time |
 | 2 | Memory, follow and feedback, the ladder, attempt rule, teaching with an example, highest help level, scripted dialogues | **After** the freeze |
 
 ## 1. The turn (all modes)
@@ -75,7 +75,7 @@ The two quoted no-source wordings of section 3 are **not used**. With no course 
 - The with-source eval (plan step 5c) uses the same rubric.
 
 ## 8. Tests first (names, written and failing before code, after the go)
-- Stage 1 contracts: `test_no_source_contract_lists_the_process_actions`, `test_no_source_contract_still_bans_facts_causes_and_code`, `test_decision_questions_ask_for_decision_reason_and_risk`, `test_grounded_contracts_ask_for_an_anchor_and_one_action`, `test_prompt_catalogue_matches_the_code`.
+- Stage 1 contracts: `test_the_no_source_wording_is_the_one_on_main`, `test_grounded_contracts_ask_for_an_anchor_and_one_action`, `test_only_the_prompts_with_a_source_have_new_versions`, `test_prompt_catalogue_matches_the_code`.
 - Error output: `test_panel_sends_the_latest_run_error`, `test_a_successful_run_clears_it`, `test_the_end_of_a_long_error_is_kept`, `test_paths_are_replaced_by_file_names_before_the_model`, `test_no_error_text_in_traces`.
 - Checks: `test_anchored_check`, `test_one_question_check`, `test_one_action_check`, `test_items_with_run_output_are_reported_apart`.
 - Stage 2 test names are written with stage 2.

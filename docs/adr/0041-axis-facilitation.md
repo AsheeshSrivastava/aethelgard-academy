@@ -17,7 +17,7 @@ AXIS has no memory, never receives the learner's run output, and with no course 
 1. **A turn has four parts:** anchor on the learner's own line, value or error; ask one thing they can answer by looking or running; suggest one small action; follow from what they answered, with feedback on it.
 2. **Support steps up** when the learner is stuck on the same point: question; narrower question and an action; then the lesson step, and with a course source an example from it (A5).
 3. **Attempt before more help.** AXIS asks for an attempt before it steps up.
-4. **Process actions are allowed with no course source** (D1): ways of looking that need no knowledge. Facts, causes and fixes from memory stay banned.
+4. **Process actions are allowed with no course source** (D1): ways of looking that need no knowledge. Facts, causes and fixes from memory stay banned. **Deferred 2026-11-27** (SPEC-33 3.3): putting the list in the prompt made the local model teach from memory, so the wording with no source is unchanged for now.
 5. **Memory** (D2, A2, A3): the last 4 exchanges of this learner on this step, built **by the server** from the interaction log, never accepted from the browser; fenced as untrusted data and capped; cleared on a new step and while a Cold Check round is open.
 6. **AXIS receives the run's error output** (A1). **A conversation records the highest level of help** it reached (A4). For decision subjects (governance, change, design) the small action is **stating a decision, its reason and a risk** (A7).
 

@@ -34,7 +34,7 @@ Today the system prompt is base + mode sentence + (course reference or no-source
 
 ## 3. Contract wording (learner-facing behaviour: owner approval needed)
 
-Amended 2026-11-27 by SPEC-33 section 3 (ADR-0041): new no-source wording, and with a source every mode asks exactly one question, anchors on something of the learner's and ends with one small action.
+Amended 2026-11-27 by SPEC-33 section 3 (ADR-0041): the no-source wording is unchanged (SPEC-33 3.3); with a source every mode asks exactly one question, anchors on something of the learner's and ends with one small action.
 
 ### 3.1 Socratic, with a source
 > MODE: SOCRATIC FACILITATOR.
