@@ -107,6 +107,7 @@ Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follow
 | 8c | Follow-up from SPEC-30: move the code detector from `adapters` into `core` | **Proposed** 2026-11-26 | |
 | 8d | Owner console (GUI) for evals, traces and observability ([backlog](../plan/owner-console-evals-traces.md); builds on ADR-0037 section 2.7) | **Proposed** 2026-11-26, after the 5 Dec 2026 freeze | |
 | 8e | AXIS facilitation: what a good turn is, conversation memory, how it is judged ([decision paper](../plan/axis-facilitation-decision-paper.md); touches 8b, and 5c would use the same rubric) | ADR-0041 accepted 2026-11-27; SPEC-33 drafted; stage 2 after the freeze | |
+| 8f | AXIS learning limits ([record](../plan/axis-learning-limits.md)) and a fixed reply for error questions with no source (SPEC-34) | Limits recorded; SPEC-34 **draft** 2026-11-27 | |
 | 9 | Learner-style questions: query rewriting and at most one bounded agentic retry, only if measured to help (2.8) | last, optional | 7 |
 
 Later, not in the nine: A7 (ConceptStore wiring), then A8 (split `app.py`). The old section 4 items 1 and 2 (fixture set, first local measurement) were done before this list began (SPEC-20, #47 and #48). GraphRAG stays rejected (5.3).

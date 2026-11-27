@@ -27,6 +27,8 @@ Four layers: the obedience eval; turn quality (deterministic checks plus the own
 ## 5. The fixed reply
 The server-side fixed reply for error turns (SPEC-31 9.6, choice 1(b)) is **held back** (D4). It is kept only as a safety net if the local model still states causes after stage 1.
 
+**Update 2026-11-27 (owner):** the local model did state causes, and wording did not fix it, so the fixed reply is to be built for the local model (SPEC-34, draft). OpenAI stays a Settings choice. What AXIS does not yet do is recorded in `docs/plan/axis-learning-limits.md`.
+
 ## 6. Order
 Stage 1, the one-turn change and its eval, comes first. Stage 2, memory and everything that needs it, comes **after the 5 Dec 2026 freeze** (A6). SPEC-33 gives both.
 
