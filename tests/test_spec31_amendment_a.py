@@ -132,7 +132,7 @@ def test_no_source_contract_no_longer_asks_to_restate_their_question(mode, state
 def test_every_no_source_prompt_version_changes_and_course_versions_do_not(mode):
     for state, old in OLD_NO_SOURCE_VERSIONS[mode.value].items():
         assert axis_rules.chat_prompt_version(mode, state) != old, state
-    assert axis_rules.chat_prompt_version(mode, "course") == COURSE_VERSIONS[mode.value]
+    assert axis_rules.chat_prompt_version(mode, "course") != COURSE_VERSIONS[mode.value]  # SPEC-33 section 3
 
 
 @pytest.mark.parametrize("mode", ALL_MODES)
@@ -451,9 +451,9 @@ def test_checker_version_is_c(tmp_path):
     from lms.adapters.ai.obedience import report
     from lms.core import axis_obedience
 
-    assert axis_obedience.CHECKER_VERSION == "C"
+    assert axis_obedience.CHECKER_VERSION == "D"  # SPEC-33 section 7
     folder = report.write_run(tmp_path, "run1", [ob.make_row("q1", "Coach")], {"seed": 29})
-    assert json.loads((folder / "results.json").read_text(encoding="utf-8"))["checker_version"] == "C"
+    assert json.loads((folder / "results.json").read_text(encoding="utf-8"))["checker_version"] == "D"
 
 
 def write_replies(tmp_path, rows):
@@ -472,7 +472,7 @@ def test_replay_rescores_old_raw_replies_under_c_and_keeps_the_stored_visible_re
 
     run_dir = ob.the_run_dir(tmp_path)
     results = ob.read_results(run_dir)
-    assert results["checker_version"] == "C"
+    assert results["checker_version"] == "D"
     assert results["failing_ids"]["b"] == []
     (row,) = ob.read_rows(run_dir)
     assert row["visible_reply"] == old_visible and row["raw_reply"] == raw

@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { api, type Exercise } from "../api/client";
 import { CodeEditor } from "./CodeEditor";
 import { RunTerminal } from "./RunTerminal";
+import { RunErrorContext } from "./runError";
 
 export type Answer = {
   choice?: string;
@@ -361,6 +362,7 @@ export function CodeWorkspace({
   const { ready, code, update } = useDraft(exerciseId, start);
   const [version, setVersion] = useState(0);
   const getCode = () => code.current;
+  const reportRunError = useContext(RunErrorContext);
 
   if (!ready) return <p className="muted small">Loading your work…</p>;
 
@@ -374,13 +376,15 @@ export function CodeWorkspace({
           onClick={() => {
             update(start);
             setVersion(version + 1);
+            reportRunError(undefined);
           }}
         >
           Reset code
         </button>
       </div>
       <CodeEditor key={version} value={code.current} onChange={update} label={label} />
-      {run && <RunTerminal getCode={getCode} exerciseId={exerciseId} />}
+      {/* Keyed, so another exercise never gets this one's run. */}
+      {run && <RunTerminal key={exerciseId} getCode={getCode} exerciseId={exerciseId} resets={version} />}
       {children(getCode)}
     </div>
   );

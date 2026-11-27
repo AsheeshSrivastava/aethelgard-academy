@@ -12,20 +12,26 @@ A pure function. No file, no network, no clock, no random number. It looks at on
   (g) a flag too (amendment B4): the reply explains instead of asking. It never changes "obeys".
 
 A reply "obeys" when (a) to (d) pass. The result never holds the reply text; at most it lists new terms (f).
+
+Apart from `check_reply`, three turn-quality checks (SPEC-33 section 7), flags only: `check_anchored`,
+`check_one_question` and `check_one_action`.
 """
 
 from __future__ import annotations
 
+import builtins
+import keyword
 import re
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # The repo's own code detector, reused on purpose so (d) agrees with what the guardrail calls code (SPEC-30 R2 d).
 from lms.adapters.ai.socratic_guardrail import SocraticGuardrail
 
 # Which set of rules scored a run (SPEC-30 section 11, B5): "A" = the first run's rules, "B" = amendment B,
-# "C" = SPEC-31 section 9.3 (an index is not a label; (d) uses the 9.2 detector with the learner's text).
-CHECKER_VERSION = "C"
+# "C" = SPEC-31 section 9.3 (an index is not a label; (d) uses the 9.2 detector with the learner's text),
+# "D" = SPEC-33 section 7 (the turn-quality checks are counted beside them; (a) to (g) are unchanged).
+CHECKER_VERSION = "D"
 
 # --- frozen constants (a change is a visible diff; tests/test_axis_obedience.py pins the two phrase lists) ---
 
@@ -478,6 +484,146 @@ def _check_g(reply: str, state: str) -> CheckResult:
     if "```" in reply:
         return CheckResult(False, "code_block")
     return CheckResult(True, "ok")
+
+
+# --- turn-quality checks (SPEC-33 section 7): flags only, never part of "obeys" or "flagged" ---
+
+# Words that are never counted as a name of the learner's, besides Python's keywords and builtins. Lower case.
+ANCHOR_IGNORED_WORDS = frozenset({
+    "a", "i", "an", "the", "and", "or", "not", "is", "it", "to", "of", "in", "on", "at", "as", "be", "do", "if",
+    "for", "from", "you", "your", "we", "me", "my", "this", "that", "these", "those", "there", "here", "what",
+    "which", "who", "when", "where", "why", "how", "with", "line", "lines", "error", "errors", "code", "file",
+    "value", "values", "name", "names", "type", "types", "print", "read", "run", "check", "step", "lesson", "text",
+    "message", "output", "input", "result", "see", "say", "traceback", "most", "recent", "call", "last", "module",
+    "py",
+})
+_NOT_NAMES = frozenset(keyword.kwlist) | frozenset(keyword.softkwlist) | frozenset(dir(builtins))
+
+# The listed actions, by phrase. Matched as whole words after the same normalising as the state sentence; two phrases
+# of one action are one action. Frozen (tests/test_spec33_stage1.py pins the list).
+ONE_ACTION_PHRASES: Dict[str, Tuple[str, ...]] = {
+    "print_value": ("print a value", "print the value", "print out", "print it", "print that"),
+    "read_last_line": (
+        "last line of the error", "last line of your error", "last line of the traceback",
+        "last line of the message", "final line of the error",
+    ),
+    "run_smaller": ("run one line", "run just one line", "run that line", "smaller input", "smaller example"),
+    "expected_and_saw": ("what you expected", "what you expect", "what did you expect", "what do you expect"),
+    "check_type": ("check what type", "check the type", "print the type"),
+    "reread_lesson": (
+        "reread this step", "reread the step", "reread the lesson", "re read this step", "re read the lesson",
+        "step s lesson text",
+    ),
+    "decision": ("decision you lean", "decision you are leaning", "one reason and one risk", "a reason and a risk"),
+}
+
+_FILE_LINE = re.compile(r'^\s*File "([^"]*)", line \d+(?:, in (\S+))?')
+_ERROR_LINE = re.compile(r"^(?:\w+\.)*\w*(?:Error|Exception|Warning|Interrupt|Exit)\b")
+_QUOTED = re.compile(r"'([^'\n]*)'|\"([^\"\n]*)\"")
+_IDENTIFIER = re.compile(r"(?<!\w)[^\W\d]\w*")
+_STRING_OR_COMMENT = re.compile(r"'([^'\n]*)'|\"([^\"\n]*)\"|#[^\n]*")
+# A line of a question that is code and not prose: indented, a block opener, an import, an assignment or a call.
+_CODE_LINE = re.compile(
+    r"^(?:(?: {2,}|\t)\s*\S"
+    r"|(?:def|class|for|while|if|elif|else|try|except|with)\b.*:\s*(?:#.*)?$"
+    r"|(?:from [\w.]+ import \w|import [\w.]+\s*$)"
+    r"|[^\W\d][\w.\[\]'\"]*\s*[-+*/]?=(?!=)\s*\S"
+    r"|[^\W\d][\w.]*\(.*\)\s*$)"
+)
+_REPLY_LINE_NUMBER = re.compile(r"(?<!\w)lines?\s+\d+", re.IGNORECASE)
+
+
+def _is_name(word: str) -> bool:
+    return word not in _NOT_NAMES and word.lower() not in ANCHOR_IGNORED_WORDS
+
+
+def _code_names(code: str) -> Set[str]:
+    """The names in code. Comments go; a string counts only when it is one word, such as a key."""
+
+    def keep(found: "re.Match[str]") -> str:
+        inside = found.group(1) or found.group(2) or ""
+        return f" {inside} " if _IDENTIFIER.fullmatch(inside) else " "
+
+    return {word for word in _IDENTIFIER.findall(_STRING_OR_COMMENT.sub(keep, code)) if _is_name(word)}
+
+
+def _error_names(error_output: str) -> Set[str]:
+    """The names in run output: the file and function of a frame, the source lines, and what an error quotes.
+
+    The plain words of an error message are Python's, not the learner's, so they do not count.
+    """
+    names: Set[str] = set()
+    for line in error_output.splitlines():
+        frame = _FILE_LINE.match(line)
+        if frame:
+            stem = re.split(r"[\\/]", frame.group(1))[-1].split(".")[0]
+            names |= {word for word in (stem, frame.group(2) or "") if _IDENTIFIER.fullmatch(word) and _is_name(word)}
+        elif _ERROR_LINE.match(line):
+            for found in _QUOTED.finditer(line):
+                names |= _code_names(found.group(1) or found.group(2) or "")
+        elif line[:1].isspace():
+            names |= _code_names(line)
+    return names
+
+
+def _pasted(question: str) -> Tuple[str, str]:
+    """(code, error output) the learner pasted into the question. Prose is in neither."""
+    code: List[str] = []
+    errors: List[str] = []
+    in_traceback = False
+    for line in question.splitlines():
+        if line.startswith("Traceback (most recent call last)") or _FILE_LINE.match(line):
+            in_traceback = True
+        if in_traceback:
+            errors.append(line)
+            in_traceback = bool(line.strip()) and not _ERROR_LINE.match(line)
+        elif _ERROR_LINE.match(line) and ":" in line:
+            errors.append(line)
+        elif _CODE_LINE.match(line):
+            code.append(line)
+    return "\n".join(code), "\n".join(errors)
+
+
+_TRACEBACK_NOTE = re.compile(r"^[^\S\n]*\[Previous line repeated[^\n]*$", re.MULTILINE)
+
+
+def check_anchored(reply: str, question: str, code: str = "", error_output: str = "") -> CheckResult:
+    """The reply holds a name from the learner's code or error output, or a line number. None: nothing to anchor on.
+
+    The words of the question do not count, only code or a traceback pasted into it (SPEC-33 section 12 reading 1).
+    """
+    pasted_code, pasted_errors = _pasted(question or "")
+    code = "\n".join(part for part in (code or "", pasted_code) if part.strip())
+    error_output = "\n".join(part for part in (error_output or "", pasted_errors) if part.strip())
+    if not code and not error_output:
+        return CheckResult(None, "not_applicable")
+    # "[Previous line repeated 996 more times]" is Python talking, not a line of the learner's.
+    code, error_output = _TRACEBACK_NOTE.sub("", code), _TRACEBACK_NOTE.sub("", error_output)
+    reply = reply or ""
+    if _REPLY_LINE_NUMBER.search(reply):
+        return CheckResult(True, "line_number")
+    if set(_IDENTIFIER.findall(reply)) & (_code_names(code) | _error_names(error_output)):
+        return CheckResult(True, "name")
+    return CheckResult(False, "no_anchor")
+
+
+def is_bare(reply: str) -> bool:
+    """No question outside code: the learner is given nothing to answer (SPEC-33 section 7)."""
+    return "?" not in _INLINE_SPAN.sub(" ", _FENCED.sub(" ", reply or ""))
+
+
+def check_one_question(reply: str) -> CheckResult:
+    """Exactly one question mark outside code."""
+    marks = _INLINE_SPAN.sub(" ", _FENCED.sub(" ", reply or "")).count("?")
+    return CheckResult(marks == 1, "one" if marks == 1 else ("none" if marks == 0 else "several"))
+
+
+def check_one_action(reply: str) -> CheckResult:
+    """Exactly one of the listed actions, by its frozen phrases."""
+    normalised = _normalise(reply or "")
+    found = sum(
+        1 for phrases in ONE_ACTION_PHRASES.values() if any(_phrase_start(normalised, p) >= 0 for p in phrases))
+    return CheckResult(found == 1, "one" if found == 1 else ("none" if found == 0 else "several"))
 
 
 # --- the entry point ---

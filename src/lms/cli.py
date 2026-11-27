@@ -471,7 +471,8 @@ def handle_report_command(args, environ=None) -> int:
 EVAL_USAGE = """Usage: lms eval axis-obedience [options]
 Asks the real model every question with no course source, then checks its raw reply against the no-source rules
 (SPEC-30). A measurement, not a gate. Needs MOCK_AI=false; --replay and --estimate call no model.
-The error-message questions (eval/obedience/error-items.yaml, set error-items) are asked too and counted apart.
+The error-message questions (eval/obedience/error-items.yaml, set error-items) are asked too and counted apart,
+and each is asked again with its code and its error passed as run output (counted apart as run-output items).
 Options:
   --profile ID          provider profile (default: the local one)
   --temperature X       one chat temperature, 0 to 2 (default 0.0; AXIS_TEMPERATURE is not read)

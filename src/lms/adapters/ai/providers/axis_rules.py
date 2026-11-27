@@ -16,6 +16,7 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 from lms.adapters.ai import passage_safety
 from lms.adapters.ai.concept_store import ConceptStore
+from lms.adapters.ai.run_output import error_for_model
 from lms.adapters.ai.socratic_guardrail import (
     AssistanceClassifier,
     SocraticGuardrail,
@@ -191,26 +192,35 @@ SOCRATIC_INVARIANT = (
     "function definitions, or direct code solutions."
 )
 
-# The mode contracts, used only when a course passage reached the model (SPEC-31 sections 3.1 to 3.3).
+# The mode contracts, used only when a course passage reached the model (SPEC-31 sections 3.1 to 3.3, as amended
+# by SPEC-33 section 3: one question, anchored on something of the learner's, and one action).
+_ANCHOR_AND_ACTION = (
+    "Name something from the learner's own code, question or run output, ask exactly one question they can answer "
+    "by looking or running, and end with one small action they can take now."
+)
 MODE_CONTRACTS = {
     AxisMode.SOCRATIC: (
         "MODE: SOCRATIC FACILITATOR.\n"
         f"{SOCRATIC_INVARIANT}\n"
         "Draw out what the learner already thinks. Reply with one sentence that restates their question, "
-        "then one question about their own code, data or reasoning. Never ask more than two questions. "
-        "Write no code, not even inside a sentence."
+        "then one question about their own code, data or reasoning. Ask exactly one question. "
+        "Write no code, not even inside a sentence. "
+        "Name something from the learner's own code, question or run output, and end with one small action they can "
+        "take now."
     ),
     AxisMode.HYBRID: (
         "MODE: HYBRID (PLAN BEFORE CODE).\n"
         "State the learner's goal in one line. Then give two or three sub-steps phrased as gaps for them to "
         "fill: the inputs, the outputs and how they will know it works. End with one next action. "
-        "Do not write implementation code. Do not write the plan or the contract for them."
+        "Do not write implementation code. Do not write the plan or the contract for them. "
+        f"{_ANCHOR_AND_ACTION}"
     ),
     AxisMode.COACH: (
         "MODE: COACH (EXPLAIN, THEN THEY DO IT).\n"
         "Explain briefly and encouragingly, using only the numbered passages, and mark each claim with its "
         "label such as [1]. Give one example from the passages. Then set one small task for the learner to "
-        "try. Keep it to about 150 words. Never write the solution to their exercise."
+        "try. Keep it to about 150 words. Never write the solution to their exercise. "
+        f"{_ANCHOR_AND_ACTION}"
     ),
 }
 NO_SOURCE_HEADER = "MODE: NO COURSE SOURCE."
@@ -259,7 +269,8 @@ def build_user_message(query: AxisQuery) -> str:
     safe_code = (query.learner_code or "")[:MAX_CODE_CHARS]
     stderr_text = ""
     if query.execution_result and query.execution_result.stderr:
-        stderr_text = query.execution_result.stderr[:MAX_CODE_CHARS]
+        # File names instead of full paths, and the end of a long output (SPEC-33 section 4).
+        stderr_text = error_for_model(query.execution_result.stderr, MAX_CODE_CHARS)
     return _user_message(query.unit_id, query.current_activity.value, safe_code, stderr_text, safe_prompt)
 
 

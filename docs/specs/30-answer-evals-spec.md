@@ -20,6 +20,8 @@ Governed by: AGENTS.md (zero-cost offline development, `MOCK_AI=true`, no learne
 
 Amended 2026-11-27 by SPEC-31 section 9.3 (checker version C): in (b), `[n]` written directly after a name, `]` or `)` is an index, not a label; (d) uses the detector of SPEC-31 9.2 with the learner's text; and the error-message questions of `eval/obedience/error-items.yaml` are asked too, reported apart from the totals, with every such reply in the hand-review file.
 
+Amended 2026-11-27 by SPEC-33 section 7 (checker version D): three turn checks (anchored, one question, one action) are counted as flags, never in the pass count; and each error question is asked a second time with its code and its error passed as run output, with its own totals, every such reply also in the hand-review file.
+
 ## 1. Why
 
 SPEC-24 made "no facts from memory" a rule in the prompt and a visible note in the panel. Nothing measures whether a real model follows it. The panel note and the guardrail hide some disobedience, so the only honest measure is the model's raw reply. This spec adds a checker (deterministic, offline, in CI) and a harness (local, owner-run) that produces counts, the exact failing questions and a small hand-review sample, plus the named `AXIS_TEMPERATURE` setting so the same run can be repeated at 0.0 and 0.2. It is a **measurement, not a gate**.

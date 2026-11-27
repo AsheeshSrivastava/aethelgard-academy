@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useContext, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { api, ApiError, type ColdCheckStatus, type Exercise, type Unit } from "../api/client";
 import { ErrorNote, Loading } from "../components/common";
@@ -11,6 +11,7 @@ import { loadAxisWidth } from "../lesson/axisWidth";
 import { CodeWorkspace, ItemForm, type Answer } from "../lesson/items";
 import { Prose } from "../lesson/Prose";
 import { NextLink, Result } from "../lesson/Result";
+import { RunErrorContext, type RunError } from "../lesson/runError";
 import { explainParts, nextStep } from "../lesson/steps";
 import { AiJudgement } from "../components/AiJudgement";
 import { coldCheckMessage, stepName } from "../lib/format";
@@ -281,10 +282,12 @@ function ExerciseStep({ unit, step, next, onDone, onExercise }: { unit: Unit; st
   const key = ["exercise", unit.unit_id, step];
   const exercise = useQuery({ queryKey: key, queryFn: () => api.exercise(unit.unit_id, step), retry: false });
   const attempt = useAttempt(exercise.data, step, onDone);
+  const reportRunError = useContext(RunErrorContext);
   const regenerate = useMutation({
     mutationFn: () => api.regenerate(unit.unit_id, step),
     onSuccess: (fresh) => {
       attempt.reset();
+      reportRunError(undefined);
       client.setQueryData(key, fresh);
     },
   });
@@ -523,6 +526,17 @@ export function Lesson() {
   const codeGetter = useRef<(() => string) | undefined>(undefined);
   const layout = useRef<HTMLDivElement>(null);
   const [axisWidth, setAxisWidth] = useState(loadAxisWidth);
+  // The latest run's error belongs to one step of one unit (SPEC-33 section 12 reading 2).
+  const [unitResets, setUnitResets] = useState(0);
+  const stepKey = `${unitId}/${step}`;
+  const [held, setHeld] = useState<{ stepKey: string; error?: RunError }>({ stepKey });
+  if (held.stepKey !== stepKey) setHeld({ stepKey }); // forget it, so returning does not bring it back
+  const runError = held.stepKey === stepKey ? held.error : undefined;
+  // A report made for another step changes nothing.
+  const reportRunError = useCallback(
+    (error: RunError | undefined) => setHeld((now) => (now.stepKey === stepKey ? { stepKey, error } : now)),
+    [stepKey],
+  );
 
   const stepKnown = unit.data?.activities?.includes(step);
   const stateReady = state.isSuccess;
@@ -596,7 +610,13 @@ export function Lesson() {
             {steps.filter((name) => doneSteps.includes(name)).length} of {steps.length} steps done
           </span>
         </span>
-        <ResetUnit unitId={unitId} />
+        <ResetUnit
+          unitId={unitId}
+          onReset={() => {
+            reportRunError(undefined);
+            setUnitResets((n) => n + 1); // a run still going is closed with the step it belongs to
+          }}
+        />
       </div>
 
       {!stepKnown ? (
@@ -604,18 +624,20 @@ export function Lesson() {
       ) : (
         <div ref={layout} className="lesson-layout" style={{ "--axis-width": `${axisWidth}px` } as CSSProperties}>
           <section className="lesson-content" aria-label="Lesson content">
-            {step === "video" && <VideoStep unit={data} next={next} onDone={finish} done={doneSteps.includes("video")} />}
-            {step === "explain" && <ExplainStep unit={data} next={next} onDone={finish} />}
-            {step === "playground" && <PlaygroundStep unit={data} next={next} onDone={finish} onCode={onCode} />}
-            {onColdCheck && <ColdCheckStep unit={data} cold={cold.data} />}
-            {!["video", "explain", "playground", "cold_check"].includes(step) && (
-              <ExerciseStep key={step} unit={data} step={step} next={next} onDone={finish} onExercise={setExerciseId} />
-            )}
+            <RunErrorContext.Provider key={unitResets} value={reportRunError}>
+              {step === "video" && <VideoStep unit={data} next={next} onDone={finish} done={doneSteps.includes("video")} />}
+              {step === "explain" && <ExplainStep unit={data} next={next} onDone={finish} />}
+              {step === "playground" && <PlaygroundStep unit={data} next={next} onDone={finish} onCode={onCode} />}
+              {onColdCheck && <ColdCheckStep unit={data} cold={cold.data} />}
+              {!["video", "explain", "playground", "cold_check"].includes(step) && (
+                <ExerciseStep key={step} unit={data} step={step} next={next} onDone={finish} onExercise={setExerciseId} />
+              )}
+            </RunErrorContext.Provider>
           </section>
           {!onColdCheck && (
             <>
               <AxisResizer layout={layout} width={axisWidth} onChange={setAxisWidth} />
-              <AxisPanel unitId={unitId} step={step} exerciseId={exerciseId} getCode={() => codeGetter.current?.()} />
+              <AxisPanel unitId={unitId} step={step} exerciseId={exerciseId} getCode={() => codeGetter.current?.()} runError={runError} />
             </>
           )}
         </div>
