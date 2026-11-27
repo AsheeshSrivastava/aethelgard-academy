@@ -17,6 +17,7 @@ from lms.adapters.ai.socratic_guardrail import (
     AssistanceClassifier,
     SocraticGuardrail,
     code_spans,
+    follow_up_for,
     learner_text_of,
     remove_prompt_tags,
 )
@@ -89,7 +90,8 @@ def _next_cut(buffer: str, final: bool) -> Optional[int]:
 class SocraticStreamFilter:
     """Releases only complete sentences that hold no code."""
 
-    def __init__(self, guardrail: SocraticGuardrail, learner_text: str = ""):
+    def __init__(self, guardrail: SocraticGuardrail, learner_text: str = "", reflect: bool = True):
+        self.reflect = reflect
         self.guardrail = guardrail
         self.learner_text = learner_text
         self._buffer = ""
@@ -108,7 +110,7 @@ class SocraticStreamFilter:
         if self._withheld:
             out.append(GUIDING_INQUIRY)
             self._released += GUIDING_INQUIRY
-        if "?" not in self._released:
+        if self.reflect and "?" not in self._released:
             out.append(REFLECTION_PROMPT)
             self._released += REFLECTION_PROMPT
         return out
@@ -182,7 +184,10 @@ def stream_axis(
     """Yield (event, data) pairs: tokens, then citations, then done."""
     deltas, cited = axis.stream(query)
     grounding = cited if isinstance(cited, passage_safety.Grounding) else None
-    gate = SocraticStreamFilter(guardrail, learner_text_of(query)) if query.mode == AxisMode.SOCRATIC else None
+    no_source = grounding is not None and grounding.source_state != "course"
+    gate = None
+    if query.mode == AxisMode.SOCRATIC:
+        gate = SocraticStreamFilter(guardrail, learner_text_of(query), reflect=not no_source)
     sent: List[str] = []
 
     clean_deltas = strip_prompt_tags(deltas)
@@ -203,6 +208,11 @@ def stream_axis(
         yield "citation", {"name": concept}
 
     assistance = classifier.classify(query.user_prompt, "".join(sent), query.mode)
+    if no_source and not grounding.from_mock:  # after the classifier: a fixed question is not help (SPEC-24 R21)
+        line = follow_up_for("".join(sent))
+        if line:
+            sent.append(line)
+            yield "token", {"text": line}
     done: Dict[str, Any] = {"assistance_level": assistance.value, "cited_concepts": cited}
     if grounding is not None:
         done["source_state"] = grounding.source_state  # SPEC-24 R9: server data, never the model's words

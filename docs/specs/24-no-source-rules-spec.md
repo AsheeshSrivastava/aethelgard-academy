@@ -93,3 +93,19 @@ ADR-0034 2.3 "not in the course yet", no chip -> R2, R3, R12. "Coach only, label
 - **Stress test Socratic, Hybrid and Coach** against real questions: does each keep its stance, does Socratic ever give code, does any mode answer from memory when no source exists, does Hybrid add anything the other two lack. This step only fixes the shared memory rule; it does not judge the modes.
 - **Mode usage count.** The interaction log already records `mode` on every AXIS answer, so "how often is each mode used" is a count over existing data. The task adds a small report (per mode, per unit, per week), not a new log field. It belongs with the tracing and evals step (plan step 8) or earlier if the owner wants.
 - **Note for the tracing and evals step (plan step 8), owner 2026-11-18:** measure how often a real model obeys the SPEC-24 prompt rules. SPEC-24 tests the prompt text only. The eval should ask real questions with no source (and with a source), per mode, and count answers that give facts, syntax or error explanations from the model's memory, name a source that was not given, or skip the state sentence. The server-side note on the panel (R13) shows either way.
+
+## 10. Never a bare reply (amendment 2026-11-27; ADR-0041 section 1)
+Evidence: on the local model, 19% of no-source questions without an error got only the state sentence ("This is not in the course yet."), after SPEC-31 Amendment A. A prompt cannot guarantee a follow-up; the app can.
+
+- R16. **Where.** Chat replies (consult and stream) whose `source_state` is `not_found`, `no_index` or `unavailable`, in every mode. Not with a course source, not for the mock companion, not for the concept check, drafts or build feedback.
+- R17. **When.** Only when the reply the learner would see, after the guard and the label clean-up, holds no question. A question is a "?" outside fenced and inline code; a block opens only at the start of a line. A reply cut off inside a block has it closed before the line. A reply from the mock, including the fallback when the local server fails, gets no line.
+- R18. **Exact wording**, added after a blank line (or alone if the reply is empty):
+> Start from your own code, error or question: what have you tried so far, and what did you see?
+
+  It states no cause or fact, holds no code, names nothing, and reads sensibly with no code or error.
+- R19. In Socratic mode it takes the place of the general reflection question for no-source replies. With a course source, Socratic keeps that question.
+- R20. **Stream.** It is sent as one last piece of text, after the model's reply.
+- R21. **Help level** is judged on the reply before the line is added, so a fixed question never raises it.
+- R22. **Record.** The interaction log's answer holds what the learner saw, the line included. No new log field; nothing new in traces.
+- R23. The line is text the app adds, not a prompt: it changes no `prompt_version` and is not in the prompt catalogue.
+

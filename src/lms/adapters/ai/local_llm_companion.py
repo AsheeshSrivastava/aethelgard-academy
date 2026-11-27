@@ -230,9 +230,11 @@ class OpenAICompatibleCompanion:
         sys_prompt, user_msg = axis_rules.build_prompts(query, grounding)
         self._check_budget(sys_prompt, user_msg)
         version = axis_rules.chat_prompt_version(query.mode, grounding.source_state)
-        return self._stream_deltas(query, sys_prompt, user_msg, version), grounding
+        return self._stream_deltas(query, sys_prompt, user_msg, version, grounding), grounding
 
-    def _stream_deltas(self, query: AxisQuery, sys_prompt: str, user_msg: str, version: str) -> Iterator[str]:
+    def _stream_deltas(
+        self, query: AxisQuery, sys_prompt: str, user_msg: str, version: str, grounding: Any
+    ) -> Iterator[str]:
         sent_any = False
         said: List[str] = []  # everything yielded, kept as last_raw_reply when the stream ends
         reasoning: List[str] = []
@@ -289,6 +291,7 @@ class OpenAICompatibleCompanion:
             self.last_backend_used = f"Offline Mock (Fallback reason: {type(exc).__name__})"
             tracing.annotate(fallback="mock")
             fell_back = True  # that reply came from no prompt
+            grounding.from_mock = True  # the mock is not given the no-source line (SPEC-24 R16)
             yield from self._mock_fallback.stream(query)[0]
         finally:
             if requested and not fell_back:
