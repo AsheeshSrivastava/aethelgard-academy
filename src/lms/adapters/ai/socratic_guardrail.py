@@ -21,7 +21,15 @@ GUIDING_INQUIRY = (
 REFLECTION_PROMPT = "\n\nWhat is your hypothesis for why this step behaves the way it does?"
 # SPEC-24 section 10: with no course source a reply that asks nothing gets this line, in every mode, from the app.
 NO_SOURCE_FOLLOW_UP = "Start from your own code, error or question: what have you tried so far, and what did you see?"
-_CODE_TEXT = re.compile(r"```.*?(?:```|\Z)|~~~.*?(?:~~~|\Z)|`[^`\n]*`", re.DOTALL)
+# Code, for finding a real question: a one-line fence, a fenced block (it opens at the start of a line only, so a
+# stray ``` in a sentence hides nothing), or an inline span of one or two backticks.
+_CODE_TEXT = re.compile(
+    r"```[^\n]*?```|~~~[^\n]*?~~~"
+    r"|^[^\S\n]*(?:```|~~~).*?(?:^[^\S\n]*(?:```|~~~)[^\n]*$|\Z)"
+    r"|(?<!`)(`{1,2})(?!`)[^\n]*?(?<!`)\1(?!`)",
+    re.DOTALL | re.MULTILINE,
+)
+_FENCE_LINE = re.compile(r"^[^\S\n]*(```|~~~)(?![^\n]*\1)", re.MULTILINE)  # a line that opens or closes a block
 
 
 def asks_a_question(text: str) -> bool:
@@ -33,7 +41,9 @@ def follow_up_for(text: str) -> str:
     """What to add after a no-source reply so that it is not bare: "" when it already asks something."""
     if asks_a_question(text):
         return ""
-    return ("\n\n" if text.strip() else "") + NO_SOURCE_FOLLOW_UP
+    fences = _FENCE_LINE.findall(text)
+    close = "\n" + fences[-1] if len(fences) % 2 else ""  # a reply cut off inside a block would swallow the line
+    return close + ("\n\n" if text.strip() else "") + NO_SOURCE_FOLLOW_UP
 
 PROMPT_TAG_NAMES = (
     "learner_query",

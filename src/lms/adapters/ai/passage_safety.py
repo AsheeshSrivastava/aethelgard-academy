@@ -70,6 +70,7 @@ class Grounding:
 
     entries: List[Entry] = field(default_factory=list)
     trace: Optional[Any] = None  # RetrievalTrace; passages_cited is written when a reply is checked
+    from_mock: bool = False  # set when the model failed mid-request and the mock wrote the reply instead
 
     @property
     def block(self) -> str:

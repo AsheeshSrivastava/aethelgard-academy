@@ -208,7 +208,7 @@ def stream_axis(
         yield "citation", {"name": concept}
 
     assistance = classifier.classify(query.user_prompt, "".join(sent), query.mode)
-    if no_source:  # after the classifier: a fixed question is not help (SPEC-24 R21)
+    if no_source and not grounding.from_mock:  # after the classifier: a fixed question is not help (SPEC-24 R21)
         line = follow_up_for("".join(sent))
         if line:
             sent.append(line)

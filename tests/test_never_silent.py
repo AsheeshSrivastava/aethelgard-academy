@@ -6,10 +6,14 @@ Interface these tests fix:
 No model, no network. All text is made up.
 """
 
+import httpx
 import pytest
+
+from fake_retriever import FakeRetriever
 
 from lms.adapters.ai import passage_safety
 from lms.adapters.ai.axis_stream import stream_axis
+from lms.adapters.ai.local_llm_companion import OpenAICompatibleCompanion
 from lms.adapters.ai.mock_axis import MockAxisCompanion
 from lms.adapters.ai.providers import axis_rules
 from lms.adapters.ai.socratic_guardrail import (NO_SOURCE_FOLLOW_UP, AssistanceClassifier, SocraticGuardrail,
@@ -132,3 +136,34 @@ def test_the_mock_companion_is_unchanged():
     events = list(stream_axis(companion, query(AxisMode.COACH), GUARD, CLASSIFIER))
 
     assert NO_SOURCE_FOLLOW_UP not in "".join(d["text"] for name, d in events if name == "token")
+
+
+# --- review round 1 ---
+
+
+def test_a_mock_fallback_gets_no_line_on_either_route():
+    companion = OpenAICompatibleCompanion(
+        base_url="http://127.0.0.1:9/v1", model="made-up-model", api_key="local-no-key",
+        retriever=FakeRetriever(status=RetrievalStatus.NOT_FOUND), fallback_to_mock=True,
+        http_client=httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(500, json={}))))
+
+    events = list(stream_axis(companion, query(AxisMode.COACH), GUARD, CLASSIFIER))
+    shown = "".join(d["text"] for name, d in events if name == "token")
+    consulted = companion.consult(query(AxisMode.COACH))
+
+    assert companion.last_backend_used.startswith("Offline Mock")
+    assert shown and NO_SOURCE_FOLLOW_UP not in shown and NO_SOURCE_FOLLOW_UP not in consulted.reply
+
+
+def test_double_backticks_are_code_and_a_stray_fence_hides_nothing():
+    assert asks_a_question("Look at ``a ? b`` again.") is False
+    assert asks_a_question("Do not type ``` here. What did you try?") is True
+    assert asks_a_question("```x ? y``` and no more.") is False
+
+
+@pytest.mark.parametrize("mode", [AxisMode.HYBRID, AxisMode.COACH])
+def test_a_reply_cut_off_inside_a_block_is_closed_before_the_line(mode):
+    reply = "This is not in the course yet.\n```\nx = 1"
+
+    for text in (whole(reply, mode, no_source("not_found")).reply, streamed(reply, mode, no_source("not_found"))[0]):
+        assert text.endswith(f"x = 1\n```\n\n{NO_SOURCE_FOLLOW_UP}")

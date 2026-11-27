@@ -98,7 +98,7 @@ ADR-0034 2.3 "not in the course yet", no chip -> R2, R3, R12. "Coach only, label
 Evidence: on the local model, 19% of no-source questions without an error got only the state sentence ("This is not in the course yet."), after SPEC-31 Amendment A. A prompt cannot guarantee a follow-up; the app can.
 
 - R16. **Where.** Chat replies (consult and stream) whose `source_state` is `not_found`, `no_index` or `unavailable`, in every mode. Not with a course source, not for the mock companion, not for the concept check, drafts or build feedback.
-- R17. **When.** Only when the reply the learner would see, after the guard and the label clean-up, holds no question. A question is a "?" outside fenced and inline code.
+- R17. **When.** Only when the reply the learner would see, after the guard and the label clean-up, holds no question. A question is a "?" outside fenced and inline code; a block opens only at the start of a line. A reply cut off inside a block has it closed before the line. A reply from the mock, including the fallback when the local server fails, gets no line.
 - R18. **Exact wording**, added after a blank line (or alone if the reply is empty):
 > Start from your own code, error or question: what have you tried so far, and what did you see?
 
