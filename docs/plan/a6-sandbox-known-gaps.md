@@ -1,3 +1,5 @@
+> **Detail record. Order and timing moved 2026-11-27 to the freeze tracker.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 > **Snapshot copied from the project folder on 2026-11-20.** Source: lms-backlog/a6-sandbox-known-gaps.md. Hosting gates G1, G5, G6 and G2 are repeated in master-plan-2026-11-15.md section 3.
 
 # A6 sandbox: known gaps to close later

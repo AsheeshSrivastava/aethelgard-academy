@@ -1,5 +1,7 @@
 # Master plan (freeze plan) snapshot
 
+> **Superseded 2026-11-27 by the freeze tracker; kept as a record.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 > **Snapshot copied from the project folder (`lms-backlog/master-plan-2026-11-15.md`, last edited 2026-11-18) on 2026-11-20.** The body below is the 2026-11-18 text; its F7 to F9 rows are out of date. The block directly below is the current status. Where they differ, this block wins.
 
 ## Status update 2026-11-20

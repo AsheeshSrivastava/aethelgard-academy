@@ -1,3 +1,5 @@
+> **Superseded 2026-11-27 by the freeze tracker; kept as a record.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 > **Snapshot copied from the project folder on 2026-11-20.** Source: lms-backlog/independent-audit-plan.md. Steps A0 to A6 are done; A7 is paused; A8 is queued (master plan F10). Status lives in master-plan-2026-11-15.md.
 
 # Plan from the independent audit (2026-11-09 report)

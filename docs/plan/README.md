@@ -2,12 +2,13 @@
 
 | File | What it is | Status |
 | :--- | :--- | :--- |
-| `work-sequence.md` | The ordered list of what comes next. | Live. Updated 2026-11-20. |
-| `master-plan-2026-11-15.md` | The freeze plan (freeze 5 Dec 2026) with a status block at the top. | Live; body is the 2026-11-18 snapshot. |
-| `review-2026-11-15-plan.md` | Ordered actions from the independent (Fable) review. | Snapshot; status in the master plan. |
-| `independent-audit-plan.md` | Steps A0 to A8 from the 9 Nov audit. | Snapshot; status in the master plan. |
-| `a6-sandbox-known-gaps.md` | Docker runner gaps G1 to G10. | Snapshot; hosting gates repeated in the master plan. |
-| `after-stage0-round2.md` | Follow-ups after Stage 0 round 2. | History only. |
+| `freeze-2026-12-05.md` | **The one live tracker:** the must-do list for the 5 Dec 2026 freeze and the post-freeze backlog. | Live, 2026-11-27. |
+| `work-sequence.md` | The earlier ordered list of what comes next. | Superseded 2026-11-27; kept. |
+| `master-plan-2026-11-15.md` | The earlier freeze plan. | Superseded 2026-11-27; kept. |
+| `review-2026-11-15-plan.md` | Ordered actions from the independent (Fable) review. | Superseded 2026-11-27; kept. |
+| `independent-audit-plan.md` | Steps A0 to A8 from the 9 Nov audit. | Superseded 2026-11-27; kept. |
+| `a6-sandbox-known-gaps.md` | Docker runner gaps G1 to G10. | Detail record; hosting gates are in the freeze tracker. |
+| `after-stage0-round2.md` | Follow-ups after Stage 0 round 2. | Superseded 2026-11-27; kept. |
 | `axis-cold-check-known-gaps.md` | What is still open about AXIS during Cold Checks (ADR-0040). | Live backlog, recorded 2026-11-26. |
 | `owner-console-evals-traces.md` | The proposed owner console for evals, traces and observability, and the deferred demo mode. | Backlog, Proposed for after the freeze, recorded 2026-11-26. |
 | `axis-facilitation-evidence-review.md` | Short desk review of machine-led tutoring, for the paper below. | Quick and non-systematic, 2026-11-27. |

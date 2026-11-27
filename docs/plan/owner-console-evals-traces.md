@@ -1,5 +1,7 @@
 # Owner console for evals, traces and observability (backlog)
 
+> **2026-11-27: the "demo mode is deferred" note below is superseded (demo mode is a freeze step). The console stays backlog.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 Status: **Proposed** 2026-11-26 (owner), for **after the 5 Dec 2026 freeze**. Nothing is decided or built. Tracker row: ADR-0035 section 5.1, step 8d.
 
 ## Need

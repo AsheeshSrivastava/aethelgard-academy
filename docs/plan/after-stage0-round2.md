@@ -1,3 +1,5 @@
+> **Superseded 2026-11-27 by the freeze tracker; kept as a record.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 > **Snapshot copied from the project folder on 2026-11-20.** Source: lms-backlog/after-stage0-round2.md. History only: S0-1 to S0-4 are done (see master-plan-2026-11-15.md section 1).
 
 # Changes waiting for the end of Stage 0 round 2
