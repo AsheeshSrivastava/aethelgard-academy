@@ -25,6 +25,7 @@ from lms.core.axis_obedience import (
     check_one_question,
     check_reply,
     contains_address,
+    is_bare,
 )
 
 OUTPUT_FILES = ("report.txt", "results.json", "replies.jsonl", "review-sample.md")
@@ -95,6 +96,12 @@ def _is_error_item(row: Mapping[str, Any]) -> bool:
 
 def _is_run_output_item(row: Mapping[str, Any]) -> bool:
     return row.get("kind") == "run_output"
+
+
+def _bare_counts(rows: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
+    """Replies with no question: in what the model said, and in what the learner is shown. no_reply rows are left out."""
+    answered = [row for row in rows if not row.get("no_reply")]
+    return {"n": len(answered), **{view: sum(1 for row in answered if is_bare(_text(row, view))) for view in VIEWS}}
 
 
 def _turn_counts(rows: Sequence[Mapping[str, Any]]) -> Dict[str, Dict[str, Dict[str, int]]]:
@@ -178,6 +185,8 @@ def build_results(rows: Sequence[Mapping[str, Any]], meta: Mapping[str, Any]) ->
         run_output_items=_error_totals(run_output),
         turn_checks={key: _turn_counts(block)
                      for (key, _label), block in zip(TURN_BLOCKS, (rows, errors, run_output))},
+        bare_replies={key: _bare_counts(block)
+                      for (key, _label), block in zip(TURN_BLOCKS, (rows, errors, run_output))},
     )
     return results
 
@@ -226,6 +235,11 @@ def _turn_lines(turn: Mapping[str, Mapping[str, Mapping[str, Mapping[str, int]]]
     return lines
 
 
+def _bare_line(bare: Mapping[str, Mapping[str, int]]) -> str:
+    parts = "; ".join(f"{label} {bare[key]['raw']}/{bare[key]['visible']} of {bare[key]['n']}" for key, label in TURN_BLOCKS)
+    return f"Bare replies (no question), said/shown: {parts}"
+
+
 def render_report(results: Mapping[str, Any]) -> str:
     """report.txt (R14): counts per mode and state, each check alone, the made-up score, flags and failing ids."""
     temperature = results.get("temperature")
@@ -267,6 +281,7 @@ def render_report(results: Mapping[str, Any]) -> str:
         f"{runs['b_failed']} fail (b), {runs['d_failed']} fail (d) (not in the totals above)",
         "",
         *_turn_lines(results["turn_checks"]),
+        _bare_line(results["bare_replies"]),
         "",
         "Failing question ids per check (raw reply):",
     ]

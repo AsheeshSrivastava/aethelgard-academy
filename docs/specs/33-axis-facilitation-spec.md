@@ -41,6 +41,9 @@ Every changed prompt gets a new `prompt_version` and the catalogue is regenerate
 ### 3.2 Tightened after the first eval (owner, 2026-11-27)
 The first wording read as permission to advise. Local model, no source, temperature 0.0 and 0.2, against the run before: pasted errors improved (explains flag 33% to 9% and 27% to 12%), but the other questions got worse: explains 2% to 8% and 3% to 8%; made-up names handled well 214 to 206 and 214 to 196 of 216; replies with code the learner did not write 14 to 24 and 12 to 23 of 756; replies about 80% longer. The sentence now asks for exactly one listed way of looking, nothing of the model's own, no explanation, and three sentences in all.
 
+### 3.3 The no-source wording is held back (owner, 2026-11-27)
+The two quoted no-source wordings of section 3 are **not used**. With no course source, AXIS keeps the wording of SPEC-31 section 9.1; the with-source sentences stay. So the process actions and the decision-subject line with no source (section 2) are deferred. Measured on the local model, one sentence at a time: the list of actions made it teach on ordinary questions (12% of replies that said something, against 2%), and nothing in the old wording makes a follow-up compulsory, so many replies are bare. That is handled by the app (SPEC-24 section 10).
+
 ## 4. The run's error output (stage 1)
 - E1. The run terminal keeps the error output of the **latest** run on the step; a new successful run clears it. The AXIS panel sends it as `execution_result` (the field exists; the server already puts `stderr` in the user message, capped at 4000 characters).
 - E2. The **end** of a long output is kept (the cause line is last), not the start.
@@ -64,6 +67,7 @@ The first wording read as permission to advise. Local model, no source, temperat
 - L5. The conversation records the **highest** level of help reached. This is a record; how it grades evidence is unchanged (choice 3).
 
 ## 7. Judging
+- **Bare replies** (stage 1): the eval counts replies with no question outside code, both what the model said and what the learner is shown, per block. Every safety check scores silence as perfect, so this is read beside them.
 - Turn-quality checks, flag only, added to the eval (stage 1): **anchored** (the reply holds a name or line number from the learner's code or error); **one question**; **one action** (a frozen phrase list); the existing explains flag.
 - The owner's five-line rubric, each 0 to 2: anchored; answerable; actionable; follows the last reply (stage 2); respectful.
 - Stage 1 eval: the 18 error items, each also with its error passed as run output, local model, temperatures 0.0 and 0.2 (free). An OpenAI pass only with a printed estimate, run by the owner. The first run reports; it sets no new pass mark. The earlier 5% explains-flag target stays as the line for using the fixed reply as a safety net.

@@ -607,6 +607,11 @@ def check_anchored(reply: str, question: str, code: str = "", error_output: str 
     return CheckResult(False, "no_anchor")
 
 
+def is_bare(reply: str) -> bool:
+    """No question outside code: the learner is given nothing to answer (SPEC-33 section 7)."""
+    return "?" not in _INLINE_SPAN.sub(" ", _FENCED.sub(" ", reply or ""))
+
+
 def check_one_question(reply: str) -> CheckResult:
     """Exactly one question mark outside code."""
     marks = _INLINE_SPAN.sub(" ", _FENCED.sub(" ", reply or "")).count("?")

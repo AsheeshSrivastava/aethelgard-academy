@@ -69,7 +69,7 @@ REFERENCE_INTRO = (
     "When your answer uses a passage, mark it with its label, such as [1]. "
     "Do not use a label that is not listed."
 )
-# SPEC-31 section 3.4 as amended by SPEC-33 section 3. The state sentences are SPEC-24 R3.
+# SPEC-31 section 3.4. The state sentences are SPEC-24 R3.
 NEUTRAL_HEADER = "MODE: NO COURSE SOURCE."
 STATE_SENTENCE = {
     "not_found": "This is not in the course yet.",
@@ -85,18 +85,14 @@ def no_source_block(state):
         f'in your own plain words: "{STATE_SENTENCE[state]}" Then do not give facts, syntax, error explanations or '
         "advice from your own memory. Do not explain an error, even in the learner's own code. Do not say what a name "
         "you do not recognise is or does, and do not guess. Write no code, not even inside a sentence. Work only from "
-        "what the learner wrote (the question, the code and the run output). "
-        # SPEC-33 section 3
-        "Name one thing of theirs, such as a name or a line number. Ask one question they can answer by looking or "
-        "running. Then suggest exactly one of these ways of looking and nothing else, with no code, command or "
-        "name of your own: print a value and read it; "
-        "read the last line of the error; run one line or try a smaller input; say what they expected and what they "
-        "saw; check what type a value is; reread this step's lesson text. Do not explain any idea, tool or word. "
-        "Keep the whole reply to three sentences. For a question about a decision, design, "
-        "policy or change, ask them to state the decision they lean to, one reason and one risk. A question may point "
-        "at a line of their code; it never states the cause or the fix. When there is an error or a traceback, do not "
-        'say what it means, what caused it, or what the values must be. Do not write "means" or "because" about it. '
-        "Do not copy their code or the traceback into your reply."
+        "what the learner wrote (the question, the code and the run output): restate what they asked for, "
+        "ask what they already know or have tried, with at most two questions, or suggest they rephrase or reread "
+        "this step's lesson text. A question may point at a line of their code; it never states the cause or the fix. "
+        # SPEC-31 section 9.1 (Amendment A)
+        "When their question, code or run output shows an error or a traceback, do not say what the error or its "
+        'message means, what caused it, or what the values in it must be. Do not write "means" or "because" about it. '
+        "Point at one line number or function name to look at, then ask what they expected to happen there and what "
+        "they have checked. Do not copy their code or the traceback into your reply; point at it by line number or name."
     )
 
 
@@ -169,7 +165,7 @@ def test_no_source_contract_forbids_error_explanations_guessing_names_and_inline
     assert "Do not explain an error, even in the learner's own code." in prompt
     assert "Do not say what a name you do not recognise is or does, and do not guess." in prompt
     assert "Write no code, not even inside a sentence." in prompt
-    assert "Ask one question they can answer by looking or running." in prompt
+    assert "with at most two questions" in prompt
     assert "it never states the cause or the fix" in prompt
 
 

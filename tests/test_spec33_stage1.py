@@ -97,24 +97,7 @@ def axis_query(stderr=None, **changes):
 # SPEC-33 sections 2, 3 and 3.1: contract wording
 # =====================================================================================================
 
-# Section 3, character for character, from "Work only from what the learner wrote".
-NO_SOURCE_TAIL = (
-    "Work only from what the learner wrote (the question, the code and the run output). Name one thing of theirs, "
-    "such as a name or a line number. Ask one question they can answer by looking or running. Then suggest "
-    "exactly one of these ways of looking and nothing else, with no code, command or name of your own: print "
-    "a value and read it; read the last line of the error; "
-    "run one line or try a smaller input; say what they expected and what they saw; check what type a value is; "
-    "reread this step's lesson text. Do not explain any idea, tool or word. Keep the whole reply to three "
-    "sentences. For a question about a decision, design, policy or change, ask them to state "
-    "the decision they lean to, one reason and one risk. A question may point at a line of their code; it never "
-    "states the cause or the fix. When there is an error or a traceback, do not say what it means, what caused it, "
-    'or what the values must be. Do not write "means" or "because" about it. Do not copy their code or the '
-    "traceback into your reply."
-)
-ACTIONS = (
-    "print a value and read it", "read the last line of the error", "run one line or try a smaller input",
-    "say what they expected and what they saw", "check what type a value is", "reread this step's lesson text",
-)
+# The no-source wording is held back (SPEC-33 section 3.3): it stays SPEC-31 section 9.1, as on main.
 SOCRATIC_SENTENCE = (
     "Name something from the learner's own code, question or run output, and end with one small action they can "
     "take now."
@@ -136,45 +119,12 @@ OLD_VERSIONS = {
 
 @pytest.mark.parametrize("state", NO_SOURCE_STATES)
 @pytest.mark.parametrize("mode", ALL_MODES)
-def test_no_source_contract_lists_the_process_actions(mode, state):
-    notice = norm(axis_rules.no_source_notice(mode, state))
-
-    assert notice.endswith(NO_SOURCE_TAIL)
-    for action in ACTIONS:
-        assert action in notice, action
-    assert "restate what they asked for" not in notice and "with at most two questions" not in notice
-    assert NO_SOURCE_TAIL in no_source(mode, state)
-
-
-@pytest.mark.parametrize("state", NO_SOURCE_STATES)
-@pytest.mark.parametrize("mode", ALL_MODES)
-def test_no_source_contract_still_bans_facts_causes_and_code(mode, state):
+def test_the_no_source_wording_is_the_one_on_main(mode, state):
     prompt = no_source(mode, state)
 
-    # The sentences before the replaced part are unchanged, and lead straight into the new part.
-    assert (
-        "Then do not give facts, syntax, error explanations or advice from your own memory. Do not explain an error, "
-        "even in the learner's own code. Do not say what a name you do not recognise is or does, and do not guess. "
-        "Write no code, not even inside a sentence. Work only from what the learner wrote"
-    ) in prompt
-    assert axis_rules.NO_SOURCE_SENTENCES[state] in prompt
-    assert "with no code, command or name of your own" in prompt
-    assert "exactly one of these ways of looking and nothing else" in prompt
-    assert "Do not explain any idea, tool or word. Keep the whole reply to three sentences." in prompt
-    assert "in your own words and with no code" not in prompt
-    assert "it never states the cause or the fix" in prompt
-    assert "do not say what it means, what caused it, or what the values must be." in prompt
-    assert 'Do not write "means" or "because" about it.' in prompt  # SPEC-33 3.1 point 2
-    assert ("STRICT INVARIANT" in prompt) is (mode is AxisMode.SOCRATIC)
-
-
-@pytest.mark.parametrize("state", NO_SOURCE_STATES)
-@pytest.mark.parametrize("mode", ALL_MODES)
-def test_decision_questions_ask_for_decision_reason_and_risk(mode, state):
-    assert (
-        "For a question about a decision, design, policy or change, ask them to state the decision they lean to, "
-        "one reason and one risk."
-    ) in no_source(mode, state)
+    assert axis_rules.chat_prompt_version(mode, state) == OLD_VERSIONS[(mode.value, state)]
+    assert "restate what they asked for" in prompt and "with at most two questions" in prompt
+    assert "these ways of looking" not in prompt and "Keep the whole reply to three sentences" not in prompt
 
 
 def test_grounded_contracts_ask_for_an_anchor_and_one_action():
@@ -192,11 +142,11 @@ def test_grounded_contracts_ask_for_an_anchor_and_one_action():
             assert HYBRID_COACH_SENTENCE not in no_source(mode, state)
 
 
-def test_every_changed_prompt_has_a_new_version():
-    unchanged = [key for key, old in OLD_VERSIONS.items()
-                 if axis_rules.chat_prompt_version(AxisMode(key[0]), key[1]) == old]
+def test_only_the_prompts_with_a_source_have_new_versions():
+    changed = {key for key, old in OLD_VERSIONS.items()
+               if axis_rules.chat_prompt_version(AxisMode(key[0]), key[1]) != old}
 
-    assert unchanged == []
+    assert changed == {(mode.value, "course") for mode in ALL_MODES}
 
 
 def test_prompt_catalogue_matches_the_code():
@@ -208,7 +158,7 @@ def test_prompt_catalogue_matches_the_code():
     committed = (REPO / "docs" / "prompts" / "prompt-catalogue.md").read_text(encoding="utf-8")
 
     assert committed == make_prompt_catalogue.render_catalogue()
-    for wording in (NO_SOURCE_TAIL, SOCRATIC_SENTENCE, HYBRID_COACH_SENTENCE, "Ask exactly one question."):
+    for wording in (SOCRATIC_SENTENCE, HYBRID_COACH_SENTENCE, "Ask exactly one question."):
         assert wording in norm(committed), wording
     for mode in ALL_MODES:
         for state in ("course", *NO_SOURCE_STATES):
@@ -1041,3 +991,31 @@ def test_the_repeated_lines_note_of_a_traceback_is_not_a_learner_name():
 
     for reply in ("Can you tell me more?", "Try it a few times. What happens?"):
         assert check_anchored(reply, "Why?", code="countdown(3)", error_output=error).passed is not True
+
+
+# =====================================================================================================
+# SPEC-33 section 7: bare replies are counted, so that silence cannot read as good behaviour
+# =====================================================================================================
+
+
+def bare_rows():
+    return [
+        ob.make_row("b1", "Coach", "not_found", NOT_FOUND, visible=f"{NOT_FOUND}\n\nWhat did you try?"),
+        ob.make_row("b2", "Coach", "not_found", f"{NOT_FOUND} Look at `a ? b` again."),
+        ob.make_row("b3", "Coach", "not_found", f"{NOT_FOUND} What did you try?"),
+        ob.make_row("b4", "Coach", "not_found", None, visible=None, no_reply=True, error_class="TimeoutError"),
+    ]
+
+
+def test_bare_replies_are_counted_for_what_the_model_said_and_what_the_learner_sees():
+    from lms.adapters.ai.obedience import report
+
+    results = report.build_results(bare_rows() + [pasted_error_row()] + run_rows(), {"seed": 29})
+
+    assert results["bare_replies"]["main"] == {"n": 3, "raw": 2, "visible": 1}
+    assert results["bare_replies"]["error_items"] == {"n": 1, "raw": 0, "visible": 0}
+    assert results["bare_replies"]["run_output_items"]["n"] == 2
+    line = [x for x in report.render_report(results).splitlines() if x.startswith("Bare replies (no question)")]
+    assert line == ["Bare replies (no question), said/shown: main 2/1 of 3; error items 0/0 of 1; run-output items "
+                    f"{results['bare_replies']['run_output_items']['raw']}/"
+                    f"{results['bare_replies']['run_output_items']['visible']} of 2"]
