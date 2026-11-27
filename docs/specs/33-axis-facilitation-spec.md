@@ -22,7 +22,7 @@ For governance, change and design questions: state the decision you lean to, one
 
 ## 3. Contract wording (stage 1; owner approval needed)
 **No course source** (replaces the end of SPEC-31 3.4 as amended by 9.1, from "Work only from what the learner wrote"):
-> Work only from what the learner wrote (the question, the code and the run output). Name one thing of theirs, such as a name or a line number. Ask one question they can answer by looking or running. Then suggest one of these actions, in your own words and with no code: print a value and read it; read the last line of the error; run one line or try a smaller input; say what they expected and what they saw; check what type a value is; reread this step's lesson text. For a question about a decision, design, policy or change, ask them to state the decision they lean to, one reason and one risk. A question may point at a line of their code; it never states the cause or the fix. When there is an error or a traceback, do not say what it means, what caused it, or what the values must be. Do not write "means" or "because" about it. Do not copy their code or the traceback into your reply.
+> Work only from what the learner wrote (the question, the code and the run output). Name one thing of theirs, such as a name or a line number. Ask one question they can answer by looking or running. Then suggest exactly one of these ways of looking and nothing else, with no code, command or name of your own: print a value and read it; read the last line of the error; run one line or try a smaller input; say what they expected and what they saw; check what type a value is; reread this step's lesson text. Do not explain any idea, tool or word. Keep the whole reply to three sentences. For a question about a decision, design, policy or change, ask them to state the decision they lean to, one reason and one risk. A question may point at a line of their code; it never states the cause or the fix. When there is an error or a traceback, do not say what it means, what caused it, or what the values must be. Do not write "means" or "because" about it. Do not copy their code or the traceback into your reply.
 
 The sentences before it (no pretended source, the state sentence, no facts, no code) are unchanged. "Advice from your own memory" stays banned; the listed actions are the stated exception.
 
@@ -37,6 +37,9 @@ Every changed prompt gets a new `prompt_version` and the catalogue is regenerate
 ### 3.1 Two points settled before the tests (owner, 2026-11-27)
 1. Choice 4A applies to every mode, with a source too (the wording above).
 2. The sentence "Do not write "means" or "because" about it" of SPEC-31 9.1, left out of the first draft by mistake, stays.
+
+### 3.2 Tightened after the first eval (owner, 2026-11-27)
+The first wording read as permission to advise. Local model, no source, temperature 0.0 and 0.2, against the run before: pasted errors improved (explains flag 33% to 9% and 27% to 12%), but the other questions got worse: explains 2% to 8% and 3% to 8%; made-up names handled well 214 to 206 and 214 to 196 of 216; replies with code the learner did not write 14 to 24 and 12 to 23 of 756; replies about 80% longer. The sentence now asks for exactly one listed way of looking, nothing of the model's own, no explanation, and three sentences in all.
 
 ## 4. The run's error output (stage 1)
 - E1. The run terminal keeps the error output of the **latest** run on the step; a new successful run clears it. The AXIS panel sends it as `execution_result` (the field exists; the server already puts `stderr` in the user message, capped at 4000 characters).

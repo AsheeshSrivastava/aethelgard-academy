@@ -88,9 +88,11 @@ def no_source_block(state):
         "what the learner wrote (the question, the code and the run output). "
         # SPEC-33 section 3
         "Name one thing of theirs, such as a name or a line number. Ask one question they can answer by looking or "
-        "running. Then suggest one of these actions, in your own words and with no code: print a value and read it; "
+        "running. Then suggest exactly one of these ways of looking and nothing else, with no code, command or "
+        "name of your own: print a value and read it; "
         "read the last line of the error; run one line or try a smaller input; say what they expected and what they "
-        "saw; check what type a value is; reread this step's lesson text. For a question about a decision, design, "
+        "saw; check what type a value is; reread this step's lesson text. Do not explain any idea, tool or word. "
+        "Keep the whole reply to three sentences. For a question about a decision, design, "
         "policy or change, ask them to state the decision they lean to, one reason and one risk. A question may point "
         "at a line of their code; it never states the cause or the fix. When there is an error or a traceback, do not "
         'say what it means, what caused it, or what the values must be. Do not write "means" or "because" about it. '

@@ -100,10 +100,12 @@ def axis_query(stderr=None, **changes):
 # Section 3, character for character, from "Work only from what the learner wrote".
 NO_SOURCE_TAIL = (
     "Work only from what the learner wrote (the question, the code and the run output). Name one thing of theirs, "
-    "such as a name or a line number. Ask one question they can answer by looking or running. Then suggest one of "
-    "these actions, in your own words and with no code: print a value and read it; read the last line of the error; "
+    "such as a name or a line number. Ask one question they can answer by looking or running. Then suggest "
+    "exactly one of these ways of looking and nothing else, with no code, command or name of your own: print "
+    "a value and read it; read the last line of the error; "
     "run one line or try a smaller input; say what they expected and what they saw; check what type a value is; "
-    "reread this step's lesson text. For a question about a decision, design, policy or change, ask them to state "
+    "reread this step's lesson text. Do not explain any idea, tool or word. Keep the whole reply to three "
+    "sentences. For a question about a decision, design, policy or change, ask them to state "
     "the decision they lean to, one reason and one risk. A question may point at a line of their code; it never "
     "states the cause or the fix. When there is an error or a traceback, do not say what it means, what caused it, "
     'or what the values must be. Do not write "means" or "because" about it. Do not copy their code or the '
@@ -156,7 +158,10 @@ def test_no_source_contract_still_bans_facts_causes_and_code(mode, state):
         "Write no code, not even inside a sentence. Work only from what the learner wrote"
     ) in prompt
     assert axis_rules.NO_SOURCE_SENTENCES[state] in prompt
-    assert "in your own words and with no code" in prompt
+    assert "with no code, command or name of your own" in prompt
+    assert "exactly one of these ways of looking and nothing else" in prompt
+    assert "Do not explain any idea, tool or word. Keep the whole reply to three sentences." in prompt
+    assert "in your own words and with no code" not in prompt
     assert "it never states the cause or the fix" in prompt
     assert "do not say what it means, what caused it, or what the values must be." in prompt
     assert 'Do not write "means" or "because" about it.' in prompt  # SPEC-33 3.1 point 2
