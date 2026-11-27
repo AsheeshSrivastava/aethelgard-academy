@@ -15,7 +15,7 @@ With no course source, the local model states the cause of a pasted error in abo
   - a run error came with the turn **and** the question is about it: it holds one of the frozen words `why, error, fail, wrong, work, crash, stuck, help, fix, broke, traceback, exception` (choice 1).
   - Measured on the eval sets: the first rule matches all 24 error questions and none of the 78 others.
 
-## 3. The reply (learner-facing; owner approval needed)
+## 3. The reply (learner-facing; approved by the owner 2026-11-27)
 The usual state sentence (SPEC-24 R3), then, when a line number and error name can be read from the error:
 > Look at line 3, where the KeyError is reported. What did you expect that line to do, and what have you checked so far?
 

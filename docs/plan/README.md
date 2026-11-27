@@ -10,7 +10,7 @@
 | `a6-sandbox-known-gaps.md` | Docker runner gaps G1 to G10. | Detail record; hosting gates are in the freeze tracker. |
 | `after-stage0-round2.md` | Follow-ups after Stage 0 round 2. | Superseded 2026-11-27; kept. |
 | `axis-cold-check-known-gaps.md` | What is still open about AXIS during Cold Checks (ADR-0040). | Live backlog, recorded 2026-11-26. |
-| `owner-console-evals-traces.md` | The proposed owner console for evals, traces and observability, and the deferred demo mode. | Backlog, Proposed for after the freeze, recorded 2026-11-26. |
+| `owner-console-evals-traces.md` | The proposed owner console for evals, traces and observability. Demo mode is now a freeze step. | Backlog, Proposed for after the freeze, recorded 2026-11-26. |
 | `axis-facilitation-evidence-review.md` | Short desk review of machine-led tutoring, for the paper below. | Quick and non-systematic, 2026-11-27. |
 | `axis-facilitation-decision-paper.md` | What a good AXIS turn is, conversation memory, and how we would judge it. | Decided 2026-11-27 (ADR-0041); SPEC-33 is a draft. |
 | `axis-learning-limits.md` | What AXIS does not do yet (it does not yet improve learning), what is unmeasured, and what could be done. | Recorded 2026-11-27. |
