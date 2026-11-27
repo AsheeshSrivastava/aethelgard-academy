@@ -1,6 +1,6 @@
 # SPEC-34: A fixed reply for error questions with no course source (local model)
 
-Status: **Draft 2026-11-27, waiting for the owner's go** on this spec and the choices of section 8. No test or code.
+Status: **Choices decided by the owner 2026-11-27** (option A on all four of section 8), with the section 3 reply that names the line and error. **Waiting for the owner's go** to write the tests. No test or code.
 Implements: ADR-0041 section 5 (the fallback kept for this case). Decided by the owner 2026-11-27: use it with the local model; OpenAI stays a Settings choice and needs no change.
 Needs first: SPEC-24 section 10 (PR #84) and SPEC-33 stage 1 (PR #83, which sends the run error to AXIS).
 
@@ -41,7 +41,7 @@ The obedience eval reports fixed replies apart. With the local profile every err
 ## 7. Limits, known in advance
 It teaches nothing: it is the same question every time. A conceptual question that names an error ("what is a `KeyError:`?") gets it too, though without a source AXIS could not have answered from memory anyway. An error message in an unusual shape falls back to the model. With a course source, errors are answered by the model as today, which is unmeasured.
 
-## 8. Choices for the owner (recommendation first)
+## 8. Choices (decided by the owner 2026-11-27: (a) on all four)
 1. **A held run error:** (a) fixed reply only when the question is about it (the word list); (b) for every question while an error is held; (c) only for pasted tracebacks.
 2. **The reply:** (a) name the line and error when readable; (b) always the general form.
 3. **Add a small action** to the reply, such as "Then write what you expected next to what happened": (a) not now; (b) add it.
