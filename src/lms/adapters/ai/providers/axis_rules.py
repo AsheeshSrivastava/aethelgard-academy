@@ -19,6 +19,7 @@ from lms.adapters.ai.concept_store import ConceptStore
 from lms.adapters.ai.socratic_guardrail import (
     AssistanceClassifier,
     SocraticGuardrail,
+    follow_up_for,
     learner_text_of,
     remove_prompt_tags,
 )
@@ -338,13 +339,17 @@ def finish_reply(
 ) -> AxisResponse:
     """Guardrail and classifier applied the same way after every model."""
     cleaned = remove_prompt_tags(strip_think(str(raw_reply))).strip()
-    enforced = guardrail.enforce(cleaned, query.mode, strict=False, learner_text=learner_text_of(query))
+    no_source = isinstance(cited_concepts, passage_safety.Grounding) and cited_concepts.source_state != "course"
+    enforced = guardrail.enforce(
+        cleaned, query.mode, strict=False, learner_text=learner_text_of(query), reflect=not no_source)
     if isinstance(cited_concepts, passage_safety.Grounding):
         enforced = passage_safety.strip_unknown_labels(enforced, cited_concepts.labels)
         cited_ids = cited_concepts.cited_for(enforced)
     else:
         cited_ids = list(cited_concepts)
     assistance = classifier.classify(query.user_prompt, enforced, query.mode)
+    if no_source:
+        enforced += follow_up_for(enforced)  # after the classifier: a fixed question is not help (SPEC-24 R21)
     suggested_action = (
         "Trace variable types step-by-step before re-running."
         if query.mode == AxisMode.SOCRATIC

@@ -19,6 +19,21 @@ GUIDING_INQUIRY = (
     "and what specific transformation is required before egress?"
 )
 REFLECTION_PROMPT = "\n\nWhat is your hypothesis for why this step behaves the way it does?"
+# SPEC-24 section 10: with no course source a reply that asks nothing gets this line, in every mode, from the app.
+NO_SOURCE_FOLLOW_UP = "Start from your own code, error or question: what have you tried so far, and what did you see?"
+_CODE_TEXT = re.compile(r"```.*?(?:```|\Z)|~~~.*?(?:~~~|\Z)|`[^`\n]*`", re.DOTALL)
+
+
+def asks_a_question(text: str) -> bool:
+    """A "?" outside fenced and inline code."""
+    return "?" in _CODE_TEXT.sub(" ", text)
+
+
+def follow_up_for(text: str) -> str:
+    """What to add after a no-source reply so that it is not bare: "" when it already asks something."""
+    if asks_a_question(text):
+        return ""
+    return ("\n\n" if text.strip() else "") + NO_SOURCE_FOLLOW_UP
 
 PROMPT_TAG_NAMES = (
     "learner_query",
@@ -246,6 +261,7 @@ class SocraticGuardrail:
         mode: AxisMode,
         strict: bool = False,
         learner_text: str = "",
+        reflect: bool = True,
     ) -> str:
         """Inspects and enforces the Socratic boundary on an AI response."""
         if mode != AxisMode.SOCRATIC:
@@ -263,8 +279,8 @@ class SocraticGuardrail:
             sanitized = self.TILDE_FENCE_PATTERN.sub("", self.CODE_FENCE_PATTERN.sub("", reply))
             reply = self._drop_code_lines(sanitized, learner_text) + GUIDING_INQUIRY
 
-        # Socratic mode must always provoke learner reflection
-        if "?" not in reply:
+        # Socratic mode must always provoke learner reflection. With no source the caller adds its own line instead.
+        if reflect and "?" not in reply:
             reply += REFLECTION_PROMPT
 
         return reply
