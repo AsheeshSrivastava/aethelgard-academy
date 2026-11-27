@@ -1,5 +1,7 @@
 # Work Sequence
 
+> **Order superseded 2026-11-27 by the freeze tracker; kept as a record.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 One list of what comes next, in order. One step at a time. Agreed with the owner on 2026-11-04.
 
 **Current step (2026-11-20):** AXIS retrieval and observability under 2d.7 (ADR-0035 plan step 8: tracing, SPEC-29 report and thumbs in progress). Then step 5b, A7 (paused), A8, and the freeze on 5 Dec. The freeze plan is `master-plan-2026-11-15.md` in this folder. Phase 4 content waits behind it.

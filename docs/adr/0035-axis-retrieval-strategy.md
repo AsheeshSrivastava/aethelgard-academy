@@ -90,6 +90,9 @@ A7 (ConceptStore wiring) is paused until there are enough concept notes. The sel
 ## 5. Amendment 2026-11-16 (owner-approved plan)
 
 ### 5.1 New plan order
+
+> **2026-11-27:** status tracking for the table below moved to [the freeze tracker](../plan/freeze-2026-12-05.md). The decisions stand; the table is no longer updated.
+
 Step 4 above was split, and the owner's plan of 2026-11-16 reordered what follows. **The nine-step list below is the plan order. The "Work sequence" numbers in section 4 are the older numbering** (corrected 2026-11-16; an earlier version of this section wrongly said the later steps were unchanged in order and put contextual retrieval after the rag-core adapter).
 
 | Plan step | What | Status | Old section 4 number |

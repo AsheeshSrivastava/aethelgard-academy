@@ -1,3 +1,5 @@
+> **Superseded 2026-11-27 by the freeze tracker; kept as a record.** See [freeze-2026-12-05.md](freeze-2026-12-05.md).
+
 > **Snapshot copied from the project folder on 2026-11-20.** Source: lms-backlog/review-2026-11-15-plan.md. The order was agreed 2026-11-15; for what is done now, see master-plan-2026-11-15.md section 1.
 
 # Plan from the independent review (2026-11-15)
